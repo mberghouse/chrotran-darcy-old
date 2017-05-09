@@ -38,6 +38,9 @@ contains
     type(option_type)               :: option
     PetscReal                       :: Res(option%nflowdof),area
 
+    Res(1) = 0.0d0
+    if (.not. auxvar%active) return
+    
     area   = 0.5d0 * material_auxvar%volume / auxvar%half_cell_height
     Res(1) = auxvar%density * auxvar%surface_water_depth / option%flow_dt * area
 
@@ -61,6 +64,8 @@ contains
     PetscReal                       :: J(option%nflowdof,option%nflowdof),area
 
     J(1,1) = 0.0d0
+    if (.not. auxvar%active) return
+    
     if ( auxvar%surface_water_depth > 0.d0 ) then
       area   = 0.5d0 * material_auxvar%volume / auxvar%half_cell_height
       J(1,1) = area / ( option%flow_dt * FMWH2O * ABS(option%gravity(3)) )
@@ -84,6 +89,10 @@ contains
 #if 0 
     ! full diffusive wave approximation with no upwinding
     PetscReal :: rho,dz,Cf,gradZ,gradH,epsilon,v,havg
+
+    Res(1) = 0.0d0    
+    if (.not. (auxvar_up%active .and. auxvar_dn%active)) return
+        
     epsilon = 1.0d-4
     rho     = 0.5d0*(auxvar_up%density             + auxvar_dn%density) 
     dz      = 0.5d0*(auxvar_up%half_cell_height    + auxvar_dn%half_cell_height) 
@@ -98,6 +107,10 @@ contains
 #else
     ! hybrid approximation with Scott's upwinding
     PetscReal :: Cf,dphi,dz,epsilon,have,rho,rhohu,slope
+    
+    Res(1) = 0.0d0    
+    if (.not. (auxvar_up%active .and. auxvar_dn%active)) return
+    
     epsilon = 1.0d-4
     slope   = ABS(dist(3)) + epsilon
     dphi    = auxvar_up%surface_water_depth - auxvar_dn%surface_water_depth &
@@ -134,6 +147,9 @@ contains
     PetscInt  :: ibndtype(:)
     type(inlinesurface_auxvar_type) :: auxvar_up,auxvar_dn
     PetscReal :: area,dist(-1:3),Res(1)
+    
+    Res(1) = 0.0d0
+    if (.not. (auxvar_up%active .and. auxvar_dn%active)) return
 
     select case(ibndtype(RICHARDS_PRESSURE_DOF))
 
@@ -175,6 +191,10 @@ contains
     PetscReal :: area,dist(-1:3),Jup(1,1),Jdn(1,1)
     PetscReal :: Cf,dphi,dz,epsilon,have,rho,slope,const,deriv
 
+    Jup(1,1) = 0.0d0
+    Jdn(1,1) = 0.0d0
+    if (.not. (auxvar_up%active .and. auxvar_dn%active)) return
+    
     epsilon  = 1.0d-4
     slope    = ABS(dist(3)) + epsilon
     dphi     = auxvar_up%surface_water_depth - auxvar_dn%surface_water_depth &
@@ -184,8 +204,6 @@ contains
     Cf       = 0.5d0*(auxvar_up%Mannings_coeff  +auxvar_dn%Mannings_coeff)
     const    = 1.0d0/(SQRT(slope)*dist(0)*Cf)/ABS(option%gravity(3))/ &
          FMWH2O*area/(2.0d0*dz)
-    Jup(1,1) = 0.0d0
-    Jdn(1,1) = 0.0d0
     if (dphi > 0) then
       have = auxvar_up%surface_water_depth - MAX(+dist(3)*dist(0),0.0d0)
       if (have > 0.0d0) then
@@ -224,6 +242,9 @@ contains
     type(option_type)               :: option
     PetscReal :: area,dist(-1:3),Jup(1,1),Jdn(1,1)
 
+    Jdn(1,1) = 0.0d0
+    if (.not. (auxvar_up%active .and. auxvar_dn%active)) return
+    
     select case(ibndtype(RICHARDS_PRESSURE_DOF))
 
     case(SURFACE_DIRICHLET)

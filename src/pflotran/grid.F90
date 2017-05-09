@@ -260,34 +260,45 @@ function ConnectionSetIntersectRegion(connection_set,region) result(reg_connecti
   nconn = 0
   allocate(ids(connection_set%num_connections,3))
   do i = 1,connection_set%num_connections
-     up = -1
-     dn = -1
-     do j = 1,region%num_cells
-        if (connection_set%id_up(i) == region%cell_ids(j)) up = j
-        if (connection_set%id_dn(i) == region%cell_ids(j)) dn = j
-        if (up > 0 .and. dn > 0) then
-           nconn = nconn + 1
-           ids(nconn,1) = i
-           ids(nconn,2) = up
-           ids(nconn,3) = dn
-           exit
-        endif
-     enddo
+    
+    ! if both up and dn cells are in the region, copy the connection
+    up = -1
+    dn = -1
+    do j = 1,region%num_cells
+      if (connection_set%id_up(i) == region%cell_ids(j)) up = j
+      if (connection_set%id_dn(i) == region%cell_ids(j)) dn = j
+      if (up > 0 .and. dn > 0) then
+        nconn = nconn + 1
+        ids(nconn,1) = i
+        ids(nconn,2) = connection_set%id_up(i)
+        ids(nconn,3) = connection_set%id_dn(i)
+        exit
+      endif
+    enddo
+    
+    ! if the up cell is in the region, and the connection is
+    ! horizontal, copy the connection
+    if(up > 0 .and. dn < 0 .and. (abs(1.0d0-abs(connection_set%dist(3,i))) > 5.0d-2) ) then
+      nconn = nconn + 1
+      ids(nconn,1) = i
+      ids(nconn,2) = connection_set%id_up(i)
+      ids(nconn,3) = connection_set%id_dn(i)
+    endif
   enddo
-
+  
   ! second pass to load the information
   nullify(reg_connection_set)
   if (nconn > 0) then
-     reg_connection_set => ConnectionCreate(nconn,connection_set%itype)
-     do i = 1,nconn
-        j = ids(i,1)
-        reg_connection_set%id_up  (  i) = ids(i,2)
-        reg_connection_set%id_dn  (  i) = ids(i,3)
-        reg_connection_set%dist   (:,i) = connection_set%dist   (:,j)
-        reg_connection_set%intercp(:,i) = connection_set%intercp(:,j)
-        reg_connection_set%area   (  i) = connection_set%area   (  j)
-        reg_connection_set%face_id(  i) = connection_set%face_id(  j)
-     enddo
+    reg_connection_set => ConnectionCreate(nconn,connection_set%itype)
+    do i = 1,nconn
+      j = ids(i,1)
+      reg_connection_set%id_up  (  i) = ids(i,2)
+      reg_connection_set%id_dn  (  i) = ids(i,3)
+      reg_connection_set%dist   (:,i) = connection_set%dist   (:,j)
+      reg_connection_set%intercp(:,i) = connection_set%intercp(:,j)
+      reg_connection_set%area   (  i) = connection_set%area   (  j)
+      reg_connection_set%face_id(  i) = connection_set%face_id(  j)
+    enddo
   endif
 
   ! cleanup and return

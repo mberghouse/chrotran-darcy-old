@@ -13,7 +13,8 @@ module InlineSurface_Aux_module
     PetscReal :: surface_water_depth
     PetscReal :: density
     PetscReal :: Mannings_coeff
-
+    PetscBool :: active
+    
   end type inlinesurface_auxvar_type
 
   type, public :: inlinesurface_type
@@ -57,6 +58,8 @@ contains
     auxvar%surface_water_depth = NaN
     auxvar%Mannings_coeff      = NaN
     auxvar%density             = NaN
+    auxvar%active              = PETSC_FALSE
+    
   end subroutine InlineSurfaceAuxVarInit
 
   !************************************************************************** !
@@ -75,6 +78,7 @@ contains
     copy%surface_water_depth = source%surface_water_depth
     copy%density             = source%density
     copy%Mannings_coeff      = source%Mannings_coeff
+    copy%active              = source%active
 
   end subroutine InlineSurfaceAuxVarCopy
 
@@ -95,6 +99,9 @@ contains
     type(global_auxvar_type)        :: global_auxvar
     type(option_type)               :: option
     PetscReal :: Pref,Pl,g,rho
+
+    ! Only evaluate if it is active
+    if (.not. auxvar%active) return
 
     ! We need to ensure that surface density stays consistent with the subsurface
     auxvar%density = global_auxvar%den(1)
