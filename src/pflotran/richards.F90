@@ -174,7 +174,7 @@ subroutine RichardsSetupPatch(realization)
     call printErrMsg(option)
   endif
   
-  ! allocate auxvar data structures for all grid cells  
+  ! allocate auxvar data structures for all grid cells
   allocate(rich_auxvars(grid%ngmax))
   do ghosted_id = 1, grid%ngmax
     call RichardsAuxVarInit(rich_auxvars(ghosted_id),option)
@@ -193,6 +193,7 @@ subroutine RichardsSetupPatch(realization)
     patch%aux%Richards%auxvars_bc => rich_auxvars_bc
   endif
   patch%aux%Richards%num_aux_bc = sum_connection
+  print *,"RICH BCs",sum_connection
   
   ! count the number of source/sink connections and allocate
   ! auxvar data structures for them  
@@ -224,10 +225,16 @@ subroutine RichardsSetupPatch(realization)
     do ghosted_id = 1, grid%ngmax
       call InlineSurfaceAuxVarInit(patch%aux%InlineSurface%auxvars(ghosted_id),option)
     enddo
-    
-    ! activate all auxvars which are used in our top region
-    do i = 1, region%num_cells
-      patch%aux%InlineSurface%auxvars(region%cell_ids(i))%active = PETSC_TRUE
+
+    ! activate all auxvars which are used in our connections
+    cur_connection_set => grid%reg_internal_connection_set_list%first
+    do 
+      if (.not.associated(cur_connection_set)) exit
+      do iconn = 1, cur_connection_set%num_connections
+        patch%aux%InlineSurface%auxvars(cur_connection_set%id_up(iconn))%active = PETSC_TRUE
+        patch%aux%InlineSurface%auxvars(cur_connection_set%id_dn(iconn))%active = PETSC_TRUE
+      enddo
+      cur_connection_set => cur_connection_set%next
     enddo
     
     do ghosted_id = 1, grid%ngmax 
@@ -274,12 +281,12 @@ subroutine RichardsSetupPatch(realization)
 
       ! set Manning's coefficient
       patch%aux%InlineSurface%auxvars(ghosted_id)%Mannings_coeff = option%inline_surface_Mannings_coeff
-      
+
     enddo
 
     ! count the number of boundary connections and allocate
     ! auxvar data structures for them
-    sum_connection = CouplerGetNumConnectionsInList(patch%boundary_condition_list)    
+    sum_connection = CouplerGetNumConnectionsInList(patch%boundary_condition_list)
     if (sum_connection > 0) then
       allocate(patch%aux%InlineSurface%auxvars_bc(sum_connection))
       do iconn = 1, sum_connection
@@ -312,6 +319,8 @@ subroutine RichardsSetupPatch(realization)
     enddo
 
   endif
+
+  print *,"Setup Complete"
   
 end subroutine RichardsSetupPatch
 
@@ -1467,6 +1476,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
                              cur_connection_set%area(iconn), &
                              cur_connection_set%dist(:,iconn), &
                              Res)
+      print *,"R:",option%myrank,sum_connection,ghosted_id_up,ghosted_id_dn,Res(1)
       
       if (local_id_up>0) then
         istart = (local_id_up-1)*option%nflowdof + 1

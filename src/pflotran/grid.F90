@@ -285,7 +285,7 @@ function ConnectionSetIntersectRegion(connection_set,region) result(reg_connecti
       ids(nconn,3) = connection_set%id_dn(i)
     endif
   enddo
-  
+
   ! second pass to load the information
   nullify(reg_connection_set)
   if (nconn > 0) then
