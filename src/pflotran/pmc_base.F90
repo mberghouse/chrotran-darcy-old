@@ -977,9 +977,9 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
   if (associated(this%timestepper)) then
     call this%timestepper%RestartBinary(viewer,this%option)
     if (Initialized(this%option%restart_time)) then
-      ! simply a flag to set time back to zero, no matter what the restart
-      ! time is set to.
-      call this%timestepper%Reset()
+      ! simply a flag to set time back to start_time, no matter what the 
+      ! restart time is set to.
+      call this%timestepper%Reset(option)
       ! note that this sets the target time back to zero.
     endif
   
@@ -1260,9 +1260,9 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
     call this%timestepper%RestartHDF5(pmc_grp_id, this%option)
 
     if (Initialized(this%option%restart_time)) then
-      ! simply a flag to set time back to zero, no matter what the restart
-      ! time is set to.
-      call this%timestepper%Reset()
+      ! simply a flag to set time back to zero, no matter what the 
+      ! restart time is set to.
+      call this%timestepper%Reset(option)
       ! note that this sets the target time back to zero.
     endif
 
