@@ -142,6 +142,7 @@ subroutine TimestepperSurfaceSetTargetTime(this,sync_time,option,stop_flag, &
   observation_plot_flag = PETSC_FALSE
   massbal_plot_flag = PETSC_FALSE
   
+  !TOOD(geh): replace with start time
   if (cur_waypoint%time < 1.d-40) then
     cur_waypoint => cur_waypoint%next
   endif
