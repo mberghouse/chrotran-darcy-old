@@ -330,22 +330,6 @@ recursive subroutine PMRTInitializeRun(this)
   call RTUpdateAuxVars(this%realization,PETSC_FALSE,PETSC_TRUE,PETSC_FALSE)
   ! pass PETSC_FALSE to turn off update of kinetic state variables
   call PMRTUpdateSolution2(this,PETSC_FALSE)
-  
-#if 0
-  if (this%option%jumpstart_kinetic_sorption .and. &
-      this%option%time < 1.d-40) then
-    ! only user jumpstart for a restarted simulation
-    if (.not. this%option%restart_flag) then
-      this%option%io_buffer = 'Only use JUMPSTART_KINETIC_SORPTION on a ' // &
-        'restarted simulation.  ReactionEquilibrateConstraint() will ' // &
-        'appropriately set sorbed initial concentrations for a normal ' // &
-        '(non-restarted) simulation.'
-      call printErrMsg(this%option)
-    endif
-    call RTJumpStartKineticSorption(this%realization)
-  endif
-  ! check on MAX_STEPS < 0 to quit after initialization.
-#endif  
     
 end subroutine PMRTInitializeRun
 
