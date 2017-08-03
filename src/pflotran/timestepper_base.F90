@@ -198,6 +198,7 @@ subroutine TimestepperBaseInitializeRun(this,option)
   ! For the case where the second waypoint is a printout after the first time 
   ! step, we must increment the waypoint beyond the first (time=0.) waypoint.  
   ! Otherwise the second time step will be zero. - geh
+  !TOOD(geh): replace with start time
   if (this%cur_waypoint%time < 1.d-40) then
     this%cur_waypoint => this%cur_waypoint%next
   endif
@@ -838,22 +839,23 @@ end subroutine TimestepperBaseGetHeader
 
 ! ************************************************************************** !
 
-subroutine TimestepperBaseReset(this)
+subroutine TimestepperBaseReset(this,option)
   ! 
   ! Zeros timestepper object members.
   ! 
   ! Author: Glenn Hammond
   ! Date: 01/20/14
   ! 
-
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  implicit none
+  use Option_module
   
+  implicit none
 
   class(timestepper_base_type) :: this
+  type(option_type) :: option
   
-  this%target_time = 0.d0
+  this%target_time = option%start_time
   this%dt = this%dt_init
   this%prev_dt = 0.d0
   this%steps = 0

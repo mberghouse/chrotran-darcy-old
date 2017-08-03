@@ -481,10 +481,11 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
     call VecRestoreArrayReadF90(vec_int_ptr,vec_loc_p,ierr); CHKERRQ(ierr)
   enddo
 
-  if (ref_pres_set_by_initial .and. option%time > 0.d0) then
-    option%io_buffer = 'Restarted simulations (restarted with time > 0) &
-      &that set reference pressure based on the initial pressure will be &
-      &incorrect as the initial pressure is not stored in a checkpoint file.'
+  if (ref_pres_set_by_initial .and. option%time > option%start_time) then
+    option%io_buffer = 'Restarted simulations (restarted with time > &
+      &start_time) that set reference pressure based on the initial & 
+      & pressure will be incorrect as the initial pressure is not stored &
+      &in a checkpoint file.'
     call printErrMsg(option)
   endif
 

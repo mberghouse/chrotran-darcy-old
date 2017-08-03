@@ -132,6 +132,7 @@ module Option_module
     PetscReal :: dt
     PetscBool :: match_waypoint
     PetscReal :: refactor_dt
+    PetscReal :: start_time  ! allows for a non-zero start time.
   
     PetscReal :: gravity(3)
     
@@ -164,7 +165,7 @@ module Option_module
     character(len=MAXSTRINGLENGTH) :: restart_filename
     character(len=MAXSTRINGLENGTH) :: input_filename
     
-    PetscLogDouble :: start_time
+    PetscLogDouble :: wallclock_start_time
     PetscBool :: wallclock_stop_flag
     PetscLogDouble :: wallclock_stop_time
     
@@ -515,7 +516,7 @@ subroutine OptionInitRealization(option)
   option%restart_filename = ""
   option%restart_time = UNINITIALIZED_DOUBLE
   
-  option%start_time = 0.d0
+  option%wallclock_start_time = 0.d0
   option%wallclock_stop_flag = PETSC_FALSE
   option%wallclock_stop_time = 0.d0
   
@@ -535,6 +536,7 @@ subroutine OptionInitRealization(option)
   option%tran_dt = 0.d0
   option%dt = 0.d0
   option%refactor_dt = 0.d0
+  option%start_time = 0.d0
   option%match_waypoint = PETSC_FALSE
 
   option%io_handshake_buffer_size = 0
@@ -1208,7 +1210,7 @@ subroutine OptionBeginTiming(option)
   PetscErrorCode :: ierr
   
   call PetscTime(timex_wall, ierr);CHKERRQ(ierr)
-  option%start_time = timex_wall
+  option%wallclock_start_time = timex_wall
   
 end subroutine OptionBeginTiming
 
@@ -1241,16 +1243,16 @@ subroutine OptionEndTiming(option)
     if (option%print_to_screen) then
       write(*,'(/," Wall Clock Time:", 1pe12.4, " [sec] ", &
       & 1pe12.4, " [min] ", 1pe12.4, " [hr]")') &
-        timex_wall-option%start_time, &
-        (timex_wall-option%start_time)/60.d0, &
-        (timex_wall-option%start_time)/3600.d0
+        timex_wall-option%wallclock_start_time, &
+        (timex_wall-option%wallclock_start_time)/60.d0, &
+        (timex_wall-option%wallclock_start_time)/3600.d0
     endif
     if (option%print_to_file) then
       write(option%fid_out,'(/," Wall Clock Time:", 1pe12.4, " [sec] ", &
       & 1pe12.4, " [min] ", 1pe12.4, " [hr]")') &
-        timex_wall-option%start_time, &
-        (timex_wall-option%start_time)/60.d0, &
-        (timex_wall-option%start_time)/3600.d0
+        timex_wall-option%wallclock_start_time, &
+        (timex_wall-option%wallclock_start_time)/60.d0, &
+        (timex_wall-option%wallclock_start_time)/3600.d0
     endif
   endif
 
