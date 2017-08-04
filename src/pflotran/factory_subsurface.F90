@@ -375,7 +375,8 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
   ! add in periodic time waypoints for checkpointing. these will not appear
   ! in the outer list
   call CheckpointPeriodicTimeWaypoints(simulation%checkpoint_option, &
-                                       simulation%waypoint_list_subsurface)
+                                       simulation%waypoint_list_subsurface, &
+                                       option)
  
   ! clean up waypoints
   if (.not.option%steady_state) then
@@ -1346,6 +1347,7 @@ subroutine SubsurfaceJumpStart(simulation)
   use Output_module, only : Output, OutputInit, OutputPrintCouplers
   use Condition_Control_module
   use Reactive_Transport_module, only : RTJumpStartKineticSorption  
+  use Utility_module, only : Equal
 
   implicit none
 
@@ -1427,9 +1429,9 @@ subroutine SubsurfaceJumpStart(simulation)
 !  endif
 
   if (option%transport%jumpstart_kinetic_sorption .and. &
-      Equal(option%time,option%start_time) then
+      Equal(option%time,option%initial_time)) then
     ! only user jumpstart for a restarted simulation
-    if (.not. option%restart_flag) then
+    if (option%restart_flag == RESTART_OFF) then
       option%io_buffer = 'Only use JUMPSTART_KINETIC_SORPTION on a ' // &
         'restarted simulation.  ReactionEquilibrateConstraint() will ' // &
         'appropriately set sorbed initial concentrations for a normal ' // &
@@ -2121,21 +2123,6 @@ subroutine SubsurfaceReadInput(simulation)
         option%io_buffer = 'The RESTART card within SUBSURFACE block has &
                            &been deprecated.'
         call printErrMsg(option)
-!        option%restart_flag = PETSC_TRUE
-        !call InputReadNChars(input,option,option%restart_filename,MAXSTRINGLENGTH, &
-        !                     PETSC_TRUE)
-        !call InputErrorMsg(input,option,'RESTART','Restart file name') 
-        !call InputReadDouble(input,option,option%restart_time)
-        !if (input%ierr == 0) then
-        !  call InputReadWord(input,option,word,PETSC_TRUE)
-        !  if (input%ierr == 0) then
-        !    internal_units = 'sec'
-        !    option%restart_time = option%restart_time* &
-        !      UnitsConvertToInternal(word,internal_units,option)
-        !  else
-        !    call InputDefaultMsg(input,option,'RESTART, time units')
-        !  endif
-        !endif
 
 !......................
 
@@ -2380,8 +2367,8 @@ subroutine SubsurfaceReadInput(simulation)
         call InputDefaultMsg(input,option,'WALLCLOCK_STOP time units')
         internal_units = 'sec'
         units_conversion = UnitsConvertToInternal(word,internal_units,option) 
-        ! convert from hrs to seconds and add to start_time
-        option%wallclock_stop_time = option%start_time + &
+        ! convert from hrs to seconds and add to initial_time
+        option%wallclock_stop_time = option%wallclock_start_time + &
                                      option%wallclock_stop_time* &
                                      units_conversion
       

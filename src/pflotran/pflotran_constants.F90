@@ -299,6 +299,11 @@ module PFLOTRAN_Constants_module
   PetscInt, parameter, public :: CONVERGENCE_KEEP_ITERATING = 0
   PetscInt, parameter, public :: CONVERGENCE_FORCE_ITERATION = 1
   PetscInt, parameter, public :: CONVERGENCE_CONVERGED = 2
+
+  ! restart flags
+  PetscInt, parameter, public :: RESTART_OFF = 0
+  PetscInt, parameter, public :: RESTART_AT_INITIAL_TIME = 1
+  PetscInt, parameter, public :: RESTART_FROM_END_OF_SIMULATION = 2
   
   ! Dummy value
   PetscReal, parameter, public :: DUMMY_VALUE = UNINITIALIZED_DOUBLE

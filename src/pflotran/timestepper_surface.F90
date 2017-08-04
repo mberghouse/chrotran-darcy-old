@@ -111,6 +111,7 @@ subroutine TimestepperSurfaceSetTargetTime(this,sync_time,option,stop_flag, &
   ! 
 
   use Option_module
+  use Utility_module, only : Equal
 
   implicit none
 
@@ -142,8 +143,7 @@ subroutine TimestepperSurfaceSetTargetTime(this,sync_time,option,stop_flag, &
   observation_plot_flag = PETSC_FALSE
   massbal_plot_flag = PETSC_FALSE
   
-  !TOOD(geh): replace with start time
-  if (cur_waypoint%time < 1.d-40) then
+  if (Equal(cur_waypoint%time,option%initial_time)) then
     cur_waypoint => cur_waypoint%next
   endif
 
@@ -421,11 +421,14 @@ end subroutine TimestepperSurfaceGetHeader
 
 ! ************************************************************************** !
 
-subroutine TimestepperSurfaceReset(this)
+subroutine TimestepperSurfaceReset(this,option)
+
+  use Option_module
 
   implicit none
 
   class(timestepper_surface_type) :: this
+  type(option_type) :: option
 
   PetscErrorCode :: ierr
 
@@ -435,7 +438,7 @@ subroutine TimestepperSurfaceReset(this)
   this%dt_max_allowable = header%dt_max_allowable
   this%surf_subsurf_coupling_flow_dt = header%surf_subsurf_coupling_flow_dt
 
-  call TimestepperBaseReset(this)
+  call TimestepperBaseReset(this,option)
 
   !TODO(Gautam): this%target_time is set to 0.d0 in TimestepperBaseReset(). Is
   !              that OK? - Glenn

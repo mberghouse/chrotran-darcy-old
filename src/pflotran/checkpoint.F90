@@ -1587,7 +1587,8 @@ end subroutine CheckpointRead
 
 ! ************************************************************************** !
 
-subroutine CheckpointPeriodicTimeWaypoints(checkpoint_option,waypoint_list)
+subroutine CheckpointPeriodicTimeWaypoints(checkpoint_option,waypoint_list, &
+                                           option)
   ! 
   ! Inserts periodic time waypoints into list
   ! 
@@ -1602,9 +1603,10 @@ subroutine CheckpointPeriodicTimeWaypoints(checkpoint_option,waypoint_list)
 
   implicit none
 
-  type(option_type) :: option
   type(checkpoint_option_type), pointer :: checkpoint_option
   type(waypoint_list_type) :: waypoint_list
+  type(option_type) :: option
+
   type(waypoint_type), pointer :: waypoint
   character(len=MAXWORDLENGTH) :: word
   PetscReal :: final_time
@@ -1612,10 +1614,12 @@ subroutine CheckpointPeriodicTimeWaypoints(checkpoint_option,waypoint_list)
   PetscReal :: num_waypoints, warning_num_waypoints
   PetscInt :: k
   
+  ! Inside WaypointListGetFinalTime, final_time is initialized to -1.d20
   final_time = WaypointListGetFinalTime(waypoint_list)
   warning_num_waypoints = 15000.0
 
-  if (final_time < 1.d-40) then
+  ! option%initial_time has to be larger than -1.d20
+  if (final_time < option%initial_time) then
     option%io_buffer = 'No final time specified in waypoint list. &
       &Send your input deck to pflotran-dev.'
     call printMsg(option)

@@ -968,7 +968,7 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
     call PMCBaseRegisterHeader(this,bag,header)
     call PetscBagLoad(viewer,bag,ierr);CHKERRQ(ierr)
     call PMCBaseGetHeader(this,header)
-    if (Initialized(this%option%restart_time)) then
+    if (this%option%restart_flag == RESTART_AT_INITIAL_TIME) then
       this%pm_list%realization_base%output_option%plot_number = 0
     endif
     call PetscBagDestroy(bag,ierr);CHKERRQ(ierr)
@@ -976,11 +976,9 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
   
   if (associated(this%timestepper)) then
     call this%timestepper%RestartBinary(viewer,this%option)
-    if (Initialized(this%option%restart_time)) then
-      ! simply a flag to set time back to start_time, no matter what the 
-      ! restart time is set to.
-      call this%timestepper%Reset(option)
-      ! note that this sets the target time back to zero.
+    if (this%option%restart_flag == RESTART_AT_INITIAL_TIME) then
+      ! simply a flag to set time back to initial_time
+      call this%timestepper%Reset(this%option)
     endif
   
     ! Point cur_waypoint to the correct waypoint.
@@ -1244,7 +1242,7 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
     ! read pmc header
     call PMCBaseGetHeaderHDF5(this, h5_pmc_grp_id, this%option)
 
-    if (Initialized(this%option%restart_time)) then
+    if (this%option%restart_flag == RESTART_AT_INITIAL_TIME) then
       this%pm_list%realization_base%output_option%plot_number = 0
     endif
     chk_grp_id = h5_chk_grp_id 
@@ -1259,11 +1257,9 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
     pmc_grp_id = h5_pmc_grp_id
     call this%timestepper%RestartHDF5(pmc_grp_id, this%option)
 
-    if (Initialized(this%option%restart_time)) then
-      ! simply a flag to set time back to zero, no matter what the 
-      ! restart time is set to.
-      call this%timestepper%Reset(option)
-      ! note that this sets the target time back to zero.
+    if (this%option%restart_flag == RESTART_AT_INITIAL_TIME) then
+      ! simply a flag to set time back to the initial_time
+      call this%timestepper%Reset(this%option)
     endif
 
     ! Point cur_waypoint to the correct waypoint.

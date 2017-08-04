@@ -1623,14 +1623,14 @@ subroutine PMUFDBOutputHeader(this)
   type(unsupported_rad_type), pointer :: cur_unsupp_rad
   PetscInt :: fid, i
   PetscInt :: icolumn
-  PetscBool :: exist
+  PetscBool :: exists
   
   output_option => this%realization%output_option
   
   fid = 91
   filename = PMUFDBOutputFilename(this%option)
-  exist = FileExists(trim(filename))
-  if (this%option%restart_flag .and. exist) return
+  exists = FileExists(trim(filename))
+  if (this%option%restart_flag /= RESTART_OFF .and. exists) return
   open(unit=fid,file=filename,action="write",status="replace")  
   
   if (output_option%print_column_ids) then

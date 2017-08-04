@@ -120,7 +120,7 @@ subroutine SurfSubsurfaceInitializeRun(this)
 
   call this%process_model_coupler_list%InitializeRun()
 
-  if (this%option%restart_flag) then
+  if (this%option%restart_flag /= RESTART_OFF) then
     call this%process_model_coupler_list%RestartBinary(viewer)
     cur_process_model_coupler => this%process_model_coupler_list
     select type(pmc => cur_process_model_coupler)

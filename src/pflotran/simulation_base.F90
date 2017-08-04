@@ -137,7 +137,7 @@ subroutine SimulationBaseInitializeRun(this)
   ! the requested process models; this routine should catch such issues.
   call OutputEnsureVariablesExist(this%output_option,this%option)
   if (associated(this%process_model_coupler_list)) then
-    if (this%option%restart_flag) then
+    if (this%option%restart_flag /= RESTART_OFF) then
       if (index(this%option%restart_filename,'.chk') > 0) then
         call this%process_model_coupler_list%RestartBinary(viewer)
       elseif (index(this%option%restart_filename,'.h5') > 0) then
