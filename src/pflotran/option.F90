@@ -74,8 +74,7 @@ module Option_module
     PetscReal :: surf_flow_time, surf_flow_dt
     PetscReal :: surf_subsurf_coupling_time
     PetscReal :: surf_subsurf_coupling_flow_dt
-    PetscReal :: surf_restart_time
-    PetscBool :: surf_restart_flag
+    PetscInt :: surf_restart_flag
     character(len=MAXSTRINGLENGTH) :: surf_initialize_flow_filename
     character(len=MAXSTRINGLENGTH) :: surf_restart_filename
 
@@ -132,7 +131,7 @@ module Option_module
     PetscReal :: dt
     PetscBool :: match_waypoint
     PetscReal :: refactor_dt
-    PetscReal :: start_time  ! allows for a non-zero start time.
+    PetscReal :: initial_time  ! allows for a non-zero initial simulation time
   
     PetscReal :: gravity(3)
     
@@ -160,8 +159,7 @@ module Option_module
     PetscInt :: co2eos
     character(len=MAXSTRINGLENGTH) :: co2_database_filename
 
-    PetscBool :: restart_flag
-    PetscReal :: restart_time
+    PetscInt :: restart_flag
     character(len=MAXSTRINGLENGTH) :: restart_filename
     character(len=MAXSTRINGLENGTH) :: input_filename
     
@@ -441,8 +439,7 @@ subroutine OptionInitRealization(option)
   option%surf_subsurf_coupling_flow_dt = 0.d0
   option%surf_initialize_flow_filename = ""
   option%surf_restart_filename = ""
-  option%surf_restart_flag = PETSC_FALSE
-  option%surf_restart_time = UNINITIALIZED_DOUBLE
+  option%surf_restart_flag = RESTART_OFF
 
   option%geomech_on = PETSC_FALSE
   option%geomech_initial = PETSC_FALSE
@@ -512,9 +509,8 @@ subroutine OptionInitRealization(option)
   
 !  option%disp = 0.d0
   
-  option%restart_flag = PETSC_FALSE
+  option%restart_flag = RESTART_OFF
   option%restart_filename = ""
-  option%restart_time = UNINITIALIZED_DOUBLE
   
   option%wallclock_start_time = 0.d0
   option%wallclock_stop_flag = PETSC_FALSE
@@ -536,7 +532,7 @@ subroutine OptionInitRealization(option)
   option%tran_dt = 0.d0
   option%dt = 0.d0
   option%refactor_dt = 0.d0
-  option%start_time = 0.d0
+  option%initial_time = 0.d0
   option%match_waypoint = PETSC_FALSE
 
   option%io_handshake_buffer_size = 0
@@ -609,9 +605,12 @@ subroutine OptionCheckCommandLine(option)
                            PETSC_NULL_CHARACTER, "-use_mc", &
                            option%use_mc, ierr);CHKERRQ(ierr)
                            
+  option_found = PETSC_FALSE
   call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER, &
                              '-restart', option%restart_filename, &
-                             option%restart_flag, ierr);CHKERRQ(ierr)
+                             option_found, ierr);CHKERRQ(ierr)
+  if (option_found) option%restart_flag = RESTART_FROM_END_OF_SIMULATION
+
   ! check on possible modes                                                     
   option_found = PETSC_FALSE
   call PetscOptionsHasName(PETSC_NULL_OPTIONS, &

@@ -44,7 +44,6 @@ module Timestepper_Base_class
     
     PetscBool :: time_step_cut_flag  ! flag toggled if timestep is cut
 
-    PetscLogDouble :: start_time    
     PetscInt :: start_time_step ! the first time step of a given run
     PetscReal :: time_step_tolerance ! scalar used in determining time step size
     PetscReal :: target_time    ! time at end of "synchronized" time step 
@@ -150,7 +149,6 @@ subroutine TimestepperBaseInit(this)
   this%cumulative_time_step_cuts = 0    
   this%cumulative_solver_time = 0.d0
 
-  this%start_time = 0.d0  
   this%start_time_step = 0
   this%time_step_tolerance = 0.1d0
   this%target_time = 0.d0
@@ -185,8 +183,8 @@ subroutine TimestepperBaseInitializeRun(this,option)
   ! Author: Glenn Hammond
   ! Date: 11/21/14
   ! 
-
   use Option_module
+  use Utility_module, only : Equal
   
   implicit none
 
@@ -196,10 +194,9 @@ subroutine TimestepperBaseInitializeRun(this,option)
   call this%PrintInfo(option)
   option%time = this%target_time
   ! For the case where the second waypoint is a printout after the first time 
-  ! step, we must increment the waypoint beyond the first (time=0.) waypoint.  
-  ! Otherwise the second time step will be zero. - geh
-  !TOOD(geh): replace with start time
-  if (this%cur_waypoint%time < 1.d-40) then
+  ! step, we must increment the waypoint beyond the first (time=initial_time) 
+  !waypoint.  Otherwise the second time step will be zero. - geh
+  if (Equal(this%cur_waypoint%time,option%initial_time)) then
     this%cur_waypoint => this%cur_waypoint%next
   endif
 
@@ -855,7 +852,7 @@ subroutine TimestepperBaseReset(this,option)
   class(timestepper_base_type) :: this
   type(option_type) :: option
   
-  this%target_time = option%start_time
+  this%target_time = option%initial_time
   this%dt = this%dt_init
   this%prev_dt = 0.d0
   this%steps = 0
@@ -884,21 +881,21 @@ function TimestepperBaseWallClockStop(this,option)
   class(timestepper_base_type) :: this
   type(option_type) :: option
   
-  PetscBool :: TimestepperBaseWallclockStop
+  PetscBool :: TimestepperBaseWallClockStop
   PetscLogDouble :: current_time, average_step_time
   PetscErrorCode :: ierr
   
   ! if a simulation wallclock duration time is set, check to see that the
   ! next time step will not exceed that value.  If it does, print the
   ! checkpoint and exit
-  TimestepperBaseWallclockStop = PETSC_FALSE
+  TimestepperBaseWallClockStop = PETSC_FALSE
   if (option%wallclock_stop_flag) then
     call PetscTime(current_time, ierr)
-    average_step_time = (current_time-option%start_time)/ &
+    average_step_time = (current_time-option%wallclock_start_time)/ &
                         dble(this%steps-this%start_time_step+1) &
                         *2.d0  ! just to be safe, double it
     if (average_step_time + current_time > option%wallclock_stop_time) then
-      TimestepperBaseWallclockStop = PETSC_TRUE
+      TimestepperBaseWallClockStop = PETSC_TRUE
     endif
   endif
   

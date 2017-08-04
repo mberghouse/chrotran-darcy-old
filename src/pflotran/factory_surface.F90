@@ -138,7 +138,7 @@ subroutine SurfaceJumpStart(simulation)
   failure = PETSC_FALSE
   
 #if 0
-  if (option%restart_flag) then
+  if (option%restart_flag /= RESTART_OFF) then
     call SurfaceRestart(surf_realization,surf_flow_prev_dt,surf_flow_read)
 
     if (option%time /= option%surf_flow_time) then
@@ -829,17 +829,6 @@ subroutine SurfaceReadInput(surf_realization,surf_flow_solver,waypoint_list, &
       case ('SURF_RESTART')
         option%io_buffer = 'The SURF_RESTART card within SURFACE_FLOW &
                            &block has been deprecated.'      
-        !option%surf_restart_flag = PETSC_TRUE
-        !call InputReadNChars(input,option,option%surf_restart_filename, &
-        !                     MAXSTRINGLENGTH,PETSC_TRUE)
-        !call InputErrorMsg(input,option,'SURF_RESTART','Surface restart &
-        !                                               &file name') 
-        !call InputReadDouble(input,option,option%restart_time)
-        !if (input%ierr == 0) then
-        !  call printErrMsg(option,'Setting time to value not supported in &
-        !                          &surface-flow')
-        !endif
-        !option%first_step_after_restart = PETSC_TRUE
 
 !......................
 
@@ -859,7 +848,7 @@ subroutine SurfaceReadInput(surf_realization,surf_flow_solver,waypoint_list, &
     end select
   enddo
 
-  if (option%restart_flag .neqv. option%surf_restart_flag) then
+  if (option%restart_flag /= option%surf_restart_flag) then
     option%io_buffer='option%restart_flag /= option%surf_restart_flag'
     call printErrMsg(option)
   endif

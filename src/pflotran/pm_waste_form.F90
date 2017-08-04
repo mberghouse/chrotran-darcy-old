@@ -2313,7 +2313,7 @@ end subroutine PMWFSetup
   enddo
   
   ! restart
-  if (this%option%restart_flag .and. &
+  if (this%option%restart_flag /= RESTART_OFF .and. &
       this%option%overwrite_restart_transport) then
   endif
   
@@ -3677,7 +3677,7 @@ subroutine PMWFOutputHeader(this)
 ! fid: [-] file id number
 ! icolumn: [-] column number
 ! i: [-] looping index integer
-! exist: Boolean helper to check is file exists
+! exists: Boolean helper to check is file exists
 ! -------------------------------------------------------------
   type(output_option_type), pointer :: output_option
   type(grid_type), pointer :: grid
@@ -3688,7 +3688,7 @@ subroutine PMWFOutputHeader(this)
   character(len=MAXSTRINGLENGTH) :: filename
   PetscInt :: fid
   PetscInt :: icolumn, i
-  PetscBool :: exist
+  PetscBool :: exists
 ! -------------------------------------------------------------
   
   if (.not.associated(this%waste_form_list)) return
@@ -3698,8 +3698,8 @@ subroutine PMWFOutputHeader(this)
   
   fid = 86
   filename = PMWFOutputFilename(this%option)
-  exist = FileExists(trim(filename))
-  if (this%option%restart_flag .and. exist) return
+  exists = FileExists(trim(filename))
+  if (this%option%restart_flag /= RESTART_OFF .and. exists) return
   open(unit=fid,file=filename,action="write",status="replace")  
   
   if (output_option%print_column_ids) then

@@ -319,7 +319,7 @@ recursive subroutine PMRTInitializeRun(this)
   endif
   
   ! restart
-  if (this%option%restart_flag .and. &
+  if (this%option%restart_flag /= RESTART_OFF .and. &
       this%option%overwrite_restart_transport) then
     call RTClearActivityCoefficients(this%realization)
     call CondControlAssignTranInitCond(this%realization)  

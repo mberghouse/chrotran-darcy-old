@@ -253,20 +253,25 @@ subroutine PFLOTRANReadSimulation(simulation,option)
         call CheckpointRead(input,option,checkpoint_option, &
                             checkpoint_waypoint_list)
       case ('RESTART')
-        option%restart_flag = PETSC_TRUE
+        option%restart_flag = RESTART_FROM_END_OF_SIMULATION
         call InputReadNChars(input,option,option%restart_filename, &
                              MAXSTRINGLENGTH,PETSC_TRUE)
         call InputErrorMsg(input,option,'RESTART','Restart file name') 
-        call InputReadDouble(input,option,option%restart_time)
+        call InputReadWord(input,option,word,PETSC_TRUE)
         if (input%ierr == 0) then
-          call InputReadAndConvertUnits(input,option%restart_time, &
-                                        'sec','RESTART,time units',option)
+          call StringToUpper(word)
+          select case(word)
+            case('RESET')
+              option%restart_flag = RESTART_AT_INITIAL_TIME
+            case default
+              call InputKeywordUnrecognized(word,'SIMULATION,RESTART',option)
+          end select
         endif    
       case('INPUT_RECORD_FILE')
         option%input_record = PETSC_TRUE
         call OpenAndWriteInputRecord(option)
       case default
-        call InputKeywordUnrecognized(word,'SIMULATION',option)            
+        call InputKeywordUnrecognized(word,'SIMULATION',option)
     end select
   enddo
   call InputDestroy(input)

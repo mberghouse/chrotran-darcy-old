@@ -938,23 +938,25 @@ end subroutine TimestepperBEGetHeader
 
 ! ************************************************************************** !
 
-subroutine TimestepperBEReset(this)
+subroutine TimestepperBEReset(this,option)
   ! 
   ! Zeros timestepper object members.
   ! 
   ! Author: Glenn Hammond
   ! Date: 01/20/14
   ! 
+  use Option_module
 
   implicit none
 
   class(timestepper_BE_type) :: this
+  type(option_type) :: option
   
   this%cumulative_newton_iterations = 0
   this%cumulative_linear_iterations = 0
   this%num_newton_iterations = 0
 
-  call TimestepperBaseReset(this)
+  call TimestepperBaseReset(this,option)
   
 end subroutine TimestepperBEReset
 

@@ -11,7 +11,7 @@ SIMULATION
       GLOBAL_IMPLICIT
     /
   /
-  RESTART 543_hanford_srfcplx_base-restart.chk 0.d0
+  RESTART 543_hanford_srfcplx_base-restart.chk RESET
 END
 
 SUBSURFACE

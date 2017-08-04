@@ -110,8 +110,9 @@ subroutine GeomechanicsSimulationInitializeRun(this)
   call printMsg(this%option,'Simulation%InitializeRun()')
   call this%process_model_coupler_list%InitializeRun()
 
-  if (this%option%restart_flag) then
-    call printErrMsg(this%option,'add code for restart of GeomechanicsSimulation')
+  if (this%option%restart_flag /= RESTART_OFF) then
+    this%option%io_buffer = 'Add code for restart of GeomechanicsSimulation.'
+    call printErrMsg(this%option)
   endif
 
 end subroutine GeomechanicsSimulationInitializeRun

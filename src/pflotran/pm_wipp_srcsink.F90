@@ -3477,7 +3477,7 @@ subroutine PMWSSOutputHeader(this)
   character(len=MAXWORDLENGTH) :: cell_string
   PetscInt :: fid
   PetscInt :: icolumn
-  PetscBool :: exist
+  PetscBool :: exists
 ! -----------------------------------------------------
   
   if (.not.associated(this%waste_panel_list)) return
@@ -3487,8 +3487,8 @@ subroutine PMWSSOutputHeader(this)
   fid = 88
   filename = PMWSSOutputFilename(this%option)
   ! check if file exists
-  exist = FileExists(trim(filename))
-  if (this%option%restart_flag .and. exist) return
+  exists = FileExists(trim(filename))
+  if (this%option%restart_flag /= RESTART_OFF .and. exists) return
   open(unit=fid,file=filename,action="write",status="replace")
   
   if (output_option%print_column_ids) then

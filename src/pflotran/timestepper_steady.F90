@@ -89,7 +89,6 @@ subroutine TimestepperSteadyCreateFromBE(timestepper_BE)
   stepper%cumulative_time_step_cuts = timestepper_BE%cumulative_time_step_cuts    
   stepper%cumulative_solver_time = timestepper_BE%cumulative_solver_time
 
-  stepper%start_time = timestepper_BE%start_time
   stepper%start_time_step = timestepper_BE%start_time_step
   stepper%time_step_tolerance = timestepper_BE%time_step_tolerance
   stepper%target_time = timestepper_BE%target_time
