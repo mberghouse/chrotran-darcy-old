@@ -113,6 +113,9 @@ class RegressionTest(object):
         self._check_performance = False
         self._num_failed = 0
         self._test_name = None
+        # gold file name allows one to compare at test against a gold file
+        # with a different root filename.
+        self._alternate_regression_gold_filename = None
         self._ascii_output_filenames = None
         # assign default tolerances for different classes of variables
         # absolute min and max thresholds for determining whether to
@@ -403,7 +406,10 @@ class RegressionTest(object):
             return
 
         if not self._skip_check_regression:
-            gold_filename = self.name() + run_id + ".regression.gold"
+            if self._alternate_regression_gold_filename is None:
+              gold_filename = self.name() + run_id + ".regression.gold"
+            else:
+              gold_filename = self._alternate_regression_gold_filename
             current_filename = self.name() + run_id + ".regression"
             # this routine is defined below
             self._compare_regression_files(current_filename,gold_filename,
@@ -1074,6 +1080,8 @@ class RegressionTest(object):
         self._timeout = float(test_data.pop('timeout', self._timeout))
         if timeout:
             self._timeout = float(timeout[0])
+
+        self._alternate_regression_gold_filename = test_data.pop('alternate_regression_gold_filename',None)
 
         self._ascii_output_filenames = test_data.pop('compare_ascii_output', 
                                                      None)
