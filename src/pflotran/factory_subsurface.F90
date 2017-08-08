@@ -1696,6 +1696,7 @@ subroutine SubsurfaceReadInput(simulation)
   PetscBool :: energy_flowrate
   PetscBool :: aveg_mass_flowrate
   PetscBool :: aveg_energy_flowrate
+  PetscBool :: initial_time_set
   
   type(region_type), pointer :: region
   type(flow_condition_type), pointer :: flow_condition
@@ -2882,6 +2883,7 @@ subroutine SubsurfaceReadInput(simulation)
 !        dt_init = UNINITIALIZED_DOUBLE
         dt_init = 1.d0
         dt_min = UNINITIALIZED_DOUBLE
+        initial_time_set = PETSC_FALSE
         do
           call InputReadPflotranString(input,option)
           call InputReadStringErrorMsg(input,option,card)
@@ -2891,6 +2893,20 @@ subroutine SubsurfaceReadInput(simulation)
           select case(trim(word))
             case('STEADY_STATE')
               option%steady_state = PETSC_TRUE
+            case('INITIAL_TIME')
+              initial_time_set = PETSC_TRUE
+              call InputReadDouble(input,option,temp_real)
+              call InputErrorMsg(input,option,'Initial Time','TIME') 
+              call InputReadWord(input,option,word,PETSC_TRUE)
+              call InputErrorMsg(input,option,'Initial Time Units','TIME')
+              internal_units = 'sec'
+              temp_real2 = UnitsConvertToInternal(word,internal_units,option)
+              waypoint => WaypointCreate()
+              !TODO(geh): remove option%initial_time. we should be able to key
+              !           off waypoint times instead.
+              option%initial_time = temp_real*temp_real2
+              waypoint%time = option%initial_time
+              call WaypointInsertInList(waypoint,waypoint_list)
             case('FINAL_TIME')
               call InputReadDouble(input,option,temp_real)
               call InputErrorMsg(input,option,'Final Time','TIME') 
@@ -2979,6 +2995,12 @@ subroutine SubsurfaceReadInput(simulation)
           if (associated(tran_timestepper)) then
             tran_timestepper%dt_min = dt_min
           endif
+        endif
+        if (.not. initial_time_set) then
+          waypoint => WaypointCreate()
+          option%initial_time = 0.d0
+          waypoint%time = option%initial_time
+          call WaypointInsertInList(waypoint,waypoint_list)
         endif
 
 !......................
