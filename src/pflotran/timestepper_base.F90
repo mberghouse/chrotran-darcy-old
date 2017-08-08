@@ -1,6 +1,7 @@
 module Timestepper_Base_class
  
 #include "petsc/finclude/petscsys.h"
+  use petscsys
   use Waypoint_module 
  
   use PFLOTRAN_Constants_module
@@ -131,8 +132,6 @@ subroutine TimestepperBaseInit(this)
   ! Date: 07/01/13
   ! 
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   implicit none
   
   class(timestepper_base_type) :: this
@@ -175,7 +174,8 @@ end subroutine TimestepperBaseInit
 
 ! ************************************************************************** !
 
-subroutine TimestepperBaseInitializeRun(this,option)
+subroutine TimestepperBaseInitializeRun(this,waypoint_list,option, &
+                                        output_option)
   ! 
   ! Initializes the timestepper for the simulation.  This is more than just
   ! initializing parameters.
@@ -184,26 +184,45 @@ subroutine TimestepperBaseInitializeRun(this,option)
   ! Date: 11/21/14
   ! 
   use Option_module
-  use Utility_module, only : Equal
+  use Waypoint_module
+  use Output_Aux_module
   
   implicit none
 
   class(timestepper_base_type) :: this
+  type(waypoint_list_type) :: waypoint_list
   type(option_type) :: option
+  type(output_option_type) :: output_option
   
   call this%PrintInfo(option)
-  if (option%restart_flag == RESTART_OFF) then
-    ! at this point, target_time should be set to the initial time, unless
-    ! restarting.
+  this%cur_waypoint => waypoint_list%first
+  if (option%restart_flag == RESTART_FROM_CHECKPOINT_TIME) then
+    !geh: there is a problem here in that the timesteppers "prev_waypoint"
+    !     may not be set correctly if the time step does not converge. See
+    !     top of TimestepperBaseSetTargetTime().
+    call WaypointSkipToTime(this%cur_waypoint,this%target_time)
+    ! check to ensure that simulation is not restarted beyond the end of the
+    ! prescribed final simulation time.
+    if (.not.associated(this%cur_waypoint)) then
+      write(option%io_buffer,*) this%target_time*output_option%tconv
+      option%io_buffer = 'Simulation is being restarted at a time that &
+        &is at or beyond the end of checkpointed simulation (' // &
+        trim(adjustl(option%io_buffer)) // trim(output_option%tunit) // ').'
+      call printErrMsg(option)
+    endif
+    option%time = this%target_time
+  else
+    if (option%restart_flag == RESTART_AT_INITIAL_TIME) then
+      call this%Reset()
+    endif
+    ! the first waypoint is the initial time.
     this%target_time = this%cur_waypoint%time
-  endif
-  option%time = this%target_time
-  ! For the case where the second waypoint is a printout after the first time 
-  ! step, we must increment the waypoint beyond the first (time=initial_time) 
-  !waypoint.  Otherwise the second time step will be zero. - geh
-  if (Equal(this%cur_waypoint%time,option%initial_time)) then
+    ! the first waypoint is always at the beginning of the simulation. need to
+    ! skip to the next (2nd) waypoint, but only after target_time has been set.
     this%cur_waypoint => this%cur_waypoint%next
   endif
+  ! option%time is used to update boundary conditions during initialization.
+  option%time = this%target_time
 
 end subroutine TimestepperBaseInitializeRun
 
@@ -240,9 +259,6 @@ subroutine TimestepperBaseProcessKeyword(this,input,option,keyword)
   ! Author: Glenn Hammond
   ! Date: 03/20/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   use String_module
   use Input_Aux_module
@@ -334,9 +350,6 @@ subroutine TimestepperBaseSetTargetTime(this,sync_time,option,stop_flag, &
   ! Author: Glenn Hammond
   ! Date: 03/20/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   
   implicit none
@@ -640,14 +653,9 @@ subroutine TimestepperBaseCheckpointBinary(this,viewer,option)
   ! Author: Glenn Hammond
   ! Date: 07/25/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
-
-
 
   class(timestepper_base_type) :: this
   PetscViewer :: viewer
@@ -713,8 +721,6 @@ subroutine TimestepperBaseRegisterHeader(this,bag,header)
   ! Author: Glenn Hammond
   ! Date: 07/30/13
   ! 
-#include "petsc/finclude/petscsys.h"  
-  use petscsys
   use Option_module
 
   implicit none
@@ -754,9 +760,6 @@ subroutine TimestepperBaseSetHeader(this,bag,header)
   ! Author: Glenn Hammond
   ! Date: 07/25/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
@@ -792,9 +795,6 @@ subroutine TimestepperBaseRestartBinary(this,viewer,option)
   ! Author: Glenn Hammond
   ! Date: 07/25/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
@@ -817,9 +817,6 @@ subroutine TimestepperBaseGetHeader(this,header)
   ! Author: Glenn Hammond
   ! Date: 07/25/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
@@ -841,23 +838,19 @@ end subroutine TimestepperBaseGetHeader
 
 ! ************************************************************************** !
 
-subroutine TimestepperBaseReset(this,option)
+subroutine TimestepperBaseReset(this)
   ! 
   ! Zeros timestepper object members.
   ! 
   ! Author: Glenn Hammond
   ! Date: 01/20/14
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
-  use Option_module
   
   implicit none
 
   class(timestepper_base_type) :: this
-  type(option_type) :: option
   
-  this%target_time = option%initial_time
+  this%target_time = 0.d0
   this%dt = this%dt_init
   this%prev_dt = 0.d0
   this%steps = 0
@@ -877,8 +870,6 @@ function TimestepperBaseWallClockStop(this,option)
   ! Author: Glenn Hammond
   ! Date: 08/08/14
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
@@ -934,9 +925,6 @@ recursive subroutine TimestepperBaseFinalizeRun(this,option)
   ! Author: Glenn Hammond
   ! Date: 07/22/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   
   implicit none

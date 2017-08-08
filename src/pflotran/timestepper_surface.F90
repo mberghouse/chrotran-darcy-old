@@ -421,7 +421,7 @@ end subroutine TimestepperSurfaceGetHeader
 
 ! ************************************************************************** !
 
-subroutine TimestepperSurfaceReset(this,option)
+subroutine TimestepperSurfaceReset(this)
 
   use Option_module
 
@@ -438,10 +438,11 @@ subroutine TimestepperSurfaceReset(this,option)
   this%dt_max_allowable = header%dt_max_allowable
   this%surf_subsurf_coupling_flow_dt = header%surf_subsurf_coupling_flow_dt
 
-  call TimestepperBaseReset(this,option)
+  call TimestepperBaseReset(this)
 
-  !TODO(Gautam): this%target_time is set to 0.d0 in TimestepperBaseReset(). Is
-  !              that OK? - Glenn
+  !TODO(Gautam): this%target_time is set to the initial simulation time in
+  !              TimestepperBaseInitializeRun(), which will be called after
+  !              this subroutines.
   call TSSetTime(this%solver%ts,this%target_time,ierr);CHKERRQ(ierr)
 #endif
 

@@ -303,7 +303,7 @@ module PFLOTRAN_Constants_module
   ! restart flags
   PetscInt, parameter, public :: RESTART_OFF = 0
   PetscInt, parameter, public :: RESTART_AT_INITIAL_TIME = 1
-  PetscInt, parameter, public :: RESTART_FROM_END_OF_SIMULATION = 2
+  PetscInt, parameter, public :: RESTART_FROM_CHECKPOINT_TIME = 2
   
   ! Dummy value
   PetscReal, parameter, public :: DUMMY_VALUE = UNINITIALIZED_DOUBLE

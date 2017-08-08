@@ -1027,20 +1027,6 @@ subroutine SubsurfaceInitSimulation(simulation)
                                     simulation%waypoint_list_subsurface)
   
   !TODO(geh): refactor
-  if (associated(simulation%flow_process_model_coupler)) then
-    if (associated(simulation%flow_process_model_coupler%timestepper)) then
-      simulation%flow_process_model_coupler%timestepper%cur_waypoint => &
-        simulation%waypoint_list_subsurface%first
-    endif
-  endif
-  if (associated(simulation%rt_process_model_coupler)) then
-    if (associated(simulation%rt_process_model_coupler%timestepper)) then
-      simulation%rt_process_model_coupler%timestepper%cur_waypoint => &
-        simulation%waypoint_list_subsurface%first
-    endif
-  endif
-  
-  !TODO(geh): refactor
   ! initialize global auxiliary variable object
   call GlobalSetup(realization)
   

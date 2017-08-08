@@ -938,7 +938,7 @@ end subroutine TimestepperBEGetHeader
 
 ! ************************************************************************** !
 
-subroutine TimestepperBEReset(this,option)
+subroutine TimestepperBEReset(this)
   ! 
   ! Zeros timestepper object members.
   ! 
@@ -956,7 +956,7 @@ subroutine TimestepperBEReset(this,option)
   this%cumulative_linear_iterations = 0
   this%num_newton_iterations = 0
 
-  call TimestepperBaseReset(this,option)
+  call TimestepperBaseReset(this)
   
 end subroutine TimestepperBEReset
 
