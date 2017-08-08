@@ -393,7 +393,8 @@ recursive subroutine InitializeRun(this)
 #endif
   
   if (associated(this%timestepper)) then
-    call this%timestepper%InitializeRun(this%option)
+    call this%timestepper%InitializeRun(this%waypoint_list,this%option, &
+                                        this%pm_list%output_option)
   endif
   cur_pm => this%pm_list
   do
@@ -976,33 +977,6 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
   
   if (associated(this%timestepper)) then
     call this%timestepper%RestartBinary(viewer,this%option)
-    if (this%option%restart_flag == RESTART_AT_INITIAL_TIME) then
-      ! simply a flag to set time back to initial_time
-      !TODO(geh): pass in waypoint_list%first%time instead for the initial time
-      call this%timestepper%Reset(this%option)
-    endif
-  
-    ! Point cur_waypoint to the correct waypoint.
-    !geh: there is a problem here in that the timesteppers "prev_waypoint"
-    !     may not be set correctly if the time step does not converge. See
-    !     top of TimestepperBaseSetTargetTime().
-    call WaypointSkipToTime(this%timestepper%cur_waypoint, &
-                            this%timestepper%target_time)
-    !geh: this is a bit of a kludge.  Need to use the timestepper target time
-    !     directly.  Time is needed to update boundary conditions within 
-    !     this%UpdateSolution
-    ! check to ensure that simulation is not restarted beyond the end of the
-    ! prescribed final simulation time.
-    if (.not.associated(this%timestepper%cur_waypoint)) then
-      write(this%option%io_buffer,*) this%timestepper%target_time* &
-        this%pm_list%realization_base%output_option%tconv
-      this%option%io_buffer = 'Simulation is being restarted at a time that &
-        &is at or beyond the end of checkpointed simulation (' // &
-        trim(adjustl(this%option%io_buffer)) // &
-        trim(this%pm_list%realization_base%output_option%tunit) // ').'
-      call printErrMsg(this%option)
-    endif
-    this%option%time = this%timestepper%target_time
   endif
   
   cur_pm => this%pm_list
@@ -1060,13 +1034,16 @@ subroutine PMCBaseGetHeader(this,header)
   if (header%times_per_h5_file /= &
       this%pm_list%realization_base%output_option%times_per_h5_file) then
     write(string,*) header%times_per_h5_file
-    this%option%io_buffer = 'From checkpoint file: times_per_h5_file ' // trim(string)
+    this%option%io_buffer = 'From checkpoint file: times_per_h5_file ' // &
+                            trim(string)
     call printMsg(this%option)
-    write(string,*) this%pm_list%realization_base%output_option%times_per_h5_file
-    this%option%io_buffer = 'From inputdeck      : times_per_h5_file ' // trim(string)
+    write(string,*) &
+      this%pm_list%realization_base%output_option%times_per_h5_file
+    this%option%io_buffer = 'From inputdeck      : times_per_h5_file ' // &
+                            trim(string)
     call printMsg(this%option)
-    this%option%io_buffer = 'times_per_h5_file specified in inputdeck does not ' // &
-      'match that stored in checkpoint file. Correct the inputdeck.'
+    this%option%io_buffer = 'times_per_h5_file specified in inputdeck does &
+      &not match that stored in checkpoint file. Correct the inputdeck.'
     call printErrMsg(this%option)
   endif
 
@@ -1257,33 +1234,6 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
   if (associated(this%timestepper)) then
     pmc_grp_id = h5_pmc_grp_id
     call this%timestepper%RestartHDF5(pmc_grp_id, this%option)
-
-    if (this%option%restart_flag == RESTART_AT_INITIAL_TIME) then
-      ! simply a flag to set time back to the initial_time
-      call this%timestepper%Reset(this%option)
-    endif
-
-    ! Point cur_waypoint to the correct waypoint.
-    !geh: there is a problem here in that the timesteppers "prev_waypoint"
-    !     may not be set correctly if the time step does not converge. See
-    !     top of TimestepperBaseSetTargetTime().
-    call WaypointSkipToTime(this%timestepper%cur_waypoint, &
-                            this%timestepper%target_time)
-    !geh: this is a bit of a kludge.  Need to use the timestepper target time
-    !     directly.  Time is needed to update boundary conditions within
-    !     this%UpdateSolution
-    ! check to ensure that simulation is not restarted beyond the end of the
-    ! prescribed final simulation time.
-    if (.not.associated(this%timestepper%cur_waypoint)) then
-      write(this%option%io_buffer,*) this%timestepper%target_time/ &
-        this%pm_list%realization_base%output_option%tconv
-      this%option%io_buffer = 'Simulation is being restarted at a time that &
-        &is at or beyond the end of checkpointed simulation (' // &
-        trim(adjustl(this%option%io_buffer)) // &
-        trim(this%pm_list%realization_base%output_option%tunit) // ').'
-      call printErrMsg(this%option)
-    endif
-    this%option%time = this%timestepper%target_time
   endif
 
   cur_pm => this%pm_list
