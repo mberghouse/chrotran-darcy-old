@@ -131,7 +131,6 @@ module Option_module
     PetscReal :: dt
     PetscBool :: match_waypoint
     PetscReal :: refactor_dt
-    PetscReal :: initial_time  ! allows for a non-zero initial simulation time
   
     PetscReal :: gravity(3)
     
@@ -532,7 +531,6 @@ subroutine OptionInitRealization(option)
   option%tran_dt = 0.d0
   option%dt = 0.d0
   option%refactor_dt = 0.d0
-  option%initial_time = 0.d0
   option%match_waypoint = PETSC_FALSE
 
   option%io_handshake_buffer_size = 0
@@ -609,7 +607,7 @@ subroutine OptionCheckCommandLine(option)
   call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER, &
                              '-restart', option%restart_filename, &
                              option_found, ierr);CHKERRQ(ierr)
-  if (option_found) option%restart_flag = RESTART_FROM_END_OF_SIMULATION
+  if (option_found) option%restart_flag = RESTART_FROM_CHECKPOINT_TIME
 
   ! check on possible modes                                                     
   option_found = PETSC_FALSE

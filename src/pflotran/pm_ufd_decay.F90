@@ -873,7 +873,7 @@ end subroutine PMUFDDecaySetRealization
 
 ! ************************************************************************** !
 
-recursive subroutine PMUFDDecayInitializeRun(this)
+recursive subroutine PMUFDDecayInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -889,8 +889,10 @@ recursive subroutine PMUFDDecayInitializeRun(this)
 ! INPUT ARGUMENTS:
 ! ================
 ! this (input/output): UFD Decay process model object
+! initial_time: start time of simulation which can be negative
 ! --------------------------------
   class(pm_ufd_decay_type) :: this
+  PetscReal :: initial_time
 ! --------------------------------
   
 ! LOCAL VARIABLES:

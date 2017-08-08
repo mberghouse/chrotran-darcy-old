@@ -251,7 +251,7 @@ end subroutine PMAuxiliarySetFunctionPointer
 
 ! ************************************************************************** !
 
-recursive subroutine PMAuxiliaryInitializeRun(this)
+recursive subroutine PMAuxiliaryInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -263,13 +263,12 @@ recursive subroutine PMAuxiliaryInitializeRun(this)
   implicit none
 
   class(pm_auxiliary_type) :: this
+  PetscReal :: initial_time
   
-  PetscReal :: time
   PetscInt :: i
   PetscErrorCode :: ierr
   
   ierr = 0
-  time = 0.d0
   select case(this%ctype)
     case('EVOLVING_STRATA')
 !      call MatSetOption(Jacobian,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_FALSE, &
@@ -288,7 +287,7 @@ recursive subroutine PMAuxiliaryInitializeRun(this)
             reaction%primary_spec_molar_wt(this%salinity%ispecies(i))
         endif
       enddo
-      call this%Evaluate(time,ierr)
+      call this%Evaluate(initial_time,ierr)
   end select  
 
 end subroutine PMAuxiliaryInitializeRun

@@ -231,7 +231,7 @@ end subroutine PMGeneralRead
 
 ! ************************************************************************** !
 
-recursive subroutine PMGeneralInitializeRun(this)
+recursive subroutine PMGeneralInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -243,6 +243,7 @@ recursive subroutine PMGeneralInitializeRun(this)
   implicit none
   
   class(pm_general_type) :: this
+  PetscReal :: initial_time
   
   PetscInt :: i
   PetscErrorCode :: ierr
@@ -260,7 +261,7 @@ recursive subroutine PMGeneralInitializeRun(this)
   enddo
 
   ! call parent implementation
-  call PMSubsurfaceFlowInitializeRun(this)
+  call PMSubsurfaceFlowInitializeRun(this,initial_time)
 
 end subroutine PMGeneralInitializeRun
 

@@ -52,6 +52,7 @@ module Waypoint_module
             WaypointSkipToTime, &
             WaypointForceMatchToTime, &
             WaypointListPrint, &
+            WaypointListGetInitialTime, &
             WaypointListGetFinalTime, &
             WaypointCreateSyncWaypointList, &
             WaypointInputRecord
@@ -909,6 +910,33 @@ subroutine WaypointInputRecord(output_option,waypoint_list)
   write(id,'(a)') adjustl(trim(word1)) // ' ' // trim(output_option%tunit)
 
 end subroutine WaypointInputRecord
+
+! ************************************************************************** !
+
+function WaypointListGetInitialTime(waypoint_list)
+  ! 
+  ! Returns the initial time in the waypoint list
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 08/08/17
+  ! 
+  implicit none
+  
+  type(waypoint_list_type) :: waypoint_list
+  
+  PetscReal :: WaypointListGetInitialTime
+  
+  type(waypoint_type), pointer :: cur_waypoint
+
+  ! initialize to negative infinity
+  WaypointListGetInitialTime = 1.d20
+  
+  cur_waypoint => waypoint_list%first
+  if (associated(cur_waypoint)) then
+    WaypointListGetInitialTime = cur_waypoint%time
+  endif
+  
+end function WaypointListGetInitialTime 
 
 ! ************************************************************************** !
 

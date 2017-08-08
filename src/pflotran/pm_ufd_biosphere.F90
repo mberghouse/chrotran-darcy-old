@@ -115,7 +115,7 @@ function PMUFDBCreate()
   nullify(PMUFDBCreate%ERB_list)
   nullify(PMUFDBCreate%unsupported_rad_list)
   nullify(PMUFDBCreate%supported_rad_list)
-  PMUFDBCreate%output_start_time = 0.d0  ! [sec] default value
+  PMUFDBCreate%output_start_time = UNINITIALIZED_DOUBLE
   PMUFDBCreate%unsupp_rads_needed = PETSC_FALSE
   PMUFDBCreate%name = 'ufd biosphere'
 
@@ -1274,7 +1274,7 @@ end subroutine PMUFDBAllocateERBarrays
 
 ! ************************************************************************** !
 
-subroutine PMUFDBInitializeRun(this)
+subroutine PMUFDBInitializeRun(this,initial_time)
   ! 
   ! Initializes the process model for the simulation.
   ! 
@@ -1282,16 +1282,21 @@ subroutine PMUFDBInitializeRun(this)
   ! Date: 03/13/2017
   !
   
+  
   implicit none
 
   class(pm_ufd_biosphere_type) :: this
-  
+  PetscReal :: initial_time
+
   PetscErrorCode :: ierr
   
   ierr = 0
   
+  if (Uninitialized(this%output_start_time)) then
+    this%output_start_time = initial_time
+  endif
   call PMUFDBOutputHeader(this)
-  call PMUFDBSolve(this,0.d0,ierr)
+  call PMUFDBSolve(this,initial_time,ierr)
   
 end subroutine PMUFDBInitializeRun
 

@@ -11,7 +11,7 @@ SIMULATION
       GLOBAL_IMPLICIT
     /
   /
-  RESTART 543_hanford_srfcplx_base-restart.chk RESET
+  RESTART 543_hanford_srfcplx_base-restart.chk RESET_TO_INITIAL_TIME
 END
 
 SUBSURFACE

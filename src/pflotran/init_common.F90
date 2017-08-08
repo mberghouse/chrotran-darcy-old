@@ -680,6 +680,7 @@ subroutine InitCommonAddOutputWaypoints(option,output_option,waypoint_list)
   type(waypoint_type), pointer :: waypoint
   character(len=MAXWORDLENGTH) :: word
   PetscReal :: temp_real
+  PetscReal :: initial_time
   PetscReal :: final_time
   PetscReal :: num_waypoints, warning_num_waypoints
   PetscInt :: k
@@ -687,6 +688,7 @@ subroutine InitCommonAddOutputWaypoints(option,output_option,waypoint_list)
   !geh: The repetitive summation of a time increment can result in slight 
   !     error.   The perturbation is designed to allow for a slight shift 
   !     beyond the final time.
+  initial_time = WaypointListGetInitialTime(waypoint_list)
   final_time = WaypointListGetFinalTime(waypoint_list)
   temp_real = final_time * 1.d-10
   final_time = final_time + temp_real
@@ -694,7 +696,7 @@ subroutine InitCommonAddOutputWaypoints(option,output_option,waypoint_list)
   
   ! Add waypoints for periodic snapshot output
   if (output_option%periodic_snap_output_time_incr > 0.d0) then
-    temp_real = 0.d0
+    temp_real = initial_time
     num_waypoints = final_time / output_option%periodic_snap_output_time_incr
     if ((num_waypoints > warning_num_waypoints) .and. &
         OptionPrintToScreen(option)) then
@@ -722,7 +724,7 @@ subroutine InitCommonAddOutputWaypoints(option,output_option,waypoint_list)
 
   ! Add waypoints for periodic observation output
   if (output_option%periodic_obs_output_time_incr > 0.d0) then
-    temp_real = 0.d0
+    temp_real = initial_time
     num_waypoints = final_time / output_option%periodic_obs_output_time_incr
     if ((num_waypoints > warning_num_waypoints) .and. &
         OptionPrintToScreen(option)) then
@@ -750,7 +752,7 @@ subroutine InitCommonAddOutputWaypoints(option,output_option,waypoint_list)
 
   ! Add waypoints for periodic mass balance output
   if (output_option%periodic_msbl_output_time_incr > 0.d0) then
-    temp_real = 0.d0
+    temp_real = initial_time
     num_waypoints = final_time / output_option%periodic_msbl_output_time_incr
     if ((num_waypoints > warning_num_waypoints) .and. &
         OptionPrintToScreen(option)) then

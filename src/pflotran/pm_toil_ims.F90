@@ -196,7 +196,7 @@ end subroutine PMTOilImsRead
 
 ! ************************************************************************** !
 
-recursive subroutine PMTOilImsInitializeRun(this)
+recursive subroutine PMTOilImsInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -208,6 +208,7 @@ recursive subroutine PMTOilImsInitializeRun(this)
   implicit none
   
   class(pm_toil_ims_type) :: this
+  PetscReal :: initial_time
   
   PetscInt :: i
   PetscErrorCode :: ierr
@@ -226,7 +227,7 @@ recursive subroutine PMTOilImsInitializeRun(this)
 
 
   ! call parent implementation
-  call PMSubsurfaceFlowInitializeRun(this)
+  call PMSubsurfaceFlowInitializeRun(this,initial_time)
 
 end subroutine PMTOilImsInitializeRun
 

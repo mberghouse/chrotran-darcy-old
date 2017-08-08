@@ -24,7 +24,7 @@ module PM_Base_class
   contains
     procedure, public :: Setup => PMBaseSetup
     procedure, public :: Read => PMBaseRead
-    procedure, public :: InitializeRun => PMBaseThisOnly
+    procedure, public :: InitializeRun => PMBaseInitializeRun
     procedure, public :: InputRecord => PMBaseInputRecord
     procedure, public :: FinalizeRun => PMBaseThisOnly
     procedure, public :: Residual => PMBaseResidual
@@ -195,13 +195,13 @@ end subroutine PMBaseThisOnly
 
 ! ************************************************************************** !
 
-subroutine PMBaseThisTime(this,time)
+subroutine PMBaseInitializeRun(this,initial_time)
   implicit none
   class(pm_base_type) :: this
-  PetscReal :: time
-  print *, 'Must extend PMBaseThisTime for: ' // trim(this%name)
+  PetscReal :: initial_time
+  print *, 'Must extend PMBaseThisDouble for: ' // trim(this%name)
   stop
-end subroutine PMBaseThisTime
+end subroutine PMBaseInitializeRun
 
 ! ************************************************************************** !
 
@@ -210,7 +210,7 @@ subroutine PMBaseThisTimeError(this,time,ierr)
   class(pm_base_type) :: this
   PetscReal :: time
   PetscErrorCode :: ierr
-  print *, 'Must extend PMBaseThisTimeError for: ' // trim(this%name)
+  print *, 'Must extend PMBaseThisDoubleError for: ' // trim(this%name)
   stop
 end subroutine PMBaseThisTimeError
 
