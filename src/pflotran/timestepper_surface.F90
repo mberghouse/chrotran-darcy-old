@@ -143,10 +143,6 @@ subroutine TimestepperSurfaceSetTargetTime(this,sync_time,option,stop_flag, &
   observation_plot_flag = PETSC_FALSE
   massbal_plot_flag = PETSC_FALSE
   
-  if (Equal(cur_waypoint%time,option%initial_time)) then
-    cur_waypoint => cur_waypoint%next
-  endif
-
   force_to_match_waypoint = WaypointForceMatchToTime(cur_waypoint)
   equal_to_or_exceeds_waypoint = target_time + tolerance*dt >= cur_waypoint%time
   equal_to_or_exceeds_sync_time = target_time + tolerance*dt >= sync_time

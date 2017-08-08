@@ -472,7 +472,7 @@ function PMWSSCreate()
   pm%probdeg = UNINITIALIZED_INTEGER
   pm%bioidx = UNINITIALIZED_INTEGER
   pm%plasidx = UNINITIALIZED_INTEGER
-  pm%output_start_time = 0.d0  ! [sec] default value
+  pm%output_start_time = UNINITIALIZED_DOUBLE
   pm%stoic_mat = UNINITIALIZED_DOUBLE
   
   call PMBaseInit(pm)
@@ -2268,7 +2268,7 @@ end subroutine PMWSSChemSpeciesAllocate
 
 ! ************************************************************************** !
 
-subroutine PMWSSInitializeRun(this)
+subroutine PMWSSInitializeRun(this,initial_time)
   ! 
   ! Initializes the process model for the simulation.
   ! 
@@ -2286,8 +2286,10 @@ subroutine PMWSSInitializeRun(this)
 ! INPUT ARGUMENTS:
 ! ================
 ! this (input/ouput): wipp-srcsink process model object
+! initial_time: start time of simulation which can be negative
 ! -----------------------------------
   class(pm_wipp_srcsink_type) :: this
+  PetscReal :: initial_time
 ! -----------------------------------
   
 ! LOCAL VARIABLES:
@@ -2308,6 +2310,10 @@ subroutine PMWSSInitializeRun(this)
 ! ----------------------------------------------------
   
   ierr = 0
+
+  if (Uninitialized(this%output_start_time)) then
+    this%output_start_time = initial_time
+  endif
   
   ! set up mass transfer vector
   call RealizCreateFlowMassTransferVec(this%realization)
@@ -2366,7 +2372,7 @@ subroutine PMWSSInitializeRun(this)
   call PMWSSOutput(this)
 
   ! solve for initial process model state
-  call PMWSSSolve(this,0.d0,ierr)
+  call PMWSSSolve(this,initial_time,ierr)
   
 end subroutine PMWSSInitializeRun
 

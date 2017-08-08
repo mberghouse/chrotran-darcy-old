@@ -177,7 +177,7 @@ end subroutine PMWIPPFloRead
 
 ! ************************************************************************** !
 
-recursive subroutine PMWIPPFloInitializeRun(this)
+recursive subroutine PMWIPPFloInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -189,6 +189,7 @@ recursive subroutine PMWIPPFloInitializeRun(this)
   implicit none
   
   class(pm_wippflo_type) :: this
+  PetscReal :: initial_time
   
   PetscInt :: i
   PetscErrorCode :: ierr
@@ -205,7 +206,7 @@ recursive subroutine PMWIPPFloInitializeRun(this)
   enddo
 
   ! call parent implementation
-  call PMSubsurfaceFlowInitializeRun(this)
+  call PMSubsurfaceFlowInitializeRun(this,initial_time)
 
 end subroutine PMWIPPFloInitializeRun
 

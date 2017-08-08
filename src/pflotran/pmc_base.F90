@@ -381,17 +381,20 @@ recursive subroutine InitializeRun(this)
   ! Author: Glenn Hammond
   ! Date: 03/18/13
   ! 
+  use Waypoint_module
 
   implicit none
   
   class(pmc_base_type) :: this
   
   class(pm_base_type), pointer :: cur_pm
+  PetscReal :: initial_time
   
 #ifdef DEBUG
   call printMsg(this%option,'PMCBase%InitializeRun()')
 #endif
   
+  initial_time = WaypointListGetInitialTime(this%waypoint_list)
   if (associated(this%timestepper)) then
     call this%timestepper%InitializeRun(this%waypoint_list,this%option, &
                                         this%pm_list%output_option)
@@ -399,7 +402,7 @@ recursive subroutine InitializeRun(this)
   cur_pm => this%pm_list
   do
     if (.not.associated(cur_pm)) exit
-    call cur_pm%InitializeRun()
+    call cur_pm%InitializeRun(initial_time)
     cur_pm => cur_pm%next
   enddo
   

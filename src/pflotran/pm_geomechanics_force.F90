@@ -97,7 +97,7 @@ end subroutine PMGeomechForceSetup
 
 ! ************************************************************************** !
 
-recursive subroutine PMGeomechForceInitializeRun(this)
+recursive subroutine PMGeomechForceInitializeRun(this,initial_time)
   ! 
   ! This routine
   ! 
@@ -110,6 +110,7 @@ recursive subroutine PMGeomechForceInitializeRun(this)
   implicit none
 
   class(pm_geomech_force_type) :: this
+  PetscReal :: initial_time
 
 end subroutine PMGeomechForceInitializeRun
 

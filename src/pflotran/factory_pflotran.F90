@@ -261,7 +261,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
         if (input%ierr == 0) then
           call StringToUpper(word)
           select case(word)
-            case('RESET')
+            case('RESET_TO_INITIAL_TIME')
               option%restart_flag = RESTART_AT_INITIAL_TIME
             case default
               call InputKeywordUnrecognized(word,'SIMULATION,RESTART',option)

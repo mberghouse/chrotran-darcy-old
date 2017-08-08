@@ -180,7 +180,7 @@ end subroutine PMSurfaceSetRealization
 
 ! ************************************************************************** !
 
-recursive subroutine PMSurfaceInitializeRun(this)
+recursive subroutine PMSurfaceInitializeRun(this,initial_time)
   ! 
   ! This routine
   ! 
@@ -191,6 +191,7 @@ recursive subroutine PMSurfaceInitializeRun(this)
   implicit none
 
   class(pm_surface_type) :: this
+  PetscReal :: initial_time
 
 end subroutine PMSurfaceInitializeRun
 

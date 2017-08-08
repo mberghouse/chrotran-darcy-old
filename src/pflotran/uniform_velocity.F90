@@ -91,7 +91,7 @@ subroutine UniformVelocityDatasetRead(dataset,input,option)
   type(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
-  character(len=MAXWORDLENGTH) :: word, units, internal_units
+  character(len=MAXWORDLENGTH) :: word, units, internal_units, time_units
   PetscReal :: units_conversion
 
   PetscErrorCode :: ierr
@@ -103,6 +103,7 @@ subroutine UniformVelocityDatasetRead(dataset,input,option)
   dataset%is_cyclic = PETSC_FALSE
   
   units = ''
+  time_units = ''
   
   ! read the velocity data set
   input%ierr = 0
@@ -117,8 +118,10 @@ subroutine UniformVelocityDatasetRead(dataset,input,option)
     call InputErrorMsg(input,option,'keyword','VELOCITY_DATASET')   
       
     select case(trim(word))
-    
-      case('UNITS') ! read default units for condition arguments
+      case('TIME_UNITS') 
+        call InputReadWord(input,option,time_units,PETSC_TRUE)
+        call InputErrorMsg(input,option,'TIME_UNITS','VELOCITY_DATASET')       
+      case('UNITS')
         call InputReadWord(input,option,units,PETSC_TRUE)
         call InputErrorMsg(input,option,'UNITS','VELOCITY_DATASET')       
       case('CYCLIC')
@@ -142,14 +145,15 @@ subroutine UniformVelocityDatasetRead(dataset,input,option)
   
   enddo
 
+  if (len_trim(time_units) > 1) then
+    internal_units = 'sec'
+    units_conversion = UnitsConvertToInternal(time_units,internal_units,option)
+    dataset%times = dataset%times * units_conversion
+  endif
   if (len_trim(units) > 1) then
     internal_units = 'meter/sec'
     units_conversion = UnitsConvertToInternal(units,internal_units,option)
     dataset%values = dataset%values * units_conversion
-    word = units(index(units,'/')+1:)
-    internal_units = 'sec'
-    units_conversion = UnitsConvertToInternal(word,internal_units,option)
-    dataset%times = dataset%times * units_conversion
   endif
   
   call UniformVelocityDatasetVerify(option, dataset)
@@ -404,7 +408,9 @@ subroutine UniformVelocityDatasetVerify(option, dataset)
   allocate(dataset%cur_value(dataset%rank))
   dataset%cur_value(1:dataset%rank) = dataset%values(1:dataset%rank,1)
 
-  dataset%time_shift = dataset%times(dataset%max_time_index)
+  ! time shift is equal to the span of times in dataset
+  dataset%time_shift = dataset%times(dataset%max_time_index) - &
+                       dataset%times(1)
 
 end subroutine UniformVelocityDatasetVerify
 
@@ -418,7 +424,6 @@ subroutine UniformVelocityDatasetUpdate(option,time,dataset)
   ! Date: 06/02/09
   ! 
   use Option_module
-  use Utility_module, only : Equal
   
   implicit none
   
@@ -434,7 +439,7 @@ subroutine UniformVelocityDatasetUpdate(option,time,dataset)
   PetscReal :: time_fraction
 
  ! potentially for initial condition
-  if (Equal(time,option%initial_time) .and. .not.dataset%is_transient) return  
+  if (.not.dataset%is_transient) return  
 
   ! cycle times if at max_time_index and cyclic
   if (dataset%cur_time_index == dataset%max_time_index .and. &

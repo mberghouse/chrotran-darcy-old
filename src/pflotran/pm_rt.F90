@@ -275,7 +275,7 @@ end subroutine PMRTSetRealization
 
 ! ************************************************************************** !
 
-recursive subroutine PMRTInitializeRun(this)
+recursive subroutine PMRTInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -296,6 +296,8 @@ recursive subroutine PMRTInitializeRun(this)
   implicit none
   
   class(pm_rt_type) :: this
+  PetscReal :: initial_time
+
   PetscErrorCode :: ierr
   
 #ifdef PM_RT_DEBUG  

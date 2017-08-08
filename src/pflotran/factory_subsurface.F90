@@ -361,6 +361,9 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
   endif
   
   ! SubsurfaceInitSimulation() must be called after pmc linkages are set above.
+  ! option%time must be set to the initial time so that conditions, datasets
+  ! etc. are updated to the appropriate time, which may not be zero.
+  option%time = WaypointListGetInitialTime(simulation%waypoint_list_subsurface)
   call SubsurfaceInitSimulation(simulation)
   
   ! create sync waypoint list to be used a few lines below
@@ -1414,14 +1417,13 @@ subroutine SubsurfaceJumpStart(simulation)
 !    call simulation%rt_process_model_coupler%UpdateSolution()
 !  endif
 
-  if (option%transport%jumpstart_kinetic_sorption .and. &
-      Equal(option%time,option%initial_time)) then
-    ! only user jumpstart for a restarted simulation
+  if (option%transport%jumpstart_kinetic_sorption) then
+    ! only use jumpstart for a restarted simulation
     if (option%restart_flag == RESTART_OFF) then
-      option%io_buffer = 'Only use JUMPSTART_KINETIC_SORPTION on a ' // &
-        'restarted simulation.  ReactionEquilibrateConstraint() will ' // &
-        'appropriately set sorbed initial concentrations for a normal ' // &
-        '(non-restarted) simulation.'
+      option%io_buffer = 'Only use JUMPSTART_KINETIC_SORPTION on a &
+        &restarted simulation.  ReactionEquilibrateConstraint() will &
+        &appropriately set sorbed initial concentrations for a normal &
+        &(non-restarted) simulation.'
       call printErrMsg(option)
     endif
     call RTJumpStartKineticSorption(realization)
@@ -2354,7 +2356,7 @@ subroutine SubsurfaceReadInput(simulation)
         call InputDefaultMsg(input,option,'WALLCLOCK_STOP time units')
         internal_units = 'sec'
         units_conversion = UnitsConvertToInternal(word,internal_units,option) 
-        ! convert from hrs to seconds and add to initial_time
+        ! convert from hrs to seconds and add to start_time
         option%wallclock_stop_time = option%wallclock_start_time + &
                                      option%wallclock_stop_time* &
                                      units_conversion
@@ -2888,10 +2890,7 @@ subroutine SubsurfaceReadInput(simulation)
               internal_units = 'sec'
               temp_real2 = UnitsConvertToInternal(word,internal_units,option)
               waypoint => WaypointCreate()
-              !TODO(geh): remove option%initial_time. we should be able to key
-              !           off waypoint times instead.
-              option%initial_time = temp_real*temp_real2
-              waypoint%time = option%initial_time
+              waypoint%time = temp_real*temp_real2
               call WaypointInsertInList(waypoint,waypoint_list)
             case('FINAL_TIME')
               call InputReadDouble(input,option,temp_real)
@@ -2984,8 +2983,7 @@ subroutine SubsurfaceReadInput(simulation)
         endif
         if (.not. initial_time_set) then
           waypoint => WaypointCreate()
-          option%initial_time = 0.d0
-          waypoint%time = option%initial_time
+          waypoint%time = 0.d0
           call WaypointInsertInList(waypoint,waypoint_list)
         endif
 

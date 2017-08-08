@@ -656,7 +656,7 @@ function PMWFWasteFormCreate()
   wf%exposure_factor = 1.0d0            ! [-]
   wf%eff_dissolution_rate = UNINITIALIZED_DOUBLE ! kg/sec
   wf%mech_name = ''
-  wf%decay_start_time = 0.d0          ! sec (default value)
+  wf%decay_start_time = UNINITIALIZED_DOUBLE
   nullify(wf%instantaneous_mass_rate) ! mol-rad/sec
   nullify(wf%cumulative_mass)         ! mol-rad
   nullify(wf%rad_mass_fraction)       ! g-rad/g-matrix
@@ -2247,7 +2247,7 @@ end subroutine PMWFSetup
 
 ! ************************************************************************** !
 
- subroutine PMWFInitializeRun(this)
+ subroutine PMWFInitializeRun(this,initial_time)
   ! 
   ! Initializes the process model for the simulation
   ! 
@@ -2263,8 +2263,10 @@ end subroutine PMWFSetup
 ! INPUT ARGUMENTS:
 ! ================
 ! this (input/output): waste form process model object
+! initial_time: start time of simulation which can be negative
 ! ---------------------------------
   class(pm_waste_form_type) :: this
+  PetscReal :: initial_time
 ! ---------------------------------
   
 ! LOCAL VARIABLES:
@@ -2309,6 +2311,9 @@ end subroutine PMWFSetup
         cur_waste_form%mechanism%rad_species_list(j)%name, &
         this%realization%reaction,this%option)
     enddo
+    if (Uninitialized(cur_waste_form%decay_start_time)) then
+      cur_waste_form%decay_start_time = initial_time
+    endif
     cur_waste_form => cur_waste_form%next
   enddo
   
@@ -2375,7 +2380,7 @@ end subroutine PMWFSetup
                         this%data_mediator%scatter_ctx,ierr);CHKERRQ(ierr)
   call ISDestroy(is,ierr);CHKERRQ(ierr)
 
-  call PMWFSolve(this,0.d0,ierr)
+  call PMWFSolve(this,initial_time,ierr)
   
 end subroutine PMWFInitializeRun
 

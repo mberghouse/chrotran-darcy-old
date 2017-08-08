@@ -48,7 +48,8 @@ function TimeStorageCreate()
 
   allocate(time_storage)
   nullify(time_storage%times)
-  time_storage%cur_time = 0.d0
+  ! needs to be set to UNINITIALIZED_DOUBLE in case of negative times.
+  time_storage%cur_time = UNINITIALIZED_DOUBLE
   time_storage%cur_time_fraction = 0.d0
   time_storage%cur_time_index = 0
   time_storage%max_time_index = 0
@@ -125,7 +126,9 @@ subroutine TimeStorageVerify(default_time, time_storage, &
   time_storage%max_time_index = size(time_storage%times,1) 
   time_storage%cur_time_index = 1
   
-  time_storage%time_shift = time_storage%times(time_storage%max_time_index)
+  ! time shift is equal to the span of times
+  time_storage%time_shift = time_storage%times(time_storage%max_time_index) - &
+                            time_storage%times(1)
 
 end subroutine TimeStorageVerify
 

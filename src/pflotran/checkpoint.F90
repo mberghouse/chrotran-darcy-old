@@ -1618,8 +1618,7 @@ subroutine CheckpointPeriodicTimeWaypoints(checkpoint_option,waypoint_list, &
   final_time = WaypointListGetFinalTime(waypoint_list)
   warning_num_waypoints = 15000.0
 
-  ! option%initial_time has to be larger than -1.d20
-  if (final_time < option%initial_time) then
+  if (final_time < -1.d19) then
     option%io_buffer = 'No final time specified in waypoint list. &
       &Send your input deck to pflotran-dev.'
     call printMsg(option)

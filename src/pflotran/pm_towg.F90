@@ -324,7 +324,7 @@ end subroutine PMTOWGRead
 
 ! ************************************************************************** !
 
-recursive subroutine PMTOWGInitializeRun(this)
+recursive subroutine PMTOWGInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -336,6 +336,7 @@ recursive subroutine PMTOWGInitializeRun(this)
   implicit none
   
   class(pm_towg_type) :: this
+  PetscReal :: initial_time
   
   PetscInt :: num_var,i
   PetscErrorCode :: ierr
@@ -355,7 +356,7 @@ recursive subroutine PMTOWGInitializeRun(this)
   enddo
 
   ! call parent implementation
-  call PMSubsurfaceFlowInitializeRun(this)
+  call PMSubsurfaceFlowInitializeRun(this,initial_time)
 
 end subroutine PMTOWGInitializeRun
 

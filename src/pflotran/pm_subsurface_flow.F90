@@ -294,7 +294,7 @@ end subroutine PMSubsurfaceFlowSetRealization
 
 ! ************************************************************************** !
 
-recursive subroutine PMSubsurfaceFlowInitializeRun(this)
+recursive subroutine PMSubsurfaceFlowInitializeRun(this,initial_time)
   ! 
   ! Initializes the time stepping
   ! 
@@ -308,10 +308,12 @@ recursive subroutine PMSubsurfaceFlowInitializeRun(this)
   implicit none
   
   class(pm_subsurface_flow_type) :: this
+  PetscReal :: initial_time
+
   PetscBool :: update_initial_porosity
 
   ! must come before RealizUnInitializedVarsTran
-  call PMSubsurfaceFlowSetSoilRefPres(this%realization)
+  call PMSubsurfaceFlowSetSoilRefPres(this%realization,initial_time)
   ! check for uninitialized flow variables
   call RealizUnInitializedVarsTran(this%realization)
 
@@ -368,7 +370,7 @@ end subroutine PMSubsurfaceFlowInitializeRun
 
 ! ************************************************************************** !
 
-subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
+subroutine PMSubsurfaceFlowSetSoilRefPres(realization,initial_time)
   ! 
   ! Deallocates a realization
   ! 
@@ -392,6 +394,8 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
   implicit none
 
   type(realization_subsurface_type) :: realization
+  PetscReal :: initial_time
+
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   class(material_auxvar_type), pointer :: material_auxvars(:)
@@ -482,7 +486,7 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
     call VecRestoreArrayReadF90(vec_int_ptr,vec_loc_p,ierr); CHKERRQ(ierr)
   enddo
 
-  if (ref_pres_set_by_initial .and. option%time > option%initial_time) then
+  if (ref_pres_set_by_initial .and. option%time > initial_time) then
     option%io_buffer = 'Restarted simulations (restarted with time > &
       &initial_time) that set reference pressure based on the initial & 
       & pressure will be incorrect as the initial pressure is not stored &
