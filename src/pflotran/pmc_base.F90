@@ -978,6 +978,7 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
     call this%timestepper%RestartBinary(viewer,this%option)
     if (this%option%restart_flag == RESTART_AT_INITIAL_TIME) then
       ! simply a flag to set time back to initial_time
+      !TODO(geh): pass in waypoint_list%first%time instead for the initial time
       call this%timestepper%Reset(this%option)
     endif
   

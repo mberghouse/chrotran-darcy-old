@@ -192,6 +192,11 @@ subroutine TimestepperBaseInitializeRun(this,option)
   type(option_type) :: option
   
   call this%PrintInfo(option)
+  if (option%restart_flag == RESTART_OFF) then
+    ! at this point, target_time should be set to the initial time, unless
+    ! restarting.
+    this%target_time = this%cur_waypoint%time
+  endif
   option%time = this%target_time
   ! For the case where the second waypoint is a printout after the first time 
   ! step, we must increment the waypoint beyond the first (time=initial_time) 
