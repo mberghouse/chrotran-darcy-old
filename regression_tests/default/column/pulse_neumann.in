@@ -94,8 +94,10 @@ END
 
 #=========================== output options ===================================
 OUTPUT
+skip
   PERIODIC TIME 5.d0 y
   FORMAT HDF5
+noskip
   VARIABLES
     LIQUID_PRESSURE
   /
