@@ -42,6 +42,7 @@ STANDARD_CFG = \
 	default/543/543.cfg \
 	default/anisothermal/anisothermal.cfg \
 	default/column/column.cfg \
+	default/negative_time/negative_time.cfg \
 	default/batch/batch.cfg \
 	default/eos/eos.cfg \
 	default/dispersion/dispersion.cfg \
