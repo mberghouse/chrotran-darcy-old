@@ -43,7 +43,9 @@ subroutine CondControlAssignFlowInitCond(realization)
   use Dataset_Base_class
   use Dataset_Gridded_HDF5_class
   use Dataset_Common_HDF5_class
+  use Dataset_Global_HDF5_class
   use Grid_module
+  use HDF5_module
   use Patch_module
   use EOS_Water_module
 
@@ -63,7 +65,7 @@ subroutine CondControlAssignFlowInitCond(realization)
   PetscReal, pointer :: xx_p(:), iphase_loc_p(:)
   PetscErrorCode :: ierr
   
-  character(len=MAXSTRINGLENGTH) :: string
+  character(len=MAXSTRINGLENGTH) :: string, string2
   
   type(option_type), pointer :: option
   type(field_type), pointer :: field  
@@ -85,6 +87,8 @@ subroutine CondControlAssignFlowInitCond(realization)
   PetscReal :: x(realization%option%nflowdof)
   PetscReal :: temperature, p_sat
   PetscReal :: tempreal
+  Vec :: vec1, vec2
+  PetscReal, pointer :: vec1_p(:), vec2_p(:)
 
   option => realization%option
   discretization => realization%discretization
@@ -111,18 +115,49 @@ subroutine CondControlAssignFlowInitCond(realization)
 
         xx_p = UNINITIALIZED_DOUBLE
 
+        vec1 = PETSC_NULL_VEC
+        vec2 = PETSC_NULL_VEC
         initial_condition => cur_patch%initial_condition_list%first
         do
 
           if (.not.associated(initial_condition)) exit
 
+          general => initial_condition%flow_condition%general
+          string = ''
+          nullify(vec1_p)
+          select type(dataset => general%liquid_pressure%dataset)
+            class is(dataset_common_hdf5_type)
+              if (vec1 == PETSC_NULL_VEC) then
+                call VecDuplicate(field%work,vec1,ierr);CHKERRQ(ierr)
+              endif
+              string2 = dataset%hdf5_dataset_name
+              call HDF5ReadCellIndexedRealArray(realization,vec1, &
+                                                dataset%filename, &
+                                                string,string2, &
+                                                dataset%realization_dependent)
+              call VecGetArrayF90(vec1,vec1_p,ierr);CHKERRQ(ierr)
+          end select
+          nullify(vec2_p)
+          select type(dataset => general%gas_saturation%dataset)
+            class is(dataset_common_hdf5_type)
+              if (vec2 == PETSC_NULL_VEC) then
+                call VecDuplicate(field%work,vec2,ierr);CHKERRQ(ierr)
+              endif
+              string2 = dataset%hdf5_dataset_name
+              call HDF5ReadCellIndexedRealArray(realization,vec2, &
+                                                dataset%filename, &
+                                                string,string2, &
+                                                dataset%realization_dependent)
+              call VecGetArrayF90(vec2,vec2_p,ierr);CHKERRQ(ierr)
+          end select
+
           if (.not.associated(initial_condition%flow_aux_real_var)) then
+            !TODO(geh): This section of code has no coverage.  I don't believe
+            !           that it is ever used. 
             if (.not.associated(initial_condition%flow_condition)) then
               option%io_buffer = 'Flow condition is NULL in initial condition'
               call printErrMsg(option)
             endif
-
-            general => initial_condition%flow_condition%general
 
             string = 'in flow condition "' // &
               trim(initial_condition%flow_condition%name) // &
@@ -155,10 +190,18 @@ subroutine CondControlAssignFlowInitCond(realization)
               endif
               ! decrement ibegin to give a local offset of 0
               ibegin = ibegin - 1
-              xx_p(ibegin+WIPPFLO_LIQUID_PRESSURE_DOF) = &
-                general%gas_pressure%dataset%rarray(1)
-              xx_p(ibegin+WIPPFLO_GAS_SATURATION_DOF) = &
-                general%gas_saturation%dataset%rarray(1)
+              if (associated(vec1_p)) then
+                xx_p(ibegin+WIPPFLO_LIQUID_PRESSURE_DOF) = vec1_p(local_id)
+              else
+                xx_p(ibegin+WIPPFLO_LIQUID_PRESSURE_DOF) = &
+                  general%gas_pressure%dataset%rarray(1)
+              endif
+              if (associated(vec2_p)) then
+                xx_p(ibegin+WIPPFLO_GAS_SATURATION_DOF) = vec2_p(local_id)
+              else
+                xx_p(ibegin+WIPPFLO_GAS_SATURATION_DOF) = &
+                  general%gas_saturation%dataset%rarray(1)
+              endif
               iphase_loc_p(ghosted_id) = initial_condition%flow_condition%iphase
               cur_patch%aux%Global%auxvars(ghosted_id)%istate = &
                 initial_condition%flow_condition%iphase
@@ -182,13 +225,32 @@ subroutine CondControlAssignFlowInitCond(realization)
                     initial_condition%flow_aux_mapping( &
                       wf_dof_to_primary_variable(idof)),iconn)
               enddo
+              ! overwrite with dataset if applicable
+              if (associated(vec1_p)) then
+                xx_p(offset+1) = vec1_p(local_id)
+              endif
+              if (associated(vec2_p)) then
+                xx_p(offset+2) = vec2_p(local_id)
+              endif
               iphase_loc_p(ghosted_id) = istate
               cur_patch%aux%Global%auxvars(ghosted_id)%istate = istate
             enddo
           endif
+          if (associated(vec1_p)) then
+            call VecRestoreArrayF90(vec1,vec1_p,ierr);CHKERRQ(ierr)
+          endif
+          if (associated(vec2_p)) then
+            call VecRestoreArrayF90(vec2,vec2_p,ierr);CHKERRQ(ierr)
+          endif
           initial_condition => initial_condition%next
         enddo
 
+        if (vec1 /= PETSC_NULL_VEC) then
+          call VecDestroy(vec1,ierr);CHKERRQ(ierr)
+        endif
+        if (vec2 /= PETSC_NULL_VEC) then
+          call VecDestroy(vec2,ierr);CHKERRQ(ierr)
+        endif
         call VecRestoreArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
         call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
                                 ierr);CHKERRQ(ierr)
@@ -800,7 +862,8 @@ subroutine CondControlAssignTranInitCond(realization)
       
       if (.not.associated(initial_condition)) exit
         
-      constraint_coupler => initial_condition%tran_condition%cur_constraint_coupler
+      constraint_coupler => &
+        initial_condition%tran_condition%cur_constraint_coupler
 
       re_equilibrate_at_each_cell = PETSC_FALSE
       use_aq_dataset = PETSC_FALSE
@@ -814,8 +877,8 @@ subroutine CondControlAssignTranInitCond(realization)
           use_aq_dataset = PETSC_TRUE
           string = 'constraint ' // trim(constraint_coupler%constraint_name)
           dataset => DatasetBaseGetPointer(realization%datasets, &
-                        constraint_coupler%aqueous_species%constraint_aux_string(idof), &
-                        string,option)
+               constraint_coupler%aqueous_species%constraint_aux_string(idof), &
+               string,option)
           call ConditionControlMapDatasetToVec(realization,dataset,idof, &
                                                 field%tran_xx_loc,LOCAL)
         endif
@@ -874,11 +937,13 @@ subroutine CondControlAssignTranInitCond(realization)
       ! read in heterogeneous immobile
       if (associated(constraint_coupler%immobile_species)) then
         do iimmobile = 1, reaction%immobile%nimmobile
-          if (constraint_coupler%immobile_species%external_dataset(iimmobile)) then
+          if (constraint_coupler%immobile_species%&
+                external_dataset(iimmobile)) then
             ! no need to requilibrate at each cell
             string = 'constraint ' // trim(constraint_coupler%constraint_name)
             dataset => DatasetBaseGetPointer(realization%datasets, &
-                constraint_coupler%immobile_species%constraint_aux_string(iimmobile), &
+                constraint_coupler%immobile_species%&
+                  constraint_aux_string(iimmobile), &
                 string,option)
             idof = ONE_INTEGER
             call ConditionControlMapDatasetToVec(realization,dataset,idof, &
@@ -918,7 +983,8 @@ subroutine CondControlAssignTranInitCond(realization)
           if (use_aq_dataset) then
             offset = (ghosted_id-1)*option%ntrandof
             do iaqdataset = 1, num_aq_datasets
-              ! remember that xx_loc_p holds the data set values that were read in
+              ! remember that xx_loc_p holds the data set values that were 
+              ! read in
               temp_int = aq_dataset_to_idof(iaqdataset)
               constraint_coupler%aqueous_species%constraint_conc(temp_int) = &
                 xx_loc_p(offset+temp_int)
