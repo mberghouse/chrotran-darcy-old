@@ -113,7 +113,7 @@ module Patch_module
 
   public :: PatchCreate, PatchDestroy, PatchCreateList, PatchDestroyList, &
             PatchAddToList, PatchConvertListToArray, PatchProcessCouplers, &
-            PatchUpdateAllCouplerAuxVars, PatchInitAllCouplerAuxVars, &
+            PatchUpdateTransCouplerAuxVars, PatchInitAllCouplerAuxVars, &
             PatchLocalizeRegions, PatchUpdateUniformVelocity, &
             PatchGetVariable, PatchGetVariableValueAtCell, &
             PatchSetVariable, PatchCouplerInputRecord, &
@@ -1108,7 +1108,7 @@ subroutine PatchInitAllCouplerAuxVars(patch,option)
   ! that are not necessary after the simulation has started time stepping.
   call PatchUpdateCouplerAuxVars(patch,patch%initial_condition_list, &
                                  force_update_flag,option)
-  call PatchUpdateAllCouplerAuxVars(patch,force_update_flag,option)
+  call PatchUpdateTransCouplerAuxVars(patch,force_update_flag,option)
 
 end subroutine PatchInitAllCouplerAuxVars
 
@@ -1357,10 +1357,9 @@ end subroutine PatchInitCouplerAuxVars
 
 ! ************************************************************************** !
 
-subroutine PatchUpdateAllCouplerAuxVars(patch,force_update_flag,option)
+subroutine PatchUpdateTransCouplerAuxVars(patch,force_update_flag,option)
   ! 
-  ! Updates auxiliary variables associated
-  ! with couplers in list
+  ! Updates auxiliary variables associated with transient coupler lists
   ! 
   ! Author: Glenn Hammond
   ! Date: 02/22/08
@@ -1384,7 +1383,7 @@ subroutine PatchUpdateAllCouplerAuxVars(patch,force_update_flag,option)
                                  force_update_flag,option)
 
 !  stop
-end subroutine PatchUpdateAllCouplerAuxVars
+end subroutine PatchUpdateTransCouplerAuxVars
 
 ! ************************************************************************** !
 
@@ -1482,6 +1481,7 @@ subroutine PatchUpdateCouplerAuxVarsWF(patch,coupler,option)
   use Grid_module
   use Dataset_Common_HDF5_class
   use Dataset_Gridded_HDF5_class
+  use Dataset_Global_HDF5_class
   use Dataset_Ascii_class
   use Dataset_module
   use General_Aux_module, only : LIQUID_STATE, GAS_STATE, TWO_PHASE_STATE, &
@@ -1527,8 +1527,17 @@ subroutine PatchUpdateCouplerAuxVarsWF(patch,coupler,option)
       select case(general%liquid_pressure%itype)
         case(DIRICHLET_BC)
           coupler%flow_aux_mapping(WIPPFLO_LIQUID_PRESSURE_INDEX) = real_count
-          coupler%flow_aux_real_var(real_count,1:num_connections) = &
-            general%liquid_pressure%dataset%rarray(1)
+          select type(dataset => general%liquid_pressure%dataset)
+            class is(dataset_ascii_type)
+              coupler%flow_aux_real_var(real_count,1:num_connections) = &
+                general%liquid_pressure%dataset%rarray(1)
+            class is(dataset_common_hdf5_type)
+              ! global datasets are handled in condition_control.F90
+            class default
+              option%io_buffer = 'Pressure dataset type not supported in &
+                &PatchUpdateCouplerAuxVarsWF() for FLOW_CONDITION' // &
+                trim(flow_condition%name)
+          end select
           dof1 = PETSC_TRUE
           coupler%flow_bc_type(WIPPFLO_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
         case default
@@ -1544,8 +1553,17 @@ subroutine PatchUpdateCouplerAuxVarsWF(patch,coupler,option)
       select case(general%gas_saturation%itype)
         case(DIRICHLET_BC)
           coupler%flow_aux_mapping(WIPPFLO_GAS_SATURATION_INDEX) = real_count
-          coupler%flow_aux_real_var(real_count,1:num_connections) = &
-            general%gas_saturation%dataset%rarray(1)
+          select type(dataset => general%gas_saturation%dataset)
+            class is(dataset_ascii_type)
+              coupler%flow_aux_real_var(real_count,1:num_connections) = &
+                general%gas_saturation%dataset%rarray(1)
+            class is(dataset_common_hdf5_type)
+              ! global datasets are handled in condition_control.F90
+            class default
+              option%io_buffer = 'Saturation dataset type not supported in &
+                &PatchUpdateCouplerAuxVarsWF() for FLOW_CONDITION' // &
+                trim(flow_condition%name)
+          end select
           dof2 = PETSC_TRUE
           coupler%flow_bc_type(WIPPFLO_GAS_EQUATION_INDEX) = DIRICHLET_BC
         case default
@@ -1557,10 +1575,10 @@ subroutine PatchUpdateCouplerAuxVarsWF(patch,coupler,option)
           call printErrMsg(option)
       end select
     case(LIQUID_STATE)
-      option%io_buffer = 'LIQUID State not support for WIPP Flow mode.'
+      option%io_buffer = 'LIQUID State not supported for WIPP Flow mode.'
       call printErrMsg(option)
     case(GAS_STATE)
-      option%io_buffer = 'GAS State not support for WIPP Flow mode.'
+      option%io_buffer = 'GAS State not supported for WIPP Flow mode.'
       call printErrMsg(option)
     case(ANY_STATE)
       if (associated(coupler%flow_aux_int_var)) then ! not used with rate

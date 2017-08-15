@@ -91,7 +91,7 @@ private
             RealizationPassPtrsToPatches, &
             RealLocalToLocalWithArray, &
             RealizationCalculateCFL1Timestep, &
-            RealizUpdateAllCouplerAuxVars, &
+            RealizUpdateTransCouplerAuxVars, &
             RealizUnInitializedVarsFlow, &
             RealizUnInitializedVarsTran, &
             RealizationLimitDTByCFL
@@ -1305,7 +1305,7 @@ end subroutine RealizationPrintCoupler
 
 subroutine RealizationInitAllCouplerAuxVars(realization)
   ! 
-  ! RealizationInitCouplerAuxVars: Initializes coupler auxillary variables
+  ! RealizationInitAllCouplerAuxVars: Initializes coupler auxillary variables
   ! within list
   ! 
   ! Author: Glenn Hammond
@@ -1332,7 +1332,7 @@ end subroutine RealizationInitAllCouplerAuxVars
 
 ! ************************************************************************** !
 
-subroutine RealizUpdateAllCouplerAuxVars(realization,force_update_flag)
+subroutine RealizUpdateTransCouplerAuxVars(realization,force_update_flag)
   ! 
   ! Updates auxiliary variables associated
   ! with couplers in lis
@@ -1349,10 +1349,10 @@ subroutine RealizUpdateAllCouplerAuxVars(realization,force_update_flag)
   PetscBool :: force_update_flag
 
   !TODO(geh): separate flow from transport in these calls
-  call PatchUpdateAllCouplerAuxVars(realization%patch,force_update_flag, &
-                                    realization%option)
+  call PatchUpdateTransCouplerAuxVars(realization%patch,force_update_flag, &
+                                      realization%option)
 
-end subroutine RealizUpdateAllCouplerAuxVars
+end subroutine RealizUpdateTransCouplerAuxVars
 
 ! ************************************************************************** !
 

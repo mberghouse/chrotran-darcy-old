@@ -668,8 +668,9 @@ subroutine RealizSurfAllCouplerAuxVars(surf_realization,force_update_flag)
   class(realization_surface_type) :: surf_realization
   PetscBool :: force_update_flag
 
-  call PatchUpdateAllCouplerAuxVars(surf_realization%patch,force_update_flag, &
-                                    surf_realization%option)
+  call PatchUpdateTransCouplerAuxVars(surf_realization%patch, &
+                                      force_update_flag, &
+                                      surf_realization%option)
 
 end subroutine RealizSurfAllCouplerAuxVars
 
