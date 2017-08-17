@@ -368,6 +368,9 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
 
   num_faces = coupler%connection_set%num_connections
 
+if (coupler%region%name == 'east') then
+open(unit=86,file='hydrostatic_.txt')
+endif
   do iconn=1, num_faces !geh: this should really be num_faces!
     local_id = coupler%connection_set%id_dn(iconn)
     ghosted_id = grid%nL2G(local_id)
@@ -449,6 +452,9 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
           end select
         else
           coupler%flow_aux_real_var(1,iconn) = pressure
+if (coupler%region%name == 'east') then
+write(86,*) local_id, coupler%region%cell_ids(iconn), coupler%region%faces(iconn), pressure
+endif
         endif
     end select
 
@@ -516,6 +522,9 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
     end select
 
   enddo
+if (coupler%region%name == 'east') then
+close(86)
+endif
 
   if (associated(pressure_array)) deallocate(pressure_array)
   nullify(pressure_array)
