@@ -455,9 +455,11 @@ endif
           end select
         else
           coupler%flow_aux_real_var(1,iconn) = pressure
-if (coupler%region%name == 'east') then
-write(86,*) local_id, coupler%region%cell_ids(iconn), coupler%region%faces(iconn), pressure
-endif
+        endif
+        if (coupler%region%name == 'east') then
+          write(86,*) local_id, coupler%region%cell_ids(iconn), &
+                      coupler%region%faces(iconn), &
+                      coupler%flow_aux_real_var(1,iconn)
         endif
     end select
 
