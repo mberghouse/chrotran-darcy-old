@@ -46,7 +46,7 @@ subroutine SubsurfaceInitialize(simulation)
   
   ! NOTE: PETSc must already have been initialized here!
   call SubsurfaceInitializePostPetsc(simulation)
-  
+
 end subroutine SubsurfaceInitialize
 
 ! ************************************************************************** !
@@ -84,6 +84,7 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
   use Input_Aux_module
   use String_module
   use Checkpoint_module
+  use Output_module, only : Output
   
   implicit none
   
@@ -397,6 +398,8 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
   endif  
 
   call SubsurfaceJumpStart(simulation)
+
+  simulation%master_process_model_coupler%Output => Output
 
 end subroutine SubsurfaceInitializePostPetsc
 
@@ -1127,7 +1130,6 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   use PM_UFD_Biosphere_class
   use PM_TOilIms_class
   use Option_module
-  use Output_module, only : Output
   use Simulation_Subsurface_class
   use Realization_Subsurface_class
   use Timestepper_BE_class
@@ -1150,12 +1152,6 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   if (.not.associated(pmc)) return
   
   pmc%waypoint_list => simulation%waypoint_list_subsurface
-  if (pmc%is_master) then
-    ! leveraging option%iflag to count the number of masters
-    option%iflag = option%iflag + 1
-    ! set up subsurface output
-    pmc%Output => Output
-  endif
   
   ! loop through this pmc's process models:
   cur_pm => pmc%pm_list
