@@ -106,7 +106,6 @@ subroutine GeomechanicsInitializePostPETSc(simulation)
   enddo
   
   call SubsurfaceInitializePostPetsc(simulation)  
-  simulation%process_model_coupler_list%is_master = PETSC_TRUE
     
   if (option%geomech_on) then
     simulation%geomech_realization => GeomechRealizCreate(option)
@@ -225,8 +224,6 @@ subroutine GeomechanicsInitializePostPETSc(simulation)
      associated(simulation%geomech_process_model_coupler)) &
     simulation%geomech_process_model_coupler%sim_aux => simulation%sim_aux
  
-  ! set geomech as not master
-  simulation%geomech_process_model_coupler%is_master = PETSC_FALSE
   ! link geomech and master
   simulation%process_model_coupler_list => &
     simulation%geomech_process_model_coupler

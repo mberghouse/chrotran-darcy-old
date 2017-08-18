@@ -23,6 +23,7 @@ module Realization_Subsurface_class
   use Debug_module
   use Uniform_Velocity_module
   use Output_Aux_module
+  use Subsurface_Reset_module
   
   use Reaction_Aux_module
   
@@ -51,6 +52,7 @@ private
     type(saturation_function_type), pointer :: saturation_functions
     class(characteristic_curves_type), pointer :: characteristic_curves
     class(dataset_base_type), pointer :: datasets
+    type(subsurface_reset_type), pointer :: subsurface_reset_list
     
     type(uniform_velocity_dataset_type), pointer :: uniform_velocity_dataset
     character(len=MAXSTRINGLENGTH) :: nonuniform_velocity_filename
@@ -64,7 +66,6 @@ private
   
   public :: RealizationCreate, &
             RealizationStrip, &
-            RealizationDestroyLegacy, &
             RealizationProcessCouplers, &
             RealizationInitAllCouplerAuxVars, &
             RealizationProcessConditions, &
@@ -165,6 +166,7 @@ function RealizationCreate2(option)
   nullify(realization%saturation_functions)
   nullify(realization%characteristic_curves)
   nullify(realization%datasets)
+  nullify(realization%subsurface_reset_list)
   nullify(realization%uniform_velocity_dataset)
   nullify(realization%sec_transport_constraint)
   realization%nonuniform_velocity_filename = ''
@@ -1450,6 +1452,7 @@ subroutine RealizationAddWaypointsToList(realization,waypoint_list)
   use Time_Storage_module
   use Data_Mediator_Base_class
   use Data_Mediator_Dataset_class
+  use Subsurface_Reset_module
   use Strata_module
 
   implicit none
@@ -1465,6 +1468,7 @@ subroutine RealizationAddWaypointsToList(realization,waypoint_list)
   type(waypoint_type), pointer :: waypoint, cur_waypoint
   type(option_type), pointer :: option
   type(strata_type), pointer :: cur_strata
+  type(subsurface_reset_type), pointer :: cur_subsurface_reset
   PetscInt :: itime, isub_condition
   PetscReal :: temp_real, final_time
   PetscReal, pointer :: times(:)
@@ -1619,6 +1623,17 @@ subroutine RealizationAddWaypointsToList(realization,waypoint_list)
       call WaypointInsertInList(waypoint,waypoint_list)
     endif
     cur_strata => cur_strata%next
+  enddo
+
+  ! add in solution resets
+  cur_subsurface_reset => realization%subsurface_reset_list
+  do
+    if (.not.associated(cur_subsurface_reset)) exit
+    waypoint => WaypointCreate()
+    waypoint%time = cur_subsurface_reset%time
+    waypoint%sync = PETSC_TRUE
+    call WaypointInsertInList(waypoint,waypoint_list)
+    cur_subsurface_reset => cur_subsurface_reset%next
   enddo
 
 end subroutine RealizationAddWaypointsToList
@@ -2517,69 +2532,6 @@ end subroutine RealizationLimitDTByCFL
 
 ! ************************************************************************** !
 
-subroutine RealizationDestroyLegacy(realization)
-  ! 
-  ! Deallocates a realization
-  ! 
-  ! Author: Glenn Hammond
-  ! Date: 11/01/07
-  ! 
-
-  use Dataset_module
-
-  implicit none
-  
-  class(realization_subsurface_type), pointer :: realization
-  
-  if (.not.associated(realization)) return
-    
-  call FieldDestroy(realization%field)
-
-!  call OptionDestroy(realization%option) !geh it will be destroy externally
-  call OutputOptionDestroy(realization%output_option)
-  call RegionDestroyList(realization%region_list)
-  
-  call FlowConditionDestroyList(realization%flow_conditions)
-#ifdef WELL_CLASS
-  call WellSpecDestroyList(realization%well_specs)
-#endif
-  call TranConditionDestroyList(realization%transport_conditions)
-  call TranConstraintDestroyList(realization%transport_constraints)
-
-  call PatchDestroyList(realization%patch_list)
-
-  if (associated(realization%debug)) deallocate(realization%debug)
-  nullify(realization%debug)
-  
-  if (associated(realization%fluid_property_array)) &
-    deallocate(realization%fluid_property_array)
-  nullify(realization%fluid_property_array)
-  call FluidPropertyDestroy(realization%fluid_properties)
-  
-  call MaterialPropertyDestroy(realization%material_properties)
-
-  call SaturationFunctionDestroy(realization%saturation_functions)
-  print *, 'RealizationDestroyLegacy cannot be removed.'
-  stop
-  call CharacteristicCurvesDestroy(realization%characteristic_curves)
-
-  call DatasetDestroy(realization%datasets)
-  
-  call UniformVelocityDatasetDestroy(realization%uniform_velocity_dataset)
-  
-  call DiscretizationDestroy(realization%discretization)
-  
-  call ReactionDestroy(realization%reaction,realization%option)
-  
-  call TranConstraintDestroy(realization%sec_transport_constraint)
-  
-  deallocate(realization)
-  nullify(realization)
-  
-end subroutine RealizationDestroyLegacy
-
-! ************************************************************************** !
-
 subroutine RealizationStrip(this)
   ! 
   ! Deallocates a realization
@@ -2615,6 +2567,7 @@ subroutine RealizationStrip(this)
   call CharacteristicCurvesDestroy(this%characteristic_curves)  
 
   call DatasetDestroy(this%datasets)
+  call SubsurfaceResetDestroy(this%subsurface_reset_list)
   
   call UniformVelocityDatasetDestroy(this%uniform_velocity_dataset)
   

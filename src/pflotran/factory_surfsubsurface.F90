@@ -131,9 +131,6 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
     cur_pm => cur_pm%next
   enddo
   call SubsurfaceInitializePostPetsc(simulation)
-  ! in SubsurfaceInitializePostPetsc, the first pmc in the list is set as
-  ! the master, we need to negate this setting
-  simulation%process_model_coupler_list%is_master = PETSC_FALSE
 
   if (associated(pm_surface_flow) .or. associated(pm_surface_th)) then
     simulation%surf_realization => RealizSurfCreate(option)
@@ -292,7 +289,8 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
     simulation%surf_flow_process_model_coupler%sim_aux => simulation%sim_aux
 
   ! set surface flow as master
-  simulation%surf_flow_process_model_coupler%is_master = PETSC_TRUE
+  simulation%master_process_model_coupler => &
+    simulation%surf_flow_process_model_coupler
   ! link surface flow and master
   simulation%process_model_coupler_list => &
     simulation%surf_flow_process_model_coupler

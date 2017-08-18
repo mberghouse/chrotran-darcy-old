@@ -24,6 +24,7 @@ module Simulation_Base_class
     type(output_option_type), pointer :: output_option
     PetscInt :: stop_flag
     class(pmc_base_type), pointer :: process_model_coupler_list
+    class(pmc_base_type), pointer :: master_process_model_coupler
     class(pm_base_type), pointer :: process_model_list
     type(simulation_aux_type), pointer :: sim_aux
   contains
@@ -96,6 +97,7 @@ subroutine SimulationBaseInit(this,option)
   this%output_option => OutputOptionCreate()
   nullify(this%checkpoint_option)
   nullify(this%process_model_coupler_list)
+  nullify(this%master_process_model_coupler)
   nullify(this%process_model_list)
   this%sim_aux => SimAuxCreate()
   this%stop_flag = TS_CONTINUE

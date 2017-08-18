@@ -238,6 +238,9 @@ subroutine PMAuxiliarySetFunctionPointer(this,string)
     case('EVOLVING_STRATA')
       this%Evaluate => PMAuxiliaryEvolvingStrata
       this%name = 'auxiliary evolving strata'
+    case('SOLUTION_RESET')
+      this%Evaluate => PMAuxiliarySolutionReset
+      this%name = 'auxiliary solution reset'
     case('SALINITY')
       this%Evaluate => PMAuxiliarySalinity
       this%name = 'auxiliary salinity'
@@ -270,6 +273,7 @@ recursive subroutine PMAuxiliaryInitializeRun(this,initial_time)
   
   ierr = 0
   select case(this%ctype)
+    case('SOLUTION_RESET')
     case('EVOLVING_STRATA')
 !      call MatSetOption(Jacobian,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_FALSE, &
 !                        ierr);CHKERRQ(ierr)
@@ -294,7 +298,7 @@ end subroutine PMAuxiliaryInitializeRun
 
 ! ************************************************************************** !
 
-subroutine PMAuxiliaryEvolvingStrata(this,time,ierr)
+subroutine PMAuxiliarySolutionReset(this,time,ierr)
   ! 
   ! Initializes auxiliary process model
   ! 
@@ -309,7 +313,28 @@ subroutine PMAuxiliaryEvolvingStrata(this,time,ierr)
   PetscReal :: time
   PetscErrorCode :: ierr
 
-  PetscInt :: ndof
+  if (this%option%print_screen_flag) then
+    write(*,'(/,2("=")," SUBSURFACE SOLUTION RESET ",51("="))')
+  endif
+  
+end subroutine PMAuxiliarySolutionReset
+
+! ************************************************************************** !
+
+subroutine PMAuxiliaryEvolvingStrata(this,time,ierr)
+  ! 
+  ! Initializes auxiliary process model
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 02/10/16
+
+  use Init_Subsurface_module
+
+  implicit none
+  
+  class(pm_auxiliary_type) :: this
+  PetscReal :: time
+  PetscErrorCode :: ierr
 
   if (this%option%print_screen_flag) then
     write(*,'(/,2("=")," EVOLVE STRATA ",63("="))')

@@ -323,6 +323,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
     class is(simulation_geomechanics_type)
       call GeomechanicsInitialize(simulation)
   end select
+  simulation%master_process_model_coupler%is_master = PETSC_TRUE
   
 end subroutine PFLOTRANReadSimulation
 

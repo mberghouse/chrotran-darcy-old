@@ -172,11 +172,10 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
     ! set up logging stage
     string = trim(pm_flow%name) 
     call LoggingCreateStage(string,pmc_subsurface%stage)
-!    timestepper => TimestepperBECreate()
-!    timestepper%solver => SolverCreate()
-!    simulation%flow_process_model_coupler%timestepper => timestepper
     simulation%flow_process_model_coupler => pmc_subsurface
     simulation%process_model_coupler_list => simulation%flow_process_model_coupler
+    ! make flow master pmc
+    simulation%master_process_model_coupler => pmc_subsurface
     nullify(pmc_subsurface)
   endif
   if (associated(pm_rt)) then
@@ -191,12 +190,11 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
     ! set up logging stage
     string = trim(pm_rt%name)
     call LoggingCreateStage(string,pmc_subsurface%stage)
-!    timestepper => TimestepperBECreate()
-!    timestepper%solver => SolverCreate()
-!    simulation%rt_process_model_coupler%timestepper => timestepper
     simulation%rt_process_model_coupler => pmc_subsurface
     if (.not.associated(simulation%process_model_coupler_list)) then
       simulation%process_model_coupler_list => pmc_subsurface
+      ! make reactive transport master if flow does not exist
+      simulation%master_process_model_coupler => pmc_subsurface
     else
       call PMCBaseSetChildPeerPtr(PMCCastToBase(pmc_subsurface),PM_CHILD, &
                         PMCCastToBase(simulation%flow_process_model_coupler), &
@@ -399,8 +397,6 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
   endif  
 
   call SubsurfaceJumpStart(simulation)
-  ! set first process model coupler as the master
-  simulation%process_model_coupler_list%is_master = PETSC_TRUE
 
 end subroutine SubsurfaceInitializePostPetsc
 
@@ -977,7 +973,6 @@ subroutine SubsurfaceInitSimulation(simulation)
   use Realization_Base_class
   use Discretization_module
   use Option_module
-  use Output_module, only : Output
   use Output_Aux_module
   
   
@@ -1070,7 +1065,26 @@ subroutine SubsurfaceInitSimulation(simulation)
       auxiliary_process_model_coupler
   endif
 
-  ! For each ProcessModel, set:
+  if (associated(realization%subsurface_reset_list)) then
+    auxiliary_process_model_coupler => PMCAuxiliaryCreate()
+    allocate(pm_aux)
+    call PMAuxiliaryInit(pm_aux)
+    string = 'SOLUTION_RESET'
+    call PMAuxiliarySetFunctionPointer(pm_aux,string)
+    pm_aux%realization => realization
+    pm_aux%option => option
+    auxiliary_process_model_coupler%pm_list => pm_aux
+    auxiliary_process_model_coupler%pm_aux => pm_aux
+    auxiliary_process_model_coupler%option => option
+    ! place the solution reset process model as %peer of the first
+    ! pmc, but before it.
+    auxiliary_process_model_coupler%peer => &
+      simulation%process_model_coupler_list
+    simulation%process_model_coupler_list => &
+      auxiliary_process_model_coupler
+  endif
+
+  ! For each subsurface process model, set:
   ! - realization (subsurface or surface),
   ! - stepper (flow/trans/surf_flow),
   ! - SNES functions (Residual/Jacobain), or TS function (RHSFunction)
@@ -1079,11 +1093,17 @@ subroutine SubsurfaceInitSimulation(simulation)
   ! the following recursive subroutine will also call each pmc child 
   ! and each pms's peers
   if (associated(cur_process_model_coupler_top)) then
+    ! use iflag to count the number of master process model couplers
+    option%iflag = 0
     call SetUpPMApproach(cur_process_model_coupler_top,simulation)
+    ! should only have 1 master pmc
+    if (option%iflag /= 1) then
+      write(string,*) option%iflag
+      option%io_buffer = 'Incorrect number of master process model coupler &
+        &for subsurface simulation: ' // trim(adjustl(string))
+      call printErrMsg(option)
+    endif
   endif
-  
-  ! point the top process model coupler to Output
-  simulation%process_model_coupler_list%Output => Output
 
 end subroutine SubsurfaceInitSimulation
 
@@ -1116,6 +1136,7 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   use PM_UFD_Biosphere_class
   use PM_TOilIms_class
   use Option_module
+  use Output_module, only : Output
   use Simulation_Subsurface_class
   use Realization_Subsurface_class
   use Timestepper_BE_class
@@ -1138,6 +1159,12 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   if (.not.associated(pmc)) return
   
   pmc%waypoint_list => simulation%waypoint_list_subsurface
+  if (pmc%is_master) then
+    ! leveraging option%iflag to count the number of masters
+    option%iflag = option%iflag + 1
+    ! set up subsurface output
+    pmc%Output => Output
+  endif
   
   ! loop through this pmc's process models:
   cur_pm => pmc%pm_list
@@ -1651,6 +1678,7 @@ subroutine SubsurfaceReadInput(simulation)
   use Checkpoint_module
   use Simulation_Subsurface_class
   use PMC_Subsurface_class
+  use Subsurface_Reset_module
   use Timestepper_BE_class
   use Timestepper_Steady_class
 #if WELL_CLASS
@@ -1720,6 +1748,7 @@ subroutine SubsurfaceReadInput(simulation)
   class(data_mediator_dataset_type), pointer :: rt_data_mediator
   type(waypoint_list_type), pointer :: waypoint_list
   type(input_type), pointer :: input, input_parent
+  type(subsurface_reset_type), pointer :: subsurface_reset
   
   PetscReal :: dt_init
   PetscReal :: dt_min
@@ -1963,6 +1992,14 @@ subroutine SubsurfaceReadInput(simulation)
         call StrataRead(strata,input,option)
         call RealizationAddStrata(realization,strata)
         nullify(strata)
+
+!....................
+      case ('SOLUTION_RESET')
+        subsurface_reset => SubsurfaceResetCreate()
+        call SubsurfaceResetRead(subsurface_reset,input,option)
+        call SubsurfaceResetAddToList(subsurface_reset, &
+                                      realization%subsurface_reset_list)
+        nullify(subsurface_reset)
 
 !.....................
       case ('DATASET')
