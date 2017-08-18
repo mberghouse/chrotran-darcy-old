@@ -1206,7 +1206,6 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   option => realization%option
 
   call RichardsResidualPreliminaries(xx,r,realization,ierr)
-stop
 
   skip_conn_type = NO_CONN
   if (option%flow%only_vertical_flow) skip_conn_type = HORZ_CONN

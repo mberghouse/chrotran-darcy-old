@@ -72,6 +72,7 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   PetscReal :: z_offset
   PetscReal :: aux(1), dummy
   PetscErrorCode :: ierr
+  character(len=MAXSTRINGLENGTH) :: string
   
   class(dataset_gridded_hdf5_type), pointer :: datum_dataset
   PetscReal :: datum_dataset_rmax
@@ -369,7 +370,9 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   num_faces = coupler%connection_set%num_connections
 
 if (coupler%region%name == 'east') then
-open(unit=86,file='hydrostatic_.txt')
+write(string,'(es22.15)') option%time
+string = 'hydrostatic_' // trim(adjustl(string)) // '.txt'
+open(unit=86,file=string)
 endif
   do iconn=1, num_faces !geh: this should really be num_faces!
     local_id = coupler%connection_set%id_dn(iconn)
