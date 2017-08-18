@@ -370,7 +370,7 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   num_faces = coupler%connection_set%num_connections
 
 if (coupler%region%name == 'east') then
-write(string,'(es22.15)') option%time
+write(string,'(es22.15)') option%time/3600.d0/24.d0
 string = 'hydrostatic_' // trim(adjustl(string)) // '.txt'
 open(unit=86,file=string)
 endif
