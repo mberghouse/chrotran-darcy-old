@@ -1093,16 +1093,7 @@ subroutine SubsurfaceInitSimulation(simulation)
   ! the following recursive subroutine will also call each pmc child 
   ! and each pms's peers
   if (associated(cur_process_model_coupler_top)) then
-    ! use iflag to count the number of master process model couplers
-    option%iflag = 0
     call SetUpPMApproach(cur_process_model_coupler_top,simulation)
-    ! should only have 1 master pmc
-    if (option%iflag /= 1) then
-      write(string,*) option%iflag
-      option%io_buffer = 'Incorrect number of master process model coupler &
-        &for subsurface simulation: ' // trim(adjustl(string))
-      call printErrMsg(option)
-    endif
   endif
 
 end subroutine SubsurfaceInitSimulation

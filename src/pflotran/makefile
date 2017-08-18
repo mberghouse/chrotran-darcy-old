@@ -455,6 +455,7 @@ misc_obj = \
 	${common_src}simulation_base.o \
 	${common_src}simulation_hydrogeophysics.o \
 	${common_src}simulation_subsurface.o \
+	${common_src}subsurface_reset.o \
 	${common_src}solver.o \
 	${common_src}spline.o \
 	${common_src}strata.o \
@@ -610,14 +611,15 @@ condition.o : dataset.o dataset_ascii.o dataset_base.o general_aux.o \
               reaction_aux.o string.o time_storage.o transport_constraint.o \
               units.o utility.o
 condition_control.o : condition.o connection.o coupler.o dataset_base.o \
-                      dataset_common_hdf5.o dataset_gridded_hdf5.o \
-                      discretization.o eos_water.o field.o general_aux.o \
-                      global.o global_aux.o grid.o hdf5.o material_aux.o \
-                      option.o patch.o pflotran_constants.o pm_toil_ims_aux.o \
-                      pm_towg_aux.o reaction.o reaction_aux.o \
-                      reactive_transport.o reactive_transport_aux.o \
-                      realization_subsurface.o realization_surface.o region.o \
-                      surface_field.o surface_global_aux.o surface_th_aux.o \
+                      dataset_common_hdf5.o dataset_global_hdf5.o \
+                      dataset_gridded_hdf5.o discretization.o eos_water.o \
+                      field.o general_aux.o global.o global_aux.o grid.o \
+                      hdf5.o material_aux.o option.o patch.o \
+                      pflotran_constants.o pm_toil_ims_aux.o pm_towg_aux.o \
+                      reaction.o reaction_aux.o reactive_transport.o \
+                      reactive_transport_aux.o realization_subsurface.o \
+                      realization_surface.o region.o surface_field.o \
+                      surface_global_aux.o surface_th_aux.o \
                       transport_constraint.o variables.o wipp_flow_aux.o
 connection.o : pflotran_constants.o utility.o
 convergence.o : grid.o option.o pflotran_constants.o solver.o
@@ -725,10 +727,10 @@ factory_subsurface.o : characteristic_curves.o checkpoint.o condition.o \
                        realization_base.o realization_subsurface.o region.o \
                        regression.o saturation_function.o \
                        simulation_subsurface.o solver.o srcsink_sandbox.o \
-                       strata.o string.o timestepper_BE.o timestepper_base.o \
-                       timestepper_steady.o transport_constraint.o \
-                       uniform_velocity.o units.o utility.o waypoint.o \
-                       well_spec_base.o wipp.o
+                       strata.o string.o subsurface_reset.o timestepper_BE.o \
+                       timestepper_base.o timestepper_steady.o \
+                       transport_constraint.o uniform_velocity.o units.o \
+                       utility.o waypoint.o well_spec_base.o wipp.o
 factory_surface.o : checkpoint.o checkpoint_surface.o condition.o \
                     condition_control.o coupler.o dataset.o dataset_base.o \
                     dataset_common_hdf5.o debug.o discretization.o grid.o \
@@ -1007,17 +1009,18 @@ output_vtk.o : discretization.o field.o grid.o grid_structured.o logging.o \
                variables.o
 patch.o : auxiliary.o characteristic_curves.o condition.o connection.o \
           coupler.o dataset.o dataset_ascii.o dataset_base.o \
-          dataset_common_hdf5.o dataset_gridded_hdf5.o dataset_map_hdf5.o \
-          eos_water.o field.o general_aux.o geometry.o global_aux.o grid.o \
-          hydrostatic.o hydrostatic_multi_phase.o immis_aux.o integral_flux.o \
-          material.o material_aux.o miscible_aux.o mphase_aux.o observation.o \
-          option.o output_aux.o pflotran_constants.o pm_toil_ims_aux.o \
-          pm_towg_aux.o reaction.o reaction_aux.o reaction_mineral.o \
-          reaction_mineral_aux.o reaction_surf_complex_aux.o \
-          reactive_transport_aux.o region.o richards_aux.o saturation.o \
-          saturation_function.o strata.o string.o surface_auxiliary.o \
-          surface_field.o surface_material.o th_aux.o transport_constraint.o \
-          utility.o variables.o well.o well_spec_base.o wipp_flow_aux.o
+          dataset_common_hdf5.o dataset_global_hdf5.o dataset_gridded_hdf5.o \
+          dataset_map_hdf5.o eos_water.o field.o general_aux.o geometry.o \
+          global_aux.o grid.o hydrostatic.o hydrostatic_multi_phase.o \
+          immis_aux.o integral_flux.o material.o material_aux.o miscible_aux.o \
+          mphase_aux.o observation.o option.o output_aux.o \
+          pflotran_constants.o pm_toil_ims_aux.o pm_towg_aux.o reaction.o \
+          reaction_aux.o reaction_mineral.o reaction_mineral_aux.o \
+          reaction_surf_complex_aux.o reactive_transport_aux.o region.o \
+          richards_aux.o saturation.o saturation_function.o strata.o string.o \
+          surface_auxiliary.o surface_field.o surface_material.o th_aux.o \
+          transport_constraint.o utility.o variables.o well.o well_spec_base.o \
+          wipp_flow_aux.o
 pflotran.o : factory_hydrogeophysics.o factory_pflotran.o factory_subsurface.o \
              multisimulation.o option.o pflotran_constants.o \
              pflotran_provenance.o simulation_base.o
@@ -1135,11 +1138,11 @@ pm_wipp_flow.o : checkpoint.o field.o global.o global_aux.o grid.o input_aux.o \
                  realization_base.o realization_subsurface.o \
                  saturation_function.o string.o variables.o wipp_flow.o \
                  wipp_flow_aux.o wipp_flow_common.o
-pm_wipp_srcsink.o : data_mediator_vec.o eos_gas.o eos_water.o global_aux.o \
-                    grid.o input_aux.o material_aux.o option.o output_aux.o \
-                    pflotran_constants.o pm_base.o realization_base.o \
-                    realization_subsurface.o region.o string.o utility.o \
-                    wipp_flow_aux.o
+pm_wipp_srcsink.o : data_mediator_vec.o eos_gas.o eos_water.o general_aux.o \
+                    global_aux.o grid.o input_aux.o material_aux.o option.o \
+                    output_aux.o pflotran_constants.o pm_base.o \
+                    realization_base.o realization_subsurface.o region.o \
+                    string.o utility.o wipp_flow_aux.o
 pmc_auxiliary.o : option.o pflotran_constants.o pm_auxiliary.o pmc_base.o \
                   realization_subsurface.o timestepper_base.o
 pmc_base.o : checkpoint.o logging.o option.o output.o output_aux.o \
@@ -1313,9 +1316,9 @@ realization_subsurface.o : characteristic_curves.o communicator_structured.o \
                            pflotran_constants.o reaction.o reaction_aux.o \
                            reactive_transport_aux.o realization_base.o \
                            region.o saturation_function.o strata.o string.o \
-                           time_storage.o transport_constraint.o \
-                           uniform_velocity.o variables.o waypoint.o \
-                           well_spec_base.o
+                           subsurface_reset.o time_storage.o \
+                           transport_constraint.o uniform_velocity.o \
+                           variables.o waypoint.o well_spec_base.o
 realization_surface.o : condition.o coupler.o dataset.o dataset_base.o debug.o \
                         discretization.o dm_kludge.o field.o grid.o \
                         grid_unstructured.o grid_unstructured_aux.o \
@@ -1419,6 +1422,8 @@ srcsink_sandbox_wipp_well.o : grid.o input_aux.o material_aux.o option.o \
 strata.o : input_aux.o material.o option.o pflotran_constants.o region.o \
            string.o surface_material.o units.o
 string.o : pflotran_constants.o
+subsurface_reset.o : dataset_base.o input_aux.o option.o pflotran_constants.o \
+                     string.o units.o
 surface_auxiliary.o : pflotran_constants.o surface_global_aux.o \
                       surface_th_aux.o
 surface_field.o : pflotran_constants.o
@@ -1453,14 +1458,14 @@ time_storage.o : option.o pflotran_constants.o
 timestepper_BE.o : checkpoint.o convergence.o input_aux.o option.o output.o \
                    output_ekg.o pflotran_constants.o pm_base.o solver.o \
                    string.o timestepper_base.o utility.o
-timestepper_base.o : input_aux.o option.o output.o pflotran_constants.o \
-                     pm_base.o string.o waypoint.o
+timestepper_base.o : input_aux.o option.o output.o output_aux.o \
+                     pflotran_constants.o pm_base.o string.o waypoint.o
 timestepper_steady.o : convergence.o option.o output.o pflotran_constants.o \
                        pm_base.o pm_geomechanics_force.o solver.o \
                        timestepper_BE.o timestepper_base.o waypoint.o
 timestepper_surface.o : option.o output.o pflotran_constants.o pm_base.o \
                         pm_surface_flow.o solver.o surface_flow.o \
-                        timestepper_base.o waypoint.o
+                        timestepper_base.o utility.o waypoint.o
 toil_ims.o : auxvars_flow.o auxvars_toil_ims.o condition.o connection.o \
              coupler.o debug.o discretization.o eos_oil.o eos_water.o field.o \
              global_aux.o grid.o material.o material_aux.o option.o \
@@ -1510,13 +1515,13 @@ well_water_injector.o : eos_water.o grid.o hydrostatic_common.o option.o \
                         well_flow.o well_flow_energy.o well_spec_base.o
 wipp.o : input_aux.o lookup_table.o material_aux.o option.o \
          pflotran_constants.o string.o units.o utility.o
-wipp_flow.o : connection.o coupler.o debug.o discretization.o eos_water.o \
-              field.o fluid.o general_aux.o global_aux.o grid.o material.o \
-              material_aux.o option.o output_aux.o patch.o \
-              pflotran_constants.o realization_subsurface.o \
-              saturation_function.o srcsink_sandbox.o srcsink_sandbox_base.o \
-              srcsink_sandbox_wipp_gas.o srcsink_sandbox_wipp_well.o \
-              variables.o wipp_flow_aux.o wipp_flow_common.o
+wipp_flow.o : connection.o coupler.o debug.o discretization.o field.o \
+              general_aux.o global_aux.o grid.o material.o material_aux.o \
+              option.o output_aux.o patch.o pflotran_constants.o \
+              realization_subsurface.o srcsink_sandbox.o \
+              srcsink_sandbox_base.o srcsink_sandbox_wipp_gas.o \
+              srcsink_sandbox_wipp_well.o variables.o wipp_flow_aux.o \
+              wipp_flow_common.o
 wipp_flow_aux.o : characteristic_curves.o eos_gas.o eos_water.o global_aux.o \
                   material_aux.o option.o pflotran_constants.o utility.o \
                   wipp.o

@@ -323,7 +323,10 @@ subroutine PFLOTRANReadSimulation(simulation,option)
     class is(simulation_geomechanics_type)
       call GeomechanicsInitialize(simulation)
   end select
-  simulation%master_process_model_coupler%is_master = PETSC_TRUE
+  if (associated(simulation%master_process_model_coupler)) then
+    ! not all processes (e.g. hydrogeophysics) will have masters
+    simulation%master_process_model_coupler%is_master = PETSC_TRUE
+  endif
   
 end subroutine PFLOTRANReadSimulation
 
