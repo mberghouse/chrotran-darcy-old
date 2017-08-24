@@ -327,6 +327,7 @@ module PM_WIPP_SrcSink_class
     PetscReal :: RXH2O_factor       
     PetscReal :: volume           
     PetscBool :: scale_by_volume  
+    PetscReal :: prev_dt
     PetscInt :: id
     PetscMPIInt :: myMPIcomm
     PetscMPIInt :: myMPIgroup
@@ -544,6 +545,7 @@ function PMWSSWastePanelCreate()
   panel%RXCO2_factor = UNINITIALIZED_DOUBLE
   panel%RXH2_factor = UNINITIALIZED_DOUBLE
   panel%RXH2O_factor = UNINITIALIZED_DOUBLE
+  panel%prev_dt = 0.d0
   panel%id = 0
   panel%myMPIgroup = 0
   panel%myMPIcomm = 0
@@ -2415,7 +2417,9 @@ subroutine PMWSSInitializeTimestep(this)
   cur_waste_panel => this%waste_panel_list
   do
     if (.not.associated(cur_waste_panel)) exit
-    call PMWSSUpdateInventory(cur_waste_panel,dt,option)
+    call PMWSSUpdateInventory(cur_waste_panel,option)
+    ! set current dt after using previous in update
+    cur_waste_panel%prev_dt = dt
     cur_waste_panel => cur_waste_panel%next
   enddo
   
@@ -2428,7 +2432,7 @@ end subroutine PMWSSInitializeTimestep
 
 ! *************************************************************************** !
 
-subroutine PMWSSUpdateInventory(waste_panel,dt,option)
+subroutine PMWSSUpdateInventory(waste_panel,option)
   !
   ! Updates the waste panel tracked species inventory concentrations.
   !
@@ -2443,13 +2447,16 @@ subroutine PMWSSUpdateInventory(waste_panel,dt,option)
 ! INPUT ARGUMENTS:
 ! ================
 ! waste_panel (input/output): waste panel object
-! dt (input): [sec] flow time step value (flow_dt)
 ! option (input/output): pointer to option object
 ! ---------------------------------------
   type(srcsink_panel_type) :: waste_panel
-  PetscReal :: dt
   type(option_type), pointer :: option
 ! ---------------------------------------
+
+! dt (input): [sec] flow time step value (flow_dt)
+  PetscReal :: dt
+
+  dt = waste_panel%prev_dt
  
   call PMWSSUpdateChemSpecies(waste_panel%inventory%Fe_s,waste_panel,dt,option)
   call PMWSSUpdateChemSpecies(waste_panel%inventory%FeOH2_s,waste_panel,dt, &
@@ -2733,14 +2740,18 @@ end subroutine PMWSSUpdateChemSpecies
     !-----(see equation PA.67, PA.77, section PA-4.2.5)-----------------------
     
       ! CORSAT
-      cwp%rxnrate_Fe_corrosion_inund(i) = cwp%inundated_corrosion_rate*s_eff
+      cwp%rxnrate_Fe_corrosion_inund(i) = cwp%inundated_corrosion_rate * &
+                                          s_eff * &
+                                          cwp%scaling_factor(i)
       call PMWSSSmoothRxnrate(cwp%rxnrate_Fe_corrosion_inund(i),i, &
                               cwp%inventory%Fe_s,this%alpharxn) 
       call PMWSSTaperRxnrate(cwp%rxnrate_Fe_corrosion_inund(i),i, &
                               cwp%inventory%Fe_s,1.d0,dt)
       
       ! CORHUM
-      cwp%rxnrate_Fe_corrosion_humid(i) = cwp%humid_corrosion_rate*sg_eff
+      cwp%rxnrate_Fe_corrosion_humid(i) = cwp%humid_corrosion_rate * &
+                                          sg_eff * &
+                                          cwp%scaling_factor(i)
       call PMWSSSmoothRxnrate(cwp%rxnrate_Fe_corrosion_humid(i),i, &
                               cwp%inventory%Fe_s,this%alpharxn) 
       call PMWSSTaperRxnrate(cwp%rxnrate_Fe_corrosion_humid(i),i, &
@@ -2756,14 +2767,18 @@ end subroutine PMWSSUpdateChemSpecies
     !-----(see equation PA.69, PA.82, PA.83, section PA-4.2.5)----------------
       
       ! BIOSAT
-      cwp%rxnrate_cell_biodeg_inund(i) = cwp%inundated_biodeg_rate*s_eff
+      cwp%rxnrate_cell_biodeg_inund(i) = cwp%inundated_biodeg_rate * &
+                                         s_eff * &
+                                         cwp%scaling_factor(i)
       call PMWSSSmoothRxnrate(cwp%rxnrate_cell_biodeg_inund(i),i, &
                               cwp%inventory%BioDegs_s,this%alpharxn) 
       call PMWSSTaperRxnrate(cwp%rxnrate_cell_biodeg_inund(i),i, &
                               cwp%inventory%BioDegs_s,1.d0,dt)
       
       ! BIOHUM
-      cwp%rxnrate_cell_biodeg_humid(i) = cwp%humid_biodeg_rate*sg_eff
+      cwp%rxnrate_cell_biodeg_humid(i) = cwp%humid_biodeg_rate * &
+                                         sg_eff * &
+                                         cwp%scaling_factor(i)
       call PMWSSSmoothRxnrate(cwp%rxnrate_cell_biodeg_humid(i),i, &
                               cwp%inventory%BioDegs_s,this%alpharxn) 
       call PMWSSTaperRxnrate(cwp%rxnrate_cell_biodeg_humid(i),i, &
@@ -2792,20 +2807,26 @@ end subroutine PMWSSUpdateChemSpecies
                                this%alpharxn)
       
       ! here tapering actually truncates the rate, so this call is important
-      call PMWSSTaperRxnrate(cwp%rxnrate_FeOH2_sulf(i),i,cwp%inventory%FeOH2_s,1.d0,dt)
+      call PMWSSTaperRxnrate(cwp%rxnrate_FeOH2_sulf(i),i, &
+                             cwp%inventory%FeOH2_s,1.d0,dt)
       
       ! FeS rate is caculated based on the left over H2S rate
       cwp%rxnrate_Fe_sulf(i) = cwp%rxnrate_cell_biodeg(i)*cwp%RXH2S_factor - &
                               cwp%rxnrate_FeOH2_sulf(i)
-      call PMWSSTaperRxnrate(cwp%rxnrate_Fe_sulf(i),i,cwp%inventory%Fe_s,1.d0,dt)
+      call PMWSSTaperRxnrate(cwp%rxnrate_Fe_sulf(i),i, &
+                             cwp%inventory%Fe_s,1.d0,dt)
       
       
     !-----MgO-hydration-[mol-MgO/m3/sec]--------------------------------------
     !-----(see equation PA.73, PA.94, section PA-4.2.5)-----------------------
       
       ! CORMGO
-      cwp%rxnrate_MgO_hyd_inund(i) = cwp%inundated_brucite_rate*s_eff
-      cwp%rxnrate_MgO_hyd_humid(i) = cwp%humid_brucite_rate*sg_eff
+      cwp%rxnrate_MgO_hyd_inund(i) = cwp%inundated_brucite_rate * &
+                                     s_eff * &
+                                     cwp%scaling_factor(i)
+      cwp%rxnrate_MgO_hyd_humid(i) = cwp%humid_brucite_rate * &
+                                     sg_eff * &
+                                     cwp%scaling_factor(i)
       ! the humid rate is also smoothed based on sg_eff; neglected here
       
       ! unlike for corrorosion and biodegradation, bragflo doesn't
@@ -2831,12 +2852,14 @@ end subroutine PMWSSUpdateChemSpecies
                                this%alpharxn)
       
       ! here tapering actually truncates the rate, so this call is important
-      call PMWSSTaperRxnrate(cwp%rxnrate_MgOH2_carb(i),i,cwp%inventory%MgOH2_s,1.d0,dt)
+      call PMWSSTaperRxnrate(cwp%rxnrate_MgOH2_carb(i),i, &
+                             cwp%inventory%MgOH2_s,1.d0,dt)
       
       ! the remaining CO2 reacts with MgO
       cwp%rxnrate_MgO_carb(i) = cwp%rxnrate_cell_biodeg(i)*cwp%RXCO2_factor - &
                                 cwp%rxnrate_MgOH2_carb(i)
-      call PMWSSTaperRxnrate(cwp%rxnrate_MgO_carb(i),i,cwp%inventory%MgO_s,1.d0,dt)
+      call PMWSSTaperRxnrate(cwp%rxnrate_MgO_carb(i),i, &
+                             cwp%inventory%MgO_s,1.d0,dt)
       
     !-----hydromagnesite-conversion-[mol-hydromagnesite/m3-bulk/sec]----------
     !-----(see equation PA.74, PA.97, section PA-4.2.5)-----------------------
@@ -2847,9 +2870,9 @@ end subroutine PMWSSUpdateChemSpecies
                                 cwp%inventory%Mg5CO34OH24H2_s%current_conc_kg(i)
       ! for smoothing, the initial and current species are different
       call PMWSSSmoothRxnrate2(cwp%rxnrate_hydromag_conv(i), &
-                               cwp%inventory%Mg5CO34OH24H2_s%current_conc_mol(i), & 
-                               cwp%inventory%MgO_s%initial_conc_mol(i), & 
-                               this%alpharxn)
+                           cwp%inventory%Mg5CO34OH24H2_s%current_conc_mol(i), & 
+                           cwp%inventory%MgO_s%initial_conc_mol(i), & 
+                           this%alpharxn)
       call PMWSSTaperRxnrate(cwp%rxnrate_hydromag_conv(i),i, &
                              cwp%inventory%Mg5CO34OH24H2_s,1.d0,dt)
       
