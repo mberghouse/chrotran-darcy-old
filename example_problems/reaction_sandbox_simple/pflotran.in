@@ -1,4 +1,4 @@
-#Description: 1D Calcite dissolution problem
+#Description: Simple Reaction Sandbox input deck
 
 #==============================================================================
 # DO NOT MODIFY
@@ -17,7 +17,7 @@ END
 SUBSURFACE
 
 #=========================== constraints ======================================
-# modify these initial concentration
+# modify these initial concentrations
 CONSTRAINT initial
   CONCENTRATIONS # [mol/L]
     Aaq  1.d-10  T

@@ -193,41 +193,22 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   K_Aaq = 0.d0
   K_Baq = 0.d0
 
-! PCL: A -> B -> C
-! kinetic rate constants
-! non-stationary state
-! k1 = 1.d-1
-! k2 = 5.d-2
-
-! stationary state
-! k1 = 1.d-1
-! k2 = 1.d-0
-
-! Rate1 = k1 * Aaq * L_water
-! Rate2 = k2 * Baq * L_water
-
-! RateA = -Rate1
-! RateB =  Rate1 - Rate2
-! RateC =  Rate2
-
-! END PCL
-
   ! zero-order (A -> C)
   !k = 0.d0 ! WARNING: Too high a rate can result in negative concentrations
             !          which are non-physical and the code will not converge.
   !stoichA = -1.d0
   !stoichC = 1.d0
   !Rate = k * L_water
-  !RateA = stoichA * Rate
-  !RateC = stoichC * Rate
+  !RateA = RateA + stoichA * Rate
+  !RateC = RateC + stoichC * Rate
   
   ! first-order (A -> C)
   !k = 1.d-10
   !stoichA = -1.d0
   !stoichC = 1.d0
   !Rate = k * Aaq * L_water
-  !RateA = stoichA * Rate
-  !RateC = stoichC * Rate
+  !RateA = RateA + stoichA * Rate
+  !RateC = RateC + stoichC * Rate
   
   ! second-order (A + B -> C)
   !k = 1.d-10
@@ -235,9 +216,9 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   !stoichB = -1.d0
   !stoichC = 1.d0
   !Rate = k * Aaq * Baq * L_water
-  !RateA = stoichA * Rate
-  !RateB = stoichB * Rate
-  !RateC = stoichC * Rate
+  !RateA = RateA + stoichA * Rate
+  !RateB = RateB + stoichB * Rate
+  !RateC = RateC + stoichC * Rate
   
   ! Monod (A -> C)
   !k = 1.d-12
@@ -245,8 +226,8 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   !stoichA = -1.d0
   !stoichC = 1.d0
   !Rate = k * Aaq / (K_Aaq + Aaq) * L_water
-  !RateA = stoichA * Rate
-  !RateC = stoichC * Rate
+  !RateA = RateA + stoichA * Rate
+  !RateC = RateC + stoichC * Rate
   
   ! multiplicative Monod w/biomass
   ! A + 2B -> C
@@ -257,9 +238,9 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   !stoichB = -2.d0
   !stoichC = 1.d0
   !Rate = k * Xim * Aaq / (K_Aaq + Aaq) * Baq / (K_Baq + Baq) * L_water
-  !RateA = stoichA * Rate
-  !RateB = stoichB * Rate
-  !RateC = stoichC * Rate
+  !RateA = RateA + stoichA * Rate
+  !RateB = RateB + stoichB * Rate
+  !RateC = RateC + stoichC * Rate
   
   ! first-order forward - reverse (A <-> C)
   !k = 1.d-6
@@ -267,8 +248,8 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   !stoichA = -1.d0
   !stoichC = 1.d0
   !Rate = (k * Aaq - kr * Caq) * L_water
-  !RateA = stoichA * Rate
-  !RateC = stoichC * Rate
+  !RateA = RateA + stoichA * Rate
+  !RateC = RateC + stoichC * Rate
 
   ! mass transfer between aqueous and immobile phases
   ! k [1/sec]
@@ -279,14 +260,31 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   ! L_water [L]
   ! Rate [mole/sec]
   ! uncomment from here down
-  !k = 1.d-8
+  !k = 1.d-10
   !kr = 1.d-10
-  !stoichB = -1.d0
+  !stoichC = -1.d0
   !stoichY = 1.d0
-  !Rate = k * Baq * L_water - kr * Yim * volume
-  !RateB = stoichB * Rate
-  !RateY = stoichY * Rate
+  !Rate = k * Caq * L_water - kr * Yim * volume
+  !RateC = RateC + stoichC * Rate
+  !RateY = RateY + stoichY * Rate
   
+  ! stationary and non-stationary states: A -> B -> C
+  ! kinetic rate constants
+  ! non-stationary state
+  ! k1 = 1.d-1
+  ! k2 = 5.d-2
+  
+  ! stationary state
+  ! k1 = 1.d-1
+  ! k2 = 1.d-0
+  
+  ! Rate1 = k1 * Aaq * L_water
+  ! Rate2 = k2 * Baq * L_water
+  
+  ! RateA = RateA - Rate1
+  ! RateB = RateB + Rate1 - Rate2
+  ! RateC = RateC + Rate2
+
   ! NOTES
   ! 1. Always subtract contribution from residual
   ! 2. Units of residual are moles/second  
