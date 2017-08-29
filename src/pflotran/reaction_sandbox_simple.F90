@@ -252,6 +252,7 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   !RateC = RateC + stoichC * Rate
 
   ! mass transfer between aqueous and immobile phases
+  ! C <-> Y
   ! k [1/sec]
   ! kr [1/sec]
   ! Baq [mol/L]
