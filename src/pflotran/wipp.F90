@@ -428,6 +428,7 @@ module Creep_Closure_module
     character(len=MAXWORDLENGTH) :: name
     PetscInt :: num_times
     PetscInt :: num_values_per_time
+    PetscReal :: shutdown_pressure
     class(lookup_table_general_type), pointer :: lookup_table
     
     class(creep_closure_type), pointer :: next
@@ -483,6 +484,7 @@ function CreepClosureCreate()
   CreepClosureCreate%name = ''
   CreepClosureCreate%num_times = UNINITIALIZED_INTEGER
   CreepClosureCreate%num_values_per_time = UNINITIALIZED_INTEGER
+  CreepClosureCreate%shutdown_pressure = 1.d20 ! set to infinity
   nullify(CreepClosureCreate%lookup_table)
   nullify(CreepClosureCreate%next)
   
@@ -533,7 +535,9 @@ subroutine CreepClosureRead(this,input,option)
       case('FILENAME') 
         call InputReadNChars(input,option,filename,MAXSTRINGLENGTH,PETSC_TRUE)
         call InputErrorMsg(input,option,'FILENAME',error_string)
-      
+      case('SHUTDOWN_PRESSURE')
+        call InputReadDouble(input,option,this%shutdown_pressure)
+        call InputErrorMsg(input,option,'shutdown pressure',error_string)
      case default
         call InputKeywordUnrecognized(keyword,'CREEP_CLOSURE',option)
     end select
