@@ -303,6 +303,7 @@ subroutine WIPPFloAuxVarCompute(x,wippflo_auxvar,global_auxvar,material_auxvar, 
   use Fracture_module
   use Klinkenberg_module
   use WIPP_module
+  use Variables_module, only : SOIL_REFERENCE_PRESSURE
   
   implicit none
 
@@ -334,6 +335,7 @@ subroutine WIPPFloAuxVarCompute(x,wippflo_auxvar,global_auxvar,material_auxvar, 
   PetscReal :: dden_water_vapor_dpv
   PetscReal :: dpc_dsatl
   PetscReal :: perm_for_cc
+  PetscReal :: prev_effective_porosity
   PetscErrorCode :: ierr
 
   ! from init.F90
@@ -362,7 +364,9 @@ subroutine WIPPFloAuxVarCompute(x,wippflo_auxvar,global_auxvar,material_auxvar, 
   wippflo_auxvar%sat(lid) = 1.d0 - wippflo_auxvar%sat(gid)
 
   cell_pressure = wippflo_auxvar%pres(lid)
-        
+
+  prev_effective_porosity = wippflo_auxvar%effective_porosity
+
   ! calculate effective porosity as a function of pressure
   if (option%iflag /= WIPPFLO_UPDATE_FOR_BOUNDARY) then
     dpor_dp = 0.d0
@@ -371,6 +375,16 @@ subroutine WIPPFloAuxVarCompute(x,wippflo_auxvar,global_auxvar,material_auxvar, 
     if (option%flow%creep_closure_on .and. wippflo_use_creep_closure) then
       creep_closure => wipp%creep_closure_tables_array( &
                          material_auxvar%creep_closure_id )%ptr
+      if (associated(creep_closure)) then
+        if (cell_pressure > creep_closure%shutdown_pressure) then
+          material_auxvar%porosity_base = prev_effective_porosity
+          call MaterialAuxVarSetValue(material_auxvar,SOIL_REFERENCE_PRESSURE, &
+                                      cell_pressure)
+          ! index 1 of wipp%creep_closure_tables_array is a null pointer
+          material_auxvar%creep_closure_id = 1 
+          nullify(creep_closure)
+        endif
+      endif
       if (associated(creep_closure)) then
         ! option%time here is the t time, not t + dt time.
         creep_closure_time = option%time
