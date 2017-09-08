@@ -2227,6 +2227,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
     rt_sec_transport_vars => patch%aux%SC_RT%sec_transport_vars
   endif
 
+  option%iflag = -999
   if (reaction%act_coef_update_frequency == &
       ACT_COEF_FREQUENCY_NEWTON_ITER) then
     ! update:                        cells      bcs        act. coefs.
@@ -2234,6 +2235,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
   else
     call RTUpdateAuxVars(realization,PETSC_TRUE,PETSC_TRUE,PETSC_FALSE)
   endif
+  option%iflag = 0
   
   if (option%compute_mass_balance_new) then
     call RTZeroMassBalanceDelta(realization)

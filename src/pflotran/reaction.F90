@@ -4240,6 +4240,7 @@ subroutine RTotalSorbKD(rt_auxvar,global_auxvar,material_auxvar,reaction, &
   ! 
 
   use Option_module
+  use Utility_module, only : Interpolate
 
   implicit none
 
@@ -4259,6 +4260,11 @@ subroutine RTotalSorbKD(rt_auxvar,global_auxvar,material_auxvar,reaction, &
   PetscReal :: molality_one_over_n
   PetscReal :: kd_kgw_m3b  
   PetscReal :: temp
+  PetscReal :: scale_values(3) = [1.d0, 0.75d0, 0.d0]
+  PetscReal :: scale_times(3) = [0.d0, 500.d0, 1000.d0]
+  PetscInt, save :: iscale = 2
+  PetscReal :: scale
+  PetscReal :: t, dt
 
   PetscInt, parameter :: iphase = 1
 
@@ -4281,7 +4287,33 @@ subroutine RTotalSorbKD(rt_auxvar,global_auxvar,material_auxvar,reaction, &
                    1.d-3 * & ! convert mL water/g soil to m^3 water/kg soil
                    (rt_auxvar%mnrl_volfrac(reaction%eqkdmineral(irxn)))
     else
-      kd_kgw_m3b = reaction%eqkddistcoef(irxn)
+      t = option%time
+      dt = option%tran_dt
+      if (option%iflag == -999) then ! shift time to beginning of time step
+        t = t + dt
+      endif
+      ! find appropriate time span in time array on which to interpolate
+      do 
+        if (t > scale_times(iscale)) then
+          iscale = iscale + 1
+          if (iscale > size(scale_times)) then
+            iscale = size(scale_times)
+            exit
+          endif
+        elseif (t < scale_times(iscale-1)) then
+          iscale = iscale - 1
+          if (iscale < 2) then
+            iscale = 2
+            exit
+          endif
+        else
+          exit
+        endif
+      enddo
+      call Interpolate(scale_times(iscale),scale_times(iscale-1),t, &
+                       scale_values(iscale),scale_values(iscale-1),scale)
+      print *, option%time, t, option%iflag, scale, iscale
+      kd_kgw_m3b = reaction%eqkddistcoef(irxn) * scale
     endif
     select case(reaction%eqkdtype(irxn))
       case(SORPTION_LINEAR)
