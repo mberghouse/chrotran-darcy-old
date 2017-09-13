@@ -4315,7 +4315,7 @@ subroutine RTotalSorbKD(rt_auxvar,global_auxvar,material_auxvar,reaction, &
         call Interpolate(scale_times(iscale),scale_times(iscale-1),t, &
                          scale_values(iscale),scale_values(iscale-1),scale)
       endif
-      print *, t, option%iflag, scale, iscale
+      print *, 'joan: ', t, option%iflag, scale, iscale
       kd_kgw_m3b = reaction%eqkddistcoef(irxn) * scale
     endif
     select case(reaction%eqkdtype(irxn))
