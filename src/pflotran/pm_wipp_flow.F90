@@ -17,6 +17,8 @@ module PM_WIPP_Flow_class
     PetscReal :: gas_equation_tolerance
     PetscReal :: liquid_pressure_tolerance
     PetscReal :: gas_saturation_tolerance
+    PetscInt :: extra_newton_iterations
+    PetscInt :: converged_iteration_count
   contains
     procedure, public :: Read => PMWIPPFloRead
     procedure, public :: InitializeRun => PMWIPPFloInitializeRun
@@ -79,6 +81,8 @@ function PMWIPPFloCreate()
   wippflo_pm%gas_equation_tolerance = 1.d-2
   wippflo_pm%liquid_pressure_tolerance = 1.d-2
   wippflo_pm%gas_saturation_tolerance = 1.d-3
+  wippflo_pm%extra_newton_iterations = 0
+  wippflo_pm%converged_iteration_count = 0
 
   PMWIPPFloCreate => wippflo_pm
   
@@ -142,6 +146,9 @@ subroutine PMWIPPFloRead(this,input)
       case('GAS_SATURATION_TOLERANCE')
         call InputReadDouble(input,option,this%gas_saturation_tolerance)
         call InputDefaultMsg(input,option,'GAS_SATURATION_TOLERANCE')
+      case('EXTRA_NEWTON_ITERATIONS')
+        call InputReadInt(input,option,this%extra_newton_iterations)
+        call InputDefaultMsg(input,option,'EXTRA_NEWTON_ITERATIONS')
       case('GAS_COMPONENT_FORMULA_WEIGHT')
         call InputReadDouble(input,option,fmw_comp(2))
         call InputErrorMsg(input,option,'gas component formula wt.', &
@@ -234,8 +241,9 @@ subroutine PMWIPPFloInitializeTimestep(this)
   endif
   
   call WIPPFloInitializeTimestep(this%realization)
-  call PMSubsurfaceFlowInitializeTimestepB(this)                                 
-  
+  call PMSubsurfaceFlowInitializeTimestepB(this)
+  this%converged_iteration_count = 0 
+
 end subroutine PMWIPPFloInitializeTimestep
 
 ! ************************************************************************** !
@@ -603,6 +611,7 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   PetscInt :: min_gas_pressure_cell
   PetscReal :: abs_dX_over_absX
   character(len=4) :: reason
+  character(len=MAXWORDLENGTH) :: word
   PetscInt :: istart, iend
   
   grid => this%realization%patch%grid
@@ -757,8 +766,19 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
     if (temp_int(3) > 0) reason(3:3) = 'P'
     if (temp_int(4) > 0) reason(4:4) = 'S'
   else
-    reason = '----'
-    option%convergence = CONVERGENCE_CONVERGED
+    if (this%converged_iteration_count >= this%extra_newton_iterations) then
+      reason = '----'
+      option%convergence = CONVERGENCE_CONVERGED
+    else
+      write(word,'(i5)') this%converged_iteration_count+1
+      if (this%converged_iteration_count < 10) then
+        reason = '--^' // trim(adjustl(word))
+      else
+        reason = '-^' // trim(adjustl(word))
+      endif
+      option%convergence = CONVERGENCE_KEEP_ITERATING
+    endif
+    this%converged_iteration_count = this%converged_iteration_count + 1
   endif
   if (OptionPrintToScreen(option)) then
     if (option%mycommsize > 1) then
@@ -810,6 +830,7 @@ subroutine PMWIPPFloTimeCut(this)
   
   call PMSubsurfaceFlowTimeCut(this)
   call WIPPFloTimeCut(this%realization)
+  this%converged_iteration_count = 0 
 
 end subroutine PMWIPPFloTimeCut
 
