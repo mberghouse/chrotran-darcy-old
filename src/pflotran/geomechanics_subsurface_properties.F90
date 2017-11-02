@@ -2,8 +2,10 @@ module Geomechanics_Subsurface_Properties_module
   
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PFLOTRAN_Constants_module
+  use Dataset_Base_class
 
+  use PFLOTRAN_Constants_module
+  
   implicit none
   
   private
@@ -25,6 +27,8 @@ module Geomechanics_Subsurface_Properties_module
     character(len=MAXWORDLENGTH) :: geomechanical_compressibility_function
     PetscReal :: Bandis_A
     PetscReal :: Bandis_B
+    class(dataset_base_type), pointer :: Bandis_A_dataset 
+    class(dataset_base_type), pointer :: Bandis_B_dataset 
     PetscReal :: maximum_aperture
     PetscReal :: normal_vector_x
     PetscReal :: normal_vector_y
@@ -80,6 +84,8 @@ subroutine GeomechanicsSubsurfacePropsInit(this)
   this%geomechanical_compressibility_function = ''  
   this%Bandis_A = UNINITIALIZED_DOUBLE
   this%Bandis_B = UNINITIALIZED_DOUBLE
+  nullify(this%Bandis_A_dataset)
+  nullify(this%Bandis_B_dataset)
   this%maximum_aperture = UNINITIALIZED_DOUBLE
   this%normal_vector_x = UNINITIALIZED_DOUBLE
   this%normal_vector_y = UNINITIALIZED_DOUBLE
@@ -172,6 +178,7 @@ subroutine GeomechanicsSubsurfacePropsRead(this,input,option)
   use Option_module
   use Input_Aux_module
   use String_module
+  use Dataset_module
   
   implicit none
   
@@ -200,15 +207,17 @@ subroutine GeomechanicsSubsurfacePropsRead(this,input,option)
                              'geomechanical compressibility function', &
                              'GEOMECHANICS_SUBSURFACE_PROPS')
         case('BANDIS_A') 
-          call InputReadDouble(input,option, &
-                               this%Bandis_A)
-          call InputErrorMsg(input,option,'Bandis A parameter', &
-                             'GEOMECHANICS_SUBSURFACE_PROPS')
+          call DatasetReadDoubleorDataset(input,this%Bandis_A, &
+                                          this%Bandis_A_dataset, &
+                                          'Bandis A parameter', &
+                                          'GEOMECHANICS_SUBSURFACE_PROPS', &
+                                          option)  
         case('BANDIS_B') 
-          call InputReadDouble(input,option, &
-                               this%Bandis_B)
-          call InputErrorMsg(input,option,'Bandis B parameter', &
-                             'GEOMECHANICS_SUBSURFACE_PROPS')
+          call DatasetReadDoubleorDataset(input,this%Bandis_B, &
+                                          this%Bandis_B_dataset, &
+                                          'Bandis A parameter', &
+                                          'GEOMECHANICS_SUBSURFACE_PROPS', &
+                                          option)  
         case('MAXIMUM_APERTURE') 
           call InputReadDouble(input,option, &
                                this%maximum_aperture)
@@ -537,7 +546,9 @@ subroutine GeomechanicsSubsurfacePropsDestroy(this)
   class(geomechanics_subsurface_properties_type), pointer :: this
   
   if (.not.associated(this)) return
-
+ 
+  nullify(this%Bandis_A_dataset)
+  nullify(this%Bandis_B_dataset)
   deallocate(this)
   nullify(this)
 

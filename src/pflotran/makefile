@@ -838,7 +838,8 @@ geomechanics_regression.o : geomech_grid_aux.o geomechanics_discretization.o \
 geomechanics_strata.o : geomechanics_material.o geomechanics_region.o \
                         input_aux.o option.o pflotran_constants.o string.o
 geomechanics_subsurface_properties.o : grid.o input_aux.o material_aux.o \
-                                       option.o pflotran_constants.o string.o
+                                       option.o pflotran_constants.o string.o \
+                                       dataset_base.o dataset.o
 geometry.o : input_aux.o option.o pflotran_constants.o
 global.o : communicator_base.o connection.o coupler.o field.o global_aux.o \
            grid.o material.o option.o patch.o pflotran_constants.o \
