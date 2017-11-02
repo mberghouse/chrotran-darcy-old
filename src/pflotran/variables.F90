@@ -151,4 +151,7 @@ module Variables_module
   PetscInt, parameter, public :: GAS_PERMEABILITY_Y      = 121
   PetscInt, parameter, public :: GAS_PERMEABILITY_Z      = 122
 
+  PetscInt, parameter, public :: BANDIS_A                = 123
+  PetscInt, parameter, public :: BANDIS_B                = 124
+
 end module Variables_module

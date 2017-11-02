@@ -1662,6 +1662,18 @@ subroutine MaterialSetAuxVarVecLoc(Material,vec_loc,ivar,isubvar)
         Material%auxvars(ghosted_id)%permeability(perm_xz_index) = &
           vec_loc_p(ghosted_id)
       enddo
+    case(BANDIS_A)
+      do ghosted_id=1, Material%num_aux
+        Material%auxvars(ghosted_id)% &
+          geomechanics_subsurface_prop(Bandis_A_index) = &
+          vec_loc_p(ghosted_id)
+      enddo
+    case(BANDIS_B)
+      do ghosted_id=1, Material%num_aux
+        Material%auxvars(ghosted_id)% &
+          geomechanics_subsurface_prop(Bandis_B_index) = &
+          vec_loc_p(ghosted_id)
+      enddo  
   end select
 
   call VecRestoreArrayReadF90(vec_loc,vec_loc_p,ierr);CHKERRQ(ierr)

@@ -70,6 +70,10 @@ module Field_module
     Vec :: vy_face_inst
     Vec :: vz_face_inst
 
+    ! vectors to save Bandis model properties
+    Vec :: Bandis_A
+    Vec :: Bandis_B
+
     Vec, pointer :: max_change_vecs(:)
 
   end type field_type
@@ -158,6 +162,9 @@ function FieldCreate()
   field%vx_face_inst = PETSC_NULL_VEC
   field%vy_face_inst = PETSC_NULL_VEC
   field%vz_face_inst = PETSC_NULL_VEC
+ 
+  field%Bandis_A = PETSC_NULL_VEC
+  field%Bandis_B = PETSC_NULL_VEC
 
   nullify(field%max_change_vecs)
 
@@ -233,8 +240,7 @@ subroutine FieldDestroy(field)
   if (field%work_loc /= PETSC_NULL_VEC) then
     call VecDestroy(field%work_loc,ierr);CHKERRQ(ierr)
   endif
-
-  if (field%volume0 /= PETSC_NULL_VEC) then
+if (field%volume0 /= PETSC_NULL_VEC) then
     call VecDestroy(field%volume0,ierr);CHKERRQ(ierr)
   endif
 
@@ -340,6 +346,13 @@ subroutine FieldDestroy(field)
   if (field%vz_face_inst /= PETSC_NULL_VEC) then
     call VecDestroy(field%vz_face_inst,ierr);CHKERRQ(ierr)
   endif
+
+  if (field%Bandis_A /= PETSC_NULL_VEC) then 
+    call VecDestroy(field%Bandis_A,ierr);CHKERRQ(ierr)
+  endif
+  if (field%Bandis_B /= PETSC_NULL_VEC) then
+    call VecDestroy(field%Bandis_B,ierr);CHKERRQ(ierr)
+  endif 
 
   if (associated(field%max_change_vecs)) then
     !geh: kludge as the compiler returns i4 in 64-bit

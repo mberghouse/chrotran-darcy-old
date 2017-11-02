@@ -251,7 +251,8 @@ subroutine InitSubsurfAssignMatProperties(realization)
   use Variables_module, only : PERMEABILITY_X, PERMEABILITY_Y, &
                                PERMEABILITY_Z, PERMEABILITY_XY, &
                                PERMEABILITY_YZ, PERMEABILITY_XZ, &
-                               TORTUOSITY, POROSITY, SOIL_COMPRESSIBILITY
+                               TORTUOSITY, POROSITY, SOIL_COMPRESSIBILITY, &
+                               BANDIS_A, BANDIS_B
   use HDF5_module
   
   implicit none
@@ -271,6 +272,8 @@ subroutine InitSubsurfAssignMatProperties(realization)
   PetscReal, pointer :: perm_pow_p(:)
   PetscReal, pointer :: vec_p(:)
   PetscReal, pointer :: compress_p(:)
+  PetscReal, pointer :: Bandis_A_p(:)
+  PetscReal, pointer :: Bandis_B_p(:)
   
   character(len=MAXSTRINGLENGTH) :: string, string2
   type(material_property_type), pointer :: material_property
@@ -309,6 +312,11 @@ subroutine InitSubsurfAssignMatProperties(realization)
   endif
   call VecGetArrayF90(field%porosity0,por0_p,ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%tortuosity0,tor0_p,ierr);CHKERRQ(ierr)
+
+  if (option%geomech_on) then
+    call VecGetArrayF90(field%Bandis_A,Bandis_A_p,ierr);CHKERRQ(ierr)
+    call VecGetArrayF90(field%Bandis_B,Bandis_B_p,ierr);CHKERRQ(ierr)
+  endif
         
   ! have to use Material%auxvars() and not material_auxvars() due to memory
   ! errors in gfortran
@@ -398,6 +406,14 @@ subroutine InitSubsurfAssignMatProperties(realization)
     endif
     por0_p(local_id) = material_property%porosity
     tor0_p(local_id) = material_property%tortuosity
+ 
+    if (option%geomech_on) then
+      Bandis_A_p(local_id) = material_property% &
+                               geomechanics_subsurface_properties%Bandis_A
+      Bandis_B_p(local_id) = material_property% &
+                               geomechanics_subsurface_properties%Bandis_B
+    endif
+
   enddo
   call MaterialPropertyDestroy(null_material_property)
 
@@ -414,6 +430,12 @@ subroutine InitSubsurfAssignMatProperties(realization)
   endif
   call VecRestoreArrayF90(field%porosity0,por0_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%tortuosity0,tor0_p,ierr);CHKERRQ(ierr)
+
+  if (option%geomech_on) then
+    call VecRestoreArrayF90(field%Bandis_A,Bandis_A_p,ierr);CHKERRQ(ierr)
+    call VecRestoreArrayF90(field%Bandis_B,Bandis_B_p,ierr);CHKERRQ(ierr)
+  endif
+ 
         
   ! read in any user-defined property fields
   do material_id = 1, size(patch%material_property_array)
@@ -433,7 +455,8 @@ subroutine InitSubsurfAssignMatProperties(realization)
         call SubsurfReadDatasetToVecWithMask(realization, &
                material_property%porosity_dataset, &
                material_property%internal_id,PETSC_FALSE,field%porosity0)
-        ! if tortuosity is a function of porosity, we must calculate the
+
+       ! if tortuosity is a function of porosity, we must calculate the
         ! the tortuosity on a cell to cell basis.
         if (field%tortuosity0 /= PETSC_NULL_VEC .and. &
             material_property%tortuosity_function_of_porosity) then
@@ -455,6 +478,23 @@ subroutine InitSubsurfAssignMatProperties(realization)
                material_property%tortuosity_dataset, &
                material_property%internal_id,PETSC_FALSE,field%tortuosity0)
       endif
+      if (option%geomech_on) then
+        if (associated(material_property%geomechanics_subsurface_properties% &
+            Bandis_A_dataset)) then
+            call SubsurfReadDatasetToVecWithMask(realization, &
+                 material_property%geomechanics_subsurface_properties% &
+                 Bandis_A_dataset, &
+                 material_property%internal_id,PETSC_FALSE,field%Bandis_A)
+        endif
+        if (associated(material_property%geomechanics_subsurface_properties% &
+            Bandis_B_dataset)) then
+            call SubsurfReadDatasetToVecWithMask(realization, &
+                 material_property%geomechanics_subsurface_properties% &
+                 Bandis_B_dataset, &
+                 material_property%internal_id,PETSC_FALSE,field%Bandis_B)
+        endif
+      endif 
+
     endif
   enddo
       
@@ -496,6 +536,18 @@ subroutine InitSubsurfAssignMatProperties(realization)
                                     field%work_loc,ONEDOF)
   call MaterialSetAuxVarVecLoc(patch%aux%Material,field%work_loc, &
                                TORTUOSITY,ZERO_INTEGER)
+
+  if (option%geomech_on) then
+    call DiscretizationGlobalToLocal(discretization,field%Bandis_A, &
+                                     field%work_loc,ONEDOF)
+    call MaterialSetAuxVarVecLoc(patch%aux%Material,field%work_loc, &
+                                 BANDIS_A,ZERO_INTEGER)
+    call DiscretizationGlobalToLocal(discretization,field%Bandis_B, &
+                                     field%work_loc,ONEDOF)
+    call MaterialSetAuxVarVecLoc(patch%aux%Material,field%work_loc, &
+                                 BANDIS_B,ZERO_INTEGER)
+  endif
+
 
   ! copy rock properties to neighboring ghost cells
   do i = 1, max_material_index
