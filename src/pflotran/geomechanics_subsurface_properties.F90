@@ -133,7 +133,8 @@ subroutine GeomechanicsSubsurfacePropsPropertytoAux(auxvar,this)
   class(geomechanics_subsurface_properties_type), pointer :: &
     this 
   type(option_type) :: option
- 
+  character(len=MAXSTRINGLENGTH) :: string
+
   auxvar%geomechanics_subsurface_prop(Bandis_A_index) = &
     this%Bandis_A  
   auxvar%geomechanics_subsurface_prop(Bandis_B_index) = &
@@ -162,8 +163,10 @@ subroutine GeomechanicsSubsurfacePropsPropertytoAux(auxvar,this)
       auxvar%geomechanics_subsurface_prop(model_index) = &
         TURNER_MODEL
     case default
-      auxvar%geomechanics_subsurface_prop(model_index) = &
-        LINEAR_MODEL
+      option%io_buffer = 'geomechanical compressibility model "' // &
+        trim(this%geomechanical_compressibility_function) // &
+        '" not recognized.' 
+      call printErrMsg(option)
   end select
  
 end subroutine GeomechanicsSubsurfacePropsPropertytoAux
@@ -191,7 +194,7 @@ subroutine GeomechanicsSubsurfacePropsRead(this,input,option)
       call InputReadPflotranString(input,option)
       call InputReadStringErrorMsg(input,option, &
                         'MATERIAL_PROPERTY,GEOMECHANICS_SUBSURFACE_PROPS')
-          
+         
       if (InputCheckExit(input,option)) exit
           
       if (InputError(input)) exit
@@ -288,6 +291,7 @@ subroutine GeomechanicsSubsurfacePropsPoroEvaluate(grid, &
       normal_vector_x = auxvar%geomechanics_subsurface_prop(normal_vector_x_index)
       normal_vector_y = auxvar%geomechanics_subsurface_prop(normal_vector_y_index)
       normal_vector_z = auxvar%geomechanics_subsurface_prop(normal_vector_z_index)
+!      print *, Bandis_A, Bandis_B, maximum_aperture, normal_vector_x, normal_vector_y, normal_vector_z
       call GeomechanicsSubsurfaceBandisPoroEvaluate(grid,porosity_before, &
         local_stress,local_strain,local_pressure, &
         Bandis_A,Bandis_B,maximum_aperture,normal_vector_x,normal_vector_y, &
@@ -298,11 +302,6 @@ subroutine GeomechanicsSubsurfacePropsPoroEvaluate(grid, &
     case(TURNER_MODEL)
       call GeomechanicsSubsurfaceTurnerPoroEvaluate(porosity_before, &
         local_stress,local_strain,local_pressure,porosity_after)
-    case default
-      write(string,*) model_id
-      option%io_buffer = 'geomechanical compressibility model "' // &
-        trim(string) // '" not recognized.'
-      call printErrMsg(option)
     end select
           
 end subroutine GeomechanicsSubsurfacePropsPoroEvaluate
@@ -343,6 +342,7 @@ subroutine GeomechanicsSubsurfaceBandisPoroEvaluate(grid,porosity_before, &
   b = maximum_aperture + Bandis_A*effective_stress/ &
             (1.d0 - Bandis_B*effective_stress)
   porosity_after = b/b_p
+!  print *, porosity_before, porosity_after, effective_stress
 
 end subroutine GeomechanicsSubsurfaceBandisPoroEvaluate
 
@@ -456,11 +456,6 @@ subroutine GeomechanicsSubsurfacePropsPermEvaluate(grid, &
     case(LINEAR_MODEL)
       call GeomechanicsSubsurfaceLinearPermEvaluate(permeability_before, &
         local_stress,local_strain,local_pressure,permeability_after)    
-    case default
-      write(string,*) model_id
-      option%io_buffer = 'geomechanical perm model "' // &
-      trim(string) // '" not recognized.'
-      call printErrMsg(option)
   end select
 
 end subroutine GeomechanicsSubsurfacePropsPermEvaluate
