@@ -408,10 +408,13 @@ subroutine InitSubsurfAssignMatProperties(realization)
     tor0_p(local_id) = material_property%tortuosity
  
     if (option%geomech_on) then
-      Bandis_A_p(local_id) = material_property% &
+      if (associated(material_property% &
+          geomechanics_subsurface_properties)) then
+        Bandis_A_p(local_id) = material_property% &
                                geomechanics_subsurface_properties%Bandis_A
-      Bandis_B_p(local_id) = material_property% &
+        Bandis_B_p(local_id) = material_property% &
                                geomechanics_subsurface_properties%Bandis_B
+      endif
     endif
 
   enddo
@@ -479,21 +482,24 @@ subroutine InitSubsurfAssignMatProperties(realization)
                material_property%internal_id,PETSC_FALSE,field%tortuosity0)
       endif
       if (option%geomech_on) then
-        if (associated(material_property%geomechanics_subsurface_properties% &
-            Bandis_A_dataset)) then
-            call SubsurfReadDatasetToVecWithMask(realization, &
-                 material_property%geomechanics_subsurface_properties% &
-                 Bandis_A_dataset, &
-                 material_property%internal_id,PETSC_FALSE,field%Bandis_A)
+        if (associated(material_property% &
+            geomechanics_subsurface_properties)) then
+          if (associated(material_property%geomechanics_subsurface_properties% &
+              Bandis_A_dataset)) then
+              call SubsurfReadDatasetToVecWithMask(realization, &
+                   material_property%geomechanics_subsurface_properties% &
+                   Bandis_A_dataset, &
+                   material_property%internal_id,PETSC_FALSE,field%Bandis_A)
+          endif
+          if (associated(material_property%geomechanics_subsurface_properties% &
+              Bandis_B_dataset)) then
+              call SubsurfReadDatasetToVecWithMask(realization, &
+                   material_property%geomechanics_subsurface_properties% &
+                   Bandis_B_dataset, &
+                   material_property%internal_id,PETSC_FALSE,field%Bandis_B)
+          endif
         endif
-        if (associated(material_property%geomechanics_subsurface_properties% &
-            Bandis_B_dataset)) then
-            call SubsurfReadDatasetToVecWithMask(realization, &
-                 material_property%geomechanics_subsurface_properties% &
-                 Bandis_B_dataset, &
-                 material_property%internal_id,PETSC_FALSE,field%Bandis_B)
-        endif
-      endif 
+      endif
 
     endif
   enddo

@@ -913,48 +913,51 @@ subroutine RealProcessMatPropAndSatFunc(realization)
       end select      
     endif
     if (option%geomech_on) then
-      if (associated(cur_material_property%geomechanics_subsurface_properties% &
-          Bandis_A_dataset)) then
-        string = 'MATERIAL_PROPERTY(' // trim(cur_material_property%name) // &
+      if (associated(cur_material_property% &
+          geomechanics_subsurface_properties)) then
+        if (associated(cur_material_property%geomechanics_subsurface_properties% &
+            Bandis_A_dataset)) then
+          string = 'MATERIAL_PROPERTY(' // trim(cur_material_property%name) // &
                    '),GEOMECHANICS_SUBSURF_PROPS,BANDIS_A'
-        dataset => &
-          DatasetBaseGetPointer(realization%datasets, &
-                                cur_material_property% &
-                                geomechanics_subsurface_properties% &
-                                Bandis_A_dataset%name, &
-                                string,option)
-       call DatasetDestroy(cur_material_property% &
-                 geomechanics_subsurface_properties%Bandis_A_dataset)
-       select type(dataset)
-         class is (dataset_common_hdf5_type)
-           cur_material_property%geomechanics_subsurface_properties% &
-                Bandis_A_dataset => dataset
-         class default
-           option%io_buffer = 'Incorrect dataset type for Bandis_A.'
-           call printErrMsg(option)
-       end select
-      endif 
-      if (associated(cur_material_property%geomechanics_subsurface_properties% &
-          Bandis_B_dataset)) then
-        string = 'MATERIAL_PROPERTY(' // trim(cur_material_property%name) // &
+          dataset => &
+            DatasetBaseGetPointer(realization%datasets, &
+                                  cur_material_property% &
+                                  geomechanics_subsurface_properties% &
+                                  Bandis_A_dataset%name, &
+                                  string,option)
+          call DatasetDestroy(cur_material_property% &
+                   geomechanics_subsurface_properties%Bandis_A_dataset)
+          select type(dataset)
+            class is (dataset_common_hdf5_type)
+              cur_material_property%geomechanics_subsurface_properties% &
+                   Bandis_A_dataset => dataset
+            class default
+              option%io_buffer = 'Incorrect dataset type for Bandis_A.'
+              call printErrMsg(option)
+          end select
+        endif 
+        if (associated(cur_material_property%geomechanics_subsurface_properties% &
+            Bandis_B_dataset)) then
+          string = 'MATERIAL_PROPERTY(' // trim(cur_material_property%name) // &
                    '),GEOMECHANICS_SUBSURF_PROPS,BANDIS_B'
-        dataset => &
-          DatasetBaseGetPointer(realization%datasets, &
-                                cur_material_property% &
-                                geomechanics_subsurface_properties% &
-                                Bandis_B_dataset%name, &
-                                string,option)
-       call DatasetDestroy(cur_material_property% &
-                 geomechanics_subsurface_properties%Bandis_B_dataset)
-       select type(dataset)
-         class is (dataset_common_hdf5_type)
-           cur_material_property%geomechanics_subsurface_properties% &
-                Bandis_B_dataset => dataset
-         class default
-           option%io_buffer = 'Incorrect dataset type for Bandis_B.'
-           call printErrMsg(option)
-       end select
-      endif 
+          dataset => &
+            DatasetBaseGetPointer(realization%datasets, &
+                                  cur_material_property% &
+                                  geomechanics_subsurface_properties% &
+                                  Bandis_B_dataset%name, &
+                                  string,option)
+          call DatasetDestroy(cur_material_property% &
+                    geomechanics_subsurface_properties%Bandis_B_dataset)
+          select type(dataset)
+            class is (dataset_common_hdf5_type)
+              cur_material_property%geomechanics_subsurface_properties% &
+                   Bandis_B_dataset => dataset
+            class default
+              option%io_buffer = 'Incorrect dataset type for Bandis_B.'
+              call printErrMsg(option)
+          end select
+        endif 
+      endif
     endif
  
     cur_material_property => cur_material_property%next
