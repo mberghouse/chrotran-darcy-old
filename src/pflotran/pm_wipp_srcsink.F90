@@ -2592,7 +2592,6 @@ end subroutine PMWSSUpdateChemSpecies
   
   use Option_module
   use Grid_module
-  use General_Aux_module
   use WIPP_Flow_Aux_module
   use Material_Aux_class
   use Global_Aux_module
@@ -2716,11 +2715,21 @@ end subroutine PMWSSUpdateChemSpecies
               wippflo_auxvars(ZERO_INTEGER,ghosted_id)%sat(option%gas_phase)
         end select
 
-        SOCEXP = 200.d0*(max((water_saturation-this%smin),0.d0))**2.d0
+!geh: Begin change
+!geh: BRAGFLO's implementation differs near line 21393
+!        SOCEXP = 200.d0*(max((water_saturation-this%smin),0.d0))**2.d0
+!        s_eff = water_saturation-this%smin+(this%satwick * &
+!                                           (1.d0-exp(this%alpharxn*SOCEXP)))
+!        if (water_saturation <= this%smin) s_eff = 0.d0
+!        if (water_saturation > (1.d0-this%satwick+this%smin)) s_eff = 1.d0
+        if (this%smin > 0.d0) then
+          SOCEXP = 200.d0*(max((water_saturation-this%smin),0.d0))**2.d0
+        else
+          SOCEXP = water_saturation
+        endif
         s_eff = water_saturation-this%smin+(this%satwick * &
                                            (1.d0-exp(this%alpharxn*SOCEXP)))
-        if (water_saturation <= this%smin) s_eff = 0.d0
-        if (water_saturation > (1.d0-this%satwick+this%smin)) s_eff = 1.d0
+!geh: End change
 
         s_eff = min(s_eff,1.d0)
         s_eff = max(s_eff,0.d0)
@@ -2749,12 +2758,21 @@ end subroutine PMWSSUpdateChemSpecies
                                cwp%inventory%Fe_s,1.d0,dt)
 
         ! CORHUM
-        cwp%rxnrate_Fe_corrosion_humid(i) = cwp%humid_corrosion_rate*sg_eff
-        call PMWSSSmoothRxnrate(cwp%rxnrate_Fe_corrosion_humid(i),i, &
-                                cwp%inventory%Fe_s,this%alpharxn) 
-        call PMWSSTaperRxnrate(cwp%rxnrate_Fe_corrosion_humid(i),i, &
-                               cwp%inventory%Fe_s,1.d0,dt)
+!geh: BRAGFLO uses 1-SOACT
+!geh        cwp%rxnrate_Fe_corrosion_humid(i) = cwp%humid_corrosion_rate*sg_eff
+        if (s_eff > 0.d0) then
+          cwp%rxnrate_Fe_corrosion_humid(i) = cwp%humid_corrosion_rate * &
+                                              (1.d0-s_eff)
+          call PMWSSSmoothRxnrate(cwp%rxnrate_Fe_corrosion_humid(i),i, &
+                                  cwp%inventory%Fe_s,this%alpharxn) 
+          call PMWSSTaperRxnrate(cwp%rxnrate_Fe_corrosion_humid(i),i, &
+                                 cwp%inventory%Fe_s,1.d0,dt)
         ! the humid rate is also smoothed based on sg_eff; neglected here
+!geh: smoothing due to s_eff -> 0 missing
+          cwp%rxnrate_Fe_corrosion_humid(i) = &
+            cwp%rxnrate_Fe_corrosion_humid(i) * &
+            (1.d0-exp(this%alpharxn*s_eff))
+        endif
 
         ! total corrosion
         cwp%rxnrate_Fe_corrosion(i) = & 
@@ -2773,12 +2791,21 @@ end subroutine PMWSSUpdateChemSpecies
                                cwp%inventory%BioDegs_s,1.d0,dt)
 
         ! BIOHUM
-        cwp%rxnrate_cell_biodeg_humid(i) = cwp%humid_biodeg_rate*sg_eff
-        call PMWSSSmoothRxnrate(cwp%rxnrate_cell_biodeg_humid(i),i, &
-                                cwp%inventory%BioDegs_s,this%alpharxn) 
-        call PMWSSTaperRxnrate(cwp%rxnrate_cell_biodeg_humid(i),i, &
-                               cwp%inventory%BioDegs_s,1.d0,dt)
+!geh: BRAGFLO uses 1-SOACT
+!geh        cwp%rxnrate_cell_biodeg_humid(i) = cwp%humid_biodeg_rate*sg_eff
+        if (s_eff > 0.d0) then
+          cwp%rxnrate_cell_biodeg_humid(i) = cwp%humid_biodeg_rate * &
+                                             (1.d0-s_eff)
+          call PMWSSSmoothRxnrate(cwp%rxnrate_cell_biodeg_humid(i),i, &
+                                  cwp%inventory%BioDegs_s,this%alpharxn) 
+          call PMWSSTaperRxnrate(cwp%rxnrate_cell_biodeg_humid(i),i, &
+                                 cwp%inventory%BioDegs_s,1.d0,dt)
         ! the humid rate is also smoothed based on sg_eff; neglected here
+!geh: smoothing due to s_eff -> 0 missing
+          cwp%rxnrate_cell_biodeg_humid(i) = &
+            cwp%rxnrate_cell_biodeg_humid(i) * &
+            (1.d0-exp(this%alpharxn*s_eff))
+        endif
       
         ! total microbial gas generation
         cwp%rxnrate_cell_biodeg(i) = & 
@@ -2797,9 +2824,9 @@ end subroutine PMWSSUpdateChemSpecies
 
         ! for smoothing, the initial and current species are different
         call PMWSSSmoothRxnrate2(cwp%rxnrate_FeOH2_sulf(i), &
-        cwp%inventory%FeOH2_s%current_conc_mol(i), & 
-        cwp%inventory%Fe_s%initial_conc_mol(i), & 
-        this%alpharxn)
+                            cwp%inventory%FeOH2_s%current_conc_mol(i), & 
+                            cwp%inventory%Fe_s%initial_conc_mol(i), & 
+                            this%alpharxn)
       
         ! here tapering actually truncates the rate, so this call is important
         call PMWSSTaperRxnrate(cwp%rxnrate_FeOH2_sulf(i),i, &
@@ -2815,19 +2842,30 @@ end subroutine PMWSSUpdateChemSpecies
       !-----(see equation PA.73, PA.94, section PA-4.2.5)-----------------------
         
         ! CORMGO
-        cwp%rxnrate_MgO_hyd_inund(i) = cwp%inundated_brucite_rate*s_eff
-        cwp%rxnrate_MgO_hyd_humid(i) = cwp%humid_brucite_rate*sg_eff
-        ! the humid rate is also smoothed based on sg_eff; neglected here
         
-        ! unlike for corrorosion and biodegradation, bragflo doesn't
-        ! separately store and report inundated and humid rates for MgO hydration
-        cwp%rxnrate_MgO_hyd(i) = & 
-                  cwp%rxnrate_MgO_hyd_inund(i) + cwp%rxnrate_MgO_hyd_humid(i)
+!geh: BRAGFLO uses 1-SOACT and zeros both if zero effective brine saturation
+        if (s_eff > 0.d0) then
+          cwp%rxnrate_MgO_hyd_inund(i) = cwp%inundated_brucite_rate*s_eff
+!geh          cwp%rxnrate_MgO_hyd_humid(i) = cwp%humid_brucite_rate*sg_eff
+          cwp%rxnrate_MgO_hyd_humid(i) = cwp%humid_brucite_rate * &
+                                         (1.d0-s_eff)
+          ! the humid rate is also smoothed based on sg_eff; neglected here
+!geh: smoothing due to s_eff -> 0 missing
+          cwp%rxnrate_MgO_hyd_humid(i) = &
+            cwp%rxnrate_MgO_hyd_humid(i) * &
+            (1.d0-exp(this%alpharxn*s_eff))
         
-        call PMWSSSmoothRxnrate(cwp%rxnrate_MgO_hyd(i),i, &
-                                cwp%inventory%MgO_s,this%alpharxn) 
-        call PMWSSTaperRxnrate(cwp%rxnrate_MgO_hyd(i),i, &
-                                cwp%inventory%MgO_s,1.d0,dt)
+          ! unlike for corrorosion and biodegradation, bragflo doesn't
+          ! separately store and report inundated and humid rates for 
+          ! MgO hydration
+          cwp%rxnrate_MgO_hyd(i) = & 
+                    cwp%rxnrate_MgO_hyd_inund(i) + cwp%rxnrate_MgO_hyd_humid(i)
+          
+          call PMWSSSmoothRxnrate(cwp%rxnrate_MgO_hyd(i),i, &
+                                  cwp%inventory%MgO_s,this%alpharxn) 
+          call PMWSSTaperRxnrate(cwp%rxnrate_MgO_hyd(i),i, &
+                                  cwp%inventory%MgO_s,1.d0,dt)
+        endif
                               
                               
       !-----hydromagnesite-[mol-hydromagnesite/m3-bulk/sec]---------------------
@@ -2867,7 +2905,6 @@ end subroutine PMWSSUpdateChemSpecies
                         cwp%inventory%MgO_s%initial_conc_mol(i),this%alpharxn)
         call PMWSSTaperRxnrate(cwp%rxnrate_hydromag_conv(i),i, &
                                 cwp%inventory%Mg5CO34OH24H2_s,1.d0,dt)
-                             
                              
       !-----tracked-species-[mol-species/m3-bulk/sec]---------------------------
       !-----note:column-id-is-shifted-by-+1-since-a-0-index-not-possible--------
@@ -2919,7 +2956,7 @@ end subroutine PMWSSUpdateChemSpecies
                       this%stoic_mat(8,3)*cwp%rxnrate_hydromag_conv(i) + &
                       this%stoic_mat(2,3)*cwp%rxnrate_cell_biodeg(i) + & ! STCO_22=SMIC_H20
                       cwp%RXH2O_factor*cwp%rxnrate_cell_biodeg(i)        ! zero
-        ! Convert water weight to brine rate (bragflo BRH2O)
+        ! Convert water weight to brine rate (bragflo RH2O)
         cwp%brine_generation_rate(i) = cwp%brine_generation_rate(i) / &
                       (1.d0 - 1.d-2*this%salt_wtpercent)
 
@@ -2936,6 +2973,31 @@ end subroutine PMWSSUpdateChemSpecies
                   cwp%gas_generation_rate(i) * &                ! [mol/m3/sec]
                   material_auxvars(ghosted_id)%volume / &       ! [m3-bulk]
                   1.d3                                          ! [mol -> kmol]
+
+        if (wippflo_debug_gas_generation .and. k == 0) then
+          print *, '     SOEFC:', s_eff
+          print *, '    RXCORS:', cwp%rxnrate_Fe_corrosion_inund(i)
+          print *, '    RXCORH:', cwp%rxnrate_Fe_corrosion_humid(i)
+          print *, '     RXCOR:', cwp%rxnrate_Fe_corrosion(i)
+          print *, '    RXBIOS:', cwp%rxnrate_cell_biodeg_inund(i)
+          print *, '    RXBIOH:', cwp%rxnrate_cell_biodeg_humid(i)
+          print *, '     RXBIO:', cwp%rxnrate_cell_biodeg(i)
+          print *, ' RXFEOHH2S:', cwp%rxnrate_FeOH2_sulf(i)
+          print *, '   RXFEH2S:', cwp%rxnrate_Fe_sulf(i)
+                                  ! note that MGOH2O is split in I + H
+          print *, '  RXMGOH2O:', cwp%rxnrate_MgO_hyd(i)
+          print *, ' RXMGOHCO2:', cwp%rxnrate_MgOH2_carb(i)
+          print *, '  RXMGOCO2:', cwp%rxnrate_MgO_carb(i)
+          print *, '   RXHYMAG:', cwp%rxnrate_hydromag_conv(i)
+          print *, '  SALTCONV:', 1.d0/(1.d0 - 1.d-2*this%salt_wtpercent)
+          print *, '     QR(B):', this%srcsink_brine(k,p), ' [kmol/sec]'
+          print *, '     QR(G):', this%srcsink_gas(k,p), ' [kmol/sec]'
+          print *, '     QR(B):', cwp%brine_generation_rate(i)* &
+                                  fmw_comp(1)*option%flow_dt/1.d3, ' [kg/m^3]'
+          print *, '     QR(G):', cwp%gas_generation_rate(i) * &
+                                  fmw_comp(2)*option%flow_dt/1.d3, ' [kg/m^3]'
+          print *
+        endif
                   
         !---energy-source-term-[MJ/sec];-H-from-EOS-[J/kmol]--------------------
         !jmf: keep in the case WIPP_FLOW mode will solve for temperature
