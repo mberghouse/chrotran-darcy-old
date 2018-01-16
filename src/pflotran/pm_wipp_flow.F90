@@ -1332,7 +1332,8 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
     endif
 
     ! gas pressure
-    if (wippflo_auxvars(0,ghosted_id)%pres(2) < min_gas_pressure) then
+    if (wippflo_auxvars(0,ghosted_id)%pres(2) < min_gas_pressure .and. &
+        wippflo_auxvars(0,ghosted_id)%sat(2) > 1.d-10)then
       min_gas_pressure = wippflo_auxvars(0,ghosted_id)%pres(2)
       min_gas_pressure_cell = local_id
     endif
