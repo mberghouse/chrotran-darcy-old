@@ -551,6 +551,7 @@ subroutine PMWIPPFloFinalizeTimestep(this)
   ! Date: 11/21/17
   ! 
   use WIPP_Flow_Aux_module
+  use Option_module
 
   implicit none
   
