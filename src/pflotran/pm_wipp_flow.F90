@@ -434,6 +434,13 @@ subroutine PMWIPPFloReadSelectCase(this,input,keyword,found, &
       wippflo_allow_neg_pg_ts = PETSC_TRUE
       wippflo_allow_neg_pg_flux_ts = PETSC_TRUE
       wippflo_allow_neg_pg_flux_ni = PETSC_TRUE
+    case('MAS_GAS_SAT_FOR_NEG_GAS_PRES')
+      call InputReadDouble(input,option,wippflo_neg_pg_sat_tol)
+      call InputErrorMsg(input,option,'MAS_GAS_SAT_FOR_NEG_GAS_PRES', &
+                         error_string)
+    case('MAX_NEG_GAS_PRES_CUT')
+      call InputReadInt(input,option,wippflo_max_neg_gas_pres_cut)
+      call InputErrorMsg(input,option,'MAX_NEG_GAS_PRES_CUT', error_string)
     case default
       found = PETSC_FALSE
   end select
@@ -543,6 +550,8 @@ subroutine PMWIPPFloFinalizeTimestep(this)
   ! Author: Glenn Hammond
   ! Date: 11/21/17
   ! 
+  use WIPP_Flow_Aux_module
+
   implicit none
   
   class(pm_wippflo_type) :: this
@@ -551,6 +560,13 @@ subroutine PMWIPPFloFinalizeTimestep(this)
     call this%pmwss_ptr%FinalizeTimestep()
   endif
   call PMSubsurfaceFlowFinalizeTimestep(this)
+
+  if (wippflo_num_neg_gas_pres_cut > wippflo_max_neg_gas_pres_cut) then
+    this%option%io_buffer = 'Maximum number of time step cuts due to &
+                           &negative gas pressures in partially-saturated &
+                           &or gas flux cells has been exceeded.'
+    call printErrMsg(this%option)
+  endif
 
 end subroutine PMWIPPFloFinalizeTimestep
 
@@ -1454,6 +1470,12 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
       .not.wippflo_allow_neg_pg_flux_ni) then
     converged_flag = CONVERGENCE_CUT_TIMESTEP
     reason_string(2:2) = 'f'
+  endif
+  if ((this%convergence_flags(MIN_GAS_PRES) > 0 .and. &
+       .not.wippflo_allow_neg_pg_ni) .or. &
+      (min_pg_in_flux < 0.d0 .and. &
+       .not.wippflo_allow_neg_pg_flux_ni)) then
+    wippflo_num_neg_gas_pres_cut = wippflo_num_neg_gas_pres_cut + 1
   endif
   if (this%convergence_flags(FORCE_ITERATION) > 0) then
     if (converged_flag == CONVERGENCE_CONVERGED) then

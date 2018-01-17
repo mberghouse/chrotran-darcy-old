@@ -24,6 +24,8 @@ module WIPP_Flow_Aux_module
   PetscBool, public :: wippflo_calc_bcflux = PETSC_TRUE
   PetscBool, public :: wippflo_calc_chem = PETSC_TRUE
 
+  PetscInt, public :: wippflo_num_neg_gas_pres_cut = 0
+  PetscInt, public :: wippflo_max_neg_gas_pres_cut = 1000000000
   PetscReal, public :: wippflo_neg_pg_sat_tol = 1.d-10
   PetscBool, public :: wippflo_allow_neg_pg_ts = PETSC_FALSE
   PetscBool, public :: wippflo_allow_neg_pg_ni = PETSC_FALSE
