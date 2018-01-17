@@ -26,6 +26,7 @@ module WIPP_Flow_module
             WIPPFloSetPlotVariables, &
             WIPPFloMapBCAuxVarsToGlobal, &
             WIPPFloSSSandbox, &
+            WIPPFloMinGasPresInFlux, &
             WIPPFloDestroy
 
 contains
@@ -1898,6 +1899,105 @@ subroutine WIPPFloMapBCAuxVarsToGlobal(realization)
   enddo
   
 end subroutine WIPPFloMapBCAuxVarsToGlobal
+
+! ************************************************************************** !
+
+function WIPPFloMinGasPresInFlux(realization)
+  ! 
+  ! Returns the minimum gas pressure was used in calculating the
+  ! gradient in an internal gas phase flux calculation.
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 01/17/18
+  ! 
+
+  use Realization_Subsurface_class
+  use Connection_module
+  use Patch_module
+  use Grid_module
+  use Option_module
+
+  implicit none
+
+  type(realization_subsurface_type) :: realization
+
+  PetscReal :: WIPPFloMinGasPresInFlux
+
+  type(patch_type), pointer :: patch
+  type(grid_type), pointer :: grid
+  type(option_type), pointer :: option
+  PetscInt :: iconn
+  PetscInt :: ghosted_id_up, ghosted_id_dn
+  type(connection_set_list_type), pointer :: connection_set_list
+  type(connection_set_type), pointer :: cur_connection_set
+  type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
+  PetscInt, parameter :: iphase = 2
+  character(len=MAXWORDLENGTH) :: word
+  PetscReal :: temp_real
+  PetscReal :: pres_up, pres_dn
+  PetscReal :: sat_up, sat_dn
+  PetscErrorCode :: ierr
+
+  WIPPFloMinGasPresInFlux = 1.d20
+
+  patch => realization%patch
+  grid => patch%grid
+  option => realization%option
+
+  wippflo_auxvars => patch%aux%WIPPFlo%auxvars
+
+  if (wippflo_calc_flux) then
+    ! Interior Flux Terms -----------------------------------
+    connection_set_list => grid%internal_connection_set_list
+    cur_connection_set => connection_set_list%first
+    do 
+      if (.not.associated(cur_connection_set)) exit
+      do iconn = 1, cur_connection_set%num_connections
+  
+        ghosted_id_up = cur_connection_set%id_up(iconn)
+        ghosted_id_dn = cur_connection_set%id_dn(iconn)
+  
+        if (patch%imat(ghosted_id_up) <= 0 .or. &
+            patch%imat(ghosted_id_dn) <= 0) cycle
+
+        sat_up = wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%sat(iphase)
+        sat_dn = wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%sat(iphase)
+        pres_up = wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%pres(iphase)
+        pres_dn = wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%pres(iphase)
+
+        if ((sat_up > wippflo_neg_pg_sat_tol .or. &
+             sat_dn > wippflo_neg_pg_sat_tol) .and. &
+            (pres_up < 0.d0 .or. pres_dn < 0.d0)) then
+          if (wippflo_print_neg_pg_flux) then
+            option%io_buffer = 'Neg. gas pressure flux:'
+            if (pres_up < 0.d0 .and. grid%nG2L(ghosted_id_up) > 0) then
+              write(word,*) grid%nG2A(ghosted_id_up)
+              option%io_buffer = trim(option%io_buffer) // ' ' // adjustl(word)
+              write(word,'(es9.1)') pres_up
+              option%io_buffer = trim(option%io_buffer) // ' ' // adjustl(word)
+            endif
+            if (pres_dn < 0.d0 .and. grid%nG2L(ghosted_id_dn) > 0) then
+              write(word,*) grid%nG2A(ghosted_id_dn)
+              option%io_buffer = trim(option%io_buffer) // ' ' // adjustl(word)
+              write(word,'(es9.1)') pres_dn
+              option%io_buffer = trim(option%io_buffer) // ' ' // adjustl(word)
+            endif
+            call printMsgByRank(option)
+          endif
+          WIPPFloMinGasPresInFlux = &
+            min(WIPPFloMinGasPresInFlux,pres_up,pres_dn)
+        endif
+      enddo
+      cur_connection_set => cur_connection_set%next
+    enddo    
+  endif
+
+  temp_real = WIPPFloMinGasPresInFlux
+  call MPI_Allreduce(MPI_IN_PLACE,temp_real,ONE_INTEGER, &
+                     MPI_DOUBLE_PRECISION,MPI_MIN,option%mycomm,ierr)
+  WIPPFloMinGasPresInFlux = temp_real
+
+end function WIPPFloMinGasPresInFlux
 
 ! ************************************************************************** !
 

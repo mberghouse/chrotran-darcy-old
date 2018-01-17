@@ -79,8 +79,6 @@ subroutine BRAGFloFlux(wippflo_auxvar_up,global_auxvar_up, &
   PetscReal :: gravity_term
   PetscReal :: rel_perm, q
   PetscReal :: wat_mole_flux, air_mole_flux
-  PetscReal :: stpd_up, stpd_dn
-  PetscReal :: sat_up, sat_dn, den_up, den_dn
   
   PetscReal :: temp_perm_up, temp_perm_dn
 

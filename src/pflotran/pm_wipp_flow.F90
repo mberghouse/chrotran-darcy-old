@@ -417,8 +417,23 @@ subroutine PMWIPPFloReadSelectCase(this,input,keyword,found, &
       wippflo_print_solution = PETSC_TRUE
     case('PRINT_UPDATE')
       wippflo_print_update = PETSC_TRUE
-    case('ALLOW_NEGATIVE_GAS_PRESSURE')
-      wippflo_allow_neg_gas_pressure = PETSC_TRUE
+    case('PRINT_NEGATIVE_GAS_PRES_FLUX')
+      wippflo_print_neg_pg_flux = PETSC_TRUE
+    case('PRINT_NEGATIVE_GAS_PRES_CELL')
+      wippflo_print_neg_pg_cell = PETSC_TRUE
+    case('ALLOW_NEGATIVE_GAS_PRES_FLUX_NI')
+      wippflo_allow_neg_pg_flux_ni = PETSC_TRUE
+    case('ALLOW_NEGATIVE_GAS_PRES_FLUX')
+      wippflo_allow_neg_pg_flux_ts = PETSC_TRUE
+      wippflo_allow_neg_pg_flux_ni = PETSC_TRUE
+    case('ALLOW_NEGATIVE_GAS_PRES_NI')
+      wippflo_allow_neg_pg_ni = PETSC_TRUE
+      wippflo_allow_neg_pg_flux_ni = PETSC_TRUE
+    case('ALLOW_NEGATIVE_GAS_PRES')
+      wippflo_allow_neg_pg_ni = PETSC_TRUE
+      wippflo_allow_neg_pg_ts = PETSC_TRUE
+      wippflo_allow_neg_pg_flux_ts = PETSC_TRUE
+      wippflo_allow_neg_pg_flux_ni = PETSC_TRUE
     case default
       found = PETSC_FALSE
   end select
@@ -1137,6 +1152,7 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   use Option_module
   use Material_Aux_class  
   use WIPP_Flow_Aux_module
+  use WIPP_Flow_module, only : WIPPFloMinGasPresInFlux
   use Convergence_module
 
   implicit none
@@ -1198,6 +1214,10 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   PetscInt :: i
   PetscMPIInt :: int_mpi
   PetscBool :: cell_id_match
+  PetscReal :: min_pg_in_flux
+  PetscReal :: gas_pressure
+  PetscReal :: gas_saturation
+  character(len=MAXWORDLENGTH) :: word
   
   grid => this%realization%patch%grid
   option => this%realization%option
@@ -1205,6 +1225,8 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   patch => this%realization%patch
   wippflo_auxvars => patch%aux%WIPPFlo%auxvars
   material_auxvars => patch%aux%Material%auxvars
+
+  min_pg_in_flux = 1.d20
 
   residual_vec = tVec(0)
   ! check residual terms
@@ -1332,9 +1354,19 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
     endif
 
     ! gas pressure
-    if (wippflo_auxvars(0,ghosted_id)%pres(2) < min_gas_pressure .and. &
-        wippflo_auxvars(0,ghosted_id)%sat(2) > 1.d-10)then
-      min_gas_pressure = wippflo_auxvars(0,ghosted_id)%pres(2)
+    gas_pressure = wippflo_auxvars(0,ghosted_id)%pres(2)
+    gas_saturation = wippflo_auxvars(0,ghosted_id)%sat(2)
+    if (gas_pressure < min_gas_pressure .and. &
+        gas_saturation > wippflo_neg_pg_sat_tol)then
+      if (gas_pressure < 0.d0 .and. wippflo_print_neg_pg_cell) then
+        option%io_buffer = 'Neg. gas pressure cell: '
+        write(word,*) grid%nG2A(ghosted_id)
+        option%io_buffer = trim(option%io_buffer) // adjustl(word)
+        write(word,'(es9.1)') gas_pressure
+        option%io_buffer = trim(option%io_buffer) // adjustl(word)
+        call printMsg(option)
+      endif
+      min_gas_pressure = gas_pressure
       min_gas_pressure_cell = local_id
     endif
   enddo
@@ -1345,7 +1377,7 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   if (.not.converged_gas_equation) then
     this%convergence_flags(MAX_NORMAL_RES_GAS) = max_normal_res_gas_cell
   endif
-  if (min_gas_pressure < 0.d0 .and. .not.wippflo_allow_neg_gas_pressure) then
+  if (min_gas_pressure < 0.d0) then
     this%convergence_flags(MIN_GAS_PRES) = min_gas_pressure_cell
   endif
   ! the following flags are not used for convergence purposes, and thus can
@@ -1401,6 +1433,11 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
     endif
   endif
 
+  if (wippflo_check_neg_pg_flux .or. wippflo_print_neg_pg_flux) then
+    min_pg_in_flux = WIPPFloMinGasPresInFlux(this%realization)
+    if (.not.wippflo_check_neg_pg_flux) min_pg_in_flux = 1.d20
+  endif
+
   ! these conditionals cannot change order
   reason_string = '-------|--'
   converged_flag = CONVERGENCE_CONVERGED
@@ -1408,9 +1445,15 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
     converged_flag = CONVERGENCE_CUT_TIMESTEP
     reason_string(1:1) = 'B'
   endif
-  if (this%convergence_flags(MIN_GAS_PRES) > 0) then
+  if (this%convergence_flags(MIN_GAS_PRES) > 0 .and. &
+      .not.wippflo_allow_neg_pg_ni) then
     converged_flag = CONVERGENCE_CUT_TIMESTEP
-    reason_string(2:2) = 'N'
+    reason_string(2:2) = 'n'
+  endif
+  if (min_pg_in_flux < 0.d0 .and. &
+      .not.wippflo_allow_neg_pg_flux_ni) then
+    converged_flag = CONVERGENCE_CUT_TIMESTEP
+    reason_string(2:2) = 'f'
   endif
   if (this%convergence_flags(FORCE_ITERATION) > 0) then
     if (converged_flag == CONVERGENCE_CONVERGED) then
@@ -1460,6 +1503,15 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
       converged_flag = CONVERGENCE_CUT_TIMESTEP
       reason_string(10:10) = 'S'
     endif
+    if (this%convergence_flags(MIN_GAS_PRES) > 0 .and. &
+        .not.wippflo_allow_neg_pg_ts) then
+      converged_flag = CONVERGENCE_CUT_TIMESTEP
+      reason_string(2:2) = 'N'
+    endif
+    if (min_pg_in_flux < 0.d0 .and. .not.wippflo_allow_neg_pg_flux_ts) then
+      converged_flag = CONVERGENCE_CUT_TIMESTEP
+      reason_string(2:2) = 'F'
+    endif
   endif
   if (OptionPrintToScreen(option)) then
     !TODO(geh): add the option to report only violated tolerances, zeroing
@@ -1468,10 +1520,18 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
     tempint3 = this%convergence_flags(MAX_REL_CHANGE_LIQ_PRES_NI)
     tempreal4 = this%convergence_reals(MAX_CHANGE_GAS_SAT_NI)
     tempint4 = this%convergence_flags(MAX_CHANGE_GAS_SAT_NI)
-    if (this%convergence_flags(MIN_GAS_PRES) > 0) then
-      tempreal3 = this%convergence_reals(MIN_GAS_PRES)
-      tempint3 = this%convergence_flags(MIN_GAS_PRES)
-      reason_string(6:6) = 'N'
+    if (this%convergence_flags(MIN_GAS_PRES) > 0 .or. &
+        min_pg_in_flux < 0.d0) then
+      if (this%convergence_flags(MIN_GAS_PRES) > 0) then
+        reason_string(6:6) = 'N'
+        tempreal3 = this%convergence_reals(MIN_GAS_PRES)
+        tempint3 = this%convergence_flags(MIN_GAS_PRES)
+      endif
+      if (min_pg_in_flux < 0.d0) then
+        reason_string(6:6) = 'F'
+        tempreal3 = min_pg_in_flux
+        tempint3 = -1
+      endif
     endif
     if (this%convergence_flags(FORCE_ITERATION) > 0) then
       tempreal4 = this%convergence_reals(FORCE_ITERATION)
