@@ -25,6 +25,7 @@ module WIPP_Flow_Aux_module
   PetscBool, public :: wippflo_calc_chem = PETSC_TRUE
 
   PetscInt, public :: wippflo_num_neg_gas_pres_cut = 0
+#if 1
   PetscInt, public :: wippflo_max_neg_gas_pres_cut = 1000000000
   PetscReal, public :: wippflo_neg_pg_sat_tol = 1.d-10
   PetscBool, public :: wippflo_allow_neg_pg_ts = PETSC_FALSE
@@ -34,6 +35,17 @@ module WIPP_Flow_Aux_module
   PetscBool, public :: wippflo_check_neg_pg_flux = PETSC_TRUE
   PetscBool, public :: wippflo_print_neg_pg_cell = PETSC_FALSE
   PetscBool, public :: wippflo_print_neg_pg_flux = PETSC_FALSE
+#else
+  PetscInt, public :: wippflo_max_neg_gas_pres_cut = 100
+  PetscReal, public :: wippflo_neg_pg_sat_tol = 1.d-1
+  PetscBool, public :: wippflo_allow_neg_pg_ts = PETSC_TRUE
+  PetscBool, public :: wippflo_allow_neg_pg_ni = PETSC_TRUE
+  PetscBool, public :: wippflo_allow_neg_pg_flux_ts = PETSC_TRUE
+  PetscBool, public :: wippflo_allow_neg_pg_flux_ni = PETSC_TRUE
+  PetscBool, public :: wippflo_check_neg_pg_flux = PETSC_TRUE
+  PetscBool, public :: wippflo_print_neg_pg_cell = PETSC_TRUE
+  PetscBool, public :: wippflo_print_neg_pg_flux = PETSC_TRUE
+#endif
 
   PetscBool, public :: wippflo_match_bragflo_output = PETSC_FALSE
 
