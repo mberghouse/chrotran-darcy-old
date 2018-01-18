@@ -1545,6 +1545,25 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
     tempint4 = this%convergence_flags(MAX_CHANGE_GAS_SAT_NI)
     if (this%convergence_flags(MIN_GAS_PRES) > 0 .or. &
         min_pg_in_flux < 0.d0) then
+      if (converged_flag == CONVERGENCE_CONVERGED) then
+        ! print out of partially saturated cell is higher priority for this
+        ! statement
+        if (min_pg_in_flux < 0.d0) then
+          reason_string(6:6) = 'F'
+          tempreal3 = min_pg_in_flux
+          tempint3 = -1
+          word = 'flux'
+        endif
+        if (this%convergence_flags(MIN_GAS_PRES) > 0) then
+          reason_string(6:6) = 'N'
+          tempreal3 = this%convergence_reals(MIN_GAS_PRES)
+          tempint3 = this%convergence_flags(MIN_GAS_PRES)
+          word = 'cell'
+        endif
+        write(*,'(6x,"Maximum negative gas pressure: ",i4,es14.6,2x,a4)') &
+          tempint3, tempreal3, word
+      endif
+      ! printout of flux is higher priority here.
       if (this%convergence_flags(MIN_GAS_PRES) > 0) then
         reason_string(6:6) = 'N'
         tempreal3 = this%convergence_reals(MIN_GAS_PRES)
