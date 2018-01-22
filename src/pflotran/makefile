@@ -349,6 +349,7 @@ chem_obj = \
 	${common_src}reaction_sandbox_pnnl_cyber.o \
 	${common_src}reaction_sandbox_simple.o \
 	${common_src}reaction_sandbox_ufd_wp.o \
+	${common_src}reaction_sandbox_decay.o \
 	${common_src}reaction_solid_solution.o \
 	${common_src}reaction_solid_solution_aux.o \
 	${common_src}reaction_surf_complex.o \
@@ -1264,9 +1265,10 @@ reaction_mineral_aux.o : option.o pflotran_constants.o reaction_database_aux.o \
 reaction_sandbox.o : global_aux.o input_aux.o material_aux.o option.o \
                      output_aux.o pflotran_constants.o reaction_aux.o \
                      reaction_sandbox_base.o reaction_sandbox_clm_cn.o \
-                     reaction_sandbox_example.o reaction_sandbox_pnnl_cyber.o \
-                     reaction_sandbox_simple.o reaction_sandbox_ufd_wp.o \
-                     reactive_transport_aux.o string.o utility.o
+                     reaction_sandbox_decay.o reaction_sandbox_example.o \
+                     reaction_sandbox_pnnl_cyber.o reaction_sandbox_simple.o \
+                     reaction_sandbox_ufd_wp.o reactive_transport_aux.o \
+                     string.o utility.o
 reaction_sandbox_base.o : global_aux.o input_aux.o material_aux.o option.o \
                           output_aux.o pflotran_constants.o reaction_aux.o \
                           reactive_transport_aux.o
@@ -1275,6 +1277,10 @@ reaction_sandbox_clm_cn.o : global_aux.o input_aux.o material_aux.o option.o \
                             reaction_immobile_aux.o reaction_sandbox_base.o \
                             reactive_transport_aux.o string.o units.o \
                             utility.o
+reaction_sandbox_decay.o : global_aux.o input_aux.o material_aux.o option.o \
+                           pflotran_constants.o reaction_aux.o \
+                           reaction_immobile_aux.o reaction_sandbox_base.o \
+                           reactive_transport_aux.o string.o units.o
 reaction_sandbox_example.o : global_aux.o input_aux.o material_aux.o option.o \
                              pflotran_constants.o reaction_aux.o \
                              reaction_sandbox_base.o reactive_transport_aux.o \
