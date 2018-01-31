@@ -53,6 +53,7 @@ STANDARD_CFG = \
 	default/output/output.cfg \
 	default/restart/restart.cfg \
 	default/steady/steady.cfg \
+    default/soil_compressibility/soil_compressibility.cfg \
 	default/condition/condition.cfg \
 	default/condition/dataset/dataset.cfg \
 	default/multicontinuum/multicontinuum.cfg \
@@ -122,6 +123,7 @@ FLOW_CFG = \
 	default/eos/eos.cfg \
 	default/infiltrometer/infiltrometer.cfg \
 	default/steady/steady.cfg \
+    default/soil_compressibility/soil_compressibility.cfg \
 	default/scco2/mphase/mphase.cfg \
 	default/scco2/flash2/flash2.cfg \
 	general/general.cfg \
