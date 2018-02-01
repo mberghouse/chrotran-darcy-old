@@ -2644,12 +2644,11 @@ subroutine PMWFInitializeTimestep(this)
     if ((cur_waste_form%volume >= 0.d0) .and. &
         (option%time >= cur_waste_form%decay_start_time)) then !--------------
 
-    if (.not.this%implicit_solution) then !-----------------------------------
-
     ! 3-generation analytical solution derived for multiple parents and
     ! grandparents and non-zero initial daughter concentrations (see Section
     ! 3.2.3 of Mariner et al. (2016), SAND2016-9610R), where the solution is
-    ! obtained explicitly in time
+    ! obtained explicitly in time.
+    ! We use this as an initial guess for the implicit solution, too.
 
       !------- decay the radionuclide species --------------------------------
       ! FIRST PASS =====================
@@ -2729,91 +2728,92 @@ subroutine PMWFInitializeTimestep(this)
         enddo ! parent loop
       enddo     
 
-    else !--------------------------------------------------------------------
+    if (this%implicit_solution) then !-----------------------------------------
+    
+      ! implicit solution based on Bateman's equations and Newton's method
 
-    ! implicit solution based on Bateman's equations and Newton's method
+      allocate(residual(num_species))
+      allocate(solution(num_species))
+      allocate(rhs(num_species))
+      allocate(indices(num_species))
+      allocate(Jacobian(num_species,num_species))
 
-    allocate(residual(num_species))
-    allocate(solution(num_species))
-    allocate(rhs(num_species))
-    allocate(indices(num_species))
-    allocate(Jacobian(num_species,num_species))
-
-    residual = 1.d0 ! to start, must set bigger than tolerance
-    ! to start, set solution to old concentration, but ensure it's not zero
-    solution = max(concentration_old,1.d-40) 
-    one_over_dt = 1.d0/dt
-    it = 0
-    do ! nonlinear loop
-      if (dot_product(residual,residual) < tolerance) exit ! 2-norm(residual)
-      it = it + 1
-      residual = 0.d0 ! set to zero because we are summing
-      ! f(C^{k+1,p}) = (C^{k+1,p} - C^k)/dt -R(C^{k+1,p})
-      Jacobian = 0.d0 ! set to zero because we are summing
-      ! J_ij = del[f_i(C^{k+1,p})]/del[C_j^{k+1,p}]
-      ! isotope loop
-      do iiso = 1, num_species
-        ! ----accumulation term for isotope------------------------!-units--
-        ! dC/dt = (C^{k+1,p} - C^k)/dt
-        residual(iiso) = residual(iiso) + &                        ! mol/g/sec
-                     (solution(iiso) - concentration_old(iiso)) * &! mol/g
-                     one_over_dt                                   ! 1/sec
-        ! d[(C^{k+1,p} - C^k)/dt]/d[C^{k+1,p}] = 1/dt
-        Jacobian(iiso,iiso) = Jacobian(iiso,iiso) + &              ! 1/sec
-                              one_over_dt                          ! 1/sec
-        ! ----source/sink term for isotope-------------------------!-units--
-        ! -R(C^{k+1,p}) = -(-L*(C^{k+1,p}))    L=lambda
-        rate_constant = cwfm%rad_species_list(iiso)%decay_constant ! 1/sec
-        rate = rate_constant * solution(iiso)                      ! mol/g/sec
-        residual(iiso) = residual(iiso) + rate                     ! mol/g/sec
-        ! d[-(-L*(C^{k+1,p}))]/d[C^{k+1,p}] = L
-        Jacobian(iiso,iiso) = Jacobian(iiso,iiso) + rate_constant  ! 1/sec
-        ! daughter loop (there is only one daughter currently)
-        !do i = 1, this%isotope_daughters(0,iiso)
-        ! ----source/sink term for daughter----------------------!-units--
-        idaughter = cwfm%rad_species_list(iiso)%daugh_id
-        if (idaughter > 0) then
-          ! -R(C^{k+1,p}) = -(L*S*(C^{k+1,p}))    L=lambda
-          residual(idaughter) = residual(idaughter) - rate         ! mol/g/sec
-          ! d[-(L*S*(C^{k+1,p}))]/d[C^{k+1,p}] = -L*S
-          Jacobian(idaughter,iiso) = Jacobian(idaughter,iiso) - &  ! 1/sec
-                                     rate_constant                 ! 1/sec
-        endif
-        !enddo
-        ! k=time, p=iterate, C=isotope concentration
+      residual = 1.d0 ! to start, must set bigger than tolerance
+      ! to start, set the initial guess to the solution calculated analytically
+      ! and ensure that it is not zero
+      solution = max(cur_waste_form%rad_concentration,1.d-40)
+      one_over_dt = 1.d0/dt
+      it = 0
+      do ! nonlinear loop
+        if (dot_product(residual,residual) < tolerance) exit ! 2-norm(residual)
+        it = it + 1
+        residual = 0.d0 ! set to zero because we are summing
+        ! f(C^{k+1,p}) = (C^{k+1,p} - C^k)/dt -R(C^{k+1,p})
+        Jacobian = 0.d0 ! set to zero because we are summing
+        ! J_ij = del[f_i(C^{k+1,p})]/del[C_j^{k+1,p}]
+        ! isotope loop
+        do iiso = 1, num_species
+          ! ----accumulation term for isotope------------------------!-units--
+          ! dC/dt = (C^{k+1,p} - C^k)/dt
+          residual(iiso) = residual(iiso) + &                        ! mol/g/sec
+                      (solution(iiso) - concentration_old(iiso)) * &! mol/g
+                      one_over_dt                                   ! 1/sec
+          ! d[(C^{k+1,p} - C^k)/dt]/d[C^{k+1,p}] = 1/dt
+          Jacobian(iiso,iiso) = Jacobian(iiso,iiso) + &              ! 1/sec
+                                one_over_dt                          ! 1/sec
+          ! ----source/sink term for isotope-------------------------!-units--
+          ! -R(C^{k+1,p}) = -(-L*(C^{k+1,p}))    L=lambda
+          rate_constant = cwfm%rad_species_list(iiso)%decay_constant ! 1/sec
+          rate = rate_constant * solution(iiso)                      ! mol/g/sec
+          residual(iiso) = residual(iiso) + rate                     ! mol/g/sec
+          ! d[-(-L*(C^{k+1,p}))]/d[C^{k+1,p}] = L
+          Jacobian(iiso,iiso) = Jacobian(iiso,iiso) + rate_constant  ! 1/sec
+          ! daughter loop (there is only one daughter currently)
+          !do i = 1, this%isotope_daughters(0,iiso)
+          ! ----source/sink term for daughter----------------------!-units--
+          idaughter = cwfm%rad_species_list(iiso)%daugh_id
+          if (idaughter > 0) then
+            ! -R(C^{k+1,p}) = -(L*S*(C^{k+1,p}))    L=lambda
+            residual(idaughter) = residual(idaughter) - rate         ! mol/g/sec
+            ! d[-(L*S*(C^{k+1,p}))]/d[C^{k+1,p}] = -L*S
+            Jacobian(idaughter,iiso) = Jacobian(idaughter,iiso) - &  ! 1/sec
+                                       rate_constant                 ! 1/sec
+          endif
+          !enddo
+          ! k=time, p=iterate, C=isotope concentration
+        enddo
+        ! scale Jacobian
+        do iiso = 1, num_species
+          norm = max(1.d0,maxval(abs(Jacobian(iiso,:))))
+          norm = 1.d0/norm
+          rhs(iiso) = residual(iiso)*norm
+          ! row scaling
+          Jacobian(iiso,:) = Jacobian(iiso,:)*norm
+        enddo 
+        ! log formulation for derivatives, column scaling
+        do iiso = 1, num_species
+          Jacobian(:,iiso) = Jacobian(:,iiso)*solution(iiso)
+        enddo
+        ! linear solve steps
+        ! solve step 1/2: get LU decomposition
+        call ludcmp(Jacobian,num_species,indices,i)
+        ! solve step 2/2: LU back substitution linear solve
+        call lubksb(Jacobian,num_species,indices,rhs)
+        rhs = dsign(1.d0,rhs)*min(dabs(rhs),10.d0)
+        ! update the solution
+        solution = solution*exp(-rhs)
       enddo
-      ! scale Jacobian
-      do iiso = 1, num_species
-        norm = max(1.d0,maxval(abs(Jacobian(iiso,:))))
-        norm = 1.d0/norm
-        rhs(iiso) = residual(iiso)*norm
-        ! row scaling
-        Jacobian(iiso,:) = Jacobian(iiso,:)*norm
-      enddo 
-      ! log formulation for derivatives, column scaling
-      do iiso = 1, num_species
-        Jacobian(:,iiso) = Jacobian(:,iiso)*solution(iiso)
+      ! if old_concentration was zero, set it back to zero here
+      do iiso = 1,num_species
+        if (solution(iiso) <= 1.d-40) solution(iiso) = 0.d0
       enddo
-      ! linear solve steps
-      ! solve step 1/2: get LU decomposition
-      call ludcmp(Jacobian,num_species,indices,i)
-      ! solve step 2/2: LU back substitution linear solve
-      call lubksb(Jacobian,num_species,indices,rhs)
-      rhs = dsign(1.d0,rhs)*min(dabs(rhs),10.d0)
-      ! update the solution
-      solution = solution*exp(-rhs)
-    enddo
-    ! if old_concentration was zero, set it back to zero here
-    do iiso = 1,num_species
-      if (solution(iiso) <= 1.d-40) solution(iiso) = 0.d0
-    enddo
-    cur_waste_form%rad_concentration = solution
+      cur_waste_form%rad_concentration = solution
 
-    deallocate(residual)
-    deallocate(solution)
-    deallocate(rhs)
-    deallocate(indices)
-    deallocate(Jacobian)
+      deallocate(residual)
+      deallocate(solution)
+      deallocate(rhs)
+      deallocate(indices)
+      deallocate(Jacobian)
 
     endif !-----implicit_solution---------------------------------------------
     
