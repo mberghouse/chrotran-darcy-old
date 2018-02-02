@@ -135,7 +135,8 @@ module Input_Aux_module
             InputRewind, &
             InputCloseNestedFiles, &
             InputReadFileDirNamePrefix, &
-            UnitReadAndConversionFactor
+            UnitReadAndConversionFactor, &
+            InputReadFilename
 
 contains
 
@@ -1057,6 +1058,34 @@ subroutine InputReadNChars2(string, chars, n, return_blank_error, ierr)
   endif
 
 end subroutine InputReadNChars2
+
+! ************************************************************************** !
+
+subroutine InputReadFilename(input, option, filename)
+  ! 
+  ! Reads in a filename and prepends the input object path if applicable.
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 01/31/18
+  ! 
+  implicit none
+
+  type(input_type), pointer :: input
+  type(option_type) :: option
+  character(len=MAXSTRINGLENGTH) :: filename
+
+  PetscBool, parameter :: return_blank_error = PETSC_TRUE
+  
+  call InputReadNChars(input,option,filename, &
+                       MAXSTRINGLENGTH,return_blank_error)
+
+  ! only prepend a path if a path exist and the filename is not absolue (i.e.
+  ! it does not start with a "/").
+  if (len_trim(input%path) > 0 .and. index(filename,'/') /= 1) then
+    filename = trim(input%path) // trim(filename)
+  endif
+  
+end subroutine InputReadFilename
 
 ! ************************************************************************** !
 
