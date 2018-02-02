@@ -38,6 +38,11 @@ module Geometry_module
     module procedure GeometryComputePlaneWithPoints2
   end interface GeometryComputePlaneWithPoints
   
+  interface GeomComputeDistanceFromPlane
+    module procedure GeomComputeDistanceFromPlane1
+    module procedure GeomComputeDistanceFromPlane2
+  end interface GeomComputeDistanceFromPlane
+  
   public :: GeometryCreatePolygonalVolume, &
             GeometryReadCoordinates, &
             GeometryReadCoordinate, &
@@ -627,7 +632,7 @@ end subroutine GeomGetPlaneGradientinXandY
 
 ! ************************************************************************** !
 
-function GeomComputeDistanceFromPlane(plane,point)
+function GeomComputeDistanceFromPlane1(plane,point)
   ! 
   ! Calculates the distance of a point from a plane
   ! 
@@ -640,12 +645,34 @@ function GeomComputeDistanceFromPlane(plane,point)
   type(plane_type) :: plane
   type(point3d_type) :: point
   
-  PetscReal :: GeomComputeDistanceFromPlane
+  PetscReal :: GeomComputeDistanceFromPlane1
 
-  GeomComputeDistanceFromPlane = &
-    (plane%A*point%x + plane%B*point%y + plane%C*point%z + plane%D) / &
+  GeomComputeDistanceFromPlane1 = &
+    GeomComputeDistanceFromPlane2(plane,point%x,point%y,point%z)
+  
+end function GeomComputeDistanceFromPlane1
+
+! ************************************************************************** !
+
+function GeomComputeDistanceFromPlane2(plane,x,y,z)
+  ! 
+  ! Calculates the distance of a point from a plane
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/24/11
+  ! 
+
+  implicit none
+  
+  type(plane_type) :: plane
+  PetscReal :: x, y, z
+  
+  PetscReal :: GeomComputeDistanceFromPlane2
+
+  GeomComputeDistanceFromPlane2 = &
+    (plane%A*x + plane%B*y + plane%C*z + plane%D) / &
     sqrt(plane%A*plane%A+plane%B*plane%B+plane%C*plane%C)
   
-end function GeomComputeDistanceFromPlane
+end function GeomComputeDistanceFromPlane2
 
 end module Geometry_module

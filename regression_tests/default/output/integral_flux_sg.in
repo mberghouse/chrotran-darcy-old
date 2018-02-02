@@ -1,0 +1,110 @@
+# Description: Small scenario for testing integral flux output to ensure that
+#              the correct faces are found and output formatting is correct.
+
+#=========================== simulation =======================================
+SIMULATION
+  SIMULATION_TYPE SUBSURFACE
+  PROCESS_MODELS
+    SUBSURFACE_FLOW flow
+      MODE RICHARDS
+    /
+    SUBSURFACE_TRANSPORT transport
+      GLOBAL_IMPLICIT
+    /
+  /
+END
+
+#=========================== subsurface block =================================
+SUBSURFACE
+
+# read in GRID and REGIONs blocks for 2x2x2 unstructured explicit domain
+EXTERNAL_FILE ../common/2x2x2_sg.txt
+
+#=========================== solver options ===================================
+TIMESTEPPER FLOW
+  # end simulation without taking a time step
+  MAX_STEPS 0
+END
+
+#=========================== chemistry ========================================
+CHEMISTRY
+  PRIMARY_SPECIES
+    Tracer
+  /
+  OUTPUT
+    TOTAL
+  /
+END
+
+#=========================== material properties ==============================
+#=========================== characteristic curves ============================
+EXTERNAL_FILE ../common/soil1_default.txt
+
+#=========================== integral flux ====================================
+EXTERNAL_FILE integral_flux_block.txt
+
+#=========================== output options ===================================
+OUTPUT
+  PERIODIC_OBSERVATION TIMESTEP 1
+END
+
+#=========================== times ============================================
+TIME
+  FINAL_TIME 1.d-6 y
+  INITIAL_TIMESTEP_SIZE 1.d-6 y
+  MAXIMUM_TIMESTEP_SIZE 1.d-6 y
+END
+
+#=========================== regions ==========================================
+EXTERNAL_FILE ../common/region_all.txt
+
+#=========================== flow conditions ==================================
+FLOW_CONDITION initial
+  TYPE
+    PRESSURE DIRICHLET
+  /
+  PRESSURE 101325.d0
+END
+
+#=========================== transport conditions =============================
+TRANSPORT_CONDITION initial
+  TYPE dirichlet_zero_gradient
+  CONSTRAINT initial
+    CONCENTRATIONS
+      Tracer  1.d-3  T
+    /
+  /
+END
+
+#=========================== condition couplers ===============================
+INITIAL_CONDITION
+  FLOW_CONDITION initial
+  TRANSPORT_CONDITION initial
+  REGION all
+END
+
+BOUNDARY_CONDITION top
+  FLOW_CONDITION initial
+  TRANSPORT_CONDITION initial
+  REGION top
+END
+
+BOUNDARY_CONDITION north
+  FLOW_CONDITION initial
+  TRANSPORT_CONDITION initial
+  REGION north
+END
+
+BOUNDARY_CONDITION east
+  FLOW_CONDITION initial
+  TRANSPORT_CONDITION initial
+  REGION east
+END
+
+#=========================== stratigraphy couplers ============================
+STRATA
+  REGION all
+  MATERIAL soil1
+END
+
+END_SUBSURFACE

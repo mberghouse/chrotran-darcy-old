@@ -275,27 +275,27 @@ END
 INTEGRAL_FLUX
   ! 1 x 2 x 1
   NAME X
-  COORDINATES
+  POLYGON
     46. 13. 15.
-    46. 36. 20.
+    46. 36. 35.
   /
 END
 
 INTEGRAL_FLUX
   ! 1 x 1 x 1
   NAME Y
-  COORDINATES
+  POLYGON
     21. 25. 15.
-    33. 25. 20.
+    33. 25. 35.
   /
 END
 
 INTEGRAL_FLUX
   ! 2 x 2 x 1
   NAME Z
-  COORDINATES
-    21. 13. 20.
-    46. 36. 20.
+  POLYGON
+    21. 13. 15.
+    46. 36. 15.
   /
 END
 

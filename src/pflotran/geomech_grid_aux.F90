@@ -207,7 +207,6 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
 #include "petsc/finclude/petscdm.h"
   use petscdm
   use Option_module
-  use Utility_module, only: reallocateIntArray
   
   implicit none
 

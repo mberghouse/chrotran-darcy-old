@@ -142,7 +142,7 @@ subroutine DatasetAsciiLoad(this,input,data_internal_units,option)
 
   use Input_Aux_module
   use String_module
-  use Utility_module, only : reallocateRealArray
+  use Utility_module, only : ReallocateArray
   use Option_module
   use Units_module, only : UnitsConvertToInternal
   use Time_Storage_module  
@@ -253,7 +253,7 @@ subroutine DatasetAsciiLoad(this,input,data_internal_units,option)
     
     ! enlarge the array as needed.
     if (row_count+1 > max_size) then
-      call reallocateRealArray(temp_array,max_size) 
+      call ReallocateArray(temp_array,max_size) 
     endif  
   enddo
   

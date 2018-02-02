@@ -316,17 +316,17 @@ subroutine UniVelocityDatasetReadFromFile(input,dataset,option)
     endif
     if (count+1 > max_size) then
       temp_max_size = max_size
-      call reallocateRealArray(temp_times,max_size) 
-      ! careful.  reallocateRealArray double max_size every time.
+      call ReallocateArray(temp_times,max_size) 
+      ! careful.  ReallocateArray double max_size every time.
       i = temp_max_size
-      call reallocateRealArray(temp_array1,i) 
+      call ReallocateArray(temp_array1,i) 
       if (dataset%rank > 1) then
         i = temp_max_size
-        call reallocateRealArray(temp_array2,i)
+        call ReallocateArray(temp_array2,i)
       endif
       if (dataset%rank > 2) then
         i = temp_max_size
-        call reallocateRealArray(temp_array3,i)
+        call ReallocateArray(temp_array3,i)
       endif
     endif  
   enddo
