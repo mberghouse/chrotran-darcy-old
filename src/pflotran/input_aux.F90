@@ -1070,7 +1070,7 @@ subroutine InputReadFilename(input, option, filename)
   ! 
   implicit none
 
-  type(input_type), pointer :: input
+  type(input_type) :: input
   type(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: filename
 

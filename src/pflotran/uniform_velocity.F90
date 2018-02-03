@@ -204,7 +204,7 @@ subroutine UniVelocityDatasetReadValues(input,option,keyword,string,dataset, &
   if (input%ierr == 0) then
     call StringToLower(word)
     if (StringCompare(word,'file',FOUR_INTEGER)) then
-      call InputReadNChars(input,option,filename,MAXSTRINGLENGTH,PETSC_TRUE)
+      call InputReadFilename(input,option,filename)
       input%err_buf = trim(keyword) // ' FILE'
       input%err_buf2 = 'VELOCITY_DATASET'
       call InputErrorMsg(input,option)

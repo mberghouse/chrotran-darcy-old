@@ -257,8 +257,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
                             checkpoint_waypoint_list)
       case ('RESTART')
         option%restart_flag = PETSC_TRUE
-        call InputReadNChars(input,option,option%restart_filename, &
-                             MAXSTRINGLENGTH,PETSC_TRUE)
+        call InputReadFilename(input,option,option%restart_filename)
         call InputErrorMsg(input,option,'RESTART','Restart file name') 
         call InputReadDouble(input,option,option%restart_time)
         if (input%ierr == 0) then

@@ -175,22 +175,21 @@ subroutine GeomechStrataRead(strata,input,option)
       
     select case(trim(keyword))
     
+      case('GEOMECHANICS_FILE')
+        call InputReadFilename(input,option,strata%material_property_filename)
+        call InputErrorMsg(input,option,'material property filename', &
+                           'GEOMECHANICS STRATA')
       case('GEOMECHANICS_REGION')
         call InputReadWord(input,option,strata%region_name,PETSC_TRUE)
         call InputErrorMsg(input,option,'geomechanics region name', &
                            'GEOMECHANICS STRATA')
       case('GEOMECHANICS_MATERIAL')
-        call InputReadNChars(input,option,string,MAXSTRINGLENGTH,PETSC_TRUE)
-        call InputErrorMsg(input,option, &
-                   'geomechancis material property name','GEOMECHANICS STRATA')
-        if (StringCompareIgnoreCase(string,'realization_dependent')) then
-          strata%realization_dependent = PETSC_TRUE
-          call InputReadNChars(input,option,string,MAXSTRINGLENGTH,PETSC_TRUE)
-          call InputErrorMsg(input,option, &
-                   'geomechancis material property name','GEOMECHANICS STRATA')
-        endif
-        strata%material_property_name = trim(string)
-        strata%material_property_filename = string
+        call InputReadWord(input,option,strata%material_property_name, &
+                           PETSC_TRUE)
+        call InputErrorMsg(input,option,'material property name', &
+                           'GEOMECHANICS STRATA')
+      case('REALIZATION_DEPENDENT')
+        strata%realization_dependent = PETSC_TRUE
       case('INACTIVE')
         strata%active = PETSC_FALSE
       case default
@@ -198,6 +197,15 @@ subroutine GeomechStrataRead(strata,input,option)
     end select 
   
   enddo  
+
+  if (len_trim(strata%region_name) == 0 .and. &
+      len_trim(strata%material_property_name) > 0) then
+    option%io_buffer = 'The GEOMECHANICS MATERIAL property "' // &
+      trim(strata%material_property_name) // '" must have an associated &
+      &REGION in the STRATA block.  Otherwise, please use "GEOMECHANIC_FILE &
+      &<filename>" to read material IDs from a file.'
+    call printErrMsg(option)
+  endif
 
 end subroutine GeomechStrataRead
 
