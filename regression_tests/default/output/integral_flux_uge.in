@@ -41,7 +41,7 @@ END
 EXTERNAL_FILE ../common/soil1_default.txt
 
 #=========================== integral flux ====================================
-EXTERNAL_FILE integral_flux_block.txt
+EXTERNAL_FILE ../integral_flux/integral_flux_block.txt
 
 #=========================== output options ===================================
 OUTPUT
@@ -58,48 +58,8 @@ END
 #=========================== regions ==========================================
 EXTERNAL_FILE ../common/region_all.txt
 
-#=========================== flow conditions ==================================
-FLOW_CONDITION initial
-  TYPE
-    PRESSURE DIRICHLET
-  /
-  PRESSURE 101325.d0
-END
-
-#=========================== transport conditions =============================
-TRANSPORT_CONDITION initial
-  TYPE dirichlet_zero_gradient
-  CONSTRAINT initial
-    CONCENTRATIONS
-      Tracer  1.d-3  T
-    /
-  /
-END
-
-#=========================== condition couplers ===============================
-INITIAL_CONDITION
-  FLOW_CONDITION initial
-  TRANSPORT_CONDITION initial
-  REGION all
-END
-
-BOUNDARY_CONDITION top
-  FLOW_CONDITION initial
-  TRANSPORT_CONDITION initial
-  REGION top
-END
-
-BOUNDARY_CONDITION north
-  FLOW_CONDITION initial
-  TRANSPORT_CONDITION initial
-  REGION north
-END
-
-BOUNDARY_CONDITION east
-  FLOW_CONDITION initial
-  TRANSPORT_CONDITION initial
-  REGION east
-END
+#=========================== boundary and initial conditions ==================
+EXTERNAL_FILE conditions.txt
 
 #=========================== stratigraphy couplers ============================
 STRATA

@@ -1108,6 +1108,11 @@ subroutine WriteObservationDataForBC(fid,realization_base,patch,connection_set)
     end select
 
     if (associated(reaction)) then
+      option%io_buffer = 'WriteObservationDataForBC() not set up properly &
+        &for use of patch%boundary_tran_fluxes as it scales by cross-&
+        &sectional area, which is incorrect.  Please email &
+        &pflotran-dev@googlegroups.com with your input deck.'
+      call printErrMsg(option)
       sum_solute_flux = 0.d0
       if (associated(connection_set)) then
         do iconn = 1, connection_set%num_connections

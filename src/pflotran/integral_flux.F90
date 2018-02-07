@@ -201,7 +201,7 @@ subroutine IntegralFluxRead(integral_flux,input,option)
           ! fourth value is optional, no error message
         enddo
         allocate(integral_flux%vertices(4,icount))
-        integral_flux%coordinates_and_directions = int_array(:,1:icount)
+        integral_flux%vertices = int_array(:,1:icount)
         call DeallocateArray(int_array)
       case default
         call InputKeywordUnrecognized(keyword,'INTEGRAL_FLUX',option)

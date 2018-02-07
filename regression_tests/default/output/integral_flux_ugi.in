@@ -18,7 +18,7 @@ END
 SUBSURFACE
 
 # read in GRID and REGIONs blocks for 2x2x2 unstructured explicit domain
-EXTERNAL_FILE ../common/2x2x2_sg.txt
+EXTERNAL_FILE ../common/2x2x2_ugi.txt
 
 #=========================== solver options ===================================
 TIMESTEPPER FLOW

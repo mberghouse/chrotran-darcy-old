@@ -7983,25 +7983,23 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   PetscReal :: v1(3), v2(3), cp(3)
   PetscReal :: x, y, z
   PetscReal :: coord(3)
-  PetscReal :: dir(3) 
-  PetscReal :: value1, value2
+  PetscReal :: unit_direction(3) 
+  PetscReal, parameter :: absolute_tolerance = 1.d-10
   PetscReal, parameter :: relative_tolerance = 1.d-6
-  PetscBool :: within_tolerance
   PetscBool :: found
   PetscBool :: found2
   PetscBool :: reverse_direction
   PetscBool :: same_direction
   PetscBool, pointer :: yet_to_be_found(:)
-  PetscBool, pointer :: yet_to_be_foundv(:)
   PetscInt :: ipass
   PetscInt :: face_vertices_natural(MAX_VERT_PER_FACE)
   PetscInt :: ivert1, ivert2
   PetscInt :: iv1, iv2
   PetscInt :: num_vertices1, num_vertices2
+  PetscInt :: num_to_be_found
   PetscErrorCode :: ierr
 
   nullify(yet_to_be_found)
-  nullify(yet_to_be_foundv)
   nullify(connections)
 
   grid => patch%grid
@@ -8009,53 +8007,73 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   plane => integral_flux%plane
   coordinates_and_directions => integral_flux%coordinates_and_directions
   vertices => integral_flux%vertices
+  num_to_be_found = 0
 
   if (associated(polygon)) then
     ! determine orientation of polygon
+    allocate(plane)
     if (size(polygon) > 2) then
-      !TODO(geh) fix this so that the direction is correct? 
-      v1(1) = polygon(3)%x - polygon(2)%x
-      v1(2) = polygon(3)%y - polygon(2)%y
-      v1(3) = polygon(3)%z - polygon(2)%z
-      v2(1) = polygon(1)%x - polygon(2)%x
-      v2(2) = polygon(1)%y - polygon(2)%y
-      v2(3) = polygon(1)%z - polygon(2)%z
+      call GeometryComputePlaneWithPoints(plane, &
+                                   polygon(1)%x,polygon(1)%y,polygon(1)%z, &
+                                   polygon(2)%x,polygon(2)%y,polygon(2)%z, &
+                                   polygon(3)%x,polygon(3)%y,polygon(3)%z)
     else
-      v1 = 0.d0
-      v2 = 0.d0
-      if (Equal(polygon(1)%x,polygon(2)%x)) then
-        v1(2) = polygon(1)%y-polygon(2)%y
-        v2(3) = polygon(2)%z-polygon(1)%z
-      else if (Equal(polygon(1)%y,polygon(2)%y)) then
-        v1(1) = polygon(1)%x-polygon(2)%x
-        v2(3) = polygon(2)%z-polygon(1)%z
-      else if (Equal(polygon(1)%z,polygon(2)%z)) then
-        v1(1) = polygon(1)%x-polygon(2)%x
-        v2(2) = polygon(2)%y-polygon(1)%y
+      if (Equal(polygon(1)%x,polygon(2)%x) .and. &
+          .not. Equal(polygon(1)%y,polygon(2)%y) .and. &
+          .not. Equal(polygon(1)%z,polygon(2)%z)) then
+        call GeometryComputePlaneWithPoints(plane, &
+                                     polygon(1)%x,polygon(1)%y,polygon(1)%z, &
+                                     polygon(1)%x,polygon(1)%y,polygon(2)%z, &
+                                     polygon(1)%x,polygon(2)%y,polygon(2)%z)
+      else if (.not. Equal(polygon(1)%x,polygon(2)%x) .and. &
+               Equal(polygon(1)%y,polygon(2)%y) .and. &
+               .not. Equal(polygon(1)%z,polygon(2)%z)) then
+        call GeometryComputePlaneWithPoints(plane, &
+                                     polygon(1)%x,polygon(1)%y,polygon(1)%z, &
+                                     polygon(1)%x,polygon(1)%y,polygon(2)%z, &
+                                     polygon(2)%x,polygon(1)%y,polygon(2)%z)
+      else if (.not. Equal(polygon(1)%x,polygon(2)%x) .and. &
+               .not. Equal(polygon(1)%y,polygon(2)%y) .and. &
+               Equal(polygon(1)%z,polygon(2)%z)) then
+        call GeometryComputePlaneWithPoints(plane, &
+                                     polygon(1)%x,polygon(1)%y,polygon(1)%z, &
+                                     polygon(1)%x,polygon(2)%y,polygon(1)%z, &
+                                     polygon(2)%x,polygon(2)%y,polygon(1)%z)
+      else
+        if (OptionPrintToScreen(option)) write(*,*) 'pt1: ', &
+          polygon(1)%x, polygon(1)%y, polygon(1)%z
+        if (OptionPrintToScreen(option)) write(*,*) 'pt2: ', &
+          polygon(2)%x, polygon(2)%y, polygon(2)%z
+        option%io_buffer = 'An integral flux polygon defined by 2 points must &
+          & be a plane.' 
+        call printErrMsg(option)
       endif
     endif
-    cp = CrossProduct(v1,v2)
     icount = 0
-    idir = 0
-    do i = X_DIRECTION, Z_DIRECTION
-      if (cp(i) > 1.d-10) then
-        icount = icount + 1
-        idir = i
-      else if (cp(i) < -1.d-10) then
-        icount = icount + 1
-        idir = -i
-      endif
-    enddo
+    if (dabs(plane%A) > absolute_tolerance) then
+      idir = 1
+      icount = icount + 1
+    endif
+    if (dabs(plane%B) > absolute_tolerance) then
+      idir = 2
+      icount = icount + 1
+    endif
+    if (dabs(plane%C) > absolute_tolerance) then
+      idir = 3
+      icount = icount + 1
+    endif
     if (icount /= 1) then
       option%io_buffer = 'Polygon defined in integral flux "' // &
         trim(adjustl(integral_flux%name)) // &
         '" must be aligned with grid axes.'
       call printErrMsg(option)
     endif
+    integral_flux%plane => plane
   endif
 
   if (associated(coordinates_and_directions)) then
-    allocate(yet_to_be_found(size(coordinates_and_directions,2)))
+    num_to_be_found = size(coordinates_and_directions,2)
+    allocate(yet_to_be_found(num_to_be_found))
     yet_to_be_found = PETSC_TRUE
   endif
 
@@ -8066,8 +8084,9 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
         trim(integral_flux%name) // '.'
       call printErrMsg(option)
     endif
-    allocate(yet_to_be_foundv(size(vertices,2)))
-    yet_to_be_foundv = PETSC_TRUE
+    num_to_be_found = size(vertices,2)
+    allocate(yet_to_be_found(num_to_be_found))
+    yet_to_be_found = PETSC_TRUE
   endif
 
   array_size = 100
@@ -8095,6 +8114,9 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
       if (.not.associated(cur_connection_set)) exit
       do iconn = 1, cur_connection_set%num_connections
         sum_connection = sum_connection + 1
+        magnitude = cur_connection_set%dist(0,iconn)
+        unit_direction(:) = &
+          cur_connection_set%dist(X_DIRECTION:Z_DIRECTION,iconn) 
         select case(ipass)
           case(1) ! internal connections
             ghosted_id_up = cur_connection_set%id_up(iconn)
@@ -8103,72 +8125,53 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
             ! when the upwind cell is non-ghosted.
             if (local_id_up <= 0) cycle
             fraction_upwind = cur_connection_set%dist(-1,iconn)
-            magnitude = cur_connection_set%dist(0,iconn)
             x = grid%x(ghosted_id_up) + fraction_upwind * magnitude * &
-                cur_connection_set%dist(X_DIRECTION,iconn)
+                                        unit_direction(X_DIRECTION)
             y = grid%y(ghosted_id_up) + fraction_upwind * magnitude * &
-                cur_connection_set%dist(Y_DIRECTION,iconn)
+                                        unit_direction(Y_DIRECTION)
             z = grid%z(ghosted_id_up) + fraction_upwind * magnitude * &
-                cur_connection_set%dist(Z_DIRECTION,iconn)
+                                        unit_direction(Z_DIRECTION)
           case(2) ! boundary connections
             local_id = cur_connection_set%id_dn(iconn)
             ghosted_id = grid%nL2G(local_id)
             fraction_upwind = 1.d0
-            magnitude = cur_connection_set%dist(0,iconn)
             x = grid%x(ghosted_id) - fraction_upwind * magnitude * &
-                                     cur_connection_set%dist(X_DIRECTION,iconn)
+                                     unit_direction(X_DIRECTION)
             y = grid%y(ghosted_id) - fraction_upwind * magnitude * &
-                                     cur_connection_set%dist(Y_DIRECTION,iconn)
+                                     unit_direction(Y_DIRECTION)
             z = grid%z(ghosted_id) - fraction_upwind * magnitude * &
-                                     cur_connection_set%dist(Z_DIRECTION,iconn)
+                                     unit_direction(Z_DIRECTION)
         end select 
         found = PETSC_FALSE
         same_direction = PETSC_TRUE
-        if (associated(polygon)) then
-          select case(iabs(idir))
-            case(X_DIRECTION)
-              value1 = x
-              value2 = polygon(1)%x
-            case(Y_DIRECTION)
-              value1 = y
-              value2 = polygon(1)%y
-            case(Z_DIRECTION)
-              value1 = z
-              value2 = polygon(1)%z
-          end select
-          within_tolerance = dabs((value1-value2)/magnitude) < &
-                             relative_tolerance
-          if (within_tolerance .and. &
-              GeometryPointInPolygon(x,y,z,iabs(idir),polygon)) then
-            found = PETSC_TRUE
-            if (idir < 0) same_direction = PETSC_FALSE
+        if (associated(plane)) then
+          if (minval(unit_direction) < 0.d0) then
+            same_direction = PETSC_FALSE
           endif
-        endif
-        if (.not.found .and. associated(plane)) then
           found = dabs(GeomComputeDistanceFromPlane(plane,x,y,z)) < &
                   relative_tolerance
+          if (found .and. associated(polygon)) then
+            found = GeometryPointInPolygon(x,y,z,iabs(idir),polygon)
+          endif
         endif
         if (.not.found .and. associated(coordinates_and_directions)) then
-          do i = 1, size(coordinates_and_directions,2)
+          do i = 1, num_to_be_found
             if (.not.yet_to_be_found(i)) cycle
             v1(1) = coordinates_and_directions(1,i) - x
             v1(2) = coordinates_and_directions(2,i) - y
             v1(3) = coordinates_and_directions(3,i) - z
             ! same point?
             if (DotProduct(v1,v1)/magnitude < relative_tolerance) then
-              dir(:) = cur_connection_set%dist(X_DIRECTION:Z_DIRECTION,iconn) 
               v2(1) = coordinates_and_directions(4,i)
               v2(2) = coordinates_and_directions(5,i)
               v2(3) = coordinates_and_directions(6,i)
               ! same direction?
-              cp = CrossProduct(v2,dir)
+              cp = CrossProduct(v2,unit_direction)
               if (DotProduct(cp,cp)/magnitude < relative_tolerance) then
                 found = PETSC_TRUE
                 yet_to_be_found(i) = PETSC_FALSE
                 ! could be opposite direction
-                if (v2(1)*dir(1) < 0.d0 .or. &
-                    v2(2)*dir(2) < 0.d0 .or. &
-                    v2(3)*dir(3) < 0.d0) then
+                if (minval(v2*unit_direction) < 0.d0) then
                   same_direction = PETSC_FALSE
                 endif
                 exit
@@ -8185,8 +8188,8 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
             if (face_vertices_natural(num_vertices1) > 0) exit
             num_vertices1 = num_vertices1 - 1
           enddo
-          do i = 1, size(vertices,2)
-            if (.not.yet_to_be_foundv(i)) cycle
+          do i = 1, num_to_be_found
+            if (.not.yet_to_be_found(i)) cycle
             num_vertices2 = size(vertices,1)
             do
               if (Initialized(vertices(num_vertices2,i))) exit
@@ -8234,7 +8237,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
               endif
             endif
             if (found2) then
-              yet_to_be_foundv(i) = PETSC_FALSE
+              yet_to_be_found(i) = PETSC_FALSE
               found = PETSC_TRUE
               if (reverse_direction) same_direction = PETSC_FALSE
               exit
@@ -8285,39 +8288,24 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   if (associated(integral_flux%boundary_connections)) then
     icount = icount + size(integral_flux%boundary_connections)
   endif
-  call MPI_Allreduce(icount,i,ONE_INTEGER_MPI,MPIU_INTEGER,MPI_SUM, &
-                     option%mycomm,ierr)
-  if (i == 0) then
+  call MPI_Allreduce(MPI_IN_PLACE,icount,ONE_INTEGER_MPI,MPIU_INTEGER, &
+                     MPI_SUM,option%mycomm,ierr)
+  if (icount == 0) then
     option%io_buffer = 'Zero connections found for INTEGRAL_FLUX "' // &
       trim(adjustl(integral_flux%name)) // &
       '".  Please ensure that the polygon coincides with an internal &
       &cell boundary or a boundary condition.'
     call printErrMsg(option)
+  else if (num_to_be_found > 0 .and. icount /= num_to_be_found) then
+    write(word,*) num_to_be_found - icount
+    option%io_buffer = trim(adjustl(word)) // &
+      ' face(s) missed for INTEGRAL_FLUX "' // &
+      trim(adjustl(integral_flux%name)) // &
+      '".  Please ensure that the polygon coincides with an internal &
+      &cell boundary or a boundary condition.'
+    call printErrMsg(option)
   else
-    ! check to ensure that all vertices or coordinates_and_directions have
-    ! been found
-    icount = 0
-    if (associated(integral_flux%coordinates_and_directions)) then
-      if (i /= size(integral_flux%coordinates_and_directions,2)) then
-        write(word,*) size(integral_flux%coordinates_and_directions,2)
-        write(option%io_buffer,*) i
-        option%io_buffer = trim(adjustl(option%io_buffer)) // ' of ' // &
-          trim(adjustl(word)) // ' connections found for integral flux "' // &
-          trim(adjustl(integral_flux%name)) // '".'
-        call printErrMsg(option)
-      endif
-    endif
-    if (associated(integral_flux%vertices)) then
-      if (i /= size(integral_flux%vertices,2)) then
-        write(word,*) size(integral_flux%vertices,2)
-        write(option%io_buffer,*) i
-        option%io_buffer = trim(adjustl(option%io_buffer)) // ' of ' // &
-          trim(adjustl(word)) // ' connections found for integral flux "' // &
-          trim(adjustl(integral_flux%name)) // '".'
-        call printErrMsg(option)
-      endif
-    endif
-    write(option%io_buffer,*) i
+    write(option%io_buffer,*) icount
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' connections found &
       &for integral flux "' // trim(adjustl(integral_flux%name)) // '".'
     call printMsg(option)

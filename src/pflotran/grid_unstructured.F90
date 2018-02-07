@@ -3537,6 +3537,17 @@ subroutine UGridMapSideSet(unstructured_grid,face_vertices,n_ss_faces, &
   enddo
   call VecRestoreArrayF90(Face_vec,vec_ptr,ierr);CHKERRQ(ierr)
   deallocate(boundary_faces)
+
+  ! check to ensure that all faces have been mapped across all processes
+  call MPI_Allreduce(mapped_face_count,iface,ONE_INTEGER_MPI, &
+                     MPIU_INTEGER,MPI_SUM,option%mycomm,ierr)
+  if (iface /= n_ss_faces) then
+    write(string,*) n_ss_faces - iface
+    option%io_buffer = trim(adjustl(string)) // ' faces not mapped for &
+      &sideset "' // trim(region_name) // '".  Please ensure that the &
+      &listed vertices match the mesh.'
+    call printErrMsg(option)
+  endif
   
   allocate(cell_ids(mapped_face_count))
   allocate(face_ids(mapped_face_count))
@@ -3842,6 +3853,17 @@ subroutine UGridMapSideSet2(unstructured_grid,face_vertices,n_ss_faces, &
       face_ids(mapped_face_count) = face_ids_for_all_boundary_faces(ii)
     endif
   enddo
+
+  ! check to ensure that all faces have been mapped across all processes
+  call MPI_Allreduce(mapped_face_count,ii,ONE_INTEGER_MPI, &
+                     MPIU_INTEGER,MPI_SUM,option%mycomm,ierr)
+  if (ii /= n_ss_faces) then
+    write(string,*) n_ss_faces - ii
+    option%io_buffer = trim(adjustl(string)) // ' faces not mapped for &
+      &sideset "' // trim(region_name) // '".  Please ensure that the &
+      &listed vertices match the mesh.'
+    call printErrMsg(option)
+  endif
 
   if (option%mycommsize>1) then
     call MatSeqAIJRestoreArrayF90(Mat_face_loc,aa_v,ierr);CHKERRQ(ierr)
