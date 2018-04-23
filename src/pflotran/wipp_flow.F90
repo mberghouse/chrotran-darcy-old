@@ -1759,6 +1759,8 @@ subroutine WIPPFloCreepShutDown(realization)
   wippflo_auxvars => realization%patch%aux%WIPPFlo%auxvars
   
   do ghosted_id = 1, grid%ngmax
+    material_auxvars(ghosted_id)%creep_closure_id = &
+      iabs(material_auxvars(ghosted_id)%creep_closure_id)
     creep_closure_id = material_auxvars(ghosted_id)%creep_closure_id
     creep_closure => wipp%creep_closure_tables_array(creep_closure_id)%ptr
     if (associated(creep_closure)) then
@@ -1776,8 +1778,6 @@ subroutine WIPPFloCreepShutDown(realization)
         material_auxvars(ghosted_id)%porosity_base = &
           creep_closure%Evaluate(option%time,creep_closure%shutdown_pressure)
         ! fix to shutdown pressure and porosity at shutdown pressure
-        material_auxvars(ghosted_id)%porosity_base = &
-          wippflo_auxvars(ZERO_INTEGER,ghosted_id)%effective_porosity
         call MaterialAuxVarSetValue(material_auxvars(ghosted_id), &
                                     SOIL_REFERENCE_PRESSURE, &
                                     creep_closure%shutdown_pressure)

@@ -366,17 +366,35 @@ subroutine WIPPFloAuxVarCompute(x,wippflo_auxvar,global_auxvar, &
     ! creep_closure, fracture, and soil_compressibility are mutually exclusive
     if (option%flow%creep_closure_on .and. wippflo_use_creep_closure) then
       creep_closure => wipp%creep_closure_tables_array( &
-                         material_auxvar%creep_closure_id )%ptr
+                         iabs(material_auxvar%creep_closure_id))%ptr
       if (associated(creep_closure)) then
         ! option%time here is the t time, not t + dt time.
         creep_closure_time = option%time
         if (option%iflag /= WIPPFLO_UPDATE_FOR_FIXED_ACCUM) then
           creep_closure_time = creep_closure_time + option%flow_dt
         endif
-        wippflo_auxvar%effective_porosity = &
-          creep_closure%Evaluate(creep_closure_time,cell_pressure)
-        wippflo_auxvar%effective_porosity = & 
-          max(wippflo_auxvar%effective_porosity,creep_closure%porosity_minimum)
+        if (cell_pressure > creep_closure%shutdown_pressure .and. &
+            option%iflag /= WIPPFLO_UPDATE_FOR_DERIVATIVE) then
+          material_auxvar%creep_closure_id = &
+            -iabs(material_auxvar%creep_closure_id)
+          wippflo_auxvar%effective_porosity = &
+            creep_closure%Evaluate(option%time,creep_closure%shutdown_pressure)
+          material_auxvar%porosity_base = &
+            wippflo_auxvar%effective_porosity
+          call MaterialAuxVarSetValue(material_auxvar, &
+                                      SOIL_REFERENCE_PRESSURE, &
+                                      creep_closure%shutdown_pressure)
+        endif
+        if (material_auxvar%creep_closure_id > 0) then
+          wippflo_auxvar%effective_porosity = &
+            creep_closure%Evaluate(creep_closure_time,cell_pressure)
+          wippflo_auxvar%effective_porosity = & 
+            max(wippflo_auxvar%effective_porosity, &
+                creep_closure%porosity_minimum)
+        else if (soil_compressibility_index > 0) then
+          call MaterialCompressSoil(material_auxvar,cell_pressure, &
+                                    wippflo_auxvar%effective_porosity,dummy)
+        endif
       else if (associated(material_auxvar%fracture) .and. &
                wippflo_use_fracture) then
           call FracturePoroEvaluate(material_auxvar,cell_pressure, &
