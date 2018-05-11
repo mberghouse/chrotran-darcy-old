@@ -70,6 +70,7 @@ module PM_Subsurface_Flow_class
             PMSubsurfaceFlowSetup, &
             PMSubsurfaceFlowInitializeTimestepA, &
             PMSubsurfaceFlowInitializeTimestepB, &
+            PMSubsurfaceFlowFinalizeTimestep, &
             PMSubsurfaceFlowPreSolve, &
             PMSubsurfaceFlowInitializeRun, &
             PMSubsurfaceFlowUpdateSolution, &
@@ -198,6 +199,19 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
       option%io_buffer = 'ANALYTICAL_DERIVATIVES has been deprecated.  Please &
         &use ANALYTICAL_JACOBIAN instead.'
 
+    case('ANALYTICAL_JACOBIAN_COMPARE')
+      option%flow%numerical_derivatives_compare = PETSC_TRUE
+
+    case('COMPARE_RELATIVE_DIFFERENCE')
+      option%matcompare_reldiff = PETSC_TRUE
+
+    case('DEBUG_TOL')
+      call InputReadDouble(input,option,option%debug_tol)
+      call InputErrorMsg(input,option,'DEBUG_TOL',error_string)
+
+    case('GEOMETRIC_PENALTY')
+      option%use_GP= PETSC_TRUE
+
     case default
       found = PETSC_FALSE
   end select  
@@ -218,6 +232,7 @@ subroutine PMSubsurfaceFlowSetup(this)
   use Communicator_Unstructured_class
   use Grid_module
   use Characteristic_Curves_module
+  use Characteristic_Curves_WIPP_module
   use Option_module
 
   implicit none
@@ -246,10 +261,12 @@ subroutine PMSubsurfaceFlowSetup(this)
   endif
   
   ! check on WIPP_type characteristic curves against simulation mode
-  if (this%option%iflowmode /= 10) then   ! 10 = twophase_mode
+  !TODO(geh): move this code into a lower wipp-specific module
+  if (this%option%iflowmode /= WF_MODE) then   ! 10 = twophase_mode
     cur_cc => this%realization%characteristic_curves
     do
       if (.not.associated(cur_cc)) exit
+      if (     associated(cur_cc%saturation_function) ) then
       select type(sf => cur_cc%saturation_function)
         class is(sat_func_WIPP_type)
           if (.not.sf%ignore_permeability .and. &
@@ -265,6 +282,7 @@ subroutine PMSubsurfaceFlowSetup(this)
             call printErrMsg(this%option)
           endif
       end select
+      endif
       cur_cc => cur_cc%next
     enddo
   endif

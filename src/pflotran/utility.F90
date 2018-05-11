@@ -89,7 +89,8 @@ module Utility_module
             InverseNorm, &
             Erf_, &
             DigitsOfAccuracy, &
-            CalcParallelSum
+            CalcParallelSum, &
+            MatCompare
             
 contains
 
@@ -594,7 +595,7 @@ subroutine ludcmp(A,N,INDX,D)
       VV(imax)=VV(j)
     endif
     INDX(j)=imax
-    if (A(j,j).eq.0.) A(j,j)=tiny
+    if (A(j,j).eq.0.d0) A(j,j)=tiny
     if (j.ne.N) then
       dum=1.d0/A(j,j)
       do i=j+1,N
@@ -635,7 +636,7 @@ subroutine lubksb(A,N,INDX,B)
       do j=ii,i-1
         sum=sum-A(i,j)*B(j)
       enddo
-    else if (sum.ne.0) then
+    else if (sum.ne.0.d0) then
       ii=i
     endif
     B(i)=sum
@@ -692,7 +693,7 @@ subroutine ludcmp_chunk(A,N,INDX,D,chunk_size,ithread,num_threads)
     do j=1,N
       if (abs(A(ichunk,ithread,i,j)).gt.aamax) aamax=abs(A(ichunk,ithread,i,j))
     enddo
-    if (aamax.eq.0) then
+    if (aamax.eq.0.d0) then
       call MPI_Comm_rank(MPI_COMM_WORLD,rank,ierr)
       print *, "ERROR: Singular value encountered in ludcmp() on processor", rank, ichunk,ithread
       call MPI_Abort(MPI_COMM_WORLD,ONE_INTEGER_MPI,ierr)
@@ -732,7 +733,7 @@ subroutine ludcmp_chunk(A,N,INDX,D,chunk_size,ithread,num_threads)
       VV(ichunk,ithread,imax)=VV(ichunk,ithread,j)
     endif
     INDX(ichunk,ithread,j)=imax
-    if (A(ichunk,ithread,j,j).eq.0.) A(ichunk,ithread,j,j)=tiny
+    if (A(ichunk,ithread,j,j).eq.0.d0) A(ichunk,ithread,j,j)=tiny
     if (j.ne.N) then
       dum=1./A(ichunk,ithread,j,j)
       do i=j+1,N
@@ -782,7 +783,7 @@ subroutine lubksb_chunk(A,N,INDX,B,chunk_size,ithread,num_threads)
       do j=ii,i-1
         sum=sum-A(ichunk,ithread,i,j)*B(ichunk,ithread,j)
       enddo
-    else if (sum.ne.0) then
+    else if (sum.ne.0.d0) then
       ii=i
     endif
     B(ichunk,ithread,i)=sum
@@ -1511,7 +1512,10 @@ function Equal(value1, value2)
   PetscReal :: value1, value2
 
   Equal = PETSC_FALSE
-  if (dabs(value1 - value2) <= 1.d-14 * dabs(value1))  Equal = PETSC_TRUE
+  ! using "abs(x) < spacing(y)/2.0" consistently gives same response as "x == y" for reals
+  ! using both gfortran and intel compilers for y around 0.0 and 1.0
+  ! this is setup assuming the "correct value" is on the RHS (second arg)
+  if (dabs(value1 - value2) < spacing(value2)/2.0)  Equal = PETSC_TRUE
   
 end function Equal
 
@@ -2325,6 +2329,41 @@ subroutine CalcParallelSUM2(option,rank_list,local_val,global_sum)
   deallocate(temp_array)
 
 end subroutine CalcParallelSUM2
+
+! ************************************************************************** !
+
+subroutine MatCompare(a1, a2, n, m, tol, do_rel_err)
+
+  !! Daniel Stone, March 2018
+  !! Just output warnings and provide place
+  !! for breakpoints.
+  !! Used in testing analytical derivatives
+  !! and comparing with numerical.
+
+  implicit none
+  PetscInt :: n, m
+  PetscReal, dimension(1:n, 1:m) :: a1, a2
+  PetscReal :: tol
+  PetscBool :: do_rel_err 
+
+  PetscInt :: i, j
+  PetscReal :: dff
+
+  do i = 1,n
+    do j = 1,m
+      dff = abs(a1(i,j) - a2(i,j)) 
+      if (do_rel_err) then
+        dff = dff/abs(a1(i,j))
+      endif
+      if (dff > tol) then
+        print *, "difference in matrices at ", i, ", ", j, ", value ", dff
+        print *, a1(i,j), " compare to ", a2(i,j)
+        print *, "..."
+      endif
+    end do
+  end do 
+
+end subroutine MatCompare
 
 ! ************************************************************************** !
 
