@@ -32,7 +32,7 @@ END
 CHEMISTRY
   PRIMARY_SPECIES
     Tracer
-    Tracer_Age
+    Tracer*Age
   /
   DATABASE ../../../database/hanford.dat
   ACTIVITY_COEFFICIENTS OFF
@@ -113,7 +113,7 @@ END
 CONSTRAINT initial
   CONCENTRATIONS
     Tracer 1.d-4  T
-    Tracer_Age 1.d-12 T
+    Tracer*Age 1.d-12 T
   /
 END
 

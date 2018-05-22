@@ -3,12 +3,12 @@
       Min:   1.0000000000000E-04
      Mean:   1.0000000000000E-04
         1:   1.0000000000000E-04
--- CONCENTRATION: Total Tracer_Age --
+-- CONCENTRATION: Total Tracer*Age --
       Max:   1.3718160000000E+04
       Min:   1.3718160000000E+04
      Mean:   1.3718160000000E+04
         1:   1.3718160000000E+04
--- GENERIC: Tracer Age --
+-- GENERIC: Age of Tracer --
       Max:   4.3500000000000E+00
       Min:   4.3500000000000E+00
      Mean:   4.3500000000000E+00
