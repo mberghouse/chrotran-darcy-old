@@ -3557,7 +3557,7 @@ subroutine BasisInit(reaction,option)
       endif
     endif
     if (reaction%species_idx%tracer_age_id == 0) then
-      word = 'Tracer_Age'
+      word = 'Tracer*Age'
       if (StringCompareIgnoreCase(reaction%primary_species_names(ispec), &
                                   word)) then
         reaction%species_idx%tracer_age_id = ispec
@@ -3565,7 +3565,7 @@ subroutine BasisInit(reaction,option)
       endif
     endif
     if (reaction%species_idx%water_age_id == 0) then
-      word = 'Water_Age'
+      word = 'Water*Age'
       if (StringCompareIgnoreCase(reaction%primary_species_names(ispec), &
                                   word)) then
         reaction%species_idx%water_age_id = ispec

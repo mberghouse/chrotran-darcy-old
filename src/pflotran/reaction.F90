@@ -6033,8 +6033,8 @@ subroutine RTSetPlotVariables(list,reaction,option,time_unit)
 
   if (reaction%print_age) then
     if (reaction%species_idx%tracer_age_id > 0) then
-      name = 'Tracer Age'
-      units = trim(time_unit) // '-molar'
+      name = 'Age of Tracer'
+      units = 'molar-' // trim(adjustl(time_unit))
       call OutputVariableAddToList(list,name,OUTPUT_GENERIC,units, &
                                    AGE,reaction%species_idx%tracer_age_id, &
                                    reaction%species_idx%tracer_aq_id)       
