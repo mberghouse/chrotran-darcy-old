@@ -757,7 +757,7 @@ reactive_transport.o : co2_span_wagner.o co2eos.o condition.o connection.o \
                        reaction_surf_complex_aux.o reactive_transport_aux.o \
                        realization_subsurface.o region.o secondary_continuum.o \
                        secondary_continuum_aux.o string.o transport.o \
-                       transport_constraint.o
+                       transport_constraint.o wipp_flow_aux.o
 reactive_transport_aux.o : matrix_block_aux.o option.o pflotran_constants.o \
                            reaction_aux.o reaction_surf_complex_aux.o \
                            utility.o
