@@ -80,6 +80,9 @@ STANDARD_CFG = \
 	wipp/wipp_flow/input_format/input_format.cfg \
 	wipp/wipp_flow/gas_generation/gas_generation.cfg \
 	wipp/nuts/nuts.cfg \
+	wipp/wipp_transport/1d_structured/1d_structured.cfg \
+	wipp/wipp_transport/1d_structured_uniform/1d_structured_uniform.cfg \
+	wipp/wipp_transport/1d_unstructured_explicit/1d_unstructured_explicit.cfg \
 #	wipp/bragflo/wipp_flow/wipp_flow.cfg \
 
 ifneq ($(strip $(HYPRE_LIB)),)
