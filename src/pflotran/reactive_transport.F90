@@ -2318,6 +2318,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
   if (option%use_mc) then
     rt_sec_transport_vars => patch%aux%SC_RT%sec_transport_vars
   endif
+  nullify(wippflo_auxvars)
   if (associated(patch%aux%WIPPFlo)) then
     wippflo_auxvars => patch%aux%WIPPFlo%auxvars
   endif

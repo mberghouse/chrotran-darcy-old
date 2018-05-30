@@ -8023,6 +8023,7 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   !
   use Connection_module
   use Coupler_module
+  use WIPP_Flow_Aux_module
 
   implicit none
 
@@ -8038,12 +8039,19 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   PetscInt :: sum_connection, iconn, num_connections
   PetscReal, allocatable :: sum_area(:,:), sum_velocity(:,:)
   PetscReal :: area(3), velocity(3)
+  PetscReal :: area_up(3), area_dn(3), velocity_up(3), velocity_dn(3)
   PetscInt :: ghosted_id_up, ghosted_id_dn
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: local_id
   PetscInt :: i
+  PetscReal :: alpha_ratio
+  type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
 
   grid => patch%grid
+  nullify(wippflo_auxvars)
+  if (associated(patch%aux%WIPPFlo)) then
+    wippflo_auxvars => patch%aux%WIPPFlo%auxvars
+  endif
 
   allocate(sum_velocity(3,grid%nlmax))
   allocate(sum_area(3,grid%nlmax))
@@ -8065,14 +8073,26 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
       ! velocities are stored as the downwind face of the upwind cell
       area = cur_connection_set%area(iconn)* &
              cur_connection_set%dist(1:3,iconn)
-      velocity = patch%internal_velocities(iphase,sum_connection)*area
+      area_up = area
+      area_dn = area
+      if (associated(wippflo_auxvars)) then
+        area = area * &
+               min(wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha, &
+                   wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha)
+      endif
+      ! get volumetic flow rate
+      velocity = patch%internal_velocities(iphase,sum_connection) * area
+      if (associated(wippflo_auxvars)) then
+        area_up = area_up * wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha
+        area_dn = area_dn * wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha
+      endif
       if (local_id_up > 0) then
         sum_velocity(:,local_id_up) = sum_velocity(:,local_id_up) + velocity
-        sum_area(:,local_id_up) = sum_area(:,local_id_up) + dabs(area)
+        sum_area(:,local_id_up) = sum_area(:,local_id_up) + dabs(area_up)
       endif
       if (local_id_dn > 0) then
         sum_velocity(:,local_id_dn) = sum_velocity(:,local_id_dn) + velocity
-        sum_area(:,local_id_dn) = sum_area(:,local_id_dn) + dabs(area)
+        sum_area(:,local_id_dn) = sum_area(:,local_id_dn) + dabs(area_dn)
       endif
     enddo
     cur_connection_set => cur_connection_set%next

@@ -1230,6 +1230,7 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
   use Patch_module
   use Connection_module
   use Coupler_module
+  use WIPP_Flow_Aux_module
 
   implicit none
   
@@ -1251,11 +1252,16 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
   PetscInt :: direction, iphase
   PetscReal :: area
   PetscReal :: sum_velocity(1:3), sum_area(1:3), velocity(1:3)
+  type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
   
   option => realization_base%option
   patch => realization_base%patch
   grid => patch%grid
   field => realization_base%field
+  nullify(wippflo_auxvars)
+  if (associated(patch%aux%WIPPFlo)) then
+    wippflo_auxvars => patch%aux%WIPPFlo%auxvars
+  endif
 
   sum_velocity = 0.d0
   sum_area = 0.d0
@@ -1276,6 +1282,13 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
           area = cur_connection_set%area(iconn)* &
                  !geh: no dabs() here
                  cur_connection_set%dist(direction,iconn)
+          if (associated(wippflo_auxvars)) then
+            area = area * &
+               min(wippflo_auxvars(ZERO_INTEGER, &
+                                   cur_connection_set%id_up(iconn))%alpha, &
+                   wippflo_auxvars(ZERO_INTEGER, &
+                                   cur_connection_set%id_dn(iconn))%alpha)
+          endif
           sum_velocity(direction) = sum_velocity(direction) + &
                                     patch%internal_velocities(iphase,sum_connection)* &
                                     area
@@ -1421,6 +1434,10 @@ function GetVelocityAtCoord(fid,realization_base,local_id,x,y,z,iphase)
 ! iphase = 1
 
   ghosted_id = grid%nL2G(local_id)
+
+  option%io_buffer = 'GetVelocityAtCoord() cannot be used with WIPP FLOW &
+    with alpha.'
+  call printErrMsg(option)
   
   coordinate(X_DIRECTION) = x
   coordinate(Y_DIRECTION) = y
