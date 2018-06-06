@@ -1,0 +1,19 @@
+CONSTRAINT initial
+  CONCENTRATIONS
+    AM241L     1.0d-50     T
+    PU239L     1.0d-50     T
+    PU238L     1.0d-50     T
+    U234L      1.0d-50     T
+    TH230L     1.0d-50     T
+    RA226      1.0d-50     T
+  /
+  MINERALS
+    AM241L(s)  0.00000d0    1.d0
+    PU239L(s)  0.00000d0    1.d0
+    PU238L(s)  0.00000d0    1.d0
+    U234L(s)   0.00000d0    1.d0
+    TH230L(s)  0.00000d0    1.d0
+    RA226(s)   0.00000d0    1.d0
+  /
+END
+

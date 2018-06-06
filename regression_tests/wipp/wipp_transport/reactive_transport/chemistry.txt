@@ -1,0 +1,45 @@
+CHEMISTRY
+  PRIMARY_SPECIES
+    AM241L
+    PU239L
+    PU238L
+    U234L
+    TH230L
+    RA226
+  /
+  MINERALS
+    AM241L(s)
+    PU239L(s)
+    PU238L(s)
+    U234L(s)
+    TH230L(s)
+    RA226(s)
+  /
+  MINERAL_KINETICS
+    AM241L(s)
+      RATE_CONSTANT  0.d0
+    /
+    PU239L(s)
+      RATE_CONSTANT  0.d0
+    /
+    PU238L(s)
+      RATE_CONSTANT  0.d0
+    /
+    U234L(s)
+      RATE_CONSTANT  0.d0
+    /
+    TH230L(s)
+      RATE_CONSTANT  0.d0
+    /
+    RA226(s)
+      RATE_CONSTANT  0.d0
+    /
+  /
+  DATABASE ../wipp_nuts.dat
+  LOG_FORMULATION
+  ACTIVITY_COEFFICIENTS OFF
+  OUTPUT
+    All
+    TOTAL
+  /
+EN

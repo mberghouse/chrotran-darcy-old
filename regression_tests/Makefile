@@ -80,9 +80,16 @@ STANDARD_CFG = \
 	wipp/wipp_flow/input_format/input_format.cfg \
 	wipp/wipp_flow/gas_generation/gas_generation.cfg \
 	wipp/nuts/nuts.cfg \
-	wipp/wipp_transport/1d_structured/1d_structured.cfg \
-	wipp/wipp_transport/1d_structured_uniform/1d_structured_uniform.cfg \
-	wipp/wipp_transport/1d_unstructured_explicit/1d_unstructured_explicit.cfg \
+	wipp/wipp_transport/transport_only/1d_structured/1d_structured.cfg \
+	wipp/wipp_transport/transport_only/1d_structured_uniform/1d_structured_uniform.cfg \
+	wipp/wipp_transport/transport_only/1d_unstructured_uniform/1d_unstructured_uniform.cfg \
+	wipp/wipp_transport/transport_only/1d_unstructured_irregular/1d_unstructured_irregular.cfg \
+	wipp/wipp_transport/transport_only/1d_unstructured_implicit/1d_unstructured_implicit.cfg \
+	wipp/wipp_transport/reactive_transport/1d_structured/1d_structured.cfg \
+	wipp/wipp_transport/reactive_transport/1d_structured_uniform/1d_structured_uniform.cfg \
+	wipp/wipp_transport/reactive_transport/1d_unstructured_uniform/1d_unstructured_uniform.cfg \
+	wipp/wipp_transport/reactive_transport/1d_unstructured_irregular/1d_unstructured_irregular.cfg \
+	wipp/wipp_transport/reactive_transport/1d_unstructured_implicit/1d_unstructured_implicit.cfg
 #	wipp/bragflo/wipp_flow/wipp_flow.cfg \
 
 ifneq ($(strip $(HYPRE_LIB)),)

@@ -1,0 +1,22 @@
+WASTE_FORM_GENERAL
+  MECHANISM WIPP
+    NAME r1s2v001
+    MATRIX_DENSITY  1.0d0 kg/m^3    # currently defined for initMF
+    SPECIES
+      #name,  Mw[g/mol],dcy[1/s],    initMF,   inst_rel_frac, daughter
+      # initMF is isotope kg/ waste form mass of 1kg
+      AM241L  241.057  0.00000E+00  2.11757E+02  0.00000d0
+      PU239L  239.052  0.00000E+00  1.40800E+04  0.00000d0
+      PU238L  238.050  2.50324E-10  3.51037E+01  0.00000d0  U234L
+      U234L   234.041  8.98325E-14  6.09556E+01  0.00000d0  TH230L
+      TH230L  230.033  2.85246E-13  2.74052E-01  0.00000d0  RA226
+      RA226   226.025  0.00000E+00  2.26025E-84  0.00000d0
+    /
+  /
+  WASTE_FORM
+    REGION waste_form
+    VOLUME 1.0d0 m^3       # bulk waste form volume, making matrix mass of 1kg
+    MECHANISM_NAME r1s2v001
+  /
+  PRINT_MASS_BALANCE
+END_WASTE_FORM_GENERAL

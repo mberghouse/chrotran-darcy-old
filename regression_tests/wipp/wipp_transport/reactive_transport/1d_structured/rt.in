@@ -9,8 +9,8 @@ SIMULATION
         FIX_UPWIND_DIRECTION #hardwired
         GAS_COMPONENT_FORMULA_WEIGHT 2.01588d0 #hardwired
         ALLOW_NEGATIVE_GAS_PRESSURE
-        ALPHA_DATASET alpha
-!        DEFAULT_ALPHA
+!        ALPHA_DATASET alpha
+        DEFAULT_ALPHA
         BRAGFLO_RESIDUAL_UNITS
         DELTMIN 8.64d-4
         DPRELIM -1.d8
@@ -33,6 +33,11 @@ SIMULATION
       GLOBAL_IMPLICIT
       MAX_CFL 1.d0
     /
+    UFD_DECAY ufd_decay
+    /
+    WASTE_FORM wipp_waste
+      TYPE GENERAL
+    /
   /
 END
 
@@ -42,28 +47,22 @@ SUBSURFACE
 REGRESSION
 #  CELLS_PER_PROCESS 5
   CELLS
-    10
-    200
-    250
-    300
-    350
-    400
-    450
-    500
-    550
-    600
-    650
-    700
-    750
-    800
-    1000
+    1
+    20
+    25
+    30
+    35
+    40
+    45
+    50
+    55
+    60
+    65
+    70
+    75
+    80
+    100
   /
-END
-
-#===================================datasets===================================#
-DATASET alpha
-  FILENAME ./alpha.h5
-  HDF5_DATASET_NAME Alpha
 END
 
 #=========================== flow mode ========================================
@@ -72,20 +71,12 @@ END
 skip
 SPECIFIED_VELOCITY
   UNIFORM? YES
-  DATASET 1.d0 0.d0 0.d0 m/yr
+  DATASET 1.d0 0.d0 0.d0 0.d0 0.d0 0.d0 m/yr
 END
 noskip
 
 #=========================== chemistry ========================================
-CHEMISTRY
-  PRIMARY_SPECIES
-    Tracer
-  /
-  OUTPUT
-    TOTAL
-    all
-  /
-END
+EXTERNAL_FILE ../chemistry.txt
 
 #=========================== solver options ===================================
 LINEAR_SOLVER TRANSPORT
@@ -94,7 +85,12 @@ END
 
 #=========================== discretization ===================================
 GRID
-  TYPE unstructured_explicit ./grid.uge
+  TYPE structured
+  NXYZ 1000 1 1
+  BOUNDS
+    0.d0 0.d0 0.d0
+    100.d0 1.d0 1.d0
+  /
 END
 
 #=========================== fluid properties =================================
@@ -103,7 +99,7 @@ FLUID_PROPERTY
 END
 
 #=========================== material properties ==============================
-MATERIAL_PROPERTY soil1
+MATERIAL_PROPERTY soil
   ID 1
   POROSITY 0.25d0
   TORTUOSITY 1.d0
@@ -134,7 +130,11 @@ END
 #=========================== output options ===================================
 OUTPUT
 #  TIMES y 5. 10. 15. 20.
-  FORMAT TECPLOT BLOCK
+  TIMES h 1.d0
+  PERIODIC TIME 1.d0 y
+  PERIODIC_OBSERVATION TIMESTEP 1
+#  FORMAT TECPLOT POINT
+  FORMAT HDF5
   VELOCITY_AT_CENTER
 END
 
@@ -155,11 +155,40 @@ REGION all
 END
 
 REGION west
-  FILE ./west.ex
+  FACE west
+  COORDINATES
+    0.d0 0.d0 0.d0
+    0.d0 1.d0 1.d0
+  /
 END
 
 REGION east
-  FILE ./east.ex
+  FACE east
+  COORDINATES
+    100.d0 0.d0 0.d0
+    100.d0 1.d0 1.d0
+  /
+END
+
+REGION waste_form
+  COORDINATES
+    9.d0 0.d0 0.d0
+    10.d0 1.d0 1.d0
+  /
+END
+
+REGION 20m
+  COORDINATE 20.d0 0.5d0 0.5d0
+END
+
+#=========================== observations =====================================
+OBSERVATION
+  REGION 20m
+  VELOCITY
+END
+
+OBSERVATION
+  REGION east
 END
 
 #=========================== flow conditions ==================================
@@ -192,22 +221,12 @@ END
 TRANSPORT_CONDITION inlet
   TYPE dirichlet_zero_gradient
   CONSTRAINT_LIST
-    0.d0 inlet
+    0.d0 initial
   /
 END
 
 #=========================== constraints ======================================
-CONSTRAINT initial
-  CONCENTRATIONS
-    Tracer 1.d-7  T
-  /
-END
-
-CONSTRAINT inlet
-  CONCENTRATIONS
-    Tracer 1.d-3  T
-  /
-END
+EXTERNAL_FILE ../constraints.txt
 
 #=========================== condition couplers ===============================
 # initial condition
@@ -232,7 +251,10 @@ END
 #=========================== stratigraphy couplers ============================
 STRATA
   REGION all
-  MATERIAL soil1
+  MATERIAL soil
 END
 
 END_SUBSURFACE
+
+EXTERNAL_FILE ../ufd_decay.txt
+EXTERNAL_FILE ../waste_form.txt

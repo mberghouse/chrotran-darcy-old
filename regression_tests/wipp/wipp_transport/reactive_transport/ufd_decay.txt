@@ -1,0 +1,67 @@
+UFD_DECAY
+#  IMPLICIT_SOLUTION
+  ELEMENT AM241
+    SOLUBILITY  2.12080d-5  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ELEMENT PU239
+    SOLUBILITY  2.84034d-6  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ELEMENT PU238
+    SOLUBILITY  8.24537d-9  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ELEMENT U234
+    SOLUBILITY  3.92772d-7  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ELEMENT TH230
+    SOLUBILITY  5.27400d-10  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ELEMENT RA226
+    SOLUBILITY  1.d0  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ISOTOPE AM241L
+    ELEMENT AM241
+    DECAY_RATE 0.d0
+  /
+  ISOTOPE PU239L
+    ELEMENT PU239
+    DECAY_RATE 0.d0
+  /
+  ISOTOPE PU238L
+    ELEMENT PU238
+    DECAY_RATE 2.50324d-10
+    DAUGHTER U234L  1.d0
+  /
+  ISOTOPE U234L
+    ELEMENT U234
+    DECAY_RATE 8.98325d-14
+    DAUGHTER TH230L  1.d0
+  /
+  ISOTOPE TH230L
+    ELEMENT TH230
+    DECAY_RATE  2.85246d-13
+    DAUGHTER RA226  1.d0
+  /
+  ISOTOPE RA226
+    ELEMENT RA226
+    DECAY_RATE  0.d0
+  /
+END
+
