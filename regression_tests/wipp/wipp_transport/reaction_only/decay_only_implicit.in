@@ -1,0 +1,145 @@
+#Description: 1D tracer problem.  Run until tracer breakthrough at midpoint.
+
+SIMULATION
+  SIMULATION_TYPE SUBSURFACE
+  PROCESS_MODELS
+    SUBSURFACE_TRANSPORT transport
+      GLOBAL_IMPLICIT
+    /
+    UFD_DECAY ufd_decay
+    /
+  /
+END
+
+SUBSURFACE
+
+#=========================== regression =======================================
+REGRESSION
+  CELLS
+    1
+  /
+END
+
+#=========================== flow mode ========================================
+#=========================== chemistry ========================================
+CHEMISTRY
+  PRIMARY_SPECIES
+    A
+    B
+  /
+  MINERALS
+    A(s)
+    B(s)
+  /
+  MINERAL_KINETICS
+    A(s)
+      RATE_CONSTANT  0.d0
+    /
+    B(s)
+      RATE_CONSTANT  0.d0
+    /
+  /
+  DATABASE ../database.dat
+  LOG_FORMULATION
+  ACTIVITY_COEFFICIENTS OFF
+  OUTPUT
+    PRIMARY_SPECIES
+    TOTAL
+  /
+END
+
+#=========================== solver options ===================================
+LINEAR_SOLVER TRANSPORT
+  SOLVER DIRECT
+END
+
+#=========================== discretization ===================================
+GRID
+  TYPE structured
+  NXYZ 1 1 1
+  BOUNDS
+    0.d0 0.d0 0.d0
+    1.d0 1.d0 1.d0
+  /
+END
+
+#=========================== fluid properties =================================
+FLUID_PROPERTY
+  DIFFUSION_COEFFICIENT 1.d-9
+END
+
+#=========================== material properties ==============================
+MATERIAL_PROPERTY soil
+  ID 1
+  POROSITY 1.d0
+  TORTUOSITY 1.d0
+END
+
+#=========================== output options ===================================
+OUTPUT
+#  TIMES y 5. 10. 15. 20.
+  TIMES h 1.d0
+  PERIODIC TIME 1.d0 y
+  PERIODIC_OBSERVATION TIMESTEP 1
+#  FORMAT TECPLOT POINT
+  FORMAT HDF5
+  VELOCITY_AT_CENTER
+END
+
+#=========================== times ============================================
+TIME
+#  FINAL_TIME 25.d0 y
+  FINAL_TIME 12.5d0 y            ! tracer at 50m midpoint
+  INITIAL_TIMESTEP_SIZE 1.d0 h
+  MAXIMUM_TIMESTEP_SIZE 2.5d-1 y
+END
+
+#=========================== regions ==========================================
+REGION all
+  COORDINATES
+    -1.d20 -1.d20 -1.d20 
+    1.d20 1.d20 1.d20 
+  /
+END
+
+#=========================== observations =====================================
+OBSERVATION
+  REGION all
+END
+
+#=========================== transport conditions =============================
+TRANSPORT_CONDITION initial
+  TYPE zero_gradient
+  CONSTRAINT_LIST
+    0.d0 at_solubility
+  /
+END
+
+#=========================== constraints ======================================
+CONSTRAINT at_solubility
+  CONCENTRATIONS
+    A     1.d-5      T
+    B     1.d-40     T
+  /
+  MINERALS
+    A(s)  0.00000d0    1.d0
+    B(s)  0.00000d0    1.d0
+  /
+END
+
+#=========================== condition couplers ===============================
+# initial condition
+INITIAL_CONDITION
+  TRANSPORT_CONDITION initial
+  REGION all
+END
+
+#=========================== stratigraphy couplers ============================
+STRATA
+  REGION all
+  MATERIAL soil
+END
+
+END_SUBSURFACE
+
+EXTERNAL_FILE ../decay_implicit.txt

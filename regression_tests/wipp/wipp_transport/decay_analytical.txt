@@ -1,0 +1,4 @@
+UFD_DECAY
+  EXTERNAL_FILE decay.txt
+END
+

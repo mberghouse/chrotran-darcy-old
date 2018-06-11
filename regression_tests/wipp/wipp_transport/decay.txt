@@ -1,0 +1,21 @@
+  ELEMENT A
+    SOLUBILITY  1.d-5  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ELEMENT B
+    SOLUBILITY  1.d0  # for R1S2V001
+    KD
+      soil  0.d0
+    /
+  /
+  ISOTOPE A
+    ELEMENT A
+    DECAY_RATE 1.d-8
+    DAUGHTER B 1.d0
+  /
+  ISOTOPE B
+    ELEMENT B
+    DECAY_RATE  0.d0
+  /
