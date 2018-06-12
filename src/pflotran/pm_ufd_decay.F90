@@ -877,7 +877,6 @@ subroutine PMUFDDecaySetRealization(this,realization)
 ! ----------------------------------------------------------
   
   this%realization => realization
-  this%realization_base => realization
 
 end subroutine PMUFDDecaySetRealization
 

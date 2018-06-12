@@ -1336,6 +1336,7 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   use Option_module
   use Simulation_Subsurface_class
   use Realization_Subsurface_class
+  use Realization_Base_class
   use Timestepper_BE_class
 
   implicit none
@@ -1345,12 +1346,14 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   class(simulation_subsurface_type) :: simulation
 
   class(realization_subsurface_type), pointer :: realization
+  class(realization_base_type), pointer :: realization_base
   class(pm_base_type), pointer :: cur_pm
   type(option_type), pointer :: option
   SNESLineSearch :: linesearch
   PetscErrorCode :: ierr
 
   realization => simulation%realization
+  realization_base => simulation%realization
   option => realization%option
 
   if (.not.associated(pmc)) return
@@ -1361,6 +1364,9 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   cur_pm => pmc%pm_list
   do
     if (.not.associated(cur_pm)) exit
+
+    call cur_pm%SetRealizationBase(realization_base)
+
     ! set realization
     select type(cur_pm)
     !-----------------------------------

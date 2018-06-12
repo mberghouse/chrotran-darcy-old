@@ -268,7 +268,6 @@ subroutine PMRTSetRealization(this,realization)
 #endif
   
   this%realization => realization
-  this%realization_base => realization
   
   if (realization%reaction%use_log_formulation) then
     this%solution_vec = realization%field%tran_log_xx

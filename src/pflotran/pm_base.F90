@@ -29,6 +29,7 @@ module PM_Base_class
     procedure, public :: Read => PMBaseRead
     procedure, public :: InitializeRun => PMBaseThisOnly
     procedure, public :: InputRecord => PMBaseInputRecord
+    procedure, public :: SetRealizationBase => PMBaseSetRealizationBase
     procedure, public :: SetSolver => PMBaseSetSolver
     procedure, public :: FinalizeRun => PMBaseThisOnly
     procedure, public :: Residual => PMBaseResidual
@@ -258,6 +259,24 @@ subroutine PMBaseComputeMassBalance(this,mass_balance_array)
   print *, 'Must extend PMBaseComputeMassBalance for: ' // trim(this%name)
   stop
 end subroutine PMBaseComputeMassBalance
+
+! ************************************************************************** !
+
+subroutine PMBaseSetRealizationBase(this, realization_base)
+  ! 
+  ! Author: Gautam Bisht
+  ! Date: 06/12/18
+
+  use Solver_module
+
+  implicit none
+
+  class(pm_base_type) :: this
+  type(realization_base_type), pointer :: realization_base
+
+  this%realization_base => realization_base
+
+end subroutine PMBaseSetRealizationBase
 
 
 ! ************************************************************************** !

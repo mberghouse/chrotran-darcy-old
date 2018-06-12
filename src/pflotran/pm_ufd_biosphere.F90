@@ -267,7 +267,6 @@ subroutine PMUFDBSetRealization(this,realization)
   class(realization_subsurface_type), pointer :: realization
   
   this%realization => realization
-  this%realization_base => realization
 
 end subroutine PMUFDBSetRealization
 

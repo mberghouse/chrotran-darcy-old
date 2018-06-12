@@ -305,7 +305,6 @@ subroutine PMSubsurfaceFlowSetRealization(this,realization)
   class(realization_subsurface_type), pointer :: realization
   
   this%realization => realization
-  this%realization_base => realization
 
   this%solution_vec = realization%field%flow_xx
   this%residual_vec = realization%field%flow_r
