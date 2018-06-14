@@ -243,8 +243,8 @@ subroutine SurfaceFlowRHSFunction(ts,t,xx,ff,surf_realization,ierr)
   ! 
   ! This routine provides the function evaluation for PETSc TSSolve()
   ! 
-  ! Author: Gautam Bisht, LBNL
-  ! Date: 03/07/13
+  ! Author: Gautam Bisht, LBNL, Satish Karra, LANL
+  ! Date: 03/07/13, 03/20/18
   ! 
 #include <petsc/finclude/petscts.h>
   use petscts
@@ -379,6 +379,15 @@ subroutine SurfaceFlowRHSFunction(ts,t,xx,ff,surf_realization,ierr)
           call printErrMsg(option)
         case (DIFFUSION_WAVE)
           call SurfaceFlowFlux(surf_global_auxvars(ghosted_id_up), &
+                               zc(ghosted_id_up), &
+                               mannings_loc_p(ghosted_id_up), &
+                               surf_global_auxvars(ghosted_id_dn), &
+                               zc(ghosted_id_dn), &
+                               mannings_loc_p(ghosted_id_dn), &
+                               dist, cur_connection_set%area(iconn), &
+                               option,vel,Res)
+        case (DIFFUSION_WAVE_VEGETATION)
+          call SurfaceFlowVegetationFlux(surf_global_auxvars(ghosted_id_up), &
                                zc(ghosted_id_up), &
                                mannings_loc_p(ghosted_id_up), &
                                surf_global_auxvars(ghosted_id_dn), &
@@ -716,6 +725,88 @@ subroutine SurfaceFlowFlux(surf_global_auxvar_up, &
   Res(TH_PRESSURE_DOF) = vel*hw_half*length ! [m^3/s]
 
 end subroutine SurfaceFlowFlux
+
+! ************************************************************************** !
+
+subroutine SurfaceFlowVegetationFlux(surf_global_auxvar_up, &
+                                     zc_up, &
+                                     mannings_up, &
+                                     surf_global_auxvar_dn, &
+                                     zc_dn, &
+                                     mannings_dn, &
+                                     dist, &
+                                     length, &
+                                     option, &
+                                     vel, &
+                                     Res)
+  !
+  ! This routine computes the internal flux term for under
+  ! diffusion-wave assumption with vegetation. Manning's coefficient
+  ! here depends on the vegetation based on 
+  ! Katul, Poggi and Ridolfi, WRR, Vol. 47, W08533, 2011
+  ! 
+  ! Author: Gautam Bisht, LBL, Satish Karra, LANL
+  ! Date: 08/03/12, 03/20/18
+  ! 
+
+  use Surface_Global_Aux_module
+  use Option_module
+
+  implicit none
+
+  type(option_type) :: option
+  type(surface_global_auxvar_type) :: surf_global_auxvar_up
+  type(surface_global_auxvar_type) :: surf_global_auxvar_dn
+  PetscReal :: zc_up, zc_dn
+  PetscReal :: mannings_up, mannings_dn
+  PetscReal :: head_up, head_dn
+  PetscReal :: dist, length
+  PetscReal :: vel                      ! units: m/s
+  PetscReal :: Res(1:option%nflowdof)   ! units: m^3/s
+
+  PetscReal :: hw_half
+  PetscReal :: mannings_half
+  PetscReal :: dhead
+  PetscReal :: kappa = 0.4d0  ! Von Karman's constant
+  PetscReal :: gravity = EARTH_GRAVITY
+  PetscReal :: canopy_height
+  PetscReal :: roughness
+
+  canopy_height = 1.d-2
+  roughness = canopy_height*0.1d0
+
+  ! upwind the total head and Manning's coefficient
+  print *, 'before:', mannings_up, mannings_dn
+  if (surf_global_auxvar_up%head(1) > canopy_height) then
+    mannings_up = kappa/gravity**(0.5d0)*(surf_global_auxvar_up%head(1))** &
+                    (1.d0/6.d0)/(log(surf_global_auxvar_up%head(1)/roughness) - 1.d0)
+  endif
+
+  if (surf_global_auxvar_dn%head(1) > canopy_height) then
+    mannings_dn = kappa/gravity**(0.5d0)*(surf_global_auxvar_dn%head(1))** &
+                    (1.d0/6.d0)/(log(surf_global_auxvar_dn%head(1)/roughness) - 1.d0)
+  endif
+
+  print *, 'after:', mannings_up, mannings_dn, surf_global_auxvar_up%head(1), surf_global_auxvar_dn%head(1), roughness, kappa
+
+  head_up = surf_global_auxvar_up%head(1) + zc_up
+  head_dn = surf_global_auxvar_dn%head(1) + zc_dn
+  if (head_up > head_dn) then
+    hw_half       = surf_global_auxvar_up%head(1)
+    mannings_half = mannings_up
+  else
+    hw_half       = surf_global_auxvar_dn%head(1)
+    mannings_half = mannings_dn
+  endif
+  
+  ! compute Manning's velocity
+  dhead = head_up - head_dn
+  vel   = sign(hw_half**(2.d0/3.d0)/mannings_half*abs(dhead/dist)**0.5d0,dhead) ! [m/s]
+
+  ! compute the volumetric flow rate
+  Res(TH_PRESSURE_DOF) = vel*hw_half*length ! [m^3/s]
+
+end subroutine SurfaceFlowVegetationFlux
 
 ! ************************************************************************** !
 
