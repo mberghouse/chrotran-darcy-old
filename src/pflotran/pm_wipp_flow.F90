@@ -417,6 +417,8 @@ subroutine PMWIPPFloReadSelectCase(this,input,keyword,found, &
       wippflo_print_solution = PETSC_TRUE
     case('PRINT_UPDATE')
       wippflo_print_update = PETSC_TRUE
+    case('ALLOW_NEGATIVE_GAS_PRESSURE')
+      wippflo_allow_neg_gas_pressure = PETSC_TRUE
     case default
       found = PETSC_FALSE
   end select
@@ -905,7 +907,7 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   dX_changed = PETSC_FALSE
   X1_changed = PETSC_FALSE
   
-  call VecGetArrayReadF90(dX,dX_p,ierr);CHKERRQ(ierr)
+  call VecGetArrayF90(dX,dX_p,ierr);CHKERRQ(ierr)
   if (wippflo_print_update) then
     open(IUNIT_TEMP,file='pf_update.txt')
     do i = 1, grid%nlmax*2
@@ -921,7 +923,7 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
     enddo
     close(IUNIT_TEMP)
   endif
-  call VecGetArrayReadF90(X1,X1_p,ierr);CHKERRQ(ierr)
+  call VecGetArrayF90(X1,X1_p,ierr);CHKERRQ(ierr)
   ! max change variables: [LIQUID_PRESSURE, GAS_PRESSURE, GAS_SATURATION]
   call VecGetArrayReadF90(field%max_change_vecs(1),press_ptr,ierr);CHKERRQ(ierr)
   call VecGetArrayReadF90(field%max_change_vecs(3),sat_ptr,ierr);CHKERRQ(ierr)
@@ -1109,9 +1111,9 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
     max_gas_sat_outside_lim_cell
   if (cut_timestep) this%convergence_flags(OUTSIDE_BOUNDS) = 1
 
-  call VecRestoreArrayReadF90(dX,dX_p,ierr);CHKERRQ(ierr)
+  call VecRestoreArrayF90(dX,dX_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayReadF90(X0,X0_p,ierr);CHKERRQ(ierr)
-  call VecRestoreArrayReadF90(X1,X1_p,ierr);CHKERRQ(ierr)
+  call VecRestoreArrayF90(X1,X1_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayReadF90(field%max_change_vecs(1),press_ptr, &
                               ierr);CHKERRQ(ierr)
   call VecRestoreArrayReadF90(field%max_change_vecs(3),sat_ptr, &
@@ -1342,7 +1344,7 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   if (.not.converged_gas_equation) then
     this%convergence_flags(MAX_NORMAL_RES_GAS) = max_normal_res_gas_cell
   endif
-  if (min_gas_pressure < 0.d0) then
+  if (min_gas_pressure < 0.d0 .and. .not.wippflo_allow_neg_gas_pressure) then
     this%convergence_flags(MIN_GAS_PRES) = min_gas_pressure_cell
   endif
   ! the following flags are not used for convergence purposes, and thus can

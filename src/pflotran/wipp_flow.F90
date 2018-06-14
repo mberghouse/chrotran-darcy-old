@@ -25,6 +25,7 @@ module WIPP_Flow_module
             WIPPFloJacobian, &
             WIPPFloSetPlotVariables, &
             WIPPFloMapBCAuxVarsToGlobal, &
+            WIPPFloCreepShutDown, &
             WIPPFloSSSandbox, &
             WIPPFloDestroy
 
@@ -284,6 +285,8 @@ subroutine WIPPFloUpdateSolution(realization)
   if (realization%option%compute_mass_balance_new) then
     call WIPPFloUpdateMassBalance(realization)
   endif
+  
+  call WIPPFloCreepShutDown(realization)
   
 end subroutine WIPPFloUpdateSolution
 
@@ -997,7 +1000,7 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
       wippflo_residual_test_cell  > 0) then
     local_end = wippflo_residual_test_cell * option%nflowdof
     local_start = local_end - option%nflowdof + 1
-    write(*,'(" Aold: ",2es12.4,i4)') &
+    write(*,'(" Aold: ",2es12.4,i5)') &
       -1.d0*r_p(local_start:local_end)/option%flow_dt, &
       wippflo_residual_test_cell
   endif
@@ -1023,14 +1026,14 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
     if (wippflo_residual_test .and. &
         wippflo_residual_test_cell == local_id) then
       write(*,'(" DT[y]: ",es12.4)') option%flow_dt/3600.d0/24.d0/365.d0
-      write(*,'(" A(calc): ",i4,8es12.4)') &
+      write(*,'(" A(calc): ",i5,8es12.4)') &
         wippflo_residual_test_cell, &
         wippflo_auxvars(ZERO_INTEGER,ghosted_id)%effective_porosity, &
         wippflo_auxvars(ZERO_INTEGER,ghosted_id)%den_kg(1), &
         wippflo_auxvars(ZERO_INTEGER,ghosted_id)%sat(1), &
         wippflo_auxvars(ZERO_INTEGER,ghosted_id)%den_kg(2), &
         wippflo_auxvars(ZERO_INTEGER,ghosted_id)%sat(2)
-      write(*,'(" A: ",2es12.4,i4)') &
+      write(*,'(" A: ",2es12.4,i5)') &
         Res(:)/option%flow_dt, wippflo_residual_test_cell
     endif
   enddo
@@ -1125,7 +1128,7 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
         if ((wippflo_jacobian_test .and. wippflo_jacobian_test_rdof > 0) .or. &
             (wippflo_residual_test .and. &
              wippflo_residual_test_cell  == local_id_up)) then
-          write(*,'(" Fup: ",2es12.4,2i4)') -1.d0*temp_Res/option%flow_dt, &
+          write(*,'(" Fup: ",2es12.4,2i5)') -1.d0*temp_Res/option%flow_dt, &
             local_id_up, local_id_dn 
 !          write(*,'("      ",8es12.4)') cur_connection_set%area(iconn), &
 !            2.d0*(cur_connection_set%dist(0,iconn)* &
@@ -1146,7 +1149,7 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
         if ((wippflo_jacobian_test .and. wippflo_jacobian_test_rdof > 0) .or. &
             (wippflo_residual_test .and. &
              wippflo_residual_test_cell  == local_id_dn)) then
-          write(*,'(" Fdn: ",2es12.4,2i4)') temp_Res/option%flow_dt, &
+          write(*,'(" Fdn: ",2es12.4,2i5)') temp_Res/option%flow_dt, &
             local_id_up, local_id_dn
 !          write(*,'("      ",8es12.4)') cur_connection_set%area(iconn), &
 !            2.d0*(cur_connection_set%dist(0,iconn)* &
@@ -1219,7 +1222,7 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
       if ((wippflo_jacobian_test .and. wippflo_jacobian_test_rdof > 0) .or. &
           (wippflo_residual_test .and. &
            wippflo_residual_test_cell  == local_id)) then
-        write(*,'(" BCF: ",2es12.4,i4 )') Res/option%flow_dt, local_id
+        write(*,'(" BCF: ",2es12.4,i5 )') Res/option%flow_dt, local_id
       endif
 
     enddo
@@ -1721,6 +1724,63 @@ subroutine WIPPFloSetPlotVariables(realization,list)
   endif
   
 end subroutine WIPPFloSetPlotVariables
+
+! ************************************************************************** !
+
+subroutine WIPPFloCreepShutDown(realization)
+  ! 
+  ! Author: Jennifer M. Frederick
+  ! Date: 04/18/2018
+  ! 
+  use Realization_Subsurface_class
+  use Grid_module
+  use Option_module
+  use WIPP_module
+  use Creep_Closure_module
+  use Material_Aux_class, only: material_auxvar_type, MaterialAuxVarSetValue
+  use Variables_module, only : SOIL_REFERENCE_PRESSURE
+  
+  implicit none
+  
+  class(realization_subsurface_type) :: realization
+
+  type(option_type), pointer :: option
+  type(grid_type), pointer :: grid
+  type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
+  class(material_auxvar_type), pointer :: material_auxvars(:)
+  class(creep_closure_type), pointer :: creep_closure
+  PetscInt :: ghosted_id
+  PetscInt :: creep_closure_id
+  PetscReal :: cell_pressure
+  
+  option => realization%option
+  grid => realization%patch%grid
+  material_auxvars => realization%patch%aux%Material%auxvars
+  wippflo_auxvars => realization%patch%aux%WIPPFlo%auxvars
+  
+  do ghosted_id = 1, grid%ngmax
+    creep_closure_id = material_auxvars(ghosted_id)%creep_closure_id
+    creep_closure => wipp%creep_closure_tables_array(creep_closure_id)%ptr
+    if (associated(creep_closure)) then
+      cell_pressure = wippflo_auxvars(ZERO_INTEGER,ghosted_id)%&
+                                                   pres(option%liquid_phase)
+      if (option%time > creep_closure%time_datamax .or. &
+          option%time > creep_closure%time_closeoff .or. &
+          cell_pressure > creep_closure%shutdown_pressure) then
+        material_auxvars(ghosted_id)%porosity_base = &
+          wippflo_auxvars(ZERO_INTEGER,ghosted_id)%effective_porosity
+        call MaterialAuxVarSetValue(material_auxvars(ghosted_id), &
+                                    SOIL_REFERENCE_PRESSURE,cell_pressure)
+        ! index 1 of wipp%creep_closure_tables_array is a null pointer
+        ! which will shut down creep closure permanently since the pointer
+        ! creep_closure => wipp%creep_closure_tables_array(creep_closure_id)%ptr
+        ! will no longer be associated in future conditionals
+        material_auxvars(ghosted_id)%creep_closure_id = 1
+      endif
+    endif
+  enddo
+  
+end subroutine WIPPFloCreepShutDown
 
 ! ************************************************************************** !
 

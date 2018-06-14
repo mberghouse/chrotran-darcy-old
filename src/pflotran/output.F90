@@ -12,7 +12,8 @@ module Output_module
   use Output_Observation_module
   
   use PFLOTRAN_Constants_module
-
+  use Utility_module, only : Equal
+  
   implicit none
 
   private
@@ -42,7 +43,8 @@ module Output_module
             OutputVariableRead, &
             OutputFileRead, &
             OutputInputRecord, &
-            OutputEnsureVariablesExist
+            OutputEnsureVariablesExist, &
+            OutputFindNaNOrInfInVec
 
 contains
 
@@ -557,7 +559,7 @@ subroutine OutputFileRead(input,realization,output_option, &
   endif
 
   if(output_option%aveg_output_variable_list%nvars>0) then
-    if(output_option%periodic_snap_output_time_incr==0.d0) then
+    if(Equal(output_option%periodic_snap_output_time_incr,0.d0)) then
       option%io_buffer = 'Keyword: AVERAGE_VARIABLES defined without &
                          &PERIODIC TIME being set.'
       call printErrMsg(option)
@@ -577,7 +579,7 @@ subroutine OutputFileRead(input,realization,output_option, &
       output_option%print_hdf5_aveg_mass_flowrate = aveg_mass_flowrate
       output_option%print_hdf5_aveg_energy_flowrate = aveg_energy_flowrate
       if(aveg_mass_flowrate.or.aveg_energy_flowrate) then
-        if(output_option%periodic_snap_output_time_incr==0.d0) then
+        if(Equal(output_option%periodic_snap_output_time_incr,0.d0)) then
           option%io_buffer = 'Keyword: AVEGRAGE_FLOWRATES/&
                              &AVEGRAGE_MASS_FLOWRATE/ENERGY_FLOWRATE &
                              &defined without PERIODIC TIME being set.'
@@ -820,6 +822,13 @@ subroutine OutputVariableRead(input,option,output_variable_list)
         call OutputVariableAddToList(output_variable_list,name, &
                                      OUTPUT_GENERIC,units, &
                                      OIL_ENERGY,temp_int)
+
+      case ('BUBBLE_POINT')
+        name = 'Bubble Point'
+        units = 'Pa'
+        call OutputVariableAddToList(output_variable_list,name, &
+                                     OUTPUT_PRESSURE,units, &
+                                     BUBBLE_POINT)
 
       case ('ICE_SATURATION')
         name = 'Ice Saturation'
@@ -2423,5 +2432,69 @@ subroutine OutputListEnsureVariablesExist(output_variable_list,option)
 end subroutine OutputListEnsureVariablesExist
 
 ! ************************************************************************** !
+
+subroutine OutputFindNaNOrInfInVec(vec,grid,option)
+  ! 
+  ! Reports Infs or NaNs in a vector
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 06/08/18
+  ! 
+  use Grid_module
+  use Option_module
+!geh: ieee_arithmetic is not yet supported by gfortran 4.x or lower
+!  use ieee_arithmetic
+
+  implicit none
+
+  Vec :: vec
+  type(grid_type), pointer :: grid
+  type(option_type) :: option
+
+  PetscReal, pointer :: vec_p(:)
+  PetscInt :: i, idof, icell, block_size, local_size, local_count, exscan_count
+  PetscInt, parameter :: max_number_to_print = 10
+  PetscInt :: iarray(2,max_number_to_print)
+  character(len=MAXWORDLENGTH) :: word
+  PetscErrorCode :: ierr
+
+  iarray = 0
+  call VecGetLocalSize(vec,local_size,ierr);CHKERRQ(ierr)
+  call VecGetBlockSize(vec,block_size,ierr);CHKERRQ(ierr)
+  call VecGetArrayReadF90(vec,vec_p,ierr);CHKERRQ(ierr)
+  local_count = 0
+  do i = 1, local_size
+     if (PetscIsInfOrNanReal(vec_p(i))) then
+!    if (ieee_is_nan(vec_p(i)) .or. .not.ieee_is_finite(vec_p(i))) then
+      local_count = local_count + 1
+      icell = int(float(i-1)/float(block_size))+1
+      iarray(1,local_count) = grid%nG2A(grid%nL2G(icell))
+      idof = i-(icell-1)*block_size
+!      if (ieee_is_nan(vec_p(i))) idof = -idof
+      iarray(2,local_count) = idof
+    endif
+  enddo
+  call VecRestoreArrayReadF90(vec,vec_p,ierr);CHKERRQ(ierr)
+
+  exscan_count = 0
+  call MPI_Exscan(local_count,exscan_count,ONE_INTEGER_MPI, &
+                MPIU_INTEGER,MPI_SUM,option%mycomm,ierr)
+  do i = 1, min(max_number_to_print-exscan_count,local_count)
+    idof = iarray(2,i)
+    if (idof > 0) then
+      option%io_buffer = 'NaN'
+    else
+      option%io_buffer = 'Inf'
+    endif
+    write(word,*) iarray(1,i)
+    option%io_buffer = trim(option%io_buffer) // ' at cell ' // &
+      trim(adjustl(word)) // ' and dof'
+    write(word,*) iabs(idof)
+    option%io_buffer = trim(option%io_buffer) // ' ' // &
+      trim(adjustl(word)) //  '.'
+    call printMsgByRank(option)
+  enddo
+
+end subroutine OutputFindNaNOrInfInVec
 
 end module Output_module

@@ -5,7 +5,8 @@ module Factory_Subsurface_module
   use Simulation_Subsurface_class
 
   use PFLOTRAN_Constants_module
-
+  use Utility_module, only : Equal
+  
   implicit none
 
   private
@@ -434,6 +435,7 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
   if (.not.associated(pm_flow)) then
     option%nphase = 1
     option%liquid_phase = 1
+    option%gas_phase = 2 ! still set gas phase to 2 for transport
     ! assume default isothermal when only transport
     option%use_isothermal = PETSC_TRUE
     return
@@ -517,12 +519,9 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
       option%phase_map(3) = GAS_PHASE
       option%energy_id = towg_energy_eq_idx
       select case (towg_miscibility_model)
-        case(TOWG_IMMISCIBLE,TOWG_TODD_LONGSTAFF)
+        case(TOWG_IMMISCIBLE,TOWG_TODD_LONGSTAFF,TOWG_BLACK_OIL)
           option%nflowdof = 4
           option%nflowspec = 3 !H20, Oil, Gas
-        !case(TOWG_TODD_LONGSTAFF,TOWG_BLACK_OIL)
-        !  option%nflowdof = 4
-        !  option%nflowspec = 3 !H20, Oil, Gas
         !case(TOWG_SOLVENT_TL)
         !  option%nphase = 4
         !  option%nflowdof = 5
@@ -1148,9 +1147,10 @@ subroutine SubsurfaceSetupRealization(simulation)
   use Init_Common_module
   use Reaction_Aux_module, only : ACT_COEF_FREQUENCY_OFF
   use Reaction_Database_module
-  use EOS_Water_module
+  use EOS_module
   use Dataset_module
   use Patch_module
+  use EOS_module
 
   implicit none
 
@@ -1158,7 +1158,6 @@ subroutine SubsurfaceSetupRealization(simulation)
 
   class(realization_subsurface_type), pointer :: realization
   type(option_type), pointer :: option
-  PetscReal :: dum1
   PetscErrorCode :: ierr
 
   realization => simulation%realization
@@ -1166,13 +1165,12 @@ subroutine SubsurfaceSetupRealization(simulation)
 
   call PetscLogEventBegin(logging%event_setup,ierr);CHKERRQ(ierr)
 
-  ! initialize reference density
-  if (option%reference_water_density < 1.d-40) then
-    call EOSWaterDensity(option%reference_temperature, &
-                         option%reference_pressure, &
-                         option%reference_water_density, &
-                         dum1,ierr)
-  endif
+  ! set reference densities if not specified in input file.
+  call EOSReferenceDensity(option)
+
+  !process eos tables
+  call EOSProcess(option)
+
 
   ! read reaction database
   if (associated(realization%reaction)) then
@@ -1543,6 +1541,7 @@ subroutine SubsurfaceReadInput(simulation,input)
   use Characteristic_Curves_module
   use Creep_Closure_module
   use Dataset_Base_class
+  use Dataset_Ascii_class
   use Dataset_module
   use Dataset_Common_HDF5_class
   use Fluid_module
@@ -1564,7 +1563,6 @@ subroutine SubsurfaceReadInput(simulation,input)
   use Input_Aux_module
   use String_module
   use Units_module
-  use Uniform_Velocity_module
   use Reaction_Mineral_module
   use Regression_module
   use Output_Aux_module
@@ -1599,6 +1597,7 @@ subroutine SubsurfaceReadInput(simulation,input)
   character(len=MAXWORDLENGTH) :: card
   character(len=MAXSTRINGLENGTH) :: string, temp_string
   character(len=MAXWORDLENGTH) :: internal_units
+  character(len=MAXSTRINGLENGTH) :: error_string
 
   character(len=1) :: backslash
   PetscReal :: temp_real, temp_real2
@@ -1613,6 +1612,9 @@ subroutine SubsurfaceReadInput(simulation,input)
   PetscBool :: energy_flowrate
   PetscBool :: aveg_mass_flowrate
   PetscBool :: aveg_energy_flowrate
+  PetscBool :: bool_flag
+
+  PetscInt :: flag1, flag2
 
   type(region_type), pointer :: region
   type(flow_condition_type), pointer :: flow_condition
@@ -1642,8 +1644,8 @@ subroutine SubsurfaceReadInput(simulation,input)
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
   type(output_option_type), pointer :: output_option
-  type(uniform_velocity_dataset_type), pointer :: uniform_velocity_dataset
   class(dataset_base_type), pointer :: dataset
+  class(dataset_ascii_type), pointer :: dataset_ascii
   class(data_mediator_dataset_type), pointer :: flow_data_mediator
   class(data_mediator_dataset_type), pointer :: rt_data_mediator
   type(waypoint_list_type), pointer :: waypoint_list
@@ -1704,40 +1706,106 @@ subroutine SubsurfaceReadInput(simulation,input)
         call ReactionReadPass2(reaction,input,option)
 
 !....................
+      case ('SPECIFIED_VELOCITY')
+        if (option%nflowdof > 0) then
+          option%io_buffer = 'SPECIFIED_VELOCITY fields may not be used &
+            &with a SUBSURFACE_FLOW mode.'
+          call printErrMsg(option)
+        endif
+        internal_units = 'm/sec'
+        flag1 = UNINITIALIZED_INTEGER ! uniform?
+        do
+          call InputReadPflotranString(input,option)
+          call InputReadStringErrorMsg(input,option,card)
+          if (InputCheckExit(input,option)) exit
+          call InputReadWord(input,option,word,PETSC_TRUE)
+          call InputErrorMsg(input,option,'keyword','SPECIFIED_VELOCITY')
+          call StringToUpper(word)
+          select case(trim(word))
+            case('UNIFORM?')
+              flag1 = StringYesNoOther(input%buf)
+            case('DATASET')
+              if (flag1 == STRING_OTHER) then
+                option%io_buffer = 'SPECIFIED_VELOCITY card "UNIFORM?" &
+                  &must be answered with "YES"/"NO" before velocity data &
+                  &can can be read.'
+                call printErrMsg(option)
+              endif
+              if (flag1 == STRING_YES) then
+                error_string = 'SPECIFIED_VELOCITY,UNIFORM,DATASET'
+                dataset_ascii => DatasetAsciiCreate()
+                dataset_ascii%data_type = DATASET_REAL
+                dataset_ascii%array_width = 3 * &
+                  max(option%nphase,option%transport%nphase)
+                realization%uniform_velocity_dataset => dataset_ascii
+
+                string = input%buf
+                call InputReadDouble(input,option,temp_real)
+                if (.not.InputError(input)) then
+                  error_string = trim(error_string) // ',SINGLE'
+                  input%buf = string
+                  call DatasetAsciiReadSingle(dataset_ascii,input, &
+                                              temp_string,internal_units, &
+                                              error_string,option)
+                else
+                  input%buf = string
+                  input%ierr = 0
+                  call InputReadWord(input,option,word,PETSC_TRUE)
+                  call InputErrorMsg(input,option,'keyword',error_string)
+                  call StringToUpper(word)
+                  select case(word)
+                    case('FILE')
+                      error_string = trim(error_string) // ',FILE'
+                      call InputReadNChars(input,option,string, &
+                                           MAXSTRINGLENGTH,PETSC_TRUE)
+                      call InputErrorMsg(input,option,'filename',error_string)
+                      call DatasetAsciiReadFile(dataset_ascii,string, &
+                                                temp_string,internal_units, &
+                                                error_string,option)
+                    case('LIST')
+                      error_string = trim(error_string) // ',LIST'
+                      call DatasetAsciiReadList(dataset_ascii,input, &
+                                                temp_string,internal_units, &
+                                                error_string,option)
+                    case default
+                      call InputKeywordUnrecognized(word,error_string,option)
+                  end select
+                  if (dataset_ascii%time_storage%time_interpolation_method == &
+                      INTERPOLATION_NULL) then
+                    option%io_buffer = 'An INTERPOLATION method (LINEAR or &
+                      &STEP) must be specified for: ' // trim(error_string)
+                    call printErrMsg(option)
+                  endif
+                endif
+                bool_flag = PETSC_FALSE
+                call DatasetAsciiVerify(dataset_ascii,bool_flag,option)
+                if (bool_flag) then
+                  option%io_buffer = 'Error verifying ' // &
+                    trim(error_string) // '.'
+                  call printErrMsg(option)
+                endif
+              else
+! Add interface for non-uniform dataset
+                call InputReadNChars(input,option, &
+                                 realization%nonuniform_velocity_filename, &
+                                 MAXSTRINGLENGTH,PETSC_TRUE)
+                call InputErrorMsg(input,option,'filename', &
+                                   'SPECIFIED_VELOCITY,NONUNIFORM,DATASET')
+              endif
+          end select
+        enddo
       case ('NONUNIFORM_VELOCITY')
-        call InputReadNChars(input,option, &
-                             realization%nonuniform_velocity_filename, &
-                             MAXSTRINGLENGTH,PETSC_TRUE)
-        call InputErrorMsg(input,option,'filename','NONUNIFORM_VELOCITY')
-
+        option%io_buffer = 'The NONUNIFORM_VELOCITY card within SUBSURFACE &
+          &block has been deprecated. Use the SPECIFIED_VELOCITY block.'
+        call printErrMsg(option)
       case ('UNIFORM_VELOCITY')
-        uniform_velocity_dataset => UniformVelocityDatasetCreate()
-        uniform_velocity_dataset%rank = 3
-        uniform_velocity_dataset%interpolation_method = 1 ! 1 = STEP
-        uniform_velocity_dataset%is_cyclic = PETSC_FALSE
-        allocate(uniform_velocity_dataset%times(1))
-        uniform_velocity_dataset%times = 0.d0
-        allocate(uniform_velocity_dataset%values(3,1))
-        uniform_velocity_dataset%values = 0.d0
-        call InputReadDouble(input,option,uniform_velocity_dataset%values(1,1))
-        call InputErrorMsg(input,option,'velx','UNIFORM_VELOCITY')
-        call InputReadDouble(input,option,uniform_velocity_dataset%values(2,1))
-        call InputErrorMsg(input,option,'vely','UNIFORM_VELOCITY')
-        call InputReadDouble(input,option,uniform_velocity_dataset%values(3,1))
-        call InputErrorMsg(input,option,'velz','UNIFORM_VELOCITY')
-        ! read units, if present
-        temp_real = 1.d0
-        call InputReadAndConvertUnits(input,temp_real, &
-                                    'meter/sec','UNIFORM_VELOCITY,units',option)
-        uniform_velocity_dataset%values(:,1) = &
-          uniform_velocity_dataset%values(:,1) * temp_real
-        call UniformVelocityDatasetVerify(option,uniform_velocity_dataset)
-        realization%uniform_velocity_dataset => uniform_velocity_dataset
-
+        option%io_buffer = 'The UNIFORM_VELOCITY card within SUBSURFACE &
+          &block has been deprecated. Use the SPECIFIED_VELOCITY block.'
+        call printErrMsg(option)
       case ('VELOCITY_DATASET')
-        uniform_velocity_dataset => UniformVelocityDatasetCreate()
-        call UniformVelocityDatasetRead(uniform_velocity_dataset,input,option)
-        realization%uniform_velocity_dataset => uniform_velocity_dataset
+        option%io_buffer = 'The VELOCITY_DATASET card within SUBSURFACE &
+          &block has been deprecated. Use the SPECIFIED_VELOCITY block.'
+        call printErrMsg(option)
 
 !....................
       case ('DEBUG')
@@ -1908,12 +1976,24 @@ subroutine SubsurfaceReadInput(simulation,input)
                                       'Pa','Reference Pressure',option)
 !....................
 
-      case('REFERENCE_DENSITY')
+      case('REFERENCE_LIQUID_DENSITY')
         call InputReadStringErrorMsg(input,option,card)
-        call InputReadDouble(input,option,option%reference_water_density)
-        call InputErrorMsg(input,option,'Reference Density','value')
-        call InputReadAndConvertUnits(input,option%reference_water_density, &
-                                      'kg/m^3','Reference Density',option)
+        call InputReadDouble(input,option, &
+                             option%reference_density(option%liquid_phase))
+        call InputErrorMsg(input,option,'Reference Liquid Density','value')
+        call InputReadAndConvertUnits(input, &
+                              option%reference_density(option%liquid_phase), &
+                              'kg/m^3','Reference Density',option)
+!....................
+
+      case('REFERENCE_GAS_DENSITY')
+        call InputReadStringErrorMsg(input,option,card)
+        call InputReadDouble(input,option, &
+                             option%reference_density(option%gas_phase))
+        call InputErrorMsg(input,option,'Reference Gas Density','value')
+        call InputReadAndConvertUnits(input, &
+                              option%reference_density(option%gas_phase), &
+                              'kg/m^3','Reference Density',option)
 !....................
 
       case('MINIMUM_HYDROSTATIC_PRESSURE')
@@ -2762,7 +2842,7 @@ subroutine SubsurfaceReadInput(simulation,input)
           output_option%print_fluxes = PETSC_TRUE
         endif
         if(output_option%aveg_output_variable_list%nvars>0) then
-          if(output_option%periodic_snap_output_time_incr==0.d0) then
+          if(Equal(output_option%periodic_snap_output_time_incr,0.d0)) then
             option%io_buffer = 'Keyword: AVERAGE_VARIABLES defined without' // &
                                ' PERIODIC TIME being set.'
             call printErrMsg(option)
@@ -2780,7 +2860,7 @@ subroutine SubsurfaceReadInput(simulation,input)
             output_option%print_hdf5_aveg_mass_flowrate = aveg_mass_flowrate
             output_option%print_hdf5_aveg_energy_flowrate = aveg_energy_flowrate
             if(aveg_mass_flowrate.or.aveg_energy_flowrate) then
-              if(output_option%periodic_snap_output_time_incr==0.d0) then
+              if(Equal(output_option%periodic_snap_output_time_incr,0.d0)) then
                 option%io_buffer = 'Keyword: AVEGRAGE_FLOWRATES/ ' // &
                   'AVEGRAGE_MASS_FLOWRATE/ENERGY_FLOWRATE defined without' // &
                   ' PERIODIC TIME being set.'

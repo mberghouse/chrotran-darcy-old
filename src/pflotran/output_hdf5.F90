@@ -7,7 +7,8 @@ module Output_HDF5_module
   use Output_Common_module
   
   use PFLOTRAN_Constants_module
-
+  use Utility_module, only : Equal
+  
   implicit none
 
   private
@@ -157,6 +158,7 @@ subroutine OutputHDF5(realization_base,var_list_type)
   PetscMPIInt :: hdf5_err
   PetscBool :: first
   PetscInt :: ivar, isubvar, var_type
+  PetscBool :: include_gas_phase
   PetscErrorCode :: ierr
 
   discretization => realization_base%discretization
@@ -302,6 +304,10 @@ subroutine OutputHDF5(realization_base,var_list_type)
 
   end select
 
+  include_gas_phase = PETSC_FALSE
+  if (option%nphase > 1 .or. option%transport%nphase > 1) then
+    include_gas_phase = PETSC_TRUE
+  endif
   if (output_option%print_hdf5_vel_cent .and. &
       (var_list_type==INSTANTANEOUS_VARS)) then
 
@@ -322,7 +328,7 @@ subroutine OutputHDF5(realization_base,var_list_type)
     call HDF5WriteStructDataSetFromVec(string,realization_base, &
                                        global_vec_vz,grp_id,H5T_NATIVE_DOUBLE)
 
-    if (option%nphase > 1) then
+    if (include_gas_phase) then
         call OutputGetCellCenteredVelocities(realization_base,global_vec_vx, &
                                              global_vec_vy,global_vec_vz, &
                                              GAS_PHASE)
@@ -351,7 +357,7 @@ subroutine OutputHDF5(realization_base,var_list_type)
         string = "Liquid X-Flux Velocities"
         call WriteHDF5FluxVelocities(string,realization_base,LIQUID_PHASE, &
                                      X_DIRECTION,grp_id)
-        if (option%nphase > 1) then
+        if (include_gas_phase) then
           string = "Gas X-Flux Velocities"
           call WriteHDF5FluxVelocities(string,realization_base,GAS_PHASE, &
                                        X_DIRECTION,grp_id)
@@ -362,7 +368,7 @@ subroutine OutputHDF5(realization_base,var_list_type)
         string = "Liquid Y-Flux Velocities"
         call WriteHDF5FluxVelocities(string,realization_base,LIQUID_PHASE, &
                                      Y_DIRECTION,grp_id)
-        if (option%nphase > 1) then
+        if (include_gas_phase) then
           string = "Gas Y-Flux Velocities"
           call WriteHDF5FluxVelocities(string,realization_base,GAS_PHASE, &
                                        Y_DIRECTION,grp_id)
@@ -373,7 +379,7 @@ subroutine OutputHDF5(realization_base,var_list_type)
         string = "Liquid Z-Flux Velocities"
         call WriteHDF5FluxVelocities(string,realization_base,LIQUID_PHASE, &
                                      Z_DIRECTION,grp_id)
-        if (option%nphase > 1) then
+        if (include_gas_phase) then
           string = "Gas Z-Flux Velocities"
           call WriteHDF5FluxVelocities(string,realization_base,GAS_PHASE, &
                                        Z_DIRECTION,grp_id)
@@ -482,9 +488,9 @@ subroutine OutputHDF5OpenFile(option, output_option, var_list_type, file_id, &
           first = PETSC_FALSE
         endif
       case (AVERAGED_VARS)
-        if (mod((option%time-output_option%periodic_snap_output_time_incr)/ &
-                output_option%periodic_snap_output_time_incr, &
-                dble(output_option%times_per_h5_file))==0) then
+        if (Equal(mod((option%time-output_option%periodic_snap_output_time_incr)/ &
+             output_option%periodic_snap_output_time_incr, &
+             dble(output_option%times_per_h5_file)),0.d0)) then
           first = PETSC_TRUE
         else
           first = PETSC_FALSE
@@ -733,9 +739,9 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
           first = PETSC_FALSE
         endif
       case (AVERAGED_VARS)
-        if (mod((option%time-output_option%periodic_snap_output_time_incr)/ &
-                output_option%periodic_snap_output_time_incr, &
-                dble(output_option%times_per_h5_file))==0) then
+        if (Equal(mod((option%time-output_option%periodic_snap_output_time_incr)/ &
+             output_option%periodic_snap_output_time_incr, &
+             dble(output_option%times_per_h5_file)),0.d0)) then
           first = PETSC_TRUE
         else
           first = PETSC_FALSE
@@ -1171,9 +1177,9 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
           first = PETSC_FALSE
         endif
       case (AVERAGED_VARS)
-        if (mod((option%time-output_option%periodic_snap_output_time_incr)/ &
-                output_option%periodic_snap_output_time_incr, &
-                dble(output_option%times_per_h5_file))==0) then
+        if (Equal(mod((option%time-output_option%periodic_snap_output_time_incr)/ &
+             output_option%periodic_snap_output_time_incr, &
+             dble(output_option%times_per_h5_file)),0.d0)) then
           first = PETSC_TRUE
         else
           first = PETSC_FALSE
@@ -1523,17 +1529,11 @@ subroutine WriteHDF5FluxVelocities(name,realization_base,iphase,direction, &
   type(output_option_type), pointer :: output_option
     
   PetscReal, allocatable :: array(:)
-  PetscReal, pointer :: vec_ptr(:)
 
   PetscBool, save :: trick_flux_vel_x = PETSC_FALSE
   PetscBool, save :: trick_flux_vel_y = PETSC_FALSE
   PetscBool, save :: trick_flux_vel_z = PETSC_FALSE
 
-  Vec :: global_vec
-
-  type(connection_set_list_type), pointer :: connection_set_list
-  type(connection_set_type), pointer :: cur_connection_set
-    
   discretization => realization_base%discretization
   patch => realization_base%patch
   grid => patch%grid
@@ -1601,44 +1601,10 @@ subroutine WriteHDF5FluxVelocities(name,realization_base,iphase,direction, &
       endif
       if (trick_flux_vel_z) trick_hdf5 = PETSC_TRUE
   end select  
+
   allocate(array(nx_local*ny_local*nz_local))
-
-
-  call DiscretizationCreateVector(discretization,ONEDOF,global_vec,GLOBAL, &
-                                  option) 
-  call VecZeroEntries(global_vec,ierr);CHKERRQ(ierr)
-  call VecGetArrayF90(global_vec,vec_ptr,ierr);CHKERRQ(ierr)
-  
-  ! place interior velocities in a vector
-  connection_set_list => grid%internal_connection_set_list
-  cur_connection_set => connection_set_list%first
-  do 
-    if (.not.associated(cur_connection_set)) exit
-    do iconn = 1, cur_connection_set%num_connections
-      ghosted_id = cur_connection_set%id_up(iconn)
-      local_id = grid%nG2L(ghosted_id) ! = zero for ghost nodes
-      ! velocities are stored as the downwind face of the upwind cell
-      if (local_id <= 0 .or. &
-          dabs(cur_connection_set%dist(direction,iconn)) < 0.99d0) cycle
-      vec_ptr(local_id) = patch%internal_velocities(iphase,iconn)
-    enddo
-    cur_connection_set => cur_connection_set%next
-  enddo
-
-  count = 0
-  do k=1,nz_local
-    do j=1,ny_local
-      do i=1,nx_local
-        count = count + 1
-        local_id = i + (j-1)*grid%structured_grid%nlx + &
-                   (k-1)*grid%structured_grid%nlxy
-        array(count) = vec_ptr(local_id) 
-      enddo
-    enddo
-  enddo
-  call VecRestoreArrayF90(global_vec,vec_ptr,ierr);CHKERRQ(ierr)
-  
-  call VecDestroy(global_vec,ierr);CHKERRQ(ierr)
+  call OutputCollectVelocityOrFlux(realization_base, iphase, direction, &
+                                   PETSC_FALSE, array)
   
   array(1:nx_local*ny_local*nz_local) = &  ! convert time units
     array(1:nx_local*ny_local*nz_local) * output_option%tconv
@@ -3363,6 +3329,11 @@ subroutine WriteHDF5FaceVelUGrid(realization_base,option,file_id, &
   call printErrMsg(option)
 #else
 
+  if (option%nphase == 1 .and. option%transport%nphase > 1) then
+    option%io_buffer = 'WriteHDF5FaceVelUGrid not supported for gas &
+      &transport without flow in the gas phase.'
+    call printErrMsg(option)
+  endif
   call VecGetLocalSize(field%vx_face_inst,local_size,ierr);CHKERRQ(ierr)
   local_size = local_size/(option%nphase*MAX_FACE_PER_CELL + 1)
 
