@@ -11,10 +11,11 @@ dx = length/float(nx)
 dy = 1.
 dz = 1.
 
-dx1 = 0.4*dx
-dx2 = 1.6*dx
-dy1 = 2.5
-dy2 = 0.625
+fraction = 0.1
+dx1 = fraction*dx
+dx2 = (2.-fraction)*dx
+dy1 = dx*dy/dx1
+dy2 = dx*dy/dx2
 
 print('dx1: %f\n'%dx1)
 print('dx2: %f\n'%dx2)

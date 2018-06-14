@@ -143,7 +143,8 @@ TIME
 #  FINAL_TIME 25.d0 y
   FINAL_TIME 12.5d0 y            ! tracer at 50m midpoint
   INITIAL_TIMESTEP_SIZE 1.d0 h
-  MAXIMUM_TIMESTEP_SIZE 2.5d-1 y
+  MAXIMUM_TIMESTEP_SIZE 2.5d-2 y
+#  MAXIMUM_TIMESTEP_SIZE 1.25d-2 y
 END
 
 #=========================== regions ==========================================
