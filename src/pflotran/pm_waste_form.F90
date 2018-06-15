@@ -1993,12 +1993,12 @@ end subroutine PMWFSetRegionScaling
 
 ! ************************************************************************** !
 
-subroutine PMWFSetRealization(this,realization)
+subroutine PMWFSetRealization(this,realization_base)
   ! 
   ! Author: Glenn Hammond
   ! Date: 08/26/15
 
-  use Realization_Subsurface_class
+  use Realization_Base_class
 
   implicit none
   
@@ -2008,10 +2008,14 @@ subroutine PMWFSetRealization(this,realization)
 ! realization (input): subsurface realization object
 ! ----------------------------------------------------------
   class(pm_waste_form_type) :: this
-  class(realization_subsurface_type), pointer :: realization
+  class(realization_base_type), pointer :: realization_base
 ! ----------------------------------------------------------
   
-  this%realization => realization
+  call PMBaseSetRealization(this,realization_base)
+  select type(realization_base)
+    class is(realization_subsurface_type)
+      this%realization => realization_base
+  end select
 
 end subroutine PMWFSetRealization
 

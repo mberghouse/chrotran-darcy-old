@@ -180,7 +180,7 @@ subroutine GeomechanicsInitializePostPETSc(simulation)
     if (associated(timestepper)) then
       call pm_geomech%SetSolver(timestepper%solver)
     endif
-    call pm_geomech%PMGeomechForceSetRealization(geomech_realization)
+    call pm_geomech%SetRealization(geomech_realization%CastToBase())
     call pm_geomech%Setup()
 
     call pmc_geomech%SetupSolvers()

@@ -431,7 +431,7 @@ module PM_WIPP_SrcSink_class
     type(pre_inventory_type), pointer :: pre_inventory_list
     class(realization_subsurface_type), pointer :: realization
   contains
-    procedure, public :: PMWSSSetRealization
+    procedure, public :: SetRealization => PMWSSSetRealization
     procedure, public :: Setup => PMWSSSetup
     procedure, public :: Read => PMWSSRead
     procedure, public :: InitializeRun => PMWSSInitializeRun
@@ -451,7 +451,6 @@ module PM_WIPP_SrcSink_class
   public :: PMWSSCreate, &
             PMWSSWastePanelCreate, &
             PMWSSPreInventoryCreate, &
-            PMWSSSetRealization, &
             PMWSSUpdateRates, &
             PMWSSCalcResidualValues, &
             PMWSSCalcJacobianValues
@@ -741,13 +740,13 @@ end subroutine PMWSSInitChemSpecies
 
 ! *************************************************************************** !
 
-subroutine PMWSSSetRealization(this,realization)
+subroutine PMWSSSetRealization(this,realization_base)
   ! 
   ! Author: Jenn Frederick
   ! Date: 02/02/2017
   !
 
-  use Realization_Subsurface_class
+  use Realization_Base_class
 
   implicit none
   
@@ -757,11 +756,14 @@ subroutine PMWSSSetRealization(this,realization)
 ! realization (input): pointer to subsurface realization object
 ! ----------------------------------------------------------
   class(pm_wipp_srcsink_type) :: this
-  class(realization_subsurface_type), pointer :: realization
+  class(realization_base_type), pointer :: realization_base
 ! ----------------------------------------------------------
   
-  this%realization => realization
-  this%realization_base => realization
+  call PMBaseSetRealization(this,realization_base)
+  select type(realization_base)
+    class is(realization_subsurface_type)
+      this%realization => realization_base
+  end select
 
 end subroutine PMWSSSetRealization
 

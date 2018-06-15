@@ -17,7 +17,7 @@ module PM_Geomechanics_Force_class
     class(communicator_type), pointer :: comm1
   contains
     procedure, public :: Setup => PMGeomechForceSetup
-    procedure, public :: PMGeomechForceSetRealization
+    procedure, public :: SetRealization => PMGeomechForceSetRealization
     procedure, public :: InitializeRun => PMGeomechForceInitializeRun
     procedure, public :: FinalizeRun => PMGeomechForceFinalizeRun
     procedure, public :: InitializeTimestep => PMGeomechForceInitializeTimestep
@@ -140,7 +140,7 @@ end subroutine PMGeomechForceFinalizeRun
 
 ! ************************************************************************** !
 
-subroutine PMGeomechForceSetRealization(this, geomech_realization)
+subroutine PMGeomechForceSetRealization(this, realization_base)
   ! 
   ! This routine
   ! 
@@ -149,17 +149,20 @@ subroutine PMGeomechForceSetRealization(this, geomech_realization)
   ! 
 
   use Grid_module
+  use Realization_Base_class
 
   implicit none
 
   class(pm_geomech_force_type) :: this
-  class(realization_geomech_type), pointer :: geomech_realization
+  class(realization_base_type), pointer :: realization_base
 
-  this%geomech_realization => geomech_realization
-  this%realization_base => geomech_realization
-
-  this%solution_vec = geomech_realization%geomech_field%disp_xx
-  this%residual_vec = geomech_realization%geomech_field%disp_r
+  call PMBaseSetRealization(this,realization_base)
+  select type(r=>realization_base)
+    class is(realization_geomech_type)
+      this%geomech_realization => r
+      this%solution_vec = r%geomech_field%disp_xx
+      this%residual_vec = r%geomech_field%disp_r
+  end select
 
 end subroutine PMGeomechForceSetRealization
 

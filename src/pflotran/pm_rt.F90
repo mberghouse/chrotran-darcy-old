@@ -250,32 +250,35 @@ end subroutine PMRTSetup
 
 ! ************************************************************************** !
 
-subroutine PMRTSetRealization(this,realization)
+subroutine PMRTSetRealization(this,realization_base)
   ! 
   ! Author: Glenn Hammond
   ! Date: 03/14/13
   ! 
 
-  use Realization_Subsurface_class  
+  use Realization_Base_class  
 
   implicit none
   
   class(pm_rt_type) :: this
-  class(realization_subsurface_type), pointer :: realization
+  class(realization_base_type), pointer :: realization_base
 
 #ifdef PM_RT_DEBUG  
   call printMsg(this%option,'PMRT%SetRealization()')
 #endif
   
-  this%realization => realization
-  
-  if (realization%reaction%use_log_formulation) then
-    this%solution_vec = realization%field%tran_log_xx
-  else
-    this%solution_vec = realization%field%tran_xx
-  endif
-  this%residual_vec = realization%field%tran_r
-  
+  call PMBaseSetRealization(this,realization_base)
+  select type(r=>realization_base)
+    class is(realization_subsurface_type)
+      this%realization => r
+      if (r%reaction%use_log_formulation) then
+        this%solution_vec = r%field%tran_log_xx
+      else
+        this%solution_vec = r%field%tran_xx
+      endif
+      this%residual_vec = r%field%tran_r
+  end select
+      
 end subroutine PMRTSetRealization
 
 ! ************************************************************************** !

@@ -236,7 +236,7 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
     option%surf_flow_dt=pmc_surface%timestepper%dt_init
 
     if (associated(pm_surface_flow)) then
-      call pm_surface_flow%PMSurfaceSetRealization(surf_realization)
+      call pm_surface_flow%SetRealization(surf_realization%CastToBase())
       call pm_surface_flow%Setup()
       call TSSetRHSFunction(timestepper%solver%ts, &
                             pm_surface_flow%residual_vec, &
@@ -246,7 +246,7 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
     endif
 
     if (associated(pm_surface_th)) then
-      call pm_surface_th%PMSurfaceSetRealization(surf_realization)
+      call pm_surface_th%SetRealization(surf_realization%CastToBase())
       call pm_surface_th%Setup()
       call TSSetRHSFunction(timestepper%solver%ts, &
                             pm_surface_th%residual_vec, &

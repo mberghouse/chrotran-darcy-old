@@ -291,23 +291,26 @@ end subroutine PMSubsurfaceFlowSetup
 
 ! ************************************************************************** !
 
-subroutine PMSubsurfaceFlowSetRealization(this,realization)
+subroutine PMSubsurfaceFlowSetRealization(this,realization_base)
   ! 
   ! Author: Glenn Hammond
   ! Date: 04/21/14
 
-  use Realization_Subsurface_class
+  use Realization_Base_class
   use Grid_module
 
   implicit none
   
   class(pm_subsurface_flow_type) :: this
-  class(realization_subsurface_type), pointer :: realization
+  class(realization_base_type), pointer :: realization_base
   
-  this%realization => realization
-
-  this%solution_vec = realization%field%flow_xx
-  this%residual_vec = realization%field%flow_r
+  call PMBaseSetRealization(this,realization_base)
+  select type(r=>realization_base)
+    class is(realization_subsurface_type)
+      this%realization => r
+      this%solution_vec = r%field%flow_xx
+      this%residual_vec = r%field%flow_r
+  end select
   
 end subroutine PMSubsurfaceFlowSetRealization
 

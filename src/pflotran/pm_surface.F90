@@ -22,7 +22,7 @@ module PM_Surface_class
     PetscReal :: temperature_change_limit
   contains
     procedure, public :: Setup => PMSurfaceSetup
-    procedure, public :: PMSurfaceSetRealization
+    procedure, public :: SetRealization => PMSurfaceSetRealization
     procedure, public :: InitializeRun => PMSurfaceInitializeRun
     procedure, public :: PreSolve => PMSurfacePreSolve
     procedure, public :: PostSolve => PMSurfacePostSolve
@@ -154,7 +154,7 @@ end subroutine PMSurfaceSetup
 
 ! ************************************************************************** !
 
-subroutine PMSurfaceSetRealization(this, surf_realization)
+subroutine PMSurfaceSetRealization(this, realization_base)
   ! 
   ! Initializes relization and PETSc vectors for solution and residual.
   ! 
@@ -162,19 +162,21 @@ subroutine PMSurfaceSetRealization(this, surf_realization)
   ! Date: 04/22/14
   ! 
 
-  use Realization_Surface_class
+  use Realization_Base_class
   use Grid_module
 
   implicit none
 
   class(pm_surface_type) :: this
-  class(realization_surface_type), pointer :: surf_realization
+  class(realization_base_type), pointer :: realization_base
 
-  this%surf_realization => surf_realization
-  this%realization_base => surf_realization
-
-  this%solution_vec = surf_realization%surf_field%flow_xx
-  this%residual_vec = surf_realization%surf_field%flow_r
+  call PMBaseSetRealization(this,realization_base)
+  select type(r=>realization_base)
+    class is(realization_surface_type)
+      this%surf_realization => r
+      this%solution_vec = r%surf_field%flow_xx
+      this%residual_vec = r%surf_field%flow_r
+  end select
 
 end subroutine PMSurfaceSetRealization
 

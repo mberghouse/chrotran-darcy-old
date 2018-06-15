@@ -36,7 +36,8 @@ module Realization_Base_class
     class(data_mediator_base_type), pointer :: tran_data_mediator_list
     
     type(reaction_type), pointer :: reaction
-    
+  contains
+    procedure, public :: CastToBase => RealizCastToBase
   end type realization_base_type
   
   public :: RealizationBaseInit, &
@@ -239,6 +240,25 @@ subroutine RealizCreateTranMassTransferVec(this)
   endif
 
 end subroutine RealizCreateTranMassTransferVec
+
+! ************************************************************************** !
+
+function RealizCastToBase(this)
+  ! 
+  ! Casts to base form
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 06/15/18
+  ! 
+  implicit none
+  
+  class(realization_base_type),target :: this
+
+  class(realization_base_type), pointer :: RealizCastToBase
+
+  RealizCastToBase => this
+
+end function RealizCastToBase
 
 ! ************************************************************************** !
 

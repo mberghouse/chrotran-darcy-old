@@ -1346,14 +1346,12 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   class(simulation_subsurface_type) :: simulation
 
   class(realization_subsurface_type), pointer :: realization
-  class(realization_base_type), pointer :: realization_base
   class(pm_base_type), pointer :: cur_pm
   type(option_type), pointer :: option
   SNESLineSearch :: linesearch
   PetscErrorCode :: ierr
 
   realization => simulation%realization
-  realization_base => simulation%realization
   option => realization%option
 
   if (.not.associated(pmc)) return
@@ -1365,7 +1363,7 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
   do
     if (.not.associated(cur_pm)) exit
 
-    call cur_pm%SetRealizationBase(realization_base)
+    call cur_pm%SetRealization(realization%CastToBase())
 
     ! set realization
     select type(cur_pm)
@@ -1376,19 +1374,6 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
             'process model without a corresponding CHEMISTRY block.'
           call printErrMsg(option)
         endif
-        call cur_pm%SetRealization(realization)
-    !-----------------------------------
-      class is(pm_subsurface_flow_type)
-        call cur_pm%SetRealization(realization)
-    !-----------------------------------
-      class is(pm_waste_form_type)
-        call cur_pm%SetRealization(realization)
-    !-----------------------------------
-      class is(pm_ufd_decay_type)
-        call cur_pm%SetRealization(realization)
-    !-----------------------------------
-      class is(pm_ufd_biosphere_type)
-        call cur_pm%SetRealization(realization)
     !-----------------------------------
     end select
     ! set time stepper

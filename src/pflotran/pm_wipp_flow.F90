@@ -472,7 +472,7 @@ recursive subroutine PMWIPPFloInitializeRun(this)
   endif
   ! call setup/initialization of all WIPP process models
   if (associated(this%pmwss_ptr)) then
-    call PMWSSSetRealization(this%pmwss_ptr,this%realization)
+    call this%pmwss_ptr%SetRealization(this%realization%CastToBase())
     call this%pmwss_ptr%Setup()
     call this%pmwss_ptr%InitializeRun()
   endif

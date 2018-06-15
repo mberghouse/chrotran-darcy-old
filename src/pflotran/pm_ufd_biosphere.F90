@@ -253,20 +253,24 @@ end function PMUFDBUnsuppRadCreate
 
 ! *************************************************************************** !
 
-subroutine PMUFDBSetRealization(this,realization)
+subroutine PMUFDBSetRealization(this,realization_base)
   ! 
   ! Author: Jenn Frederick
   ! Date: 03/13/2017
   !
 
-  use Realization_Subsurface_class
+  use Realization_Base_class
 
   implicit none
   
   class(pm_ufd_biosphere_type) :: this
-  class(realization_subsurface_type), pointer :: realization
+  class(realization_base_type), pointer :: realization_base
   
-  this%realization => realization
+  call PMBaseSetRealization(this,realization_base)
+  select type(realization_base)
+    class is(realization_subsurface_type)
+      this%realization => realization_base
+  end select
 
 end subroutine PMUFDBSetRealization
 
