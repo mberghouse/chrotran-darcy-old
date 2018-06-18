@@ -2,6 +2,7 @@ module Reaction_Sandbox_module
 
   use Reaction_Sandbox_Base_class
   use Reaction_Sandbox_CLM_CN_class
+  use Reaction_Sandbox_Gas_class
   use Reaction_Sandbox_UFD_WP_class
   use Reaction_Sandbox_Example_class
   use Reaction_Sandbox_Simple_class
@@ -157,6 +158,8 @@ subroutine RSandboxRead2(local_sandbox_list,input,option)
       ! Add new cases statements for new reacton sandbox classes here.
       case('UFD-WP')
         new_sandbox => WastePackageCreate()
+      case('GAS')
+        new_sandbox => GasCreate()
       case('EXAMPLE')
         new_sandbox => EXAMPLECreate()
       case('SIMPLE')

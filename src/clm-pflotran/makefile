@@ -328,6 +328,7 @@ chem_obj = \
 	${common_src}reaction_sandbox_base.o \
 	${common_src}reaction_sandbox_clm_cn.o \
 	${common_src}reaction_sandbox_example.o \
+	${common_src}reaction_sandbox_gas.o \
 	${common_src}reaction_sandbox_pnnl_cyber.o \
 	${common_src}reaction_sandbox_simple.o \
 	${common_src}reaction_sandbox_ufd_wp.o \

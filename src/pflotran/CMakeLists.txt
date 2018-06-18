@@ -272,6 +272,7 @@ set(CHEM_SOURCES
 	reaction_sandbox_base.F90
 	reaction_sandbox_clm_cn.F90
 	reaction_sandbox_example.F90
+	reaction_sandbox_gas.F90
 	reaction_sandbox_pnnl_cyber.F90
 	reaction_sandbox_simple.F90
 	reaction_sandbox_ufd_wp.F90
