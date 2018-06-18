@@ -218,7 +218,12 @@ subroutine GasReact(this,Residual,Jacobian,compute_derivative, &
   !   Q = Cs/Cg as measured 
 
   rate = -k * (1.d0 - Q/Keq)
-
+  
+  ! you need to have two species in involved (aqueous species and an immobile species).  The immobile species 
+  ! stores the sorbed concentration in units of mol/m^3 bulk
+  Residual(aq_species) = residual for aqeuous species
+  Residual(im_species) = residual for immobile species
+  
   ! always subtract contribution from residual
 !  Residual(this%species_id) = Residual(this%species_id) - &
 !    this%rate_constant * &  ! 1/sec
