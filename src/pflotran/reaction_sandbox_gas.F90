@@ -131,6 +131,10 @@ subroutine GasReact(this,Residual,Jacobian,compute_derivative, &
 
   PetscInt, parameter :: iphase = 1
   PetscReal :: L_water
+  PetscReal :: rate
+  PetscReal :: k
+  PetscReal :: Q
+  PetscReal :: Keq
 
   ! Key gas variables:
   ! rt_auxvar%%gas_pp(igas): partial pressure of gas in bars [10^5 Pa]
@@ -201,6 +205,20 @@ subroutine GasReact(this,Residual,Jacobian,compute_derivative, &
   ! 1.d3 converts m^3 water -> L water
   L_water = material_auxvar%porosity*global_auxvar%sat(iphase)* &
             material_auxvar%volume*1.d3
+
+  ! rate expression
+  ! rate = -k*(1.d0-Q/K)
+  !   k = rate constant [mol/s]
+  !   Keq = equilibrium constant [L gas/m^3 bulk]
+  !   Q = ratio of gas concentration [Cg] to sorbed concentration [Cs]
+  !   Cg = gas concentration [mol/L gas]
+  !   Cs = gas concentration [mol/m^3 bulk]
+  !   
+  !   Cs = Keq * Cg, therefore, Keq = Cs/Cg at equilibrium
+  !   Q = Cs/Cg as measured 
+
+  rate = -k * (1.d0 - Q/Keq)
+
   ! always subtract contribution from residual
 !  Residual(this%species_id) = Residual(this%species_id) - &
 !    this%rate_constant * &  ! 1/sec
