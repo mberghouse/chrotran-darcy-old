@@ -40,6 +40,7 @@ module Region_module
     !TODO(geh): Tear anything to do with structured/unstructured grids other
     !           than cell id ane face id out of region.
     PetscInt, pointer :: vertex_ids(:,:) ! For Unstructured mesh
+    PetscInt, pointer :: vertex_ids_new(:) ! wrj: For Unstructured mesh
     PetscInt :: num_verts              ! For Unstructured mesh
     type(region_sideset_type), pointer :: sideset
     type(region_explicit_face_type), pointer :: explicit_faceset
@@ -132,6 +133,7 @@ function RegionCreateWithNothing()
   nullify(region%cell_ids)
   nullify(region%faces)
   nullify(region%vertex_ids)
+  nullify(region%vertex_ids_new)
   nullify(region%sideset)
   nullify(region%explicit_faceset)
   nullify(region%polygonal_volume)
@@ -291,6 +293,11 @@ function RegionCreateWithRegion(region)
     allocate(new_region%cell_ids(new_region%num_cells))
     new_region%cell_ids(1:new_region%num_cells) = &
       region%cell_ids(1:region%num_cells)
+
+    print *, ''
+    print *, 'In region.F90, Line298'
+    print *, 'Test if region%cell_ids is associated'
+
   endif
   if (associated(region%faces)) then
     allocate(new_region%faces(new_region%num_cells))
@@ -302,6 +309,14 @@ function RegionCreateWithRegion(region)
     new_region%vertex_ids(0:MAX_VERT_PER_FACE,1:new_region%num_verts) = &
     region%vertex_ids(0:MAX_VERT_PER_FACE,1:new_region%num_verts)
   endif
+
+  !wrj: Add allocation of vertex_ids_new
+  if (associated(region%vertex_ids_new)) then
+    allocate(new_region%vertex_ids_new(1:new_region%num_verts))
+    new_region%vertex_ids_new(1:new_region%num_verts) = &
+    region%vertex_ids_new(1:region%num_verts)
+  endif
+
   if (associated(region%sideset)) then
     new_region%sideset => RegionCreateSideSet()
     new_region%sideset%nfaces = region%sideset%nfaces
@@ -346,6 +361,12 @@ function RegionCreateWithRegion(region)
   endif
   
   RegionCreateWithRegion => new_region
+
+  !wrj: Print Info
+  print *, ''
+  print *, 'In region.F90, Line362'
+  print *, 'region%num_cells', region%num_cells
+  ! stop
   
 end function RegionCreateWithRegion
 
@@ -1443,6 +1464,9 @@ subroutine RegionDestroy(region)
   
   if (associated(region%vertex_ids)) deallocate(region%vertex_ids)
   nullify(region%vertex_ids)
+
+  if (associated(region%vertex_ids_new)) deallocate(region%vertex_ids_new)
+  nullify(region%vertex_ids_new)
   
   nullify(region%next)
 
