@@ -63,11 +63,16 @@ module Grid_Unstructured_Aux_module
     PetscInt, pointer :: vertex_ids_natural(:)
     PetscInt, pointer :: cell_neighbors_local_ghosted(:,:) ! local neighbors
     type(point3d_type), pointer :: vertices(:)
+
+    !wrj: Add new parameters
+    PetscInt, pointer :: vertex_to_cell(:,:)
+    PetscReal, pointer :: vertex_to_cell_w_over_r(:,:)
+
     type(point3d_type), pointer :: face_centroid(:)
     PetscReal, pointer :: face_area(:)
     PetscInt, pointer :: nat_ids_of_other_grid(:)
   end type grid_unstructured_type
-  
+
   type, public :: unstructured_explicit_type
     PetscInt, pointer :: cell_ids(:)
     PetscReal, pointer :: cell_volumes(:)
@@ -268,6 +273,10 @@ function UGridCreate()
   nullify(unstructured_grid%cell_to_face_ghosted)
   nullify(unstructured_grid%vertex_ids_natural)
   nullify(unstructured_grid%vertices)
+
+  nullify(unstructured_grid%vertex_to_cell)
+  nullify(unstructured_grid%vertex_to_cell_w_over_r)
+
   nullify(unstructured_grid%cell_neighbors_local_ghosted)
   nullify(unstructured_grid%connection_to_face)
   nullify(unstructured_grid%face_centroid)
@@ -1514,6 +1523,15 @@ subroutine UGridNaturalToPetsc(ugrid,option,elements_old,elements_local, &
   ugrid%ngmax = &
     num_cells_local_new + ghost_cell_count
 
+#if 0
+  !wrj: Print Info
+  if (option%myrank == 0) then
+    print *, ''
+    print *, 'In grid_unstructured_aux.F90, Line1521'
+    print *, 'ghost_cell_count', ghost_cell_count
+  endif
+  stop
+#endif
 
 #if UGRID_DEBUG
   if (ugrid%grid_type == THREE_DIM_GRID) then
@@ -1708,7 +1726,11 @@ subroutine UGridDestroy(unstructured_grid)
   call DeallocateArray(unstructured_grid%cell_neighbors_local_ghosted)
   if (associated(unstructured_grid%vertices)) &
     deallocate(unstructured_grid%vertices)
-  nullify(unstructured_grid%vertices)  
+  nullify(unstructured_grid%vertices)
+
+  call DeallocateArray(unstructured_grid%vertex_to_cell)
+  call DeallocateArray(unstructured_grid%vertex_to_cell_w_over_r)
+
   if (associated(unstructured_grid%face_centroid)) &
     deallocate(unstructured_grid%face_centroid)
   nullify(unstructured_grid%face_centroid)  

@@ -682,10 +682,33 @@ subroutine GridLocalizeRegions(grid,region_list,option)
         call printErrMsg(option)
       case (DEFINED_BY_SIDESET_UGRID)
         call UGridMapSideSet2(grid%unstructured_grid, &
-                             region%sideset%face_vertices, &
-                             region%sideset%nfaces,region%name, &
-                             option,region%cell_ids,region%faces)
+                              region%sideset%face_vertices, &
+                              region%sideset%nfaces,region%name, &
+                              ! option,region%cell_ids,region%faces)
+                              option,region%cell_ids,region%faces, &
+                              region%vertex_ids_new,region%num_verts)
         region%num_cells = size(region%cell_ids)
+
+#if 1
+        !wrj: Print Info
+        if (option%myrank == 0) then
+          print *, ''
+          print *, 'In grid.F90, Line694'
+          print *, 'region%name: ', region%name
+          print *, 'region%num_cells', region%num_cells
+          print *, 'size(region%cell_ids)', size(region%cell_ids)
+          print *, 'region%cell_ids', region%cell_ids
+          print *, 'size(region%faces)', size(region%faces)
+          print *, 'region%faces', region%faces
+          print *, 'size(region%sideset%face_vertices)', size(region%sideset%face_vertices)
+          print *, 'region%sideset%face_vertices', region%sideset%face_vertices
+          !print *, size(region%vertex_ids), region%vertex_ids
+          !print *, grid%unstructured_grid%cell_vertices(:,region%cell_ids(1))
+          print *, 'region%num_verts', region%num_verts
+        endif
+        ! stop
+#endif
+
       case (DEFINED_BY_FACE_UGRID_EXP)
           call GridLocalizeExplicitFaceset(grid%unstructured_grid,region, &
                                            option)

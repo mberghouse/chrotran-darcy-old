@@ -26,6 +26,10 @@ module Connection_module
     PetscReal, pointer :: area(:)      ! list of areas of faces normal to distance vectors
     PetscReal, pointer :: cntr(:,:)    ! coordinates (1:3, num_connections) of the mass center of the face
     PetscInt, pointer :: face_id(:)    ! list of ids of faces (in local order)
+
+    !wrj: Add new parameters -> Note: It should be PetscReal type, not PetscInt type
+    PetscReal, pointer :: face_internal_coeff(:,:)    ! coefficients for internal connection vertex reconstruction
+
     type(connection_set_type), pointer :: next
   end type connection_set_type
 
@@ -86,6 +90,9 @@ function ConnectionCreate(num_connections,connection_itype)
   nullify(connection%intercp)
   nullify(connection%area)
   nullify(connection%cntr)
+
+  nullify(connection%face_internal_coeff)
+
   select case(connection_itype)
     case(INTERNAL_CONNECTION_TYPE)
       allocate(connection%id_up(num_connections))
@@ -94,12 +101,18 @@ function ConnectionCreate(num_connections,connection_itype)
       allocate(connection%intercp(1:3,num_connections))
       allocate(connection%area(num_connections))
       allocate(connection%face_id(num_connections))
+
+      allocate(connection%face_internal_coeff(9,num_connections))
+
       connection%id_up = 0
       connection%id_dn = 0
       connection%face_id = 0
       connection%dist = 0.d0
       connection%intercp = 0.d0
       connection%area = 0.d0
+
+      connection%face_internal_coeff = 0.0d0
+
     case(BOUNDARY_CONNECTION_TYPE)
       allocate(connection%id_dn(num_connections))
       allocate(connection%dist(-1:3,num_connections))
@@ -286,6 +299,8 @@ subroutine ConnectionDestroy(connection)
   call DeallocateArray(connection%intercp)
   call DeallocateArray(connection%area)
   call DeallocateArray(connection%cntr)
+
+  call DeallocateArray(connection%face_internal_coeff)
   
   nullify(connection%next)
   
