@@ -402,6 +402,17 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
   call material_auxvar_up%PermeabilityTensorToScalar(dist,perm_up)
   call material_auxvar_dn%PermeabilityTensorToScalar(dist,perm_dn)
 
+#if 0
+  !wrj: Print Info
+  if (option%myrank == 0) then
+    print *, ''
+    print *, 'In richards_common.F90, Line407'
+    print *, 'perm_up', perm_up
+    print *, 'perm_dn', perm_dn
+    stop
+  endif
+#endif
+
   Dq = (perm_up * perm_dn)/(dd_up*perm_dn + dd_dn*perm_up)
   
 ! Flow term
