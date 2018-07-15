@@ -26,7 +26,8 @@ module Material_Aux_class
 
   ! flag to determine which model to use for tensor to scalar conversion 
   ! of permeability
-  PetscInt :: perm_tens_to_scal_model = TENSOR_TO_SCALAR_LINEAR
+  ! PetscInt :: perm_tens_to_scal_model = TENSOR_TO_SCALAR_LINEAR
+  PetscInt :: perm_tens_to_scal_model = TENSOR_TO_SCALAR_QUADRATIC
   
 !  PetscInt, public :: soil_thermal_conductivity_index
 !  PetscInt, public :: soil_heat_capacity_index
