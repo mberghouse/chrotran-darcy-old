@@ -85,7 +85,8 @@ module Utility_module
             Erf_, &
             DigitsOfAccuracy, &
             CalcParallelSum, &
-            MatCompare
+            MatCompare, &
+            Cramer
             
 contains
 
@@ -2242,6 +2243,43 @@ subroutine MatCompare(a1, a2, n, m, tol, do_rel_err)
   end do 
 
 end subroutine MatCompare
+
+! ************************************************************************** !
+
+subroutine Cramer(A,x,b)
+  !
+  ! The solution of a small linear equations (3x3) with Cramer's rule
+  ! Author: Runjian Wu, UA
+  ! Date: 07/07/2018
+  !
+
+  implicit none
+
+  PetscReal :: A(3,3), x(3), b(3)
+  PetscReal :: C(3,3)
+  PetscReal :: detA, detC
+  PetscInt :: i, j
+
+  C(:,:) = A(:,:)
+
+  call Determinant(A,detA)
+
+  print *, ''
+  print *, 'In utility.F90, Line2268'
+  print *, 'detA', detA
+
+  do j = 1,3
+    do i = 1,3
+      C(i,j) = b(i)
+      if (j>1) then
+        C(i,j-1) = A(i,j-1)
+      endif
+    enddo
+    call Determinant(C,detC)
+    x(j) = detC/detA
+  enddo
+
+end subroutine Cramer
 
 ! ************************************************************************** !
 
