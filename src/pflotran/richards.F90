@@ -736,11 +736,37 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
     
   call VecGetArrayReadF90(field%flow_xx_loc,xx_loc_p, ierr);CHKERRQ(ierr)
 
+#if 0
+  !wrj: Print Info
+  if (option%myrank == 0) then
+    print *, ''
+    print *, 'In richards.F90, Line741'
+    print *, 'num_vertices_local', grid%unstructured_grid%num_vertices_local
+    print *, 'num_vertices_global', grid%unstructured_grid%num_vertices_global
+    ! print *, 'cell_vertices(:,:)', grid%unstructured_grid%cell_vertices(:,1)
+    print *, 'cell_ids_natural(:)', grid%unstructured_grid%cell_ids_natural(:)
+    print *, 'size of cell_ids_natural(:)', size(grid%unstructured_grid%cell_ids_natural(:))
+    print *, ''
+  endif
+  stop
+#endif
+
   do ghosted_id = 1, grid%ngmax
     if (grid%nG2L(ghosted_id) < 0) cycle ! bypass ghosted corner cells
      
     !geh - Ignore inactive cells with inactive materials
     if (patch%imat(ghosted_id) <= 0) cycle
+
+#if 0
+    !wrj: Print Info
+    if (option%myrank == 0) then
+      print *, ''
+      print *, 'In richards.F90, Line764'
+      print *, 'ghosted_id', ghosted_id
+      print *, 'local_id', grid%nG2L(ghosted_id)
+      print *, 'natural_id', grid%nG2A(ghosted_id)
+    endif
+#endif
 
     call RichardsAuxVarCompute(xx_loc_p(ghosted_id:ghosted_id), &
                                rich_auxvars(ghosted_id), &
@@ -750,6 +776,7 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
                                  patch%sat_func_id(ghosted_id))%ptr, &
                                option)   
   enddo
+  !stop
 
   if (option%inline_surface_flow) then
     region => RegionGetPtrFromList(option%inline_surface_region_name, &
@@ -777,6 +804,17 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
       ghosted_id = grid%nL2G(local_id)
       if (patch%imat(ghosted_id) <= 0) cycle
 
+#if 0
+      !wrj: Print Info
+      if (option%myrank == 0) then
+        print *, ''
+        print *, 'In richards.F90, Line811'
+        print *, 'ghosted_id', ghosted_id
+        print *, 'natural_id', -grid%nG2A(ghosted_id)
+        stop
+      endif
+#endif
+
       select case(boundary_condition%flow_condition% &
                     itype(RICHARDS_PRESSURE_DOF))
         case(DIRICHLET_BC,HYDROSTATIC_BC,SEEPAGE_BC,CONDUCTANCE_BC, &
@@ -799,6 +837,7 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
     enddo
     boundary_condition => boundary_condition%next
   enddo
+  ! stop
   
   ! inline surface boundary conditions
   if (option%inline_surface_flow) then  
@@ -1190,6 +1229,9 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   use Variables_module
   use Debug_module
 
+  use Patch_module
+  use Grid_Unstructured_Aux_module
+
   implicit none
 
   SNES :: snes
@@ -1205,6 +1247,14 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   type(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
 
+  type(patch_type), pointer :: patch
+  type(grid_unstructured_type), pointer :: unstructured_grid
+  PetscInt :: vertex_id
+  PetscInt :: icell, cell_id_tmp
+  PetscReal, pointer :: vertex_pres(:)
+  type(global_auxvar_type), pointer :: global_auxvars(:)
+  PetscReal :: cell_pres, vertex_pres_tmp
+
   call PetscLogEventBegin(logging%event_r_residual,ierr);CHKERRQ(ierr)
   
   field => realization%field
@@ -1214,6 +1264,32 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
 
   skip_conn_type = NO_CONN
   if (option%flow%only_vertical_flow) skip_conn_type = HORZ_CONN
+
+  !wrj: Update vertex pressure
+  patch => realization%patch
+  unstructured_grid => patch%grid%unstructured_grid
+  global_auxvars => patch%aux%Global%auxvars
+
+  if (associated(unstructured_grid)) then
+    print *, ''
+    print *, 'In richards.F90, Line1271'
+
+    allocate(vertex_pres(unstructured_grid%num_vertices_local))
+    do vertex_id = 1, unstructured_grid%num_vertices_local
+      ! print *, 'vertex_id', vertex_id
+      vertex_pres_tmp = 0.0d0
+      do icell = 1, unstructured_grid%vertex_to_cell(0,vertex_id)
+        cell_id_tmp = unstructured_grid%vertex_to_cell(icell,vertex_id)
+        cell_pres = global_auxvars(cell_id_tmp)%pres(1)
+        ! print *, 'vertex_id, cell_id_tmp, cell_pres', vertex_id, cell_id_tmp, cell_pres
+        vertex_pres_tmp = vertex_pres_tmp + unstructured_grid%vertex_to_cell_w_over_r(icell,vertex_id)*cell_pres
+      enddo
+      vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id)
+      print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+
+    enddo
+  endif
+  stop
 
   call RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
   call RichardsResidualBoundaryConn(r,realization,ierr)
@@ -1435,6 +1511,18 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
       icap_up = patch%sat_func_id(ghosted_id_up)
       icap_dn = patch%sat_func_id(ghosted_id_dn)
 
+#if 0
+      !wrj: Print Info
+      if (option%myrank == 0) then
+        print *, ''
+        print *, 'In richards.F90, Line1481'
+        print *, 'iconn', iconn
+        print *, 'local_id_up', local_id_up
+        print *, 'local_id_dn', local_id_dn
+        stop
+      endif
+#endif
+
       call RichardsFlux(rich_auxvars(ghosted_id_up), &
                         global_auxvars(ghosted_id_up), &
                         material_auxvars(ghosted_id_up), &
@@ -1619,6 +1707,32 @@ subroutine RichardsResidualBoundaryConn(r,realization,ierr)
       if (associated(patch%boundary_flow_fluxes)) then
         patch%boundary_flow_fluxes(1,sum_connection) = Res(1)
       endif
+
+#if 0
+      !wrj: Print Info
+      if (option%myrank == 0) then
+        print *, ''
+        print *, 'In richards.F90, Line1678'
+        print *, 'ghosted_id', ghosted_id
+        print *, 'iconn', iconn
+        print *, 'dist(:,iconn)', cur_connection_set%dist(:,iconn)
+        stop
+      endif
+#endif
+
+#if 0
+      !wrj: Print Info
+      if (option%myrank == 0) then
+        print *, ''
+        print *, 'In richards.F90, Line1690'
+        print *, 'boundary_condition%name: ', boundary_condition%name
+        print *, 'boundary_condition%region%name: ', boundary_condition%region%name
+        print *, 'boundary_condition%region%num_cells: ', boundary_condition%region%num_cells
+        print *, 'boundary_condition%region%num_verts: ', boundary_condition%region%num_verts
+        print *, 'boundary_condition%region%vertex_ids_new(:)', boundary_condition%region%vertex_ids_new(:)
+        stop
+      endif
+#endif
 
       if (option%compute_mass_balance_new) then
         ! contribution to boundary
