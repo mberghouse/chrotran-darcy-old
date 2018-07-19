@@ -1582,7 +1582,6 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       g = option%gravity(3)*(-1.0d0)
       dist0 = cur_connection_set%dist(0,iconn)
       dist3 = cur_connection_set%dist(3,iconn)
-      ! dist_gravity = dist0 * dist3 * g * (-1.0d0)
       dist_gravity = dist0 * dist3 * g
       gravity = rho * dist_gravity * FMWH2O
 
@@ -1592,7 +1591,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       up_pres_t = up_pres + rho*g*grid%z(local_id_up)*FMWH2O
       dn_pres_t = dn_pres + rho*g*grid%z(local_id_dn)*FMWH2O
 
-      b(1) = dn_pres - up_pres - gravity
+      b(1) = dn_pres - up_pres + gravity
       b_new = dn_pres_t - up_pres_t
 
       face_id = cur_connection_set%face_id(iconn)
