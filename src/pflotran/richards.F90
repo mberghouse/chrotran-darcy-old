@@ -1591,8 +1591,9 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       up_pres_t = up_pres + rho*g*grid%z(local_id_up)*FMWH2O
       dn_pres_t = dn_pres + rho*g*grid%z(local_id_dn)*FMWH2O
 
-      b(1) = dn_pres - up_pres + gravity
-      b_new = dn_pres_t - up_pres_t
+      ! b(1) = dn_pres - up_pres + gravity
+      ! b_new = dn_pres_t - up_pres_t
+      b(1) = dn_pres_t - up_pres_t
 
       face_id = cur_connection_set%face_id(iconn)
       vertex_id1 = unstructured_grid%face_to_vertex(1,face_id)
@@ -1621,14 +1622,17 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       print *, 'deriv_U', deriv_U(:)
       print *, 'deriv_U_scalar', deriv_U_scalar
       print *, 'b(1)', b(1)
-      print *, 'b_new', b_new
+      ! print *, 'b_new', b_new
+      print *, 'rho', rho
+      print *, 'FMWH2O', FMWH2O
+      print *, 'rho*FMWH2O', rho*FMWH2O
       print *, 'g', g
       print *, 'dist_gravity', dist_gravity
       print *, 'grid%z(local_id_up)', grid%z(local_id_up)
       print *, 'grid%z(local_id_dn)', grid%z(local_id_dn)
       print *, 'cell_vertices(:,up)', unstructured_grid%cell_vertices(:,local_id_up)
       print *, 'cell_vertices(:,dn)', unstructured_grid%cell_vertices(:,local_id_dn)
-      stop
+      ! stop
 
       call RichardsFlux(rich_auxvars(ghosted_id_up), &
                         global_auxvars(ghosted_id_up), &
