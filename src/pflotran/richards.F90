@@ -13,7 +13,7 @@ module Richards_module
 #endif
   
   use PFLOTRAN_Constants_module
-  use Utility_module, only : Equal
+  use Utility_module, only : Equal, Cramer
   
 #if defined(CLM_PFLOTRAN) || defined(CLM_OFFLINE)
   use clm_pflotran_interface_data
@@ -1229,8 +1229,11 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   use Variables_module
   use Debug_module
 
+  !wrj: Add new modules
   use Patch_module
   use Grid_Unstructured_Aux_module
+  use Coupler_module
+  use Region_module
 
   implicit none
 
@@ -1247,6 +1250,7 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   type(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
 
+  !wrj: Add new parameters
   type(patch_type), pointer :: patch
   type(grid_unstructured_type), pointer :: unstructured_grid
   PetscInt :: vertex_id
@@ -1254,6 +1258,10 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   PetscReal, pointer :: vertex_pres(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   PetscReal :: cell_pres, vertex_pres_tmp
+  type(coupler_type), pointer :: boundary_condition
+  type(region_type), pointer :: region
+  PetscInt :: pressure_bc_type
+  PetscInt :: ivertex
 
   call PetscLogEventBegin(logging%event_r_residual,ierr);CHKERRQ(ierr)
   
@@ -1286,12 +1294,29 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
       enddo
       vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id)
       print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+    enddo
 
+    boundary_condition => patch%boundary_condition_list%first
+    do
+      if (.not. associated(boundary_condition)) exit
+
+      region => boundary_condition%region
+      print *, 'region name: ', region%name
+
+      pressure_bc_type = boundary_condition%flow_condition%itype(1)
+      if (pressure_bc_type == DIRICHLET_BC) then
+        do ivertex = 1, region%num_verts
+          vertex_id = region%vertex_ids_new(ivertex)
+          vertex_pres(vertex_id) = boundary_condition%flow_aux_real_var(1,1)
+          print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+        enddo
+      endif
+      boundary_condition => boundary_condition%next
     enddo
   endif
-  stop
+  ! stop
 
-  call RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
+  call RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex_pres)
   call RichardsResidualBoundaryConn(r,realization,ierr)
   call RichardsResidualAccumulation(r,realization,ierr)
   call RichardsResidualSourceSink(r,realization,ierr)
@@ -1423,7 +1448,7 @@ end subroutine RichardsUpdateLocalVecs
 
 ! ************************************************************************** !
 
-subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
+subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex_pres)
   ! 
   ! Computes the interior flux terms of the residual equation
   ! 
@@ -1440,6 +1465,9 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
   use Debug_module
   use Region_module
   
+  !wrj: Add new modules
+  use Grid_Unstructured_Aux_module
+
   implicit none
 
   Vec :: r
@@ -1458,6 +1486,20 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
   type(inlinesurface_auxvar_type), pointer :: insurf_auxvars(:)
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
+
+  !wrj: Add new parameters
+  PetscReal, pointer :: vertex_pres(:)
+  PetscReal :: deriv_U(3), A(3,3), b(3)
+  PetscReal :: deriv_U_scalar
+  PetscInt :: ii, jj
+  PetscReal :: rho, g, dist0, dist3, dist_gravity, gravity
+  PetscReal :: up_pres, dn_pres
+  PetscInt :: face_id, vertex_id1, vertex_id2, vertex_id3
+  PetscReal :: vertex_id1_z, vertex_id2_z, vertex_id3_z
+  PetscReal :: v1_pres_t, v2_pres_t, v3_pres_t
+  type(grid_unstructured_type), pointer :: unstructured_grid
+  PetscReal :: up_pres_t, dn_pres_t
+  PetscReal :: b_new
 
   PetscInt :: istart
   PetscInt :: local_id_up
@@ -1483,6 +1525,8 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
   if (option%inline_surface_flow) then
     insurf_auxvars => patch%aux%InlineSurface%auxvars
   endif
+
+  unstructured_grid => patch%grid%unstructured_grid
    
   call VecGetArrayF90(r, r_p, ierr);CHKERRQ(ierr)
 
@@ -1523,6 +1567,70 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
       endif
 #endif
 
+      A(:,:) = 0.0d0
+      b(:) = 0.0d0
+      deriv_U(:) = 0.0d0
+
+      do ii = 1, 3
+        do jj = 1, 3
+          A(ii,jj) = cur_connection_set%face_internal_coeff((ii-1)*3+jj,iconn)
+        enddo
+      enddo
+
+      rho = global_auxvars(ghosted_id_up)%den(1)
+      ! g = option%gravity(3)
+      g = option%gravity(3)*(-1.0d0)
+      dist0 = cur_connection_set%dist(0,iconn)
+      dist3 = cur_connection_set%dist(3,iconn)
+      ! dist_gravity = dist0 * dist3 * g * (-1.0d0)
+      dist_gravity = dist0 * dist3 * g
+      gravity = rho * dist_gravity * FMWH2O
+
+      up_pres = global_auxvars(ghosted_id_up)%pres(1)
+      dn_pres = global_auxvars(ghosted_id_dn)%pres(1)
+
+      up_pres_t = up_pres + rho*g*grid%z(local_id_up)*FMWH2O
+      dn_pres_t = dn_pres + rho*g*grid%z(local_id_dn)*FMWH2O
+
+      b(1) = dn_pres - up_pres - gravity
+      b_new = dn_pres_t - up_pres_t
+
+      face_id = cur_connection_set%face_id(iconn)
+      vertex_id1 = unstructured_grid%face_to_vertex(1,face_id)
+      vertex_id2 = unstructured_grid%face_to_vertex(2,face_id)
+      vertex_id3 = unstructured_grid%face_to_vertex(3,face_id)
+
+      vertex_id1_z = unstructured_grid%vertices(vertex_id1)%z
+      vertex_id2_z = unstructured_grid%vertices(vertex_id2)%z
+      vertex_id3_z = unstructured_grid%vertices(vertex_id3)%z
+
+      v1_pres_t = vertex_pres(vertex_id1) + rho*g*vertex_id1_z*FMWH2O
+      v2_pres_t = vertex_pres(vertex_id2) + rho*g*vertex_id2_z*FMWH2O
+      v3_pres_t = vertex_pres(vertex_id3) + rho*g*vertex_id3_z*FMWH2O
+
+      b(2) = 0.5d0*(v2_pres_t + v3_pres_t) - v1_pres_t
+      b(3) = 0.5d0*(v3_pres_t + v1_pres_t) - v2_pres_t
+
+      call Cramer(A,deriv_U,b)
+
+      deriv_U_scalar = sqrt(b(1)**2 + b(2)**2 + b(3)**2)
+
+      print *, ''
+      print *, 'v1, v2, v3', vertex_id1, vertex_id2, vertex_id3
+      print *, 'A(1,:)', A(1,:)
+      print *, 'b', b(:)
+      print *, 'deriv_U', deriv_U(:)
+      print *, 'deriv_U_scalar', deriv_U_scalar
+      print *, 'b(1)', b(1)
+      print *, 'b_new', b_new
+      print *, 'g', g
+      print *, 'dist_gravity', dist_gravity
+      print *, 'grid%z(local_id_up)', grid%z(local_id_up)
+      print *, 'grid%z(local_id_dn)', grid%z(local_id_dn)
+      print *, 'cell_vertices(:,up)', unstructured_grid%cell_vertices(:,local_id_up)
+      print *, 'cell_vertices(:,dn)', unstructured_grid%cell_vertices(:,local_id_dn)
+      stop
+
       call RichardsFlux(rich_auxvars(ghosted_id_up), &
                         global_auxvars(ghosted_id_up), &
                         material_auxvars(ghosted_id_up), &
@@ -1533,7 +1641,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
                         material_parameter%soil_residual_saturation(1,icap_dn), &
                         cur_connection_set%area(iconn), &
                         cur_connection_set%dist(:,iconn), &
-                        option,v_darcy,Res)
+                        option,v_darcy,Res, deriv_U_scalar)
 
       patch%internal_velocities(1,sum_connection) = v_darcy
       if (associated(patch%internal_flow_fluxes)) then
@@ -1553,6 +1661,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
 
     cur_connection_set => cur_connection_set%next
   enddo
+  stop
 
   ! Regional Interior Flux Terms -----------------------------------
   if (option%inline_surface_flow) then
@@ -3493,6 +3602,9 @@ subroutine RichardsComputeLateralMassFlux(realization)
   type(field_type), pointer :: field
   PetscErrorCode :: ierr
 
+  !wrj: Add new parameters
+  PetscReal, pointer :: vertex_pres(:)
+
   field => realization%field
 
   call RichardsUpdateLocalVecs(field%flow_xx, realization, ierr)
@@ -3502,7 +3614,7 @@ subroutine RichardsComputeLateralMassFlux(realization)
   call VecZeroEntries(field%flow_mass_transfer, ierr); CHKERRQ(ierr)
 
   call RichardsResidualInternalConn(field%flow_mass_transfer, &
-                                    realization, VERT_CONN, ierr)
+                                    realization, VERT_CONN, ierr, vertex_pres)
 
   call VecScale(field%flow_mass_transfer, -1.d0, ierr); CHKERRQ(ierr)
 
