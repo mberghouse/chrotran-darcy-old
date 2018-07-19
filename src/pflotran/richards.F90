@@ -1613,7 +1613,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
       call Cramer(A,deriv_U,b)
 
-      deriv_U_scalar = sqrt(b(1)**2 + b(2)**2 + b(3)**2)
+      deriv_U_scalar = sqrt(deriv_U(1)**2 + deriv_U(2)**2 + deriv_U(3)**2)
 
       print *, ''
       print *, 'v1, v2, v3', vertex_id1, vertex_id2, vertex_id3
