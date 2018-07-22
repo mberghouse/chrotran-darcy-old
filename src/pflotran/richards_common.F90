@@ -176,7 +176,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                                   option, &
                                   characteristic_curves_up, &
                                   characteristic_curves_dn, &
-                                  Jup,Jdn)
+                                  Jup,Jdn, deriv_U_scalar)
   ! 
   ! Computes the derivatives of the internal flux terms
   ! for the Jacobian
@@ -284,11 +284,20 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
    
     if (ukvr>floweps) then
       v_darcy= Dq * ukvr * dphi
+
+      !wrj: Add new method
+      ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
+      deriv_U_scalar = deriv_U_scalar * (-1.d0)
+      v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
    
       q = v_darcy * area
       dq_dp_up = Dq*(dukvr_dp_up*dphi+ukvr*dphi_dp_up)*area
       dq_dp_dn = Dq*(dukvr_dp_dn*dphi+ukvr*dphi_dp_dn)*area
       
+      !wrj: Add new method
+      dq_dp_up = Dq * dukvr_dp_up * deriv_U_scalar * (dd_up + dd_dn) * area
+      dq_dp_dn = Dq * dukvr_dp_dn * deriv_U_scalar * (dd_up + dd_dn) * area
+
       Jup(1,1) = (dq_dp_up*density_ave+q*dden_ave_dp_up)
       Jdn(1,1) = (dq_dp_dn*density_ave+q*dden_ave_dp_dn)
     endif
@@ -448,8 +457,10 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
     if (ukvr > floweps) then
       v_darcy = Dq * ukvr * dphi
 
-      deriv_U_scalar = sign(deriv_U_scalar,dphi)
-      ! v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
+      !wrj: Add new method
+      ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
+      deriv_U_scalar = deriv_U_scalar * (-1.d0)
+      v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
    
       q = v_darcy * area
 
@@ -457,7 +468,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
     endif
   endif 
 
-#if 1
+#if 0
   !wrj: Print Info
   print *, 'dist_gravity', dist_gravity
   print *, 'gravity', global_auxvar_up%den(1)*option%gravity(3)*dist(0)*dist(3)*FMWH2O
@@ -467,7 +478,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
   print *, 'velocity new', perm_up*ukvr*deriv_U_scalar
   print *, 'perm_up, perm_dn', perm_up, perm_dn
   print *, '(dd_up + dd_dn)', (dd_up+dd_dn)
-  stop
+  ! stop
 #endif
 
   Res(1) = fluxm

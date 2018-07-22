@@ -1279,8 +1279,8 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   global_auxvars => patch%aux%Global%auxvars
 
   if (associated(unstructured_grid)) then
-    print *, ''
-    print *, 'In richards.F90, Line1271'
+    ! print *, ''
+    ! print *, 'In richards.F90, Line1271'
 
     allocate(vertex_pres(unstructured_grid%num_vertices_local))
     do vertex_id = 1, unstructured_grid%num_vertices_local
@@ -1293,7 +1293,7 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
         vertex_pres_tmp = vertex_pres_tmp + unstructured_grid%vertex_to_cell_w_over_r(icell,vertex_id)*cell_pres
       enddo
       vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id)
-      print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+      ! print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
     enddo
 
     boundary_condition => patch%boundary_condition_list%first
@@ -1301,14 +1301,14 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
       if (.not. associated(boundary_condition)) exit
 
       region => boundary_condition%region
-      print *, 'region name: ', region%name
+      ! print *, 'region name: ', region%name
 
       pressure_bc_type = boundary_condition%flow_condition%itype(1)
       if (pressure_bc_type == DIRICHLET_BC) then
         do ivertex = 1, region%num_verts
           vertex_id = region%vertex_ids_new(ivertex)
           vertex_pres(vertex_id) = boundary_condition%flow_aux_real_var(1,1)
-          print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+          ! print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
         enddo
       endif
       boundary_condition => boundary_condition%next
@@ -1615,6 +1615,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
       deriv_U_scalar = sqrt(deriv_U(1)**2 + deriv_U(2)**2 + deriv_U(3)**2)
 
+#if 0
       print *, ''
       print *, 'v1, v2, v3', vertex_id1, vertex_id2, vertex_id3
       print *, 'A(1,:)', A(1,:)
@@ -1633,6 +1634,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       print *, 'cell_vertices(:,up)', unstructured_grid%cell_vertices(:,local_id_up)
       print *, 'cell_vertices(:,dn)', unstructured_grid%cell_vertices(:,local_id_dn)
       ! stop
+#endif
 
       call RichardsFlux(rich_auxvars(ghosted_id_up), &
                         global_auxvars(ghosted_id_up), &
@@ -1664,7 +1666,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
     cur_connection_set => cur_connection_set%next
   enddo
-  stop
+  ! stop
 
   ! Regional Interior Flux Terms -----------------------------------
   if (option%inline_surface_flow) then
@@ -2218,6 +2220,12 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
   use Logging_module
   use Debug_module
 
+  !wrj: Add new modules
+  use Patch_module
+  use Grid_Unstructured_Aux_module
+  use Coupler_module
+  use Region_module
+
   implicit none
 
   SNES :: snes
@@ -2234,6 +2242,19 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
   PetscReal :: norm
   character(len=MAXSTRINGLENGTH) :: string
 
+  !wrj: Add new parameters
+  type(patch_type), pointer :: patch
+  type(grid_unstructured_type), pointer :: unstructured_grid
+  PetscInt :: vertex_id
+  PetscInt :: icell, cell_id_tmp
+  PetscReal, pointer :: vertex_pres(:)
+  type(global_auxvar_type), pointer :: global_auxvars(:)
+  PetscReal :: cell_pres, vertex_pres_tmp
+  type(coupler_type), pointer :: boundary_condition
+  type(region_type), pointer :: region
+  PetscInt :: pressure_bc_type
+  PetscInt :: ivertex
+
   call PetscLogEventBegin(logging%event_r_jacobian,ierr);CHKERRQ(ierr)
 
   option => realization%option
@@ -2249,7 +2270,50 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
 
   call MatZeroEntries(J,ierr);CHKERRQ(ierr)
 
-  call RichardsJacobianInternalConn(J,realization,ierr)
+  !wrj: Update vertex pressure
+  patch => realization%patch
+  unstructured_grid => patch%grid%unstructured_grid
+  global_auxvars => patch%aux%Global%auxvars
+
+  if (associated(unstructured_grid)) then
+    ! print *, ''
+    ! print *, 'In richards.F90, Line2278'
+
+    allocate(vertex_pres(unstructured_grid%num_vertices_local))
+    do vertex_id = 1, unstructured_grid%num_vertices_local
+      ! print *, 'vertex_id', vertex_id
+      vertex_pres_tmp = 0.0d0
+      do icell = 1, unstructured_grid%vertex_to_cell(0,vertex_id)
+        cell_id_tmp = unstructured_grid%vertex_to_cell(icell,vertex_id)
+        cell_pres = global_auxvars(cell_id_tmp)%pres(1)
+        ! print *, 'vertex_id, cell_id_tmp, cell_pres', vertex_id, cell_id_tmp, cell_pres
+        vertex_pres_tmp = vertex_pres_tmp + unstructured_grid%vertex_to_cell_w_over_r(icell,vertex_id)*cell_pres
+      enddo
+      vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id)
+      ! print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+    enddo
+
+    boundary_condition => patch%boundary_condition_list%first
+    do
+      if (.not. associated(boundary_condition)) exit
+
+      region => boundary_condition%region
+      ! print *, 'region name: ', region%name
+
+      pressure_bc_type = boundary_condition%flow_condition%itype(1)
+      if (pressure_bc_type == DIRICHLET_BC) then
+        do ivertex = 1, region%num_verts
+          vertex_id = region%vertex_ids_new(ivertex)
+          vertex_pres(vertex_id) = boundary_condition%flow_aux_real_var(1,1)
+          ! print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+        enddo
+      endif
+      boundary_condition => boundary_condition%next
+    enddo
+  endif
+  ! stop
+
+  call RichardsJacobianInternalConn(J,realization,ierr,vertex_pres)
   call RichardsJacobianBoundaryConn(J,realization,ierr)
   call RichardsJacobianAccumulation(J,realization,ierr)
   call RichardsJacobianSourceSink(J,realization,ierr)
@@ -2295,7 +2359,7 @@ end subroutine RichardsJacobian
 
 ! ************************************************************************** !
 
-subroutine RichardsJacobianInternalConn(A,realization,ierr)
+subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
   ! 
   ! Computes the interior flux terms of the Jacobian
   ! 
@@ -2314,6 +2378,9 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
   use Material_Aux_class
   use Region_module
   
+  !wrj: Add new modules
+  use Grid_Unstructured_Aux_module
+
   implicit none
 
   Mat, intent(inout) :: A
@@ -2350,6 +2417,19 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
 
   PetscViewer :: viewer
 
+  !wrj: Add new parameters
+  PetscReal, pointer :: vertex_pres(:)
+  PetscReal :: deriv_U(3), AA(3,3), bb(3)
+  PetscReal :: deriv_U_scalar
+  PetscInt :: ii, jj
+  PetscReal :: rho, g, dist0, dist3, dist_gravity, gravity
+  PetscReal :: up_pres, dn_pres
+  PetscInt :: face_id, vertex_id1, vertex_id2, vertex_id3
+  PetscReal :: vertex_id1_z, vertex_id2_z, vertex_id3_z
+  PetscReal :: v1_pres_t, v2_pres_t, v3_pres_t
+  type(grid_unstructured_type), pointer :: unstructured_grid
+  PetscReal :: up_pres_t, dn_pres_t
+
   patch => realization%patch
   grid => patch%grid
   option => realization%option
@@ -2361,6 +2441,9 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
   if (option%inline_surface_flow) then
     insurf_auxvars => patch%aux%InlineSurface%auxvars
   endif
+
+  !wrj: Note: The pointer should be added here
+  unstructured_grid => patch%grid%unstructured_grid
    
 #ifdef BUFFER_MATRIX
   if (option%use_matrix_buffer) then
@@ -2401,6 +2484,53 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
       icap_up = patch%sat_func_id(ghosted_id_up)
       icap_dn = patch%sat_func_id(ghosted_id_dn)
 
+      AA(:,:) = 0.0d0
+      bb(:) = 0.0d0
+      deriv_U(:) = 0.0d0
+
+      do ii = 1, 3
+        do jj = 1, 3
+          AA(ii,jj) = cur_connection_set%face_internal_coeff((ii-1)*3+jj,iconn)
+        enddo
+      enddo
+
+      rho = global_auxvars(ghosted_id_up)%den(1)
+      g = option%gravity(3)*(-1.0d0)
+      up_pres = global_auxvars(ghosted_id_up)%pres(1)
+      dn_pres = global_auxvars(ghosted_id_dn)%pres(1)
+      up_pres_t = up_pres + rho*g*grid%z(local_id_up)*FMWH2O
+      dn_pres_t = dn_pres + rho*g*grid%z(local_id_dn)*FMWH2O
+      bb(1) = dn_pres_t - up_pres_t
+
+      face_id = cur_connection_set%face_id(iconn)
+      vertex_id1 = unstructured_grid%face_to_vertex(1,face_id)
+      vertex_id2 = unstructured_grid%face_to_vertex(2,face_id)
+      vertex_id3 = unstructured_grid%face_to_vertex(3,face_id)
+
+      vertex_id1_z = unstructured_grid%vertices(vertex_id1)%z
+      vertex_id2_z = unstructured_grid%vertices(vertex_id2)%z
+      vertex_id3_z = unstructured_grid%vertices(vertex_id3)%z
+
+      v1_pres_t = vertex_pres(vertex_id1) + rho*g*vertex_id1_z*FMWH2O
+      v2_pres_t = vertex_pres(vertex_id2) + rho*g*vertex_id2_z*FMWH2O
+      v3_pres_t = vertex_pres(vertex_id3) + rho*g*vertex_id3_z*FMWH2O
+
+      bb(2) = 0.5d0*(v2_pres_t + v3_pres_t) - v1_pres_t
+      bb(3) = 0.5d0*(v3_pres_t + v1_pres_t) - v2_pres_t
+
+      call Cramer(AA,deriv_U,bb)
+
+      deriv_U_scalar = sqrt(deriv_U(1)**2 + deriv_U(2)**2 + deriv_U(3)**2)
+
+#if 0
+      print *, ''
+      print *, 'In richards.F90, Line2523'
+      print *, 'AA(1,:)', AA(1,:)
+      print *, 'bb(:)', bb(:)
+      print *, 'deriv_U_scalar', deriv_U_scalar
+      ! stop
+#endif
+
       call RichardsFluxDerivative(rich_auxvars(ghosted_id_up), &
                                   global_auxvars(ghosted_id_up), &
                                   material_auxvars(ghosted_id_up), &
@@ -2414,7 +2544,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
                                   option,&
                                   patch%characteristic_curves_array(icap_up)%ptr, &
                                   patch%characteristic_curves_array(icap_dn)%ptr, &
-                                  Jup,Jdn)
+                                  Jup,Jdn, deriv_U_scalar)
 
       if (local_id_up > 0) then
 
@@ -2463,6 +2593,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
     enddo
     cur_connection_set => cur_connection_set%next
   enddo
+  ! stop
 
   ! Regional Interior Flux Terms -----------------------------------
   if (option%inline_surface_flow) then

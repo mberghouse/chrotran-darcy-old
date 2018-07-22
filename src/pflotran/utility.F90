@@ -2264,9 +2264,11 @@ subroutine Cramer(A,x,b)
 
   call Determinant(A,detA)
 
+#if 0
   print *, ''
   print *, 'In utility.F90, Line2268'
   print *, 'detA', detA
+#endif
 
   do j = 1,3
     do i = 1,3
