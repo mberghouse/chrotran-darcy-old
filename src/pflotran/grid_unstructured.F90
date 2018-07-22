@@ -2390,8 +2390,9 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
 
         unstructured_grid%vertex_to_cell_w_over_r(icell,vertex_id) = w_over_r
 
-#if 0
+#if 1
         print *, ''
+        print *, 'lambda', lambda(:)
         print *, 'w_j, r_j', w_j, r_j
         print *, 'w_over_r', w_over_r
 #endif
@@ -2409,7 +2410,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
 
   ! print *, '8, vertex_to_cell', unstructured_grid%vertex_to_cell(0,8)
   ! print *, '8, sum_w_over_r', unstructured_grid%vertex_to_cell_w_over_r(0,8)
-  ! stop
+  stop
 #endif
   
   nconn = 0
