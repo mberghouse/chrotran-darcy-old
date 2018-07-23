@@ -288,7 +288,6 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
       !wrj: Add new method
       if (option%vertex_reconstruction) then
       ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
-      deriv_U_scalar = deriv_U_scalar * (-1.d0)
       v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
       endif
    
@@ -464,7 +463,6 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
       !wrj: Add new method
       if (option%vertex_reconstruction) then
       ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
-      deriv_U_scalar = deriv_U_scalar * (-1.d0)
       v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
       endif
    
