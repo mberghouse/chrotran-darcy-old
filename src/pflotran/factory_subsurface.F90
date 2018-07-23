@@ -1964,6 +1964,12 @@ subroutine SubsurfaceReadInput(simulation,input)
 
 !......................
 
+      !wrj: Add new input card
+      case('VERTEX_RECONSTRUCTION')
+        option%vertex_reconstruction = PETSC_TRUE
+
+!......................
+
       case('DFN')
         grid%unstructured_grid%grid_type = TWO_DIM_GRID
 

@@ -126,6 +126,8 @@ module Option_module
 
     PetscBool :: update_flow_perm ! If true, permeability changes due to pressure
 
+    PetscBool :: vertex_reconstruction ! wrj: If true, use vertex reconstruction method
+
     PetscInt :: ice_model         ! specify water/ice/vapor phase partitioning model
 
     PetscReal :: flow_time, tran_time, time  ! The time elapsed in the simulation.
@@ -433,6 +435,9 @@ subroutine OptionInitRealization(option)
   option%set_secondary_init_conc = PETSC_FALSE
 
   option%update_flow_perm = PETSC_FALSE
+
+  !wrj: Add initialization
+  option%vertex_reconstruction = PETSC_FALSE
 
   option%flowmode = ""
   option%iflowmode = NULL_MODE
