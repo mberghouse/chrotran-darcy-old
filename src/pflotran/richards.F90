@@ -1278,7 +1278,7 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   unstructured_grid => patch%grid%unstructured_grid
   global_auxvars => patch%aux%Global%auxvars
 
-  if (associated(unstructured_grid)) then
+  if (associated(unstructured_grid) .and. option%vertex_reconstruction) then
     ! print *, ''
     ! print *, 'In richards.F90, Line1271'
 
@@ -1567,6 +1567,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       endif
 #endif
 
+      if (associated(unstructured_grid) .and. option%vertex_reconstruction) then
       A(:,:) = 0.0d0
       b(:) = 0.0d0
       deriv_U(:) = 0.0d0
@@ -1614,6 +1615,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       call Cramer(A,deriv_U,b)
 
       deriv_U_scalar = sqrt(deriv_U(1)**2 + deriv_U(2)**2 + deriv_U(3)**2)
+      endif
 
 #if 0
       print *, ''
@@ -2275,7 +2277,7 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
   unstructured_grid => patch%grid%unstructured_grid
   global_auxvars => patch%aux%Global%auxvars
 
-  if (associated(unstructured_grid)) then
+  if (associated(unstructured_grid) .and. option%vertex_reconstruction) then
     ! print *, ''
     ! print *, 'In richards.F90, Line2278'
 
@@ -2484,6 +2486,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       icap_up = patch%sat_func_id(ghosted_id_up)
       icap_dn = patch%sat_func_id(ghosted_id_dn)
 
+      if (associated(unstructured_grid) .and. option%vertex_reconstruction) then
       AA(:,:) = 0.0d0
       bb(:) = 0.0d0
       deriv_U(:) = 0.0d0
@@ -2521,6 +2524,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       call Cramer(AA,deriv_U,bb)
 
       deriv_U_scalar = sqrt(deriv_U(1)**2 + deriv_U(2)**2 + deriv_U(3)**2)
+      endif
 
 #if 0
       print *, ''

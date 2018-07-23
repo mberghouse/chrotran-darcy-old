@@ -2411,7 +2411,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
   ! print *, '8, vertex_to_cell', unstructured_grid%vertex_to_cell(0,8)
   ! print *, '8, sum_w_over_r', unstructured_grid%vertex_to_cell_w_over_r(0,8)
   print *, 'option%vertex_reconstruction', option%vertex_reconstruction
-  stop
+  ! stop
 #endif
   
   nconn = 0

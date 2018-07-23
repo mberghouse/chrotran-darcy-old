@@ -286,17 +286,21 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
       v_darcy= Dq * ukvr * dphi
 
       !wrj: Add new method
+      if (option%vertex_reconstruction) then
       ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
       deriv_U_scalar = deriv_U_scalar * (-1.d0)
       v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
+      endif
    
       q = v_darcy * area
       dq_dp_up = Dq*(dukvr_dp_up*dphi+ukvr*dphi_dp_up)*area
       dq_dp_dn = Dq*(dukvr_dp_dn*dphi+ukvr*dphi_dp_dn)*area
       
       !wrj: Add new method
+      if (option%vertex_reconstruction) then
       dq_dp_up = Dq * dukvr_dp_up * deriv_U_scalar * (dd_up + dd_dn) * area
       dq_dp_dn = Dq * dukvr_dp_dn * deriv_U_scalar * (dd_up + dd_dn) * area
+      endif
 
       Jup(1,1) = (dq_dp_up*density_ave+q*dden_ave_dp_up)
       Jdn(1,1) = (dq_dp_dn*density_ave+q*dden_ave_dp_dn)
@@ -458,9 +462,11 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
       v_darcy = Dq * ukvr * dphi
 
       !wrj: Add new method
+      if (option%vertex_reconstruction) then
       ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
       deriv_U_scalar = deriv_U_scalar * (-1.d0)
       v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
+      endif
    
       q = v_darcy * area
 
