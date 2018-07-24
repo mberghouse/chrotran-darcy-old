@@ -2306,11 +2306,11 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
       do icell = 1, vertex_to_cell(0,vertex_id)
         cell_id_tmp = vertex_to_cell(icell,vertex_id)
 
-        x_j = grid_x(cell_id_tmp)
-        y_j = grid_y(cell_id_tmp)
-        z_j = grid_z(cell_id_tmp)
+        x_j = grid_x(cell_id_tmp) - x
+        y_j = grid_y(cell_id_tmp) - y
+        z_j = grid_z(cell_id_tmp) - z
 
-        r_j = sqrt((x-x_j)**2+(y-y_j)**2+(z-z_j)**2)
+        r_j = sqrt(x_j**2+y_j**2+z_j**2)
 
         ! w_j = 1.0d0 + lambda(1)*(x_j/r_j) + lambda(2)*(y_j/r_j) + lambda(3)*(z_j/r_j)
 
@@ -2333,11 +2333,11 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
       do icell = 1, vertex_to_cell(0,vertex_id)
         cell_id_tmp = vertex_to_cell(icell,vertex_id)
 
-        x_j = grid_x(cell_id_tmp)
-        y_j = grid_y(cell_id_tmp)
-        z_j = grid_z(cell_id_tmp)
+        x_j = grid_x(cell_id_tmp) - x
+        y_j = grid_y(cell_id_tmp) - y
+        z_j = grid_z(cell_id_tmp) - z
 
-        r_j = sqrt((x-x_j)**2+(y-y_j)**2+(z-z_j)**2)
+        r_j = sqrt(x_j**2+y_j**2+z_j**2)
 
         A(1,1) = A(1,1) + (x_j/r_j)*(x_j/r_j)
         A(1,2) = A(1,2) + (y_j/r_j)*(x_j/r_j)
@@ -2358,6 +2358,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
 #if 0
         print *, ''
         print *, 'cell_id_tmp', cell_id_tmp
+        print *, 'x_i, y_i, z_i', x_j+x, y_j+y, z_j+z
         print *, 'x_j, y_j, z_j', x_j, y_j, z_j
         print *, 'r_j', r_j
 #endif
@@ -2378,11 +2379,11 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
       do icell = 1, vertex_to_cell(0,vertex_id)
         cell_id_tmp = vertex_to_cell(icell,vertex_id)
 
-        x_j = grid_x(cell_id_tmp)
-        y_j = grid_y(cell_id_tmp)
-        z_j = grid_z(cell_id_tmp)
+        x_j = grid_x(cell_id_tmp) - x
+        y_j = grid_y(cell_id_tmp) - y
+        z_j = grid_z(cell_id_tmp) - z
 
-        r_j = sqrt((x-x_j)**2+(y-y_j)**2+(z-z_j)**2)
+        r_j = sqrt(x_j**2+y_j**2+z_j**2)
 
         w_j = 1.0d0 + lambda(1)*(x_j/r_j) + lambda(2)*(y_j/r_j) + lambda(3)*(z_j/r_j)
 
