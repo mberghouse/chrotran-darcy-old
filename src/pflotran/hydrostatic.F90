@@ -16,13 +16,14 @@ contains
 
 ! ************************************************************************** !
 
-subroutine HydrostaticUpdateCoupler(coupler,option,grid)
+subroutine HydrostaticUpdateCoupler(coupler,global_auxvars,global_auxvars_bc, &
+                                    option,grid)
   ! 
   ! Computes the hydrostatic initial/boundary
   ! condition
   ! 
-  ! Author: Glenn Hammond
-  ! Date: 11/28/07
+  ! Author: Glenn Hammond, Satish Karra
+  ! Date: 11/28/07, 07/19/2018
   ! 
 
   use EOS_Water_module
@@ -38,12 +39,13 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   use Dataset_Gridded_HDF5_class
   use Dataset_Common_HDF5_class
   use Dataset_Ascii_class
-  
+  use Global_Aux_module
+
   use General_Aux_module
   use WIPP_Flow_Aux_module
   !use TOilIms_Aux_module
   use PM_TOilIms_Aux_module 
-    ! to use constant paramters such as TOIL_IMS_PRESSURE_DOF
+    ! to use constant parameters such as TOIL_IMS_PRESSURE_DOF
     ! could work something out to eliminate this dependency here 
   
   implicit none
@@ -72,7 +74,8 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   PetscReal :: z_offset
   PetscReal :: aux(1), dummy
   PetscErrorCode :: ierr
-  
+  PetscInt, parameter :: iphase = 1
+
   class(dataset_gridded_hdf5_type), pointer :: datum_dataset
   PetscReal :: datum_dataset_rmax
   PetscReal :: datum_dataset_rmin
@@ -80,7 +83,9 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   type(flow_condition_type), pointer :: condition
   
   type(connection_set_type), pointer :: cur_connection_set
-  
+  type(global_auxvar_type), pointer :: global_auxvars(:)
+  type(global_auxvar_type), pointer :: global_auxvars_bc(:)
+
   condition => coupler%flow_condition
   
   xm_nacl = option%m_nacl * FMWNACL
@@ -403,7 +408,12 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   do iconn=1, num_faces !geh: this should really be num_faces!
     local_id = coupler%connection_set%id_dn(iconn)
     ghosted_id = grid%nL2G(local_id)
-  
+    if (option%flow%density_depends_on_salinity) then
+      ! if (associated(global_auxvars)) then
+        print *, 'ghosted_id:', ghosted_id
+        aux(1) = global_auxvars(ghosted_id)%m_nacl(iphase)
+      ! endif
+    endif
     ! geh: note that this is a boundary connection, thus the entire 
     !      distance is between the face and cell center
     if (associated(coupler%connection_set%dist)) then
@@ -437,14 +447,61 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
     endif
 
     if (associated(pressure_array)) then
-      ipressure = idatum+int(dist_z/delta_z)
-      dist_z_for_pressure = grid%z(ghosted_id)-dz_conn-(z(ipressure) + z_offset)
-      pressure = pressure_array(ipressure) + &
-                 density_array(ipressure)*option%gravity(Z_DIRECTION) * &
-                 dist_z_for_pressure + &
+      ipressure = idatum +  int(dist_z/delta_z)
+      dist_z_for_pressure = grid%z(ghosted_id) - dz_conn - (z(ipressure) + z_offset)
+      pressure0 = pressure_array(ipressure) + &
+                  density_array(ipressure)*option%gravity(Z_DIRECTION) * &
+                  dist_z_for_pressure + &
 !                 (grid%z(ghosted_id)-z(ipressure)) + &
-                 pressure_gradient(X_DIRECTION)*dist_x + & ! gradient in Pa/m
-                 pressure_gradient(Y_DIRECTION)*dist_y
+                  pressure_gradient(X_DIRECTION)*dist_x + & ! gradient in Pa/m
+                  pressure_gradient(Y_DIRECTION)*dist_y
+      ! Iterate again to include salinity effects
+      select case(option%iflowmode)
+        case(TH_MODE,MPH_MODE,IMS_MODE,FLASH2_MODE,G_MODE,MIS_MODE, &
+             TOIL_IMS_MODE)
+          temperature = temperature + temperature_gradient(Z_DIRECTION)*delta_z
+      end select
+
+      ! Grab the salinity values
+
+      call EOSWaterDensityExt(temperature,pressure0, &
+                              aux,rho_kg,dummy,ierr)
+      if (ierr /= 0) then
+        call printMsgByCell(option,-3, &
+                      'Error in HydrostaticUpdateCoupler->EOSWaterDensity')
+      endif
+      num_iteration = 0
+      do 
+        pressure = pressure_array(ipressure) + &
+                   rho_kg*option%gravity(Z_DIRECTION) * &
+                   dist_z_for_pressure + &
+                   pressure_gradient(X_DIRECTION)*dist_x + & ! gradient in Pa/m
+                   pressure_gradient(Y_DIRECTION)*dist_y
+        call EOSWaterDensityExt(temperature,pressure,aux,rho_one,dummy,ierr)
+        if (ierr /= 0) then
+          call printMsgByCell(option,-4, &
+                        'Error in HydrostaticUpdateCoupler->EOSWaterDensity')
+        endif
+        if (dabs(rho_kg-rho_one) < 1.d-10) exit
+        rho_kg = rho_one
+        num_iteration = num_iteration + 1
+        if (num_iteration > 100) then
+          print *,'Hydrostatic iteration failed to converge',num_iteration, &
+                   rho_one,rho_kg
+          print *, condition%name, idatum
+          print *, pressure_array
+          stop
+        endif
+      enddo
+
+
+
+!       pressure = pressure_array(ipressure) + &
+!                  density_array(ipressure)*option%gravity(Z_DIRECTION) * &
+!                  dist_z_for_pressure + &
+! !                 (grid%z(ghosted_id)-z(ipressure)) + &
+!                  pressure_gradient(X_DIRECTION)*dist_x + & ! gradient in Pa/m
+!                  pressure_gradient(Y_DIRECTION)*dist_y
     else
       pressure = pressure_at_datum + &
                  pressure_gradient(X_DIRECTION)*dist_x + & ! gradient in Pa/m

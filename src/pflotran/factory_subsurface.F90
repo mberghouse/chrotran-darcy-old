@@ -1207,7 +1207,6 @@ subroutine SubsurfaceInitSimulation(simulation)
   use Option_module
   use Output_module, only : Output
   use Output_Aux_module
-  use Global_module
   use Init_Subsurface_module
   use Init_Subsurface_Flow_module
   use Init_Subsurface_Tran_module
@@ -1271,7 +1270,7 @@ subroutine SubsurfaceInitSimulation(simulation)
 
   !TODO(geh): refactor
   ! initialize global auxiliary variable object
-  call GlobalSetup(realization)
+  !call GlobalSetup(realization)
 
   ! always call the flow side since a velocity field still has to be
   ! set if no flow exists
@@ -1470,6 +1469,7 @@ subroutine SubsurfaceSetupRealization(simulation)
   use Dataset_module
   use Patch_module
   use EOS_module
+  use Global_module
 
   implicit none
 
@@ -1539,6 +1539,10 @@ subroutine SubsurfaceSetupRealization(simulation)
   ! assignVolumesToMaterialAuxVars() must be called after
   ! RealizInitMaterialProperties() where the Material object is created
   call SubsurfAssignVolsToMatAuxVars(realization)
+
+! initialize global auxiliary variable object
+  call GlobalSetup(realization)
+
   call RealizationInitAllCouplerAuxVars(realization)
   if (option%ntrandof > 0) then
     call printMsg(option,"  Setting up TRAN Realization ")
