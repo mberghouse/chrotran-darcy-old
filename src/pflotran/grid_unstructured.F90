@@ -2369,8 +2369,8 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
 
 #if 0
       print *, ''
-      print *, 'A', A
-      print *, 'b', b
+      print *, 'A', A(1,:)
+      print *, 'b', b(:)
       print *, 'lambda', lambda
       ! stop
 #endif

@@ -1288,11 +1288,13 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
       vertex_pres_tmp = 0.0d0
       do icell = 1, unstructured_grid%vertex_to_cell(0,vertex_id)
         cell_id_tmp = unstructured_grid%vertex_to_cell(icell,vertex_id)
-        cell_pres = global_auxvars(cell_id_tmp)%pres(1) - 101325.d0
+        ! cell_pres = global_auxvars(cell_id_tmp)%pres(1) - 101325.d0
+        cell_pres = global_auxvars(cell_id_tmp)%pres(1)
         ! print *, 'vertex_id, cell_id_tmp, cell_pres', vertex_id, cell_id_tmp, cell_pres
         vertex_pres_tmp = vertex_pres_tmp + unstructured_grid%vertex_to_cell_w_over_r(icell,vertex_id)*cell_pres
       enddo
-      vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id) + 101325.d0
+      ! vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id) + 101325.d0
+      vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id)
       ! print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
     enddo
 
@@ -1669,7 +1671,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
     cur_connection_set => cur_connection_set%next
   enddo
-  ! stop
+  stop
 
   ! Regional Interior Flux Terms -----------------------------------
   if (option%inline_surface_flow) then
@@ -2288,11 +2290,13 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
       vertex_pres_tmp = 0.0d0
       do icell = 1, unstructured_grid%vertex_to_cell(0,vertex_id)
         cell_id_tmp = unstructured_grid%vertex_to_cell(icell,vertex_id)
-        cell_pres = global_auxvars(cell_id_tmp)%pres(1) - 101325.d0
+        ! cell_pres = global_auxvars(cell_id_tmp)%pres(1) - 101325.d0
+        cell_pres = global_auxvars(cell_id_tmp)%pres(1)
         ! print *, 'vertex_id, cell_id_tmp, cell_pres', vertex_id, cell_id_tmp, cell_pres
         vertex_pres_tmp = vertex_pres_tmp + unstructured_grid%vertex_to_cell_w_over_r(icell,vertex_id)*cell_pres
       enddo
-      vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id) + 101325.d0
+      ! vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id) + 101325.d0
+      vertex_pres(vertex_id) = vertex_pres_tmp/unstructured_grid%vertex_to_cell_w_over_r(0,vertex_id)
       ! print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
     enddo
 

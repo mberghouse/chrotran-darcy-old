@@ -472,12 +472,12 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
     endif
   endif 
 
-#if 0
+#if 1
   !wrj: Print Info
   print *, 'dist_gravity', dist_gravity
   print *, 'gravity', global_auxvar_up%den(1)*option%gravity(3)*dist(0)*dist(3)*FMWH2O
   print *, 'dphi', dphi
-  print *, 'v_darcy', v_darcy
+  print *, 'v_darcy', Dq*ukvr*dphi
   print *, 'velocity', Dq*ukvr*deriv_U_scalar*(dd_up+dd_dn)
   print *, 'velocity new', perm_up*ukvr*deriv_U_scalar
   print *, 'perm_up, perm_dn', perm_up, perm_dn
