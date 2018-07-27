@@ -2525,7 +2525,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
 
       endif
 
-#if 0
+#if 1
       print *, ''
       print *, 'In richards.F90, Line2523'
       print *, 'AA(1,:)', AA(1,:)
@@ -2547,7 +2547,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
                                   option,&
                                   patch%characteristic_curves_array(icap_up)%ptr, &
                                   patch%characteristic_curves_array(icap_dn)%ptr, &
-                                  Jup,Jdn, deriv_U)
+                                  Jup,Jdn, deriv_U, AA, bb)
 
       if (local_id_up > 0) then
 

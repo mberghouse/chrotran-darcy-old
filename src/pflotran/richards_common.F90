@@ -6,7 +6,7 @@ module Richards_Common_module
   use Global_Aux_module
   
   use PFLOTRAN_Constants_module
-  use Utility_module, only : Equal
+  use Utility_module, only : Equal, Cramer
   
   implicit none
   
@@ -176,7 +176,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                                   option, &
                                   characteristic_curves_up, &
                                   characteristic_curves_dn, &
-                                  Jup,Jdn, deriv_U)
+                                  Jup,Jdn, deriv_U, AA, bb)
   ! 
   ! Computes the derivatives of the internal flux terms
   ! for the Jacobian
@@ -211,6 +211,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   !wrj: Add new parameters
   PetscReal :: deriv_U(3)
   PetscReal :: deriv_U_scalar
+  PetscReal :: AA(3,3), bb(3), bb1_old
   
   PetscReal :: dden_ave_dp_up, dden_ave_dp_dn
   PetscReal :: dgravity_dden_up, dgravity_dden_dn
@@ -310,6 +311,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 0
   !wrj: Print Info
   print *, ''
+  print *, 'In richards_common.F90, Line314'
   print *, 'dq_dp_up -> OLD', Dq*(dukvr_dp_up*dphi+ukvr*dphi_dp_up)*area
   print *, 'dq_dp_up -> NEW', dq_dp_up
   print *, 'dukvr_dp_up', dukvr_dp_up
@@ -321,6 +323,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 1
   !wrj: Print Info
   print *, ''
+  print *, 'In richards_common.F90, Line326'
   print *, 'Jup -> analytical', Jup
   print *, 'Jdn -> analytical', Jdn
   ! stop
@@ -372,12 +375,33 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                                material_auxvar_pert_dn, &
                                characteristic_curves_dn, &
                                option)
+
+    !wrj: Calculate the perturbed deriv_U for x_pert_up
+    bb1_old = bb(1)
+    bb(1) = bb(1) - pert_up
+    call Cramer(AA,deriv_U,bb)
+
+#if 1
+    print *, ''
+    print *, 'In richards_common.F90, Line386'
+    print *, 'AA', AA(:,:)
+    print *, 'bb', bb(:)
+    print *, 'deriv_U', deriv_U(:)
+    ! stop
+#endif
+
     call RichardsFlux(rich_auxvar_pert_up,global_auxvar_pert_up, &
                       material_auxvar_pert_up,sir_up, &
                       rich_auxvar_dn,global_auxvar_dn, &
                       material_auxvar_dn,sir_dn, &
                       area, dist, &
                       option,v_darcy,res_pert_up,deriv_U)
+
+    !wrj: Calculate the perturbed deriv_U for x_pert_dn
+    bb(1) = bb1_old
+    bb(1) = bb(1) + pert_up
+    call Cramer(AA,deriv_U,bb)
+
     call RichardsFlux(rich_auxvar_up,global_auxvar_up, &
                       material_auxvar_up,sir_up, &
                       rich_auxvar_pert_dn,global_auxvar_pert_dn, &
@@ -397,6 +421,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 1
   !wrj: Print Info
   print *, ''
+  print *, 'In richards_common.F90, Line424'
   print *, 'x_up', x_up
   print *, 'x_dn', x_dn
   print *, 'x_pert_up', x_pert_up
@@ -412,6 +437,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 1
   !wrj: Print Info
   print *, ''
+  print *, 'In richards_common.F90, Line440'
   print *, 'Jup -> numerical', Jup
   print *, 'Jdn -> numerical', Jdn
   stop
@@ -471,7 +497,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
   !wrj: Print Info
   if (option%myrank == 0) then
     print *, ''
-    print *, 'In richards_common.F90, Line407'
+    print *, 'In richards_common.F90, Line500'
     print *, 'perm_up', perm_up
     print *, 'perm_dn', perm_dn
     stop
@@ -522,6 +548,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
 #if 1
   !wrj: Print Info
   print *, ''
+  print *, 'In richards_common.F90, Line551'
   print *, 'dist_gravity', dist_gravity
   print *, 'gravity', global_auxvar_up%den(1)*option%gravity(3)*dist(0)*dist(3)*FMWH2O
   print *, 'dphi', dphi
