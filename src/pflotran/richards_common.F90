@@ -176,7 +176,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                                   option, &
                                   characteristic_curves_up, &
                                   characteristic_curves_dn, &
-                                  Jup,Jdn, deriv_U_scalar)
+                                  Jup,Jdn, deriv_U)
   ! 
   ! Computes the derivatives of the internal flux terms
   ! for the Jacobian
@@ -209,6 +209,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   PetscReal :: upweight,density_ave,cond,gravity,dphi
 
   !wrj: Add new parameters
+  PetscReal :: deriv_U(3)
   PetscReal :: deriv_U_scalar
   
   PetscReal :: dden_ave_dp_up, dden_ave_dp_dn
@@ -287,7 +288,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 
       !wrj: Add new method
       if (option%vertex_reconstruction) then
-      ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
+      deriv_U_scalar = dot_product(deriv_U,dist(1:3))*(-1.0d0)
       v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
       endif
    
@@ -327,7 +328,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                       rich_auxvar_dn,global_auxvar_dn,material_auxvar_dn, &
                       sir_dn, &
                       area, dist, &
-                      option,v_darcy,res,deriv_U_scalar)
+                      option,v_darcy,res,deriv_U)
     ideriv = 1
 !    pert_up = x_up(ideriv)*perturbation_tolerance
     pert_up = max(dabs(x_up(ideriv)*perturbation_tolerance),0.1d0)
@@ -354,13 +355,13 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                       rich_auxvar_dn,global_auxvar_dn, &
                       material_auxvar_dn,sir_dn, &
                       area, dist, &
-                      option,v_darcy,res_pert_up,deriv_U_scalar)
+                      option,v_darcy,res_pert_up,deriv_U)
     call RichardsFlux(rich_auxvar_up,global_auxvar_up, &
                       material_auxvar_up,sir_up, &
                       rich_auxvar_pert_dn,global_auxvar_pert_dn, &
                       material_auxvar_pert_dn,sir_dn, &
                       area, dist, &
-                      option,v_darcy,res_pert_dn,deriv_U_scalar)
+                      option,v_darcy,res_pert_dn,deriv_U)
     J_pert_up(1,ideriv) = (res_pert_up(1)-res(1))/pert_up
     J_pert_dn(1,ideriv) = (res_pert_dn(1)-res(1))/pert_dn
     Jup = J_pert_up
@@ -380,7 +381,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
                         rich_auxvar_dn,global_auxvar_dn, &
                         material_auxvar_dn,sir_dn, &
                         area, dist, &
-                        option,v_darcy,Res,deriv_U_scalar)
+                        option,v_darcy,Res,deriv_U)
   ! 
   ! Computes the internal flux terms for the residual
   ! 
@@ -409,6 +410,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
   PetscReal :: upweight, density_ave, cond, gravity, dphi
 
   !wrj: Add new parameters
+  PetscReal :: deriv_U(3)
   PetscReal :: deriv_U_scalar
   
   fluxm = 0.d0
@@ -462,7 +464,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
 
       !wrj: Add new method
       if (option%vertex_reconstruction) then
-      ! deriv_U_scalar = sign(deriv_U_scalar,dphi)
+      deriv_U_scalar = dot_product(deriv_U,dist(1:3))*(-1.0d0)
       v_darcy = Dq * ukvr * deriv_U_scalar * (dd_up + dd_dn)
       endif
    
@@ -474,9 +476,13 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
 
 #if 1
   !wrj: Print Info
+  print *, ''
   print *, 'dist_gravity', dist_gravity
   print *, 'gravity', global_auxvar_up%den(1)*option%gravity(3)*dist(0)*dist(3)*FMWH2O
   print *, 'dphi', dphi
+  print *, 'dist', dist(:)
+  print *, 'deriv_U(:)', deriv_U(:)
+  print *, 'deriv_U_scalar*dist(0)', deriv_U_scalar*(dd_up+dd_dn)
   print *, 'v_darcy', Dq*ukvr*dphi
   print *, 'velocity', Dq*ukvr*deriv_U_scalar*(dd_up+dd_dn)
   print *, 'velocity new', perm_up*ukvr*deriv_U_scalar

@@ -1616,8 +1616,6 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
       call Cramer(A,deriv_U,b)
 
-      deriv_U_scalar = sqrt(deriv_U(1)**2 + deriv_U(2)**2 + deriv_U(3)**2)
-      deriv_U_scalar = sign(deriv_U_scalar,deriv_U(3))
       endif
 
 #if 0
@@ -1626,9 +1624,6 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       print *, 'A(1,:)', A(1,:)
       print *, 'b', b(:)
       print *, 'deriv_U', deriv_U(:)
-      print *, 'deriv_U_scalar', deriv_U_scalar
-      print *, 'b(1)', b(1)
-      ! print *, 'b_new', b_new
       print *, 'rho', rho
       print *, 'FMWH2O', FMWH2O
       print *, 'rho*FMWH2O', rho*FMWH2O
@@ -1651,7 +1646,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
                         material_parameter%soil_residual_saturation(1,icap_dn), &
                         cur_connection_set%area(iconn), &
                         cur_connection_set%dist(:,iconn), &
-                        option,v_darcy,Res, deriv_U_scalar)
+                        option,v_darcy,Res, deriv_U)
 
       patch%internal_velocities(1,sum_connection) = v_darcy
       if (associated(patch%internal_flow_fluxes)) then
@@ -2528,8 +2523,6 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
 
       call Cramer(AA,deriv_U,bb)
 
-      deriv_U_scalar = sqrt(deriv_U(1)**2 + deriv_U(2)**2 + deriv_U(3)**2)
-      deriv_U_scalar = sign(deriv_U_scalar,deriv_U(3))
       endif
 
 #if 0
@@ -2537,7 +2530,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       print *, 'In richards.F90, Line2523'
       print *, 'AA(1,:)', AA(1,:)
       print *, 'bb(:)', bb(:)
-      print *, 'deriv_U_scalar', deriv_U_scalar
+      print *, 'deriv_U', deriv_U(:)
       ! stop
 #endif
 
@@ -2554,7 +2547,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
                                   option,&
                                   patch%characteristic_curves_array(icap_up)%ptr, &
                                   patch%characteristic_curves_array(icap_dn)%ptr, &
-                                  Jup,Jdn, deriv_U_scalar)
+                                  Jup,Jdn, deriv_U)
 
       if (local_id_up > 0) then
 
