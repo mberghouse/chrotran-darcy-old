@@ -397,6 +397,21 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 1
   !wrj: Print Info
   print *, ''
+  print *, 'x_up', x_up
+  print *, 'x_dn', x_dn
+  print *, 'x_pert_up', x_pert_up
+  print *, 'x_pert_dn', x_pert_dn
+  print *, 'pert_up', pert_up
+  print *, 'pert_dn', pert_dn
+  print *, 'res_pert_up(1)', res_pert_up(1)
+  print *, 'res_pert_dn(1)', res_pert_dn(1)
+  print *, 'res(1)', res(1)
+  ! stop
+#endif
+
+#if 1
+  !wrj: Print Info
+  print *, ''
   print *, 'Jup -> numerical', Jup
   print *, 'Jdn -> numerical', Jdn
   stop
