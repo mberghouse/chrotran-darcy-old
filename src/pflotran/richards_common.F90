@@ -321,8 +321,8 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 1
   !wrj: Print Info
   print *, ''
-  print *, 'Jup -> algebraic', Jup
-  print *, 'Jdn -> algebraic', Jdn
+  print *, 'Jup -> analytical', Jup
+  print *, 'Jdn -> analytical', Jdn
   ! stop
 #endif
 
