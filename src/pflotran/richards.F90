@@ -1666,7 +1666,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
     cur_connection_set => cur_connection_set%next
   enddo
-  stop
+  ! stop
 
   ! Regional Interior Flux Terms -----------------------------------
   if (option%inline_surface_flow) then

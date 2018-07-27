@@ -307,8 +307,30 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
     endif
   endif
 
+#if 0
+  !wrj: Print Info
+  print *, ''
+  print *, 'dq_dp_up -> OLD', Dq*(dukvr_dp_up*dphi+ukvr*dphi_dp_up)*area
+  print *, 'dq_dp_up -> NEW', dq_dp_up
+  print *, 'dukvr_dp_up', dukvr_dp_up
+  print *, 'dq_dp_dn -> OLD', Dq*(dukvr_dp_dn*dphi+ukvr*dphi_dp_dn)*area
+  print *, 'dq_dp_dn -> NEW', dq_dp_dn
+  stop
+#endif
+
+#if 1
+  !wrj: Print Info
+  print *, ''
+  print *, 'Jup -> algebraic', Jup
+  print *, 'Jdn -> algebraic', Jdn
+  ! stop
+#endif
+
  ! note: Res is the flux contribution, for node up J = J + Jup
  !                                              dn J = J - Jdn  
+
+  !wrj: Add new option
+  option%flow%numerical_derivatives = PETSC_TRUE
 
   if (option%flow%numerical_derivatives) then
     call GlobalAuxVarInit(global_auxvar_pert_up,option)
@@ -371,6 +393,14 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
     call MaterialAuxVarStrip(material_auxvar_pert_up)
     call MaterialAuxVarStrip(material_auxvar_pert_dn)    
   endif
+
+#if 1
+  !wrj: Print Info
+  print *, ''
+  print *, 'Jup -> numerical', Jup
+  print *, 'Jdn -> numerical', Jdn
+  stop
+#endif
 
 end subroutine RichardsFluxDerivative
 
