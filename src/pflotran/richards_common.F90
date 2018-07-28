@@ -440,7 +440,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   print *, 'In richards_common.F90, Line440'
   print *, 'Jup -> numerical', Jup
   print *, 'Jdn -> numerical', Jdn
-  stop
+  ! stop
 #endif
 
 end subroutine RichardsFluxDerivative
