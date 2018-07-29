@@ -211,9 +211,11 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   !wrj: Add new parameters
   PetscReal :: deriv_U(3)
   PetscReal :: deriv_U_up(3), deriv_U_dn(3)
+  PetscReal :: deriv_U_up_pert(3), deriv_U_dn_pert(3)
   PetscReal :: deriv_U_scalar
-  PetscReal :: AA_up(3,3), bb_up(3), bb1_old
-  PetscReal :: AA_dn(3,3), bb_dn(3)
+  PetscReal :: AA_up(3,3), AA_dn(3,3)
+  PetscReal :: bb_up(3), bb_dn(3)
+  PetscReal :: bb_up_pert(3), bb_dn_pert(3)
   
   PetscReal :: dden_ave_dp_up, dden_ave_dp_dn
   PetscReal :: dgravity_dden_up, dgravity_dden_dn
@@ -379,26 +381,26 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                                option)
 
     !wrj: Calculate the perturbed deriv_U for x_pert_up
-    ! bb1_old = bb(1)
-    bb_up(1) = bb_up(1) - pert_up
-    bb_up(2) = bb_up(2) - pert_up
-    bb_up(3) = bb_up(3) - pert_up
-    call Cramer(AA_up,deriv_U_up,bb_up)
+    bb_up_pert(1) = bb_up(1) - pert_up
+    bb_up_pert(2) = bb_up(2) - pert_up
+    bb_up_pert(3) = bb_up(3) - pert_up
+    call Cramer(AA_up,deriv_U_up_pert,bb_up_pert)
     call Cramer(AA_dn,deriv_U_dn,bb_dn)
 
-    deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn(1))
-    deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn(2))
-    deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn(3))
+    deriv_U(1) = 0.5d0*(deriv_U_up_pert(1) + deriv_U_dn(1))
+    deriv_U(2) = 0.5d0*(deriv_U_up_pert(2) + deriv_U_dn(2))
+    deriv_U(3) = 0.5d0*(deriv_U_up_pert(3) + deriv_U_dn(3))
 
 #if 0
     print *, ''
-    print *, 'In richards_common.F90, Line394'
+    print *, 'In richards_common.F90, Line396'
     print *, 'AA_up', AA_up(:,:)
-    print *, 'bb_up', bb_up(:)
+    print *, 'bb_up_pert', bb_up_pert(:)
     print *, 'AA_dn', AA_dn(:,:)
     print *, 'bb_dn', bb_dn(:)
-    print *, 'deriv_U_up', deriv_U_up(:)
+    print *, 'deriv_U_up_pert', deriv_U_up_pert(:)
     print *, 'deriv_U_dn', deriv_U_dn(:)
+    print *, 'deriv_U', deriv_U(:)
     ! stop
 #endif
 
@@ -410,32 +412,27 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                       option,v_darcy,res_pert_up,deriv_U)
 
     !wrj: Calculate the perturbed deriv_U for x_pert_dn
-    ! bb(1) = bb1_old
-    ! bb(1) = bb(1) + pert_up
-    bb_up(1) = bb_up(1) + pert_up
-    bb_up(2) = bb_up(2) + pert_up
-    bb_up(3) = bb_up(3) + pert_up
+    bb_dn_pert(1) = bb_dn(1) - pert_dn
+    bb_dn_pert(2) = bb_dn(2) - pert_dn
+    bb_dn_pert(3) = bb_dn(3) - pert_dn
 
-    bb_dn(1) = bb_dn(1) - pert_dn
-    bb_dn(2) = bb_dn(2) - pert_dn
-    bb_dn(3) = bb_dn(3) - pert_dn
-
-    call Cramer(AA_dn,deriv_U_dn,bb_dn)
     call Cramer(AA_up,deriv_U_up,bb_up)
+    call Cramer(AA_dn,deriv_U_dn_pert,bb_dn_pert)
 
-    deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn(1))
-    deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn(2))
-    deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn(3))
+    deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn_pert(1))
+    deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn_pert(2))
+    deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn_pert(3))
 
 #if 0
     print *, ''
-    print *, 'In richards_common.F90, Line424'
+    print *, 'In richards_common.F90, Line428'
     print *, 'AA_up', AA_up(:,:)
     print *, 'bb_up', bb_up(:)
     print *, 'AA_dn', AA_dn(:,:)
-    print *, 'bb_dn', bb_dn(:)
+    print *, 'bb_dn_pert', bb_dn_pert(:)
     print *, 'deriv_U_up', deriv_U_up(:)
-    print *, 'deriv_U_dn', deriv_U_dn(:)
+    print *, 'deriv_U_dn_pert', deriv_U_dn_pert(:)
+    print *, 'deriv_U', deriv_U(:)
     ! stop
 #endif
 
@@ -458,7 +455,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 0
   !wrj: Print Info
   print *, ''
-  print *, 'In richards_common.F90, Line453'
+  print *, 'In richards_common.F90, Line458'
   print *, 'x_up', x_up
   print *, 'x_dn', x_dn
   print *, 'x_pert_up', x_pert_up
@@ -474,7 +471,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
 #if 0
   !wrj: Print Info
   print *, ''
-  print *, 'In richards_common.F90, Line477'
+  print *, 'In richards_common.F90, Line474'
   print *, 'Jup -> numerical', Jup
   print *, 'Jdn -> numerical', Jdn
   ! stop
