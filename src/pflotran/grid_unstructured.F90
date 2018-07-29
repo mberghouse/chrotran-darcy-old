@@ -2933,7 +2933,7 @@ subroutine UGridPopulateConnection(unstructured_grid, connection, iface_cell, &
       connection%face_boundary_coeff(8,iconn) = vertex3%y - point%y
       connection%face_boundary_coeff(9,iconn) = vertex3%z - point%z
 
-#if 1
+#if 0
       print *, 'iconn', iconn
       print *, 'vertex1, vertex2, vertext3', vertex1%id, vertex2%id, vertex3%id
       print *, 'vertex1: x, y, z', vertex1%x, vertex1%y, vertex1%z

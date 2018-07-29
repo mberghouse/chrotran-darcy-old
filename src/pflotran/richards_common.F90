@@ -612,7 +612,7 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
                                     sir_dn, &
                                     area,dist,option, &
                                     characteristic_curves_dn, &
-                                    Jdn)
+                                    Jdn, deriv_U, AA, bb)
   ! 
   ! Computes the derivatives of the boundary flux
   ! terms for the Jacobian
@@ -674,6 +674,11 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
   PetscReal :: dq_lin,dP_lin
   PetscReal :: q_approx, dq_approx
   PetscErrorCode :: ierr
+
+  !wrj: Add new parameters
+  PetscReal :: deriv_U(3), AA(3,3), bb(3)
+  PetscReal :: deriv_U_pert(3), bb_pert(3)
+  PetscReal :: deriv_U_scalar
 
   v_darcy = 0.d0
   ukvr = 0.d0
@@ -844,6 +849,16 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
 
   Jdn(1,1) = (dq_dp_dn*density_ave+q*dden_ave_dp_dn)
 
+#if 0
+  !wrj: Print Info
+  print *, ''
+  print *, 'In richards_common.F90, Line859'
+  print *, 'Jdn -> analytical', Jdn
+#endif
+
+  !wrj: Add new option
+  option%flow%numerical_derivatives = PETSC_TRUE
+
   if (option%flow%numerical_derivatives) then
     call GlobalAuxVarInit(global_auxvar_pert_up,option)
     call GlobalAuxVarInit(global_auxvar_pert_dn,option)  
@@ -869,7 +884,7 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
                         rich_auxvar_dn,global_auxvar_dn, &
                         material_auxvar_dn, &
                         sir_dn, &
-                        area,dist,option,v_darcy,res)
+                        area,dist,option,v_darcy,res, deriv_U)
     if (pressure_bc_type == ZERO_GRADIENT_BC) then
       x_pert_up = x_up
     endif
@@ -893,12 +908,34 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
                                material_auxvar_pert_up, &
                                characteristic_curves_dn, &
                                option)
+
+    !wrj: Calculate the perturbed deriv_U for x_pert_dn
+    bb_pert(1) = bb(1) - pert_dn
+    bb_pert(2) = bb(2) - pert_dn
+    bb_pert(3) = bb(3) - pert_dn
+
+    call Cramer(AA,deriv_U_pert,bb_pert)
+
+    deriv_U(1) = deriv_U_pert(1)
+    deriv_U(2) = deriv_U_pert(2)
+    deriv_U(3) = deriv_U_pert(3)
+
+#if 0
+    print *, ''
+    print *, 'In richards_common.F90, Line917'
+    print *, 'AA', AA(:,:)
+    print *, 'bb_pert', bb_pert(:)
+    print *, 'deriv_U_pert', deriv_U_pert(:)
+    print *, 'deriv_U', deriv_U(:)
+    ! stop
+#endif
+
     call RichardsBCFlux(ibndtype,auxvars, &
                         rich_auxvar_pert_up,global_auxvar_pert_up, &
                         rich_auxvar_pert_dn,global_auxvar_pert_dn, &
                         material_auxvar_pert_dn, &
                         sir_dn, &
-                        area,dist,option,v_darcy,res_pert_dn)
+                        area,dist,option,v_darcy,res_pert_dn, deriv_U)
     J_pert_dn(1,ideriv) = (res_pert_dn(1)-res(1))/pert_dn
     Jdn = J_pert_dn
     call GlobalAuxVarStrip(global_auxvar_pert_up)
@@ -907,6 +944,14 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
     call MaterialAuxVarStrip(material_auxvar_pert_dn)
     deallocate(material_auxvar_pert_up,material_auxvar_pert_dn)
   endif
+
+#if 0
+  !wrj: Print Info
+  print *, ''
+  print *, 'In richards_common.F90, Line954'
+  print *, 'Jdn -> numerical', Jdn
+  ! stop
+#endif
 
 end subroutine RichardsBCFluxDerivative
 
@@ -917,7 +962,7 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
                           rich_auxvar_dn, global_auxvar_dn, &
                           material_auxvar_dn, &
                           sir_dn, &
-                          area, dist, option,v_darcy,Res)
+                          area, dist, option,v_darcy,Res,deriv_U)
   ! 
   ! Computes the  boundary flux terms for the residual
   ! 
@@ -959,6 +1004,10 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
   PetscReal :: dum1
   PetscReal :: q_approx, dq_approx
   PetscErrorCode :: ierr
+
+  !wrj: Add new parameters
+  PetscReal :: deriv_U(3)
+  PetscReal :: deriv_U_scalar
   
   fluxm = 0.d0
   v_darcy = 0.d0
@@ -1022,6 +1071,12 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
         
        if (ukvr*Dq>floweps) then
         v_darcy = Dq * ukvr * dphi
+
+        !wrj: Add new method
+        if (option%vertex_reconstruction) then
+        deriv_U_scalar = dot_product(deriv_U,dist(1:3))*(-1.0d0)
+        v_darcy = Dq * ukvr * deriv_U_scalar * dist(0)
+        endif
 
         ! If running with surface-flow model, ensure (darcy_velocity*dt) does
         ! not exceed depth of standing water.
@@ -1094,6 +1149,21 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
   fluxm = q*density_ave
 
   Res(1)=fluxm
+
+#if 0
+  !wrj: Print Info
+  print *, ''
+  print *, 'In richards_common.F90, Line1111'
+  print *, 'dphi', dphi
+  print *, 'deriv_U(:)', deriv_U(:)
+  print *, 'dist(0)', dist(0)
+  print *, 'deriv_U_scalar*dist(0)', deriv_U_scalar*dist(0)
+  print *, 'v_darcy', Dq*ukvr*dphi
+  print *, 'velocity', Dq*ukvr*deriv_U_scalar*dist(0)
+  print *, 'velocity new', perm_dn*ukvr*deriv_U_scalar
+  print *, 'perm_dn', perm_dn
+  ! stop
+#endif
 
 end subroutine RichardsBCFlux
 
