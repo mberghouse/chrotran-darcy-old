@@ -176,7 +176,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
                                   option, &
                                   characteristic_curves_up, &
                                   characteristic_curves_dn, &
-                                  Jup,Jdn, deriv_U, AA_up, AA_dn, bb_up, bb_dn)
+                                  Jup,Jdn, deriv_U, AA_up, AA_dn, bb_up, bb_dn, vol_coeff_up)
   ! 
   ! Computes the derivatives of the internal flux terms
   ! for the Jacobian
@@ -216,6 +216,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   PetscReal :: AA_up(3,3), AA_dn(3,3)
   PetscReal :: bb_up(3), bb_dn(3)
   PetscReal :: bb_up_pert(3), bb_dn_pert(3)
+  PetscReal :: vol_coeff_up, vol_coeff_dn
   
   PetscReal :: dden_ave_dp_up, dden_ave_dp_dn
   PetscReal :: dgravity_dden_up, dgravity_dden_dn
@@ -387,9 +388,10 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
     call Cramer(AA_up,deriv_U_up_pert,bb_up_pert)
     call Cramer(AA_dn,deriv_U_dn,bb_dn)
 
-    deriv_U(1) = 0.5d0*deriv_U_up_pert(1) + 0.5d0*deriv_U_dn(1)
-    deriv_U(2) = 0.5d0*deriv_U_up_pert(2) + 0.5d0*deriv_U_dn(2)
-    deriv_U(3) = 0.5d0*deriv_U_up_pert(3) + 0.5d0*deriv_U_dn(3)
+    vol_coeff_dn = 1.0d0 - vol_coeff_up
+    deriv_U(1) = vol_coeff_up*deriv_U_up_pert(1) + vol_coeff_dn*deriv_U_dn(1)
+    deriv_U(2) = vol_coeff_up*deriv_U_up_pert(2) + vol_coeff_dn*deriv_U_dn(2)
+    deriv_U(3) = vol_coeff_up*deriv_U_up_pert(3) + vol_coeff_dn*deriv_U_dn(3)
 
 #if 0
     print *, ''
@@ -419,9 +421,10 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
     call Cramer(AA_up,deriv_U_up,bb_up)
     call Cramer(AA_dn,deriv_U_dn_pert,bb_dn_pert)
 
-    deriv_U(1) = 0.5d0*deriv_U_up(1) + 0.5d0*deriv_U_dn_pert(1)
-    deriv_U(2) = 0.5d0*deriv_U_up(2) + 0.5d0*deriv_U_dn_pert(2)
-    deriv_U(3) = 0.5d0*deriv_U_up(3) + 0.5d0*deriv_U_dn_pert(3)
+    vol_coeff_dn = 1.0d0 - vol_coeff_up
+    deriv_U(1) = vol_coeff_up*deriv_U_up(1) + vol_coeff_dn*deriv_U_dn_pert(1)
+    deriv_U(2) = vol_coeff_up*deriv_U_up(2) + vol_coeff_dn*deriv_U_dn_pert(2)
+    deriv_U(3) = vol_coeff_up*deriv_U_up(3) + vol_coeff_dn*deriv_U_dn_pert(3)
 
 #if 0
     print *, ''

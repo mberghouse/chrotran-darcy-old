@@ -1504,6 +1504,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
   type(grid_unstructured_type), pointer :: unstructured_grid
   PetscReal :: up_pres_t, dn_pres_t
   PetscReal :: b_new
+  PetscReal :: vol_coeff_up, vol_coeff_dn
 
   PetscInt :: istart
   PetscInt :: local_id_up
@@ -1588,6 +1589,9 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
         enddo
       enddo
 
+      vol_coeff_up = cur_connection_set%face_internal_vol_coeff_up(iconn)
+      vol_coeff_dn = 1.0d0 - vol_coeff_up
+
       rho = global_auxvars(ghosted_id_up)%den(1)
       ! g = option%gravity(3)
       g = option%gravity(3)*(-1.0d0)
@@ -1630,9 +1634,9 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       call Cramer(A_up,deriv_U_up,b_up)
       call Cramer(A_dn,deriv_U_dn,b_dn)
 
-      deriv_U(1) = 0.5d0*deriv_U_up(1) + 0.5d0*deriv_U_dn(1)
-      deriv_U(2) = 0.5d0*deriv_U_up(2) + 0.5d0*deriv_U_dn(2)
-      deriv_U(3) = 0.5d0*deriv_U_up(3) + 0.5d0*deriv_U_dn(3)
+      deriv_U(1) = vol_coeff_up*deriv_U_up(1) + vol_coeff_dn*deriv_U_dn(1)
+      deriv_U(2) = vol_coeff_up*deriv_U_up(2) + vol_coeff_dn*deriv_U_dn(2)
+      deriv_U(3) = vol_coeff_up*deriv_U_up(3) + vol_coeff_dn*deriv_U_dn(3)
 
       endif
 
@@ -2544,6 +2548,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
   PetscReal :: v1_pres_t, v2_pres_t, v3_pres_t
   type(grid_unstructured_type), pointer :: unstructured_grid
   PetscReal :: up_pres_t, dn_pres_t
+  PetscReal :: vol_coeff_up, vol_coeff_dn
 
   patch => realization%patch
   grid => patch%grid
@@ -2615,6 +2620,9 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
         enddo
       enddo
 
+      vol_coeff_up = cur_connection_set%face_internal_vol_coeff_up(iconn)
+      vol_coeff_dn = 1.0d0 - vol_coeff_up
+
       rho = global_auxvars(ghosted_id_up)%den(1)
       g = option%gravity(3)*(-1.0d0)
       up_pres = global_auxvars(ghosted_id_up)%pres(1)
@@ -2647,9 +2655,9 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       call Cramer(AA_up,deriv_U_up,bb_up)
       call Cramer(AA_dn,deriv_U_dn,bb_dn)
 
-      deriv_U(1) = 0.5d0*deriv_U_up(1) + 0.5d0*deriv_U_dn(1)
-      deriv_U(2) = 0.5d0*deriv_U_up(2) + 0.5d0*deriv_U_dn(2)
-      deriv_U(3) = 0.5d0*deriv_U_up(3) + 0.5d0*deriv_U_dn(3)
+      deriv_U(1) = vol_coeff_up*deriv_U_up(1) + vol_coeff_dn*deriv_U_dn(1)
+      deriv_U(2) = vol_coeff_up*deriv_U_up(2) + vol_coeff_dn*deriv_U_dn(2)
+      deriv_U(3) = vol_coeff_up*deriv_U_up(3) + vol_coeff_dn*deriv_U_dn(3)
 
       endif
 
@@ -2679,7 +2687,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
                                   option,&
                                   patch%characteristic_curves_array(icap_up)%ptr, &
                                   patch%characteristic_curves_array(icap_dn)%ptr, &
-                                  Jup,Jdn, deriv_U, AA_up, AA_dn, bb_up, bb_dn)
+                                  Jup,Jdn, deriv_U, AA_up, AA_dn, bb_up, bb_dn, vol_coeff_up)
 
       if (local_id_up > 0) then
 
