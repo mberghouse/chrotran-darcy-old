@@ -2865,7 +2865,15 @@ subroutine UGridPopulateConnection(unstructured_grid, connection, iface_cell, &
         vertex_8(ivert)%x = unstructured_grid%vertices(vert_id)%x
         vertex_8(ivert)%y = unstructured_grid%vertices(vert_id)%y
         vertex_8(ivert)%z = unstructured_grid%vertices(vert_id)%z
+
+#if 0
+        print *, 'vertex_8(ivert)%x', vertex_8(ivert)%x
+        print *, 'vertex_8(ivert)%y', vertex_8(ivert)%y
+        print *, 'vertex_8(ivert)%z', vertex_8(ivert)%z
+#endif
+
       enddo
+
       v2 = UCellComputeCentroid(unstructured_grid%cell_type(ghosted_id), &
                                 vertex_8,option)
 ! Instead of connecting centroid with face center, calculate the shortest
@@ -2913,6 +2921,25 @@ subroutine UGridPopulateConnection(unstructured_grid, connection, iface_cell, &
       connection%intercp(3,iconn)= intercept%z
       connection%face_id(iconn)  = face_id
       
+      connection%face_boundary_coeff(1,iconn) = vertex1%x - point%x
+      connection%face_boundary_coeff(2,iconn) = vertex1%y - point%y
+      connection%face_boundary_coeff(3,iconn) = vertex1%z - point%z
+
+      connection%face_boundary_coeff(4,iconn) = vertex2%x - point%x
+      connection%face_boundary_coeff(5,iconn) = vertex2%y - point%y
+      connection%face_boundary_coeff(6,iconn) = vertex2%z - point%z
+
+      connection%face_boundary_coeff(7,iconn) = vertex3%x - point%x
+      connection%face_boundary_coeff(8,iconn) = vertex3%y - point%y
+      connection%face_boundary_coeff(9,iconn) = vertex3%z - point%z
+
+#if 0
+      print *, 'iconn', iconn
+      print *, 'vertex1, vertex2, vertext3', vertex1%id, vertex2%id, vertex3%id
+      print *, 'point', point%x, point%y, point%z
+      stop
+#endif
+
   end select
   
 end subroutine UGridPopulateConnection
