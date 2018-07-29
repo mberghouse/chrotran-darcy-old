@@ -387,9 +387,9 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
     call Cramer(AA_up,deriv_U_up_pert,bb_up_pert)
     call Cramer(AA_dn,deriv_U_dn,bb_dn)
 
-    deriv_U(1) = 0.5d0*(deriv_U_up_pert(1) + deriv_U_dn(1))
-    deriv_U(2) = 0.5d0*(deriv_U_up_pert(2) + deriv_U_dn(2))
-    deriv_U(3) = 0.5d0*(deriv_U_up_pert(3) + deriv_U_dn(3))
+    deriv_U(1) = 0.5d0*deriv_U_up_pert(1) + 0.5d0*deriv_U_dn(1)
+    deriv_U(2) = 0.5d0*deriv_U_up_pert(2) + 0.5d0*deriv_U_dn(2)
+    deriv_U(3) = 0.5d0*deriv_U_up_pert(3) + 0.5d0*deriv_U_dn(3)
 
 #if 0
     print *, ''
@@ -419,9 +419,9 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
     call Cramer(AA_up,deriv_U_up,bb_up)
     call Cramer(AA_dn,deriv_U_dn_pert,bb_dn_pert)
 
-    deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn_pert(1))
-    deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn_pert(2))
-    deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn_pert(3))
+    deriv_U(1) = 0.5d0*deriv_U_up(1) + 0.5d0*deriv_U_dn_pert(1)
+    deriv_U(2) = 0.5d0*deriv_U_up(2) + 0.5d0*deriv_U_dn_pert(2)
+    deriv_U(3) = 0.5d0*deriv_U_up(3) + 0.5d0*deriv_U_dn_pert(3)
 
 #if 0
     print *, ''

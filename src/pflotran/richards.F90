@@ -1630,9 +1630,9 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       call Cramer(A_up,deriv_U_up,b_up)
       call Cramer(A_dn,deriv_U_dn,b_dn)
 
-      deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn(1))
-      deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn(2))
-      deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn(3))
+      deriv_U(1) = 0.5d0*deriv_U_up(1) + 0.5d0*deriv_U_dn(1)
+      deriv_U(2) = 0.5d0*deriv_U_up(2) + 0.5d0*deriv_U_dn(2)
+      deriv_U(3) = 0.5d0*deriv_U_up(3) + 0.5d0*deriv_U_dn(3)
 
       endif
 
@@ -2647,9 +2647,9 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       call Cramer(AA_up,deriv_U_up,bb_up)
       call Cramer(AA_dn,deriv_U_dn,bb_dn)
 
-      deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn(1))
-      deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn(2))
-      deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn(3))
+      deriv_U(1) = 0.5d0*deriv_U_up(1) + 0.5d0*deriv_U_dn(1)
+      deriv_U(2) = 0.5d0*deriv_U_up(2) + 0.5d0*deriv_U_dn(2)
+      deriv_U(3) = 0.5d0*deriv_U_up(3) + 0.5d0*deriv_U_dn(3)
 
       endif
 
