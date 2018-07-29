@@ -1969,6 +1969,8 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
   PetscInt :: num_verts_local_tmp, max_cells_sharing_a_vertex
   PetscReal :: x, y, z, x_j, y_j, z_j, r_j
   PetscReal :: w_j, w_over_r, sum_w_over_r
+  type(point3d_type) :: vertex_8(8)
+  PetscReal :: vol_up, vol_dn
 
   PetscReal, allocatable :: face_internal_coeff(:,:)
   PetscReal :: detA
@@ -2632,6 +2634,35 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
         connections%intercp(2,iconn) = intercept%y
         connections%intercp(3,iconn) = intercept%z
 
+        !wrj: Compute tetrahedron volumes for vertex reconstruction
+        ghosted_id = connections%id_up(iconn)
+        do ivertex = 1, unstructured_grid%cell_vertices(0,ghosted_id)
+          vertex_id = unstructured_grid%cell_vertices(ivertex,ghosted_id)
+          vertex_8(ivertex)%x = &
+            unstructured_grid%vertices(vertex_id)%x
+          vertex_8(ivertex)%y = &
+            unstructured_grid%vertices(vertex_id)%y
+          vertex_8(ivertex)%z = &
+            unstructured_grid%vertices(vertex_id)%z
+        enddo
+        vol_up = UCellComputeVolume(unstructured_grid%cell_type( &
+                           ghosted_id),vertex_8,option)
+
+        ghosted_id = connections%id_dn(iconn)
+        do ivertex = 1, unstructured_grid%cell_vertices(0,ghosted_id)
+          vertex_id = unstructured_grid%cell_vertices(ivertex,ghosted_id)
+          vertex_8(ivertex)%x = &
+            unstructured_grid%vertices(vertex_id)%x
+          vertex_8(ivertex)%y = &
+            unstructured_grid%vertices(vertex_id)%y
+          vertex_8(ivertex)%z = &
+            unstructured_grid%vertices(vertex_id)%z
+        enddo
+        vol_dn = UCellComputeVolume(unstructured_grid%cell_type( &
+                           ghosted_id),vertex_8,option)
+
+        connections%face_internal_vol_coeff_up(iconn) = vol_up/(vol_up+vol_dn)
+
         !wrj: Add new face internal_coeff(:,:) for vertex reconstruction
         connections%face_internal_coeff_up(1,iconn) = point1%x - point_up%x
         connections%face_internal_coeff_up(2,iconn) = point1%y - point_up%y
@@ -2678,6 +2709,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
         print *, 'iconn, detA', iconn, detA
         print *, 'iconn, coeff_up(2,iconn)', iconn, connections%face_internal_coeff_up(2,iconn)
         print *, 'iconn, coeff_dn(2,iconn)', iconn, connections%face_internal_coeff_dn(2,iconn)
+        print *, 'iconn, vol_coeff_up(iconn)', iconn, connections%face_internal_vol_coeff_up(iconn)
         ! stop
         !wrj: Note: "LOCAL = 2" has been defined as constant in pflotran_constants.F90
         if (local_id == 2) then

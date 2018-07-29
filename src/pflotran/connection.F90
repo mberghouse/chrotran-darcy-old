@@ -30,6 +30,7 @@ module Connection_module
     !wrj: Add new parameters -> Note: It should be PetscReal type, not PetscInt type
     PetscReal, pointer :: face_internal_coeff_up(:,:)    ! coefficients for internal connection vertex reconstruction
     PetscReal, pointer :: face_internal_coeff_dn(:,:)    ! coefficients for internal connection vertex reconstruction
+    PetscReal, pointer :: face_internal_vol_coeff_up(:)  ! coefficients for internal connection vertex reconstruction
     PetscReal, pointer :: face_boundary_coeff(:,:)       ! coefficients for boundary connection vertex reconstruction
 
     type(connection_set_type), pointer :: next
@@ -95,6 +96,7 @@ function ConnectionCreate(num_connections,connection_itype)
 
   nullify(connection%face_internal_coeff_up)
   nullify(connection%face_internal_coeff_dn)
+  nullify(connection%face_internal_vol_coeff_up)
   nullify(connection%face_boundary_coeff)
 
   select case(connection_itype)
@@ -108,6 +110,7 @@ function ConnectionCreate(num_connections,connection_itype)
 
       allocate(connection%face_internal_coeff_up(9,num_connections))
       allocate(connection%face_internal_coeff_dn(9,num_connections))
+      allocate(connection%face_internal_vol_coeff_up(num_connections))
 
       connection%id_up = 0
       connection%id_dn = 0
@@ -118,6 +121,7 @@ function ConnectionCreate(num_connections,connection_itype)
 
       connection%face_internal_coeff_up = 0.0d0
       connection%face_internal_coeff_dn = 0.0d0
+      connection%face_internal_vol_coeff_up = 0.0d0
 
     case(BOUNDARY_CONNECTION_TYPE)
       allocate(connection%id_dn(num_connections))
@@ -314,6 +318,8 @@ subroutine ConnectionDestroy(connection)
 
   call DeallocateArray(connection%face_internal_coeff_up)
   call DeallocateArray(connection%face_internal_coeff_dn)
+  call DeallocateArray(connection%face_internal_vol_coeff_up)
+  call DeallocateArray(connection%face_boundary_coeff)
   
   nullify(connection%next)
   
