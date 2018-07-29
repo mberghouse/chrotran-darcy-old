@@ -2632,21 +2632,34 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
         connections%intercp(2,iconn) = intercept%y
         connections%intercp(3,iconn) = intercept%z
 
-        connections%face_internal_coeff(1,iconn) = point_dn%x - point_up%x
-        connections%face_internal_coeff(2,iconn) = point_dn%y - point_up%y
-        connections%face_internal_coeff(3,iconn) = point_dn%z - point_up%z
+        !wrj: Add new face internal_coeff(:,:) for vertex reconstruction
+        connections%face_internal_coeff_up(1,iconn) = point1%x - point_up%x
+        connections%face_internal_coeff_up(2,iconn) = point1%y - point_up%y
+        connections%face_internal_coeff_up(3,iconn) = point1%z - point_up%z
 
-        connections%face_internal_coeff(4,iconn) = 0.5d0*(point2%x+point3%x) - point1%x
-        connections%face_internal_coeff(5,iconn) = 0.5d0*(point2%y+point3%y) - point1%y
-        connections%face_internal_coeff(6,iconn) = 0.5d0*(point2%z+point3%z) - point1%z
+        connections%face_internal_coeff_up(4,iconn) = point2%x - point_up%x
+        connections%face_internal_coeff_up(5,iconn) = point2%y - point_up%y
+        connections%face_internal_coeff_up(6,iconn) = point2%z - point_up%z
 
-        connections%face_internal_coeff(7,iconn) = 0.5d0*(point3%x+point1%x) - point2%x
-        connections%face_internal_coeff(8,iconn) = 0.5d0*(point3%y+point1%y) - point2%y
-        connections%face_internal_coeff(9,iconn) = 0.5d0*(point3%z+point1%z) - point2%z
+        connections%face_internal_coeff_up(7,iconn) = point3%x - point_up%x
+        connections%face_internal_coeff_up(8,iconn) = point3%y - point_up%y
+        connections%face_internal_coeff_up(9,iconn) = point3%z - point_up%z
+
+        connections%face_internal_coeff_dn(1,iconn) = point1%x - point_dn%x
+        connections%face_internal_coeff_dn(2,iconn) = point1%y - point_dn%y
+        connections%face_internal_coeff_dn(3,iconn) = point1%z - point_dn%z
+
+        connections%face_internal_coeff_dn(4,iconn) = point2%x - point_dn%x
+        connections%face_internal_coeff_dn(5,iconn) = point2%y - point_dn%y
+        connections%face_internal_coeff_dn(6,iconn) = point2%z - point_dn%z
+
+        connections%face_internal_coeff_dn(7,iconn) = point3%x - point_dn%x
+        connections%face_internal_coeff_dn(8,iconn) = point3%y - point_dn%y
+        connections%face_internal_coeff_dn(9,iconn) = point3%z - point_dn%z
 
         do ii = 1, 3
           do jj = 1, 3
-            A(ii,jj) = connections%face_internal_coeff((ii-1)*3+jj,iconn)
+            A(ii,jj) = connections%face_internal_coeff_up((ii-1)*3+jj,iconn)
           enddo
         enddo
 
@@ -2661,9 +2674,10 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
         print *, 'p1', point1
         print *, 'p2', point2
         print *, 'p3', point3
-        print *, 'A', A(1,:)
+        print *, 'A(1,:)', A(1,:)
         print *, 'iconn, detA', iconn, detA
-        print *, 'iconn, coeff(2,iconn)', iconn, connections%face_internal_coeff(2,iconn)
+        print *, 'iconn, coeff_up(2,iconn)', iconn, connections%face_internal_coeff_up(2,iconn)
+        print *, 'iconn, coeff_dn(2,iconn)', iconn, connections%face_internal_coeff_dn(2,iconn)
         ! stop
         !wrj: Note: "LOCAL = 2" has been defined as constant in pflotran_constants.F90
         if (local_id == 2) then

@@ -1491,7 +1491,9 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
   !wrj: Add new parameters
   PetscReal, pointer :: vertex_pres(:)
-  PetscReal :: deriv_U(3), A(3,3), b(3)
+  PetscReal :: deriv_U_up(3), A_up(3,3), b_up(3)
+  PetscReal :: deriv_U_dn(3), A_dn(3,3), b_dn(3)
+  PetscReal :: deriv_U(3)
   PetscReal :: deriv_U_scalar
   PetscInt :: ii, jj
   PetscReal :: rho, g, dist0, dist3, dist_gravity, gravity
@@ -1570,13 +1572,18 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 #endif
 
       if (associated(unstructured_grid) .and. option%vertex_reconstruction) then
-      A(:,:) = 0.0d0
-      b(:) = 0.0d0
-      deriv_U(:) = 0.0d0
+      A_up(:,:) = 0.0d0
+      b_up(:) = 0.0d0
+      deriv_U_up(:) = 0.0d0
+
+      A_dn(:,:) = 0.0d0
+      b_dn(:) = 0.0d0
+      deriv_U_dn(:) = 0.0d0
 
       do ii = 1, 3
         do jj = 1, 3
-          A(ii,jj) = cur_connection_set%face_internal_coeff((ii-1)*3+jj,iconn)
+          A_up(ii,jj) = cur_connection_set%face_internal_coeff_up((ii-1)*3+jj,iconn)
+          A_dn(ii,jj) = cur_connection_set%face_internal_coeff_dn((ii-1)*3+jj,iconn)
         enddo
       enddo
 
@@ -1596,7 +1603,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
 
       ! b(1) = dn_pres - up_pres + gravity
       ! b_new = dn_pres_t - up_pres_t
-      b(1) = dn_pres_t - up_pres_t
+      ! b(1) = dn_pres_t - up_pres_t
 
       face_id = cur_connection_set%face_id(iconn)
       vertex_id1 = unstructured_grid%face_to_vertex(1,face_id)
@@ -1611,19 +1618,37 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr,vertex
       v2_pres_t = vertex_pres(vertex_id2) + rho*g*vertex_id2_z*FMWH2O
       v3_pres_t = vertex_pres(vertex_id3) + rho*g*vertex_id3_z*FMWH2O
 
-      b(2) = 0.5d0*(v2_pres_t + v3_pres_t) - v1_pres_t
-      b(3) = 0.5d0*(v3_pres_t + v1_pres_t) - v2_pres_t
+      b_up(1) = v1_pres_t - up_pres_t
+      b_up(2) = v2_pres_t - up_pres_t
+      b_up(3) = v3_pres_t - up_pres_t
 
-      call Cramer(A,deriv_U,b)
+      b_dn(1) = v1_pres_t - dn_pres_t
+      b_dn(2) = v2_pres_t - dn_pres_t
+      b_dn(3) = v3_pres_t - dn_pres_t
+
+      call Cramer(A_up,deriv_U_up,b_up)
+      call Cramer(A_dn,deriv_U_dn,b_dn)
+
+      deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn(1))
+      deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn(2))
+      deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn(3))
 
       endif
 
 #if 0
       print *, ''
       print *, 'v1, v2, v3', vertex_id1, vertex_id2, vertex_id3
-      print *, 'A(1,:)', A(1,:)
-      print *, 'b', b(:)
+      print *, 'A_up(1,:)', A_up(1,:)
+      print *, 'A_dn(1,:)', A_dn(1,:)
+      print *, 'b_up', b_up(:)
+      print *, 'b_dn', b_dn(:)
+      print *, 'deriv_U_up', deriv_U_up(:)
+      print *, 'deriv_U_dn', deriv_U_dn(:)
       print *, 'deriv_U', deriv_U(:)
+      ! stop
+#endif
+
+#if 0
       print *, 'rho', rho
       print *, 'FMWH2O', FMWH2O
       print *, 'rho*FMWH2O', rho*FMWH2O
@@ -2421,7 +2446,9 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
 
   !wrj: Add new parameters
   PetscReal, pointer :: vertex_pres(:)
-  PetscReal :: deriv_U(3), AA(3,3), bb(3)
+  PetscReal :: deriv_U_up(3), AA_up(3,3), bb_up(3)
+  PetscReal :: deriv_U_dn(3), AA_dn(3,3), bb_dn(3)
+  PetscReal :: deriv_U(3)
   PetscReal :: deriv_U_scalar
   PetscInt :: ii, jj
   PetscReal :: rho, g, dist0, dist3, dist_gravity, gravity
@@ -2487,13 +2514,18 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       icap_dn = patch%sat_func_id(ghosted_id_dn)
 
       if (associated(unstructured_grid) .and. option%vertex_reconstruction) then
-      AA(:,:) = 0.0d0
-      bb(:) = 0.0d0
-      deriv_U(:) = 0.0d0
+      AA_up(:,:) = 0.0d0
+      bb_up(:) = 0.0d0
+      deriv_U_up(:) = 0.0d0
+
+      AA_dn(:,:) = 0.0d0
+      bb_dn(:) = 0.0d0
+      deriv_U_dn(:) = 0.0d0
 
       do ii = 1, 3
         do jj = 1, 3
-          AA(ii,jj) = cur_connection_set%face_internal_coeff((ii-1)*3+jj,iconn)
+          AA_up(ii,jj) = cur_connection_set%face_internal_coeff_up((ii-1)*3+jj,iconn)
+          AA_dn(ii,jj) = cur_connection_set%face_internal_coeff_dn((ii-1)*3+jj,iconn)
         enddo
       enddo
 
@@ -2503,7 +2535,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       dn_pres = global_auxvars(ghosted_id_dn)%pres(1)
       up_pres_t = up_pres + rho*g*grid%z(local_id_up)*FMWH2O
       dn_pres_t = dn_pres + rho*g*grid%z(local_id_dn)*FMWH2O
-      bb(1) = dn_pres_t - up_pres_t
+      ! bb(1) = dn_pres_t - up_pres_t
 
       face_id = cur_connection_set%face_id(iconn)
       vertex_id1 = unstructured_grid%face_to_vertex(1,face_id)
@@ -2518,18 +2550,32 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
       v2_pres_t = vertex_pres(vertex_id2) + rho*g*vertex_id2_z*FMWH2O
       v3_pres_t = vertex_pres(vertex_id3) + rho*g*vertex_id3_z*FMWH2O
 
-      bb(2) = 0.5d0*(v2_pres_t + v3_pres_t) - v1_pres_t
-      bb(3) = 0.5d0*(v3_pres_t + v1_pres_t) - v2_pres_t
+      bb_up(1) = v1_pres_t - up_pres_t
+      bb_up(2) = v2_pres_t - up_pres_t
+      bb_up(3) = v3_pres_t - up_pres_t
 
-      call Cramer(AA,deriv_U,bb)
+      bb_dn(1) = v1_pres_t - dn_pres_t
+      bb_dn(2) = v2_pres_t - dn_pres_t
+      bb_dn(3) = v3_pres_t - dn_pres_t
+
+      call Cramer(AA_up,deriv_U_up,bb_up)
+      call Cramer(AA_dn,deriv_U_dn,bb_dn)
+
+      deriv_U(1) = 0.5d0*(deriv_U_up(1) + deriv_U_dn(1))
+      deriv_U(2) = 0.5d0*(deriv_U_up(2) + deriv_U_dn(2))
+      deriv_U(3) = 0.5d0*(deriv_U_up(3) + deriv_U_dn(3))
 
       endif
 
-#if 1
+#if 0
       print *, ''
       print *, 'In richards.F90, Line2523'
-      print *, 'AA(1,:)', AA(1,:)
-      print *, 'bb(:)', bb(:)
+      print *, 'AA_up(1,:)', AA_up(1,:)
+      print *, 'AA_dn(1,:)', AA_dn(1,:)
+      print *, 'bb_up(:)', bb_up(:)
+      print *, 'bb_dn(:)', bb_dn(:)
+      print *, 'deriv_U_up', deriv_U_up(:)
+      print *, 'deriv_U_dn', deriv_U_dn(:)
       print *, 'deriv_U', deriv_U(:)
       ! stop
 #endif
@@ -2547,7 +2593,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
                                   option,&
                                   patch%characteristic_curves_array(icap_up)%ptr, &
                                   patch%characteristic_curves_array(icap_dn)%ptr, &
-                                  Jup,Jdn, deriv_U, AA, bb)
+                                  Jup,Jdn, deriv_U, AA_up, AA_dn, bb_up, bb_dn)
 
       if (local_id_up > 0) then
 
@@ -2596,7 +2642,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr,vertex_pres)
     enddo
     cur_connection_set => cur_connection_set%next
   enddo
-  ! stop
+  !stop
 
   ! Regional Interior Flux Terms -----------------------------------
   if (option%inline_surface_flow) then
