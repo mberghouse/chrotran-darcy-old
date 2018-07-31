@@ -1315,6 +1315,14 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
       endif
       boundary_condition => boundary_condition%next
     enddo
+
+#if 1
+    !wrj: Print Vertex Info
+    do vertex_id = 1, unstructured_grid%num_vertices_local
+      print *, 'vertex_id, vertex_pres', vertex_id, vertex_pres(vertex_id)
+    enddo
+#endif
+
   endif
   ! stop
 
