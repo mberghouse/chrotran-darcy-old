@@ -60,7 +60,8 @@ module Option_module
     PetscInt :: liquid_phase
     PetscInt :: gas_phase
     PetscInt :: oil_phase
-    PetscInt, pointer :: phase_map(:)
+    PetscInt :: solvent_phase
+    PetscInt :: phase_map(MAX_PHASE)
     PetscInt :: nflowdof
     PetscInt :: nflowspec
     PetscInt :: nmechdof
@@ -145,7 +146,7 @@ module Option_module
     PetscInt :: idt_switch
     PetscReal :: reference_temperature
     PetscReal :: reference_pressure
-    PetscReal :: reference_density(2)
+    PetscReal :: reference_density(MAX_PHASE)
     PetscReal :: reference_porosity
     PetscReal :: reference_saturation
 
@@ -224,9 +225,6 @@ module Option_module
     PetscReal :: inline_surface_Mannings_coeff
     character(len=MAXSTRINGLENGTH) :: inline_surface_region_name
 
-    PetscReal :: debug_tol
-    PetscBool :: matcompare_reldiff
-    PetscBool :: use_GP
 
   end type option_type
 
@@ -277,7 +275,9 @@ module Option_module
   public :: OptionCreate, &
             OptionCheckCommandLine, &
             printErrMsg, &
+            PrintErrMsgToDev, &
             printErrMsgByRank, &
+            PrintErrMsgByRankToDev, &
             printWrnMsg, &
             printMsg, &
             printMsgAnyRank, &
@@ -286,8 +286,10 @@ module Option_module
             printErrMsgNoStopByRank, &
             printVerboseMsg, &
             OptionCheckTouch, &
+            OptionPrint, &
             OptionPrintToScreen, &
             OptionPrintToFile, &
+            OptionGetFIDs, &
             OptionInitRealization, &
             OptionMeanVariance, &
             OptionMaxMinMeanVariance, &
@@ -471,11 +473,14 @@ subroutine OptionInitRealization(option)
   option%itranmode = NULL_MODE
   option%ntrandof = 0
 
-  nullify(option%phase_map)
+  option%phase_map = UNINITIALIZED_INTEGER
+
   option%nphase = 0
-  option%liquid_phase = 0
-  option%oil_phase = 0
-  option%gas_phase = 0
+
+  option%liquid_phase  = UNINITIALIZED_INTEGER
+  option%oil_phase     = UNINITIALIZED_INTEGER
+  option%gas_phase     = UNINITIALIZED_INTEGER
+  option%solvent_phase = UNINITIALIZED_INTEGER
 
   option%air_pressure_id = 0
   option%capillary_pressure_id = 0
@@ -589,9 +594,6 @@ subroutine OptionInitRealization(option)
   option%inline_surface_Mannings_coeff = 0.02d0
   option%inline_surface_region_name    = ""
 
-  option%debug_tol = 1.d0
-  option%matcompare_reldiff = PETSC_FALSE
-  option%use_GP = PETSC_FALSE
 
 end subroutine OptionInitRealization
 
@@ -755,8 +757,6 @@ end subroutine printErrMsgByRank2
 
 ! ************************************************************************** !
 
-! ************************************************************************** !
-
 subroutine printErrMsgNoStopByRank1(option)
   !
   ! Prints the error message from processor with error along
@@ -800,6 +800,64 @@ subroutine printErrMsgNoStopByRank2(option,string)
   endif
 
 end subroutine printErrMsgNoStopByRank2
+
+! ************************************************************************** !
+
+subroutine PrintErrMsgToDev(string,option)
+  !
+  ! Prints the error message from p0, appends a request to submit input 
+  ! deck to pflotran-dev, and stops.  The reverse order of arguments is 
+  ! to avoid conflict with variants of PrintErrMsg()
+  !
+  ! Author: Glenn Hammond
+  ! Date: 07/26/18
+  !
+
+  implicit none
+
+  character(len=*) :: string
+  type(option_type) :: option
+
+  if (len_trim(string) > 0) then
+    option%io_buffer = trim(option%io_buffer) // &
+      ' Please email pflotran-dev@googlegroups.com and ' // &
+      trim(adjustl(string)) // '.'
+  else
+    option%io_buffer = trim(option%io_buffer) // &
+      ' Please email pflotran-dev@googlegroups.com.'
+  endif
+  call PrintErrMsg(option)
+
+end subroutine PrintErrMsgToDev
+
+! ************************************************************************** !
+
+subroutine PrintErrMsgByRankToDev(string,option)
+  !
+  ! Prints the error message from processor with error along
+  ! with rank. The reverse order of arguments is to avoid conflict with
+  ! variants of PrintErrMsg()
+  !
+  ! Author: Glenn Hammond
+  ! Date: 11/04/11
+  !
+
+  implicit none
+
+  character(len=*) :: string
+  type(option_type) :: option
+
+  if (len_trim(string) > 0) then
+    option%io_buffer = trim(option%io_buffer) // &
+      ' Please email pflotran-dev@googlegroups.com and ' // &
+      trim(adjustl(string)) // '.'
+  else
+    option%io_buffer = trim(option%io_buffer) // &
+      ' Please email pflotran-dev@googlegroups.com.'
+  endif
+  call PrintErrMsgByRank(option)
+
+end subroutine PrintErrMsgByRankToDev
 
 ! ************************************************************************** !
 
@@ -1079,6 +1137,53 @@ function OptionPrintToFile(option)
   endif
 
 end function OptionPrintToFile
+
+! ************************************************************************** !
+
+subroutine OptionPrint(string,option)
+  !
+  ! Determines whether printing to file should occur
+  !
+  ! Author: Glenn Hammond
+  ! Date: 01/29/09
+  !
+  use PFLOTRAN_Constants_module
+
+  implicit none
+
+  character(len=*) :: string
+  type(option_type) :: option
+
+  ! note that these flags can be toggled off specific time steps
+  if (option%print_screen_flag) then
+    write(STDOUT_UNIT,'(a)') trim(string)
+  endif
+  if (option%print_file_flag) then
+    write(option%fid_out,'(a)') trim(string)
+  endif
+
+end subroutine OptionPrint
+
+! ************************************************************************** !
+
+function OptionGetFIDs(option)
+  !
+  ! Determines whether printing to file should occur
+  !
+  ! Author: Glenn Hammond
+  ! Date: 01/29/09
+  !
+  implicit none
+
+  type(option_type) :: option
+
+  PetscInt :: OptionGetFIDs(2)
+
+  OptionGetFIDs = -1
+  if (OptionPrintToScreen(option)) OptionGetFIDs(1) = STDOUT_UNIT
+  if (OptionPrintToFile(option)) OptionGetFIDs(2) = option%fid_out
+
+end function OptionGetFIDs
 
 ! ************************************************************************** !
 
@@ -1363,8 +1468,19 @@ subroutine OptionCreateProcessorGroups(option,num_groups)
   PetscInt :: offset, delta, remainder
   PetscInt :: igroup
   PetscMPIInt :: mycolor_mpi, mykey_mpi
+  character(len=MAXWORDLENGTH) :: word
   PetscErrorCode :: ierr
 
+  if (num_groups > option%global_commsize) then
+    write(word,*) num_groups
+    option%io_buffer = 'The number of process groups (' // adjustl(word)
+    write(word,*) option%global_commsize
+    option%io_buffer = trim(option%io_buffer) // &
+      ') must be equal to or less than the number of processes (' // &
+      adjustl(word)
+    option%io_buffer = trim(option%io_buffer) // ').'
+    call printErrMsg(option)
+  endif
   local_commsize = option%global_commsize / num_groups
   remainder = option%global_commsize - num_groups * local_commsize
   offset = 0
@@ -1436,11 +1552,7 @@ subroutine OptionDestroy(option)
 
   call OptionFlowDestroy(option%flow)
   call OptionTransportDestroy(option%transport)
-  ! all kinds of stuff needs to be added here.
-  if (associated(option%phase_map) ) then
-    deallocate(option%phase_map)
-    nullify(option%phase_map)
-  end if
+
   ! all the below should be placed somewhere other than option.F90
 
   deallocate(option)

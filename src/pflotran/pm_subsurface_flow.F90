@@ -40,7 +40,7 @@ module PM_Subsurface_Flow_class
   contains
 !geh: commented out subroutines can only be called externally
     procedure, public :: Setup => PMSubsurfaceFlowSetup
-    procedure, public :: PMSubsurfaceFlowSetRealization
+    procedure, public :: SetRealization => PMSubsurfaceFlowSetRealization
     procedure, public :: InitializeRun => PMSubsurfaceFlowInitializeRun
 !    procedure, public :: FinalizeRun => PMSubsurfaceFlowFinalizeRun
 !    procedure, public :: InitializeTimestep => PMSubsurfaceFlowInitializeTimestep
@@ -136,6 +136,7 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
   use Input_Aux_module
   use String_module
   use Option_module
+  use AuxVars_Flow_module
  
   implicit none
   
@@ -189,6 +190,9 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
       call InputReadDouble(input,option,this%cfl_governor)
       call InputErrorMsg(input,option,'MAX_CFL',error_string)
 
+    case('MULTIPLE_CONTINUUM')
+      option%use_mc = PETSC_TRUE
+
     case('NUMERICAL_JACOBIAN')
       option%flow%numerical_derivatives = PETSC_TRUE
 
@@ -202,15 +206,15 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
     case('ANALYTICAL_JACOBIAN_COMPARE')
       option%flow%numerical_derivatives_compare = PETSC_TRUE
 
-    case('COMPARE_RELATIVE_DIFFERENCE')
-      option%matcompare_reldiff = PETSC_TRUE
-
     case('DEBUG_TOL')
-      call InputReadDouble(input,option,option%debug_tol)
+      call InputReadDouble(input,option,flow_aux_debug_tol)
       call InputErrorMsg(input,option,'DEBUG_TOL',error_string)
+    case('DEBUG_RELTOL')
+      call InputReadDouble(input,option,flow_aux_debug_reltol)
+      call InputErrorMsg(input,option,'DEBUG_RELTOL',error_string)
 
     case('GEOMETRIC_PENALTY')
-      option%use_GP= PETSC_TRUE
+      flow_aux_use_GP= PETSC_TRUE
 
     case default
       found = PETSC_FALSE
@@ -580,6 +584,8 @@ subroutine PMSubsurfaceFlowInitializeTimestepA(this)
   class(pm_subsurface_flow_type) :: this
 
   this%option%flow_dt = this%option%dt
+
+  call PMBasePrintHeader(this)
 
   if (this%store_porosity_for_ts_cut) then
     ! store base properties for reverting at time step cut

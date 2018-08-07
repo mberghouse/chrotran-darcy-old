@@ -61,6 +61,10 @@ module PMC_Base_class
     procedure, public :: GetAuxData
     procedure, public :: SetAuxData
     procedure, public :: CheckNullPM => PMCBaseCheckNullPM
+    procedure, public :: SetName
+    procedure, public :: SetOption
+    procedure, public :: SetCheckpointOption
+    procedure, public :: SetWaypointList
     !procedure, public :: SetChildPeerPtr => PMCBaseSetChildPeerPtr
   end type pmc_base_type
   
@@ -945,12 +949,19 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
   PetscBag :: bag
   PetscSizeT :: bagsize
   PetscLogDouble :: tstart, tend
+  PetscBool :: flag
   PetscErrorCode :: ierr
 
   bagsize = size(transfer(dummy_header,dummy_char))
 
   ! if the top PMC, 
   if (this%is_master) then
+    call PetscTestFile(this%option%restart_filename,'r',flag,ierr);CHKERRQ(ierr)
+    if (.not.flag) then
+      this%option%io_buffer = 'Restart file "' // &
+        trim(this%option%restart_filename) // '" not found.'
+      call PrintErrMsg(this%option)
+    endif
     this%option%io_buffer = 'Restarting with checkpoint file "' // &
       trim(this%option%restart_filename) // '".'
     call printMsg(this%option)
@@ -1001,7 +1012,7 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
         &is at or beyond the end of checkpointed simulation (' // &
         trim(adjustl(this%option%io_buffer)) // &
         trim(this%pm_list%realization_base%output_option%tunit) // ').'
-      call printErrMsg(this%option)
+      call printMsg(this%option)
     endif
     this%option%time = this%timestepper%target_time
   endif
@@ -1195,6 +1206,7 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
   ! 
   use Logging_module
   use hdf5
+  use HDF5_Aux_module
   use Checkpoint_module, only : CheckPointReadCompatibilityHDF5, &
                                 CheckpointOpenFileForReadHDF5
 
@@ -1223,7 +1235,6 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
 
   ! if the top PMC
   if (this%is_master) then
-
     this%option%io_buffer = 'Restarting with checkpoint file "' // &
       trim(this%option%restart_filename) // '".'
     call printMsg(this%option)
@@ -1238,8 +1249,7 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
     call CheckPointReadCompatibilityHDF5(h5_chk_grp_id, &
                                          this%option)
 
-    call h5gopen_f(h5_chk_grp_id, trim(this%name), &
-                   h5_pmc_grp_id, hdf5_err)
+    call HDF5GroupOpen(h5_chk_grp_id,this%name,h5_pmc_grp_id,this%option)
 
     ! read pmc header
     call PMCBaseGetHeaderHDF5(this, h5_pmc_grp_id, this%option)
@@ -1250,9 +1260,7 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
     chk_grp_id = h5_chk_grp_id 
   else
     h5_chk_grp_id = chk_grp_id
-    call h5gopen_f(h5_chk_grp_id, trim(this%name), &
-                   h5_pmc_grp_id, hdf5_err)
-
+    call HDF5GroupOpen(h5_chk_grp_id,this%name,h5_pmc_grp_id,this%option)
   endif
 
   if (associated(this%timestepper)) then
@@ -1292,8 +1300,7 @@ recursive subroutine PMCBaseRestartHDF5(this,chk_grp_id)
   cur_pm => this%pm_list
   do
     if (.not.associated(cur_pm)) exit
-    call h5gopen_f(h5_pmc_grp_id, trim(cur_pm%name), h5_pm_grp_id, &
-                   hdf5_err)
+    call HDF5GroupOpen(h5_pmc_grp_id,cur_pm%name,h5_pm_grp_id,this%option)
     call cur_pm%RestartHDF5(h5_pm_grp_id)
     call h5gclose_f(h5_pm_grp_id, hdf5_err)
     cur_pm => cur_pm%next
@@ -1609,6 +1616,83 @@ subroutine PMCBaseStrip(this)
   nullify(this%sim_aux)
 
 end subroutine PMCBaseStrip
+
+!    procedure, public :: SetName
+!    procedure, public ::
+!    procedure, public ::
+!    procedure, public ::
+
+! ************************************************************************** !
+
+subroutine SetName(this, name)
+  ! 
+  ! Sets name
+  ! 
+  ! Author: Gautam Bisht
+  ! Date: 06/11/18
+  ! 
+  implicit none
+  
+  class(pmc_base_type) :: this
+  character(len=*) :: name
+
+  this%name = name
+
+end subroutine SetName
+
+! ************************************************************************** !
+
+subroutine SetOption(this, option)
+  ! 
+  ! Sets option
+  ! 
+  ! Author: Gautam Bisht
+  ! Date: 06/11/18
+  ! 
+  implicit none
+  
+  class(pmc_base_type) :: this
+  type(option_type), pointer :: option
+
+  if (associated(option)) this%option => option
+
+end subroutine SetOption
+
+! ************************************************************************** !
+
+subroutine SetCheckpointOption(this, checkpoint_option)
+  ! 
+  ! Sets checkpoint option
+  ! 
+  ! Author: Gautam Bisht
+  ! Date: 06/11/18
+  ! 
+  implicit none
+  
+  class(pmc_base_type) :: this
+  type(checkpoint_option_type), pointer :: checkpoint_option
+
+  if (associated(checkpoint_option)) this%checkpoint_option => checkpoint_option
+
+end subroutine SetCheckpointOption
+
+! ************************************************************************** !
+
+subroutine SetWaypointList(this, waypoint_list)
+  ! 
+  ! Sets waypoint list
+  ! 
+  ! Author: Gautam Bisht
+  ! Date: 06/11/18
+  ! 
+  implicit none
+  
+  class(pmc_base_type) :: this
+  type(waypoint_list_type), pointer :: waypoint_list
+
+  if (associated(waypoint_list)) this%waypoint_list => waypoint_list
+
+end subroutine SetWaypointList
 
 ! ************************************************************************** !
 

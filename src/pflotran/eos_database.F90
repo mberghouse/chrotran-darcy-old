@@ -1091,7 +1091,7 @@ subroutine EOSTableRead(this,input,option)
             case('TEMPERATURE')
               n_temp_count = n_temp_count + 1
               if (n_temp_count > temp_array_size) then
-                call reallocateRealArray(temp_array,temp_array_size)
+                call ReallocateArray(temp_array,temp_array_size)
               end if
               call InputReadDouble(input,option,temp_array(n_temp_count))
               call InputErrorMsg(input,option,&
@@ -1245,7 +1245,7 @@ subroutine ReadPressureTable(input,option,press_idx,n_press,press_data_array)
     if ( press_idx > size_rank2 ) then
       !each time doubles the size of rank 2
       !tmp_array_size overwritten by new size
-      call reallocateRealArray(press_data_array,size_rank2)
+      call ReallocateArray(press_data_array,size_rank2)
     end if
     do i_data = 1, num_fields
       call InputReadDouble(input,option,press_data_array(i_data,press_idx))
@@ -1380,7 +1380,7 @@ end subroutine EOSPropTable
 ! ************************************************************************** !
 
 subroutine EOSPropGradTable(this,T,P,prop_iname,sample,dSampledT,dSampledP, &
-                            indices,ierr)
+                            ierr,indices)
   !
   ! Author: Paolo Orsini
   ! Date: 10/20/17
@@ -1407,7 +1407,7 @@ subroutine EOSPropGradTable(this,T,P,prop_iname,sample,dSampledT,dSampledP, &
   PetscReal, intent(out) :: dSampledT ! internal PFLOTRAN units ([Sample]/[C])
   PetscReal, intent(out) :: dSampledP ! internal PFLOTRAN units ([Sample]/[Pa])
   PetscErrorCode, intent(out) :: ierr
-  PetscInt, pointer, intent(inout) :: indices(:)
+  PetscInt, pointer,optional, intent(inout) :: indices(:)
 
   ierr = 0
 
@@ -1417,7 +1417,11 @@ subroutine EOSPropGradTable(this,T,P,prop_iname,sample,dSampledT,dSampledP, &
 
   if (this%lookup_table_gen%dim == ONE_INTEGER) then
 
-    this%lookup_table_gen%axis1%saved_index = indices(this%first_index)
+    if (present(indices) ) then
+      this%lookup_table_gen%axis1%saved_index = indices(this%first_index)
+    else
+      this%lookup_table_gen%axis1%saved_index = 1
+    endif
 
     call this%lookup_table_gen%SampleAndGradient(prop_iname,P)
     sample = this%lookup_table_gen%var_array(prop_iname)%ptr%sample
@@ -1426,21 +1430,31 @@ subroutine EOSPropGradTable(this,T,P,prop_iname,sample,dSampledT,dSampledP, &
     !must copy back the index because
     ! saved_index = indices(eos_table%first_index) is a copying operation not pointing
     ! saved_index should be a pointer to save two assigment operations (in/out)
-    indices(this%first_index) = this%lookup_table_gen%axis1%saved_index
+    if (present(indices) ) then
+      indices(this%first_index) = this%lookup_table_gen%axis1%saved_index
+    endif
   else if (this%lookup_table_gen%dim == TWO_INTEGER) then
 
-    this%lookup_table_gen%axis1%saved_index = indices(this%first_index)
-    this%lookup_table_gen%axis2%saved_index = indices(this%first_index+1)
-    this%lookup_table_gen%axis2%saved_index2 = indices(this%first_index+2)
-    
+    if (present(indices) ) then
+      this%lookup_table_gen%axis1%saved_index = indices(this%first_index)
+      this%lookup_table_gen%axis2%saved_index = indices(this%first_index+1)
+      this%lookup_table_gen%axis2%saved_index2 = indices(this%first_index+2)
+    else
+      this%lookup_table_gen%axis1%saved_index = 1
+      this%lookup_table_gen%axis2%saved_index = 1
+      this%lookup_table_gen%axis2%saved_index2 = 1
+    endif
+
     call this%lookup_table_gen%SampleAndGradient(prop_iname,T,P)
     sample = this%lookup_table_gen%var_array(prop_iname)%ptr%sample
     dSampledT = this%lookup_table_gen%var_array(prop_iname)%ptr%sample_grad(1)
     dSampledP = this%lookup_table_gen%var_array(prop_iname)%ptr%sample_grad(2)
 
-    indices(this%first_index) = this%lookup_table_gen%axis1%saved_index
-    indices(this%first_index+1)= this%lookup_table_gen%axis2%saved_index
-    indices(this%first_index+2) = this%lookup_table_gen%axis2%saved_index2
+    if (present(indices) ) then
+      indices(this%first_index) = this%lookup_table_gen%axis1%saved_index
+      indices(this%first_index+1)= this%lookup_table_gen%axis2%saved_index
+      indices(this%first_index+2) = this%lookup_table_gen%axis2%saved_index2
+    endif
   end if
 
 end subroutine EOSPropGradTable

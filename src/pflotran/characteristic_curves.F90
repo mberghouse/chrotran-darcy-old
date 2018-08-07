@@ -40,7 +40,8 @@ module Characteristic_Curves_module
             CharacteristicCurvesGetID, &
             CharCurvesGetGetResidualSats, &
             CharacteristicCurvesDestroy, &
-            CharCurvesInputRecord
+            CharCurvesInputRecord, &
+            GetCriticals
 
 contains
 
@@ -329,9 +330,8 @@ subroutine CharacteristicCurvesRead(this,input,option)
             option%io_buffer = 'PHASE has not been set for &
                                &CHARACTERISTIC_CURVES,PERMEABILITY_FUNCTION. &
                                &This is most likely a development issue, and &
-                               &not an input deck mistake. Please e-mail &
-                               &pflotran-dev@googlegroups.com.' 
-            call printErrMsg(option)
+                               &not an input deck mistake. '
+            call PrintErrMsgToDev('',option)
           case default
             call InputKeywordUnrecognized(word, &
               'PERMEABILITY_FUNCTION,PHASE',option)
@@ -1695,9 +1695,8 @@ function CharCurvesGetGetResidualSats(characteristic_curves,option)
         CharCurvesGetGetResidualSats(option%gas_phase) = rpf%Sr
       class default
         option%io_buffer = 'Relative permeability class not supported in &
-              &CharCurvesGetGetResidualSats. &
-              &Contact pflotran-dev@googlegroups.com'
-        call printErrMsg(option)
+              &CharCurvesGetGetResidualSats.'
+        call PrintErrMsgToDev('',option)
     end select
 
   end if
@@ -2580,6 +2579,40 @@ recursive subroutine CharacteristicCurvesDestroy(cc)
   nullify(cc)
   
 end subroutine CharacteristicCurvesDestroy
+
+subroutine GetCriticals(gg,ww,swcr,sgcr,sowcr,sogcr,swco)
+
+!------------------------------------------------------------------------------
+! Routine to obtain relative permeability endpoints
+!
+! input  : gg,ww           : Gas and water relative permeability data
+! output : swcr            : Critical water saturation
+! output : sgcr            : Critical gas saturation
+! output : sowcr           : Critical oil in water saturation
+! output : sogcr           : Critical oil in gas saturation
+! output : swco            : Connate water saturation
+!
+!------------------------------------------------------------------------------
+! Author: Dave Ponting
+! Date  : Jun 2018
+!------------------------------------------------------------------------------
+
+ class(rel_perm_func_owg_base_type), intent(in)::gg
+ class(rel_perm_func_owg_base_type), intent(in)::ww
+
+ PetscReal,intent(out)::swcr
+ PetscReal,intent(out)::sgcr
+ PetscReal,intent(out)::sowcr
+ PetscReal,intent(out)::sogcr
+ PetscReal,intent(out)::swco
+
+  swcr =ww%swcr
+  sgcr =gg%sgcr
+  sowcr=ww%socr
+  sogcr=gg%socr
+  swco =ww%swco
+
+end subroutine GetCriticals
 
 ! ************************************************************************** !
 

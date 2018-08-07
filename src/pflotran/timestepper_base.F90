@@ -199,11 +199,15 @@ subroutine TimestepperBaseInitializeRun(this,option)
   
   call this%PrintInfo(option)
   option%time = this%target_time
-  ! For the case where the second waypoint is a printout after the first time 
-  ! step, we must increment the waypoint beyond the first (time=0.) waypoint.  
-  ! Otherwise the second time step will be zero. - geh
-  if (this%cur_waypoint%time < 1.d-40) then
-    this%cur_waypoint => this%cur_waypoint%next
+  ! cur_waypoint may be null due to restart of a simulation that reached 
+  ! its final time
+  if (associated(this%cur_waypoint)) then 
+    ! For the case where the second waypoint is a printout after the 
+    ! first time step, we must increment the waypoint beyond the first 
+    ! (time=0.) waypoint. ! Otherwise the second time step will be zero. - geh
+    if (this%cur_waypoint%time < 1.d-40) then
+      this%cur_waypoint => this%cur_waypoint%next
+    endif
   endif
 
 end subroutine TimestepperBaseInitializeRun
@@ -255,37 +259,46 @@ subroutine TimestepperBaseProcessKeyword(this,input,option,keyword)
   type(input_type) :: input
   type(option_type) :: option
 
+  character(len=MAXSTRINGLENGTH) :: error_string
+
+  error_string = 'TIMESTEPPER'
+
   select case(trim(keyword))
 
     case('NUM_STEPS_AFTER_TS_CUT')
       call InputReadInt(input,option,this%constant_time_step_threshold)
       call InputErrorMsg(input,option,'num_constant_time_steps_after_ts_cut', &
-                         'TIMESTEPPER')
-    case('MAX_STEPS')
+                         error_string)
+    case('MAX_STEPS','MAXIMUM_NUMBER_OF_TIMESTEPS')
       call InputReadInt(input,option,this%max_time_step)
-      call InputErrorMsg(input,option,'max_time_step','TIMESTEPPER')
-    case('MAX_TS_CUTS')
+      call InputErrorMsg(input,option,'max_time_step',error_string)
+    case('MAX_TS_CUTS','MAXIMUM_CONSECUTIVE_TS_CUTS')
       call InputReadInt(input,option,this%max_time_step_cuts)
-      call InputErrorMsg(input,option,'max_time_step_cuts','TIMESTEPPER')
+      call InputErrorMsg(input,option,'max_time_step_cuts',error_string)
     case('MAX_NUM_CONTIGUOUS_REVERTS')
       call InputReadInt(input,option,this%max_num_contig_revert)
-      call InputErrorMsg(input,option,'max_num_contig_reverts','TIMESTEPPER')
+      call InputErrorMsg(input,option,'max_num_contig_reverts',error_string)
+    case('TIMESTEP_MINIMUM_SIZE')
+      call InputReadDouble(input,option,this%dt_min)
+      call InputErrorMsg(input,option,keyword,error_string)
+      call InputReadAndConvertUnits(input,this%dt_min,'sec', &
+                                    trim(error_string)//','//keyword,option)
     case('TIMESTEP_REDUCTION_FACTOR')
       call InputReadDouble(input,option,this%time_step_reduction_factor)
-      call InputErrorMsg(input,option,'timestep reduction factor','TIMESTEPPER')
+      call InputErrorMsg(input,option,'timestep reduction factor',error_string)
     case('TIMESTEP_MAXIMUM_GROWTH_FACTOR')
       call InputReadDouble(input,option,this%time_step_max_growth_factor)
       call InputErrorMsg(input,option,'timestep maximum growth factor', &
-                         'TIMESTEPPER')
-    case('TIMESTEP_OVERSTEP_TOLERANCE')
+                         error_string)
+    case('TIMESTEP_OVERSTEP_REL_TOLERANCE')
       call InputReadDouble(input,option,this%time_step_tolerance)
       call InputErrorMsg(input,option,'timestep overstep tolerance', &
-                         'TIMESTEPPER')
+                         error_string)
     case('INITIALIZE_TO_STEADY_STATE')
       this%init_to_steady_state = PETSC_TRUE
       call InputReadDouble(input,option,this%steady_state_rel_tol)
       call InputErrorMsg(input,option,'steady state convergence relative &
-                         &tolerance','TIMESTEPPER')
+                         &tolerance',error_string)
     case('RUN_AS_STEADY_STATE')
       this%run_as_steady_state = PETSC_TRUE
     case('PRINT_EKG')
@@ -299,7 +312,7 @@ subroutine TimestepperBaseProcessKeyword(this,input,option,keyword)
         &deprecated in TIMESTEPPER and moved to the FLOW PM OPTIONS block.'
       call printErrMsg(option)
     case default
-      call InputKeywordUnrecognized(keyword,'TIMESTEPPER',option)
+      call InputKeywordUnrecognized(keyword,error_string,option)
   end select
 
 end subroutine TimestepperBaseProcessKeyword
@@ -575,45 +588,30 @@ subroutine TimestepperBasePrintInfo(this,option)
   ! 
 
   use Option_module
+  use String_module
   
   implicit none
   
   class(timestepper_base_type) :: this
   type(option_type) :: option
 
-  character(len=MAXSTRINGLENGTH) :: string
-  
-  if (OptionPrintToScreen(option)) then
-    write(*,*) 
-    write(*,'(a)') trim(this%name) // ' Time Stepper'
-    write(string,*) this%max_time_step
-    write(*,'("max steps:",x,a)') trim(adjustl(string))
-    write(string,*) this%constant_time_step_threshold
-    write(*,'("max constant cumulative time steps:",x,a)') &
-      trim(adjustl(string))
-    write(string,*) this%max_time_step_cuts
-    write(*,'("max cuts:",x,a)') trim(adjustl(string))
-    write(string,*) this%time_step_reduction_factor
-    write(*,'("ts reduction factor:",x,a)') trim(adjustl(string))
-    write(string,*) this%time_step_max_growth_factor
-    write(*,'("ts maximum growth factor:",x,a)') trim(adjustl(string))
-  endif
-  if (OptionPrintToFile(option)) then
-    write(option%fid_out,*) 
-    write(option%fid_out,'(a)') trim(this%name) // ' Time Stepper'
-    write(string,*) this%max_time_step
-    write(option%fid_out,'("max steps:",x,a)') trim(adjustl(string))
-    write(string,*) this%constant_time_step_threshold
-    write(option%fid_out,'("max constant cumulative time steps:",x,a)') &
-      trim(adjustl(string))
-    write(string,*) this%max_time_step_cuts
-    write(option%fid_out,'("max cuts:",x,a)') trim(adjustl(string))
-    write(string,*) this%time_step_reduction_factor
-    write(option%fid_out,'("ts reduction factor:",x,a)') trim(adjustl(string))
-    write(string,*) this%time_step_max_growth_factor
-    write(option%fid_out,'("ts maximum growth factor:",x,a)') &
-      trim(adjustl(string))
-  endif    
+  PetscInt :: fids(2)
+  character(len=MAXSTRINGLENGTH) :: strings(10)
+
+  fids = OptionGetFIDs(option)
+  ! header is printed in daughter class
+  strings(:) = ''
+  strings(1) = 'maximum number of steps: ' // StringWrite(this%max_time_step)
+  strings(2) = 'constant time steps threshold: ' // &
+                              StringWrite(this%constant_time_step_threshold)
+  strings(3) = 'maximum number of cuts: ' // &
+                                        StringWrite(this%max_time_step_cuts)
+  strings(4) = 'reduction factor: ' // &
+                                StringWrite(this%time_step_reduction_factor)
+  strings(5) = 'maximum growth factor: ' // &
+                               StringWrite(this%time_step_max_growth_factor)
+  call StringsCenter(strings,30,':')
+  call StringWriteToUnits(fids,strings)
 
 end subroutine TimestepperBasePrintInfo
 

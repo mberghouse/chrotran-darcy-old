@@ -216,8 +216,7 @@ subroutine DatasetCommonHDF5ReadSelectCase(this,input,keyword,found,option)
       call InputReadWord(input,option,this%hdf5_dataset_name,PETSC_TRUE)
       call InputErrorMsg(input,option,'hdf5_dataset_name','DATASET')
     case('FILENAME') 
-      call InputReadNChars(input,option,this%filename, &
-                            MAXSTRINGLENGTH,PETSC_TRUE)
+      call InputReadFilename(input,option,this%filename)
       call InputErrorMsg(input,option,'name','DATASET')
     case('REALIZATION_DEPENDENT')
       this%realization_dependent = PETSC_TRUE
@@ -308,8 +307,7 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
     if (h5fopen_err == 0) then
       option%io_buffer = 'Opening hdf5 group: ' // trim(dataset_name)
       call printMsg(option)
-      call h5gopen_f(file_id,dataset_name,grp_id,hdf5_err)
-
+      call HDF5GroupOpen(file_id,dataset_name,grp_id,option)
       attribute_name = "Time Units"
       call H5aexists_f(grp_id,attribute_name,attribute_exists,hdf5_err)
       if (attribute_exists) then

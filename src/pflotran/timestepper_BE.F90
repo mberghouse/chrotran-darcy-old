@@ -282,7 +282,6 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
   PetscLogDouble :: log_end_time
   PetscInt :: num_newton_iterations
   PetscInt :: num_linear_iterations
-  PetscInt :: num_linear_iterations2
   PetscInt :: sum_newton_iterations
   PetscInt :: sum_linear_iterations
   PetscInt :: sum_wasted_linear_iterations
@@ -389,7 +388,7 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
       call printMsg(option)
       if (snes_reason < SNES_CONVERGED_ITERATING) then
         call SolverNewtonPrintFailedReason(solver,option)
-        if (solver%verbose_error_msg) then
+        if (solver%verbose_logging) then
           select case(snes_reason)
             case(SNES_DIVERGED_FNORM_NAN)
               ! attempt to find cells with NaNs.
@@ -401,11 +400,6 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
                                              discretization%grid,option)
           end select
         endif
-        call KSPGetIterationNumber(solver%ksp,num_linear_iterations2, &
-                                   ierr);CHKERRQ(ierr)
-        sum_wasted_linear_iterations = sum_wasted_linear_iterations + &
-          num_linear_iterations2
-        sum_linear_iterations = sum_linear_iterations + num_linear_iterations2
       endif
 
       this%target_time = this%target_time + this%dt
@@ -794,6 +788,7 @@ subroutine TimestepperBERestartHDF5(this, chk_grp_id, option)
   !
   use Option_module
   use hdf5
+  use HDF5_Aux_module
   use Checkpoint_module, only : CheckPointReadIntDatasetHDF5
   use Checkpoint_module, only : CheckPointReadRealDatasetHDF5
 
@@ -830,7 +825,7 @@ subroutine TimestepperBERestartHDF5(this, chk_grp_id, option)
 
   string = "Timestepper"
   h5_chk_grp_id = chk_grp_id
-  call h5gopen_f(h5_chk_grp_id, string, timestepper_grp_id, hdf5_err)
+  call HDF5GroupOpen(h5_chk_grp_id,string,timestepper_grp_id,option)
 
   allocate(start(1))
   allocate(dims(1))
@@ -983,12 +978,38 @@ subroutine TimestepperBEPrintInfo(this,option)
   ! Date: 12/04/14
   ! 
   use Option_module
+  use String_module
 
   implicit none
 
   class(timestepper_BE_type) :: this
   type(option_type) :: option
-  
+
+  PetscInt :: fids(2)
+  PetscInt :: i
+  character(len=MAXSTRINGLENGTH), allocatable :: strings(:)
+
+  fids = OptionGetFIDs(option)
+  call StringWriteToUnits(fids,' ')
+  call StringWriteToUnits(fids,trim(this%name) // ' Time Stepper')
+
+  ! have to allocate since ntfac can be infinite
+  allocate(strings(this%ntfac+20))
+  strings = '' 
+  strings(1) = 'acceleration: ' // &
+                           StringWrite(String1Or2(this%iaccel>0,'on','off'))
+  if (this%iaccel > 0) then
+    strings(2) = 'acceleration threshold: ' // StringWrite(this%iaccel)
+  endif
+  strings(3) = 'number of ramp entries: ' // StringWrite(this%iaccel)
+  do i = 1, this%ntfac
+    strings(i+3) = 'ramp entry #' // trim(StringWrite(i)) // ': ' // &
+                   StringWriteF(this%tfac(i))
+  enddo
+  call StringsCenter(strings,30,':')
+  call StringWriteToUnits(fids,strings)
+  deallocate(strings)
+
   call TimestepperBasePrintInfo(this,option)
   call SolverPrintNewtonInfo(this%solver,this%name,option)
   call SolverPrintLinearInfo(this%solver,this%name,option)
