@@ -860,11 +860,13 @@ end subroutine co2den
 
 ! ************************************************************************** !
 
-      PetscReal function psi(i,del2,tau2)
+      function psi(i,del2,tau2)
       implicit none
 !     PetscReal :: psi
 !     PetscReal aco2(4),bco2(4),capa(5),capb(5),capc(5),capd(5)
+      PetscReal :: psi
       PetscReal :: del2,tau2
+
       PetscInt :: i
 !     common/params3/aco2,bco2,capa,capb,capc,capd
 

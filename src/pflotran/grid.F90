@@ -1251,7 +1251,7 @@ end subroutine GridCreateNaturalToGhostedHash
 
 ! ************************************************************************** !
 
-PetscInt function GridGetLocalIdFromNaturalId(grid,natural_id)
+function GridGetLocalIdFromNaturalId(grid,natural_id)
   ! 
   ! GetLocalIdFromNaturalId: Returns the local id corresponding to a natural
   ! id or 0, if the natural id is off-processor
@@ -1263,8 +1263,8 @@ PetscInt function GridGetLocalIdFromNaturalId(grid,natural_id)
 
   implicit none
 
+  PetscInt :: GridGetLocalIdFromNaturalId
   type(grid_type) :: grid
-
   PetscInt :: natural_id, local_id
   
   do local_id = 1, grid%nlmax
@@ -1279,7 +1279,7 @@ end function GridGetLocalIdFromNaturalId
 
 ! ************************************************************************** !
 
-PetscInt function GridGetLocalGhostedIdFromNatId(grid,natural_id)
+function GridGetLocalGhostedIdFromNatId(grid,natural_id)
   ! 
   ! Returns the local ghosted id corresponding
   ! to a natural id or 0, if the natural id
@@ -1292,6 +1292,7 @@ PetscInt function GridGetLocalGhostedIdFromNatId(grid,natural_id)
 
   implicit none
 
+  PetscInt :: GridGetLocalGhostedIdFromNatId
   type(grid_type) :: grid
   PetscInt :: natural_id
   
@@ -1310,7 +1311,7 @@ end function GridGetLocalGhostedIdFromNatId
 
 ! ************************************************************************** !
 
-PetscInt function GridGetLocalGhostedIdFromHash(grid,natural_id)
+function GridGetLocalGhostedIdFromHash(grid,natural_id)
   ! 
   ! Returns the local ghosted id of a natural
   ! id, if it exists.  Otherwise 0 is returned
@@ -1321,6 +1322,7 @@ PetscInt function GridGetLocalGhostedIdFromHash(grid,natural_id)
 
   implicit none
 
+  PetscInt :: GridGetLocalGhostedIdFromHash
   type(grid_type) :: grid
   PetscInt :: natural_id
   

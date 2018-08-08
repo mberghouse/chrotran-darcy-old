@@ -327,10 +327,10 @@ end subroutine initialize_sw_interp
 
 ! ************************************************************************** !
 
-PetscReal function co2_prop_spwag(ip,it,iv)
+function co2_prop_spwag(ip,it,iv)
      implicit none 
- !    PetscReal co2_prop_spwag
-     PetscInt ip,it,iv
+     PetscReal :: co2_prop_spwag
+     PetscInt :: ip,it,iv
       
       
       if (ifinetable)then
