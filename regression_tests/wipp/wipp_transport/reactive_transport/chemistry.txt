@@ -35,7 +35,7 @@ CHEMISTRY
       RATE_CONSTANT  0.d0
     /
   /
-  DATABASE ../wipp_nuts.dat
+  DATABASE ./wipp_nuts.dat
   LOG_FORMULATION
   ACTIVITY_COEFFICIENTS OFF
   OUTPUT
