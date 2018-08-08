@@ -1575,7 +1575,7 @@ end subroutine ReactionInterpolateLogK_hpt
 
 ! ************************************************************************** !
 
-PetscReal function logkeh(tk)
+function logkeh(tk)
   ! 
   ! Function logkeh: Maier-Kelly fit to equilibrium constant half-cell reaction
   ! 2 H2O - 4 H+ - 4 e- = O2, to compute Eh and pe.
@@ -1586,6 +1586,7 @@ PetscReal function logkeh(tk)
 
   implicit none
 
+  PetscReal :: logkeh
   PetscReal, intent(in) :: tk
 
   PetscReal, parameter :: cm1 = 6.745529048112373d0

@@ -68,7 +68,7 @@ contains
 
 ! ************************************************************************** !
 
-PetscBool function StringCompare1(string1,string2,n)
+function StringCompare1(string1,string2,n)
   ! 
   ! compares two strings
   ! 
@@ -78,8 +78,11 @@ PetscBool function StringCompare1(string1,string2,n)
 
   implicit none
 
-  PetscInt :: i, n
+  PetscBool :: StringCompare1
+  PetscInt :: n
   character(len=n) :: string1, string2
+
+  PetscInt :: i
   
   do i=1,n
     if (string1(i:i) /= string2(i:i)) then
@@ -95,7 +98,7 @@ end function StringCompare1
 
 ! ************************************************************************** !
 
-PetscBool function StringCompare2(string1,string2)
+function StringCompare2(string1,string2)
   ! 
   ! compares two strings
   ! 
@@ -105,8 +108,10 @@ PetscBool function StringCompare2(string1,string2)
 
   implicit none
 
-  PetscInt :: i, length1, length2
+  PetscBool :: StringCompare2
   character(len=*) :: string1, string2
+
+  PetscInt :: i, length1, length2
   
   length1 = len_trim(string1)
   length2 = len_trim(string2)
