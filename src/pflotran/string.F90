@@ -844,7 +844,7 @@ end function StringWriteES
 
 ! ************************************************************************** !
 
-function StringWriteF(f)
+function StringWriteF(f,decimal_places)
   ! 
   ! Writes a double precision number in floating point notaton to a string
   ! 
@@ -856,9 +856,12 @@ function StringWriteF(f)
  
   character(len=MAXSTRINGLENGTH) :: StringWriteF
 
+  character(len=MAXWORDLENGTH) :: format_string
   PetscReal :: f
+  PetscInt :: decimal_places
 
-  write(StringWriteF,'(f20.4)') f
+  format_string = '(f20.' // trim(StringWrite(decimal_places)) // ')'
+  write(StringWriteF,format_string) f
   StringWriteF = adjustl(StringWriteF)
  
 end function StringWriteF

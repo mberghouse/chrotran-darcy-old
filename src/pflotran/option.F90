@@ -272,6 +272,11 @@ module Option_module
     module procedure OptionInitMPI2
   end interface
 
+  interface OptionPrint
+    module procedure OptionPrint1
+    module procedure OptionPrint2
+  end interface
+
   public :: OptionCreate, &
             OptionCheckCommandLine, &
             printErrMsg, &
@@ -1140,7 +1145,34 @@ end function OptionPrintToFile
 
 ! ************************************************************************** !
 
-subroutine OptionPrint(string,option)
+subroutine OptionPrint1(string_format,string,option)
+  !
+  ! Determines whether printing to file should occur
+  !
+  ! Author: Glenn Hammond
+  ! Date: 01/29/09
+  !
+  use PFLOTRAN_Constants_module
+
+  implicit none
+
+  character(len=*) :: string_format
+  character(len=*) :: string
+  type(option_type) :: option
+
+  ! note that these flags can be toggled off specific time steps
+  if (option%print_screen_flag) then
+    write(STDOUT_UNIT,string_format) trim(string)
+  endif
+  if (option%print_file_flag) then
+    write(option%fid_out,string_format) trim(string)
+  endif
+
+end subroutine OptionPrint1
+
+! ************************************************************************** !
+
+subroutine OptionPrint2(string,option)
   !
   ! Determines whether printing to file should occur
   !
@@ -1154,15 +1186,9 @@ subroutine OptionPrint(string,option)
   character(len=*) :: string
   type(option_type) :: option
 
-  ! note that these flags can be toggled off specific time steps
-  if (option%print_screen_flag) then
-    write(STDOUT_UNIT,'(a)') trim(string)
-  endif
-  if (option%print_file_flag) then
-    write(option%fid_out,'(a)') trim(string)
-  endif
+  call OptionPrint('(a)',string,option)
 
-end subroutine OptionPrint
+end subroutine OptionPrint2
 
 ! ************************************************************************** !
 

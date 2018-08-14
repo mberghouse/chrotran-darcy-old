@@ -355,11 +355,9 @@ subroutine PMBasePrintHeader(this)
     print *, 'header name needs to be set for PMBaseInitializeTimestep'
     stop
   endif
-  string = '(2("=")," ' // trim(this%header) // ' ",' // &
-           trim(StringWrite(80-len_trim(this%header)-4)) // '("="))'
-  write(string,string)
-  call OptionPrint('',this%option)
-  call OptionPrint(string,this%option)
+  string = '(/,2("=")," ' // trim(this%header) // ' ",' // &
+           trim(StringWrite(80-len_trim(this%header)-4)) // '("="),a)'
+  call OptionPrint(string,'',this%option)
 
 end subroutine PMBasePrintHeader
 

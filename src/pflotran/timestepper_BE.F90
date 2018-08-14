@@ -23,6 +23,8 @@ module Timestepper_BE_class
     PetscInt :: cumulative_wasted_linear_iterations
 
     PetscInt :: iaccel        ! Accelerator index
+    PetscInt :: cum_iaccel_violations_ts ! number of ts that violate iaccel
+    PetscInt :: cum_iaccel_violations_ni ! number of newton iterations that violate iaccel
     ! An array of multiplicative factors that specify how to increase time step.
     PetscReal, pointer :: tfac(:)
     PetscInt :: ntfac             ! size of tfac
@@ -121,6 +123,8 @@ subroutine TimestepperBEInit(this)
   this%cumulative_newton_iterations = 0
   this%cumulative_linear_iterations = 0
   this%cumulative_wasted_linear_iterations = 0
+  this%cum_iaccel_violations_ts = 0
+  this%cum_iaccel_violations_ni = 0
 
   this%iaccel = 5
   this%ntfac = 13
@@ -236,6 +240,13 @@ subroutine TimestepperBEUpdateDT(this,process_model)
   endif
     
   if (update_time_step .and. this%iaccel /= 0) then
+
+    if (this%iaccel > 0 .and. &
+        this%num_newton_iterations >= this%iaccel) then
+      this%cum_iaccel_violations_ts = this%cum_iaccel_violations_ts + 1
+      this%cum_iaccel_violations_ni = this%cum_iaccel_violations_ni + &
+                              (this%num_newton_iterations - this%iaccel + 1)
+    endif
       
     call process_model%UpdateTimestep(this%dt, &
                                       this%dt_min, &
@@ -263,6 +274,7 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
   use petscsnes
   use PM_Base_class
   use Option_module
+  use String_module
   use Output_module, only : Output, OutputFindNaNOrInfInVec
   use Output_EKG_module, only : IUNIT_EKG
   
@@ -286,6 +298,7 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
   PetscInt :: sum_linear_iterations
   PetscInt :: sum_wasted_linear_iterations
   character(len=MAXWORDLENGTH) :: tunit
+  character(len=MAXSTRINGLENGTH) :: out_string
   PetscReal :: tconv
   PetscReal :: fnorm, inorm, scaled_fnorm
   PetscBool :: snapshot_plot_flag, observation_plot_flag, massbal_plot_flag
@@ -430,44 +443,43 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
                        PETSC_NULL_INTEGER,ierr);CHKERRQ(ierr)
   call VecNorm(residual_vec,NORM_2,fnorm,ierr);CHKERRQ(ierr)
   call VecNorm(residual_vec,NORM_INFINITY,inorm,ierr);CHKERRQ(ierr)
-  if (option%print_screen_flag) then
-      write(*, '(/," Step ",i6," Time= ",1pe12.5," Dt= ",1pe12.5, &
-           & " [",a,"]", " snes_conv_reason: ",i4,/,"  newton = ",i3, &
-           & " [",i8,"]", " linear = ",i5," [",i10,"]"," cuts = ",i2, &
-           & " [",i4,"]")') &
+  write(out_string,'("Step ",i6," Time= ",1pe12.5," Dt= ",1pe12.5, &
+           & " [",a,"]", " snes_conv_reason: ",i4)') &
            this%steps, &
            this%target_time/tconv, &
            this%dt/tconv, &
-           trim(tunit),snes_reason,sum_newton_iterations, &
+           trim(tunit),snes_reason
+  call OptionPrint('(/,a)',out_string,option)
+#if 0
+  write(out_string,'("  newton = ",i3," [",i8,"]"," linear = ",i5, & 
+                  & " [",i10,"]"," cuts = ",i2," [",i4,"]")') &
+           sum_newton_iterations, &
            this%cumulative_newton_iterations,sum_linear_iterations, &
            this%cumulative_linear_iterations,icut, &
            this%cumulative_time_step_cuts
-
-
-    if (associated(process_model%realization_base%discretization%grid)) then
-       scaled_fnorm = fnorm/process_model%realization_base% &
-                        discretization%grid%nmax 
-    else
-       scaled_fnorm = fnorm
-    endif
-
-    print *,' --> SNES Linear/Non-Linear Iterations = ', &
-             num_linear_iterations,' / ',num_newton_iterations
-    write(*,'("  --> SNES Residual: ",1p3e14.6)') fnorm, scaled_fnorm, inorm 
+#else
+  out_string = '  Newton It: ' // trim(StringWrite(sum_newton_iterations)) // &
+           ' [' // trim(StringWrite(this%cumulative_newton_iterations)) // &
+           '] Linear It: ' // trim(StringWrite(sum_linear_iterations)) // &
+           ' [' // trim(StringWrite(this%cumulative_linear_iterations)) // &
+           '] TS Cuts: ' // trim(StringWrite(icut)) // ' [' // &
+           trim(StringWrite(this%cumulative_time_step_cuts)) // ']'
+#endif
+  call OptionPrint(out_string,option)
+  out_string= '  --> SNES Linear/Newton Iterations = ' // &
+              trim(StringWrite(num_linear_iterations)) // ' / ' // &
+              trim(StringWrite(num_newton_iterations))
+  call OptionPrint(out_string,option)
+  if (associated(process_model%realization_base%discretization%grid)) then
+    scaled_fnorm = fnorm/process_model%realization_base% &
+                   discretization%grid%nmax 
+    write(out_string,'("  --> SNES Residual: ",3es14.6)') fnorm, &
+      scaled_fnorm, inorm 
+  else
+    write(out_string,'("  --> SNES Residual: ",2es14.6)') fnorm, inorm
   endif
-  if (option%print_file_flag) then
-    write(option%fid_out, '(" Step ",i6," Time= ",1pe12.5," Dt= ",1pe12.5, &
-      & " [",a,"]"," snes_conv_reason: ",i4,/,"  newton = ",i3, &
-      & " [",i8,"]", " linear = ",i5," [",i10,"]"," cuts = ",i2," [",i4,"]")') &
-      this%steps, &
-      this%target_time/tconv, &
-      this%dt/tconv, &
-      trim(tunit),snes_reason,sum_newton_iterations, &
-      this%cumulative_newton_iterations,sum_linear_iterations, &
-      this%cumulative_linear_iterations,icut, &
-      this%cumulative_time_step_cuts
-  endif
-  
+  call OptionPrint(out_string,option)
+
   option%time = this%target_time
   call process_model%FinalizeTimestep()
   
@@ -1004,7 +1016,7 @@ subroutine TimestepperBEPrintInfo(this,option)
   strings(3) = 'number of ramp entries: ' // StringWrite(this%iaccel)
   do i = 1, this%ntfac
     strings(i+3) = 'ramp entry #' // trim(StringWrite(i)) // ': ' // &
-                   StringWriteF(this%tfac(i))
+                   StringWriteF(this%tfac(i),3)
   enddo
   call StringsCenter(strings,30,':')
   call StringWriteToUnits(fids,strings)
@@ -1056,33 +1068,48 @@ recursive subroutine TimestepperBEFinalizeRun(this,option)
   ! 
 
   use Option_module
+  use String_module
   
   implicit none
   
   class(timestepper_BE_type) :: this
   type(option_type) :: option
   
-  character(len=MAXSTRINGLENGTH) :: string
+  character(len=MAXSTRINGLENGTH) :: out_string
   
 #ifdef DEBUG
   call printMsg(option,'TimestepperBEFinalizeRun()')
 #endif
   
-  if (OptionPrintToScreen(option)) then
-    write(*,'(/,a," TS BE steps = ",i6," newton = ",i8," linear = ",i10, &
-            & " cuts = ",i6)') &
-            trim(this%name), &
-            this%steps, &
-            this%cumulative_newton_iterations, &
-            this%cumulative_linear_iterations, &
-            this%cumulative_time_step_cuts
-    write(string,'(i12)') this%cumulative_wasted_linear_iterations
-    write(*,'(a)') trim(this%name) // ' TS BE Wasted Linear Iterations = ' // &
-      trim(adjustl(string))
-    write(string,'(f12.1)') this%cumulative_solver_time
-    write(*,'(a)') trim(this%name) // ' TS BE SNES time = ' // &
-      trim(adjustl(string)) // ' seconds'
+  out_string = ' ' // trim(this%name) // ' TS BE'
+  call OptionPrint('(/,a)',out_string,option) 
+  out_string = '   Time Steps = ' // &
+                  trim(StringWrite(this%steps))
+  call OptionPrint(out_string,option)
+  out_string = '   Newton Iterations = ' // &
+                  trim(StringWrite(this%cumulative_newton_iterations))
+  call OptionPrint(out_string,option)
+  out_string = '   Linear Iterations = ' // &
+                  trim(StringWrite(this%cumulative_linear_iterations)) 
+  call OptionPrint(out_string,option)
+  out_string = '   Time Step Cuts = ' // &
+                  trim(StringWrite(this%cumulative_time_step_cuts))
+  call OptionPrint(out_string,option)
+  out_string = '   Wasted Linear Iterations = ' // &
+               StringWrite(this%cumulative_wasted_linear_iterations)
+  call OptionPrint(out_string,option)
+  if (this%solver%verbose_logging) then
+    out_string = '   Iacceleration Violating Time Steps = ' // &
+                 StringWrite(this%cum_iaccel_violations_ts)
+    call OptionPrint(out_string,option)
+    out_string = '   Iacceleration Violating Newton &
+                 &Iterations = ' // StringWrite(this%cum_iaccel_violations_ni)
+    call OptionPrint(out_string,option)
   endif
+  out_string = '   SNES time = ' // &
+               trim(StringWriteF(this%cumulative_solver_time,1)) // ' seconds'
+  call OptionPrint(out_string,option)
+  call OptionPrint('',option)
   
 end subroutine TimestepperBEFinalizeRun
 
