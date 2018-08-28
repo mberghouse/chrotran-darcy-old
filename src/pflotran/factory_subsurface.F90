@@ -249,19 +249,19 @@ subroutine SetupPMCLinkages(simulation,pm_flow,pm_rt,pm_waste_form,&
   call SubsurfaceReadInput(simulation,input)
 
   if (associated(pm_waste_form)) &
-    call AddPMCWasteForm(simulation,pm_waste_form,'WASTE_FORM_GENERAL_BLOCK',&
+    call AddPMCWasteForm(simulation,pm_waste_form,'WASTE_FORM_GENERAL',&
                          associated(pm_ufd_decay),realization,input,option)
 
   if (associated(pm_ufd_decay)) &
-    call AddPMCUDFDecay(simulation,pm_ufd_decay,'UFD_DECAY_BLOCK',realization, &
+    call AddPMCUDFDecay(simulation,pm_ufd_decay,'UFD_DECAY',realization, &
                         input,option)
 
   if (associated(pm_ufd_biosphere)) &
-    call AddPMCUDFBiosphere(simulation,pm_ufd_biosphere,'UFD_BIOSPHERE_BLOCK',&
+    call AddPMCUDFBiosphere(simulation,pm_ufd_biosphere,'UFD_BIOSPHERE',&
                             associated(pm_ufd_decay),realization,input,option)
 
   if (associated(pm_auxiliary)) &
-       call AddPMCAuxiliary(simulation,pm_auxiliary,'SALINITY_BLOCK',&
+       call AddPMCAuxiliary(simulation,pm_auxiliary,'SALINITY',&
                         realization,option)
 
   call InputDestroy(input)
