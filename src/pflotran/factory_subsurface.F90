@@ -249,19 +249,20 @@ subroutine SetupPMCLinkages(simulation,pm_flow,pm_rt,pm_waste_form,&
   call SubsurfaceReadInput(simulation,input)
 
   if (associated(pm_waste_form)) &
-    call AddPMCWasteForm(simulation,pm_waste_form,'WASTE_FORM_GENERAL',&
+    call AddPMCWasteForm(simulation,pm_waste_form,'WASTE_FORM_GENERAL_BLOCK',&
                          associated(pm_ufd_decay),realization,input,option)
 
   if (associated(pm_ufd_decay)) &
-    call AddPMCUDFDecay(simulation,pm_ufd_decay,'UFD_DECAY',realization, &
+    call AddPMCUDFDecay(simulation,pm_ufd_decay,'UFD_DECAY_BLOCK',realization, &
                         input,option)
 
   if (associated(pm_ufd_biosphere)) &
-    call AddPMCUDFBiosphere(simulation,pm_ufd_biosphere,'UFD_BIOSPHERE',&
+    call AddPMCUDFBiosphere(simulation,pm_ufd_biosphere,'UFD_BIOSPHERE_BLOCK',&
                             associated(pm_ufd_decay),realization,input,option)
 
   if (associated(pm_auxiliary)) &
-    call AddPMCAuxiliary(simulation,pm_auxiliary,'SALINITY',realization,option)
+       call AddPMCAuxiliary(simulation,pm_auxiliary,'SALINITY_BLOCK',&
+                        realization,option)
 
   call InputDestroy(input)
 
@@ -408,7 +409,7 @@ subroutine AddPMCWasteForm(simulation,pm_waste_form,pmc_name,&
 
   nullify(pmc_dummy)
 
-  string = 'WASTE_FORM_GENERAL'
+  string = 'WASTE_FORM_GENERAL_BLOCK'
   call InputFindStringInFile(input,option,string)
   call InputFindStringErrorMsg(input,option,string)
   call pm_waste_form%Read(input)
@@ -441,7 +442,7 @@ subroutine AddPMCWasteForm(simulation,pm_waste_form,pmc_name,&
   pmc_waste_form%realization => realization
 
   ! set up logging stage
-  string = 'WASTE_FORM_GENERAL'
+  string = 'WASTE_FORM_GENERAL_BLOCK'
   call LoggingCreateStage(string,pmc_waste_form%stage)
   call PMCBaseSetChildPeerPtr(PMCCastToBase(pmc_waste_form),PM_CHILD, &
          PMCCastToBase(simulation%rt_process_model_coupler), &
@@ -485,7 +486,7 @@ subroutine AddPMCUDFDecay(simulation,pm_ufd_decay,pmc_name,&
 
   nullify(pmc_dummy)
 
-  string = 'UFD_DECAY'
+  string = 'UFD_DECAY_BLOCK'
   call InputFindStringInFile(input,option,string)
   call InputFindStringErrorMsg(input,option,string)
   call pm_ufd_decay%Read(input)
@@ -506,7 +507,7 @@ subroutine AddPMCUDFDecay(simulation,pm_ufd_decay,pmc_name,&
   pmc_ufd_decay%realization => realization
 
   ! set up logging stage
-  string = 'UFD_DECAY'
+  string = 'UFD_DECAY_BLOCK'
   call LoggingCreateStage(string,pmc_ufd_decay%stage)
   call PMCBaseSetChildPeerPtr(PMCCastToBase(pmc_ufd_decay),PM_CHILD, &
          PMCCastToBase(simulation%rt_process_model_coupler), &
@@ -551,7 +552,7 @@ subroutine AddPMCUDFBiosphere(simulation,pm_ufd_biosphere,pmc_name,&
 
   nullify(pmc_dummy)
 
-  string = 'UFD_BIOSPHERE'
+  string = 'UFD_BIOSPHERE_BLOCK'
   call InputFindStringInFile(input,option,string)
   call InputFindStringErrorMsg(input,option,string)
   call pm_ufd_biosphere%Read(input)
@@ -576,7 +577,7 @@ subroutine AddPMCUDFBiosphere(simulation,pm_ufd_biosphere,pmc_name,&
   pmc_ufd_biosphere%realization => realization
 
   ! set up logging stage
-  string = 'UFD_BIOSPHERE'
+  string = 'UFD_BIOSPHERE_BLOCK'
   call LoggingCreateStage(string,pmc_ufd_biosphere%stage)
   call PMCBaseSetChildPeerPtr(PMCCastToBase(pmc_ufd_biosphere),PM_CHILD, &
          PMCCastToBase(simulation%rt_process_model_coupler), &
@@ -620,7 +621,7 @@ subroutine AddPMCAuxiliary(simulation,pm_auxiliary,pmc_name, &
 
   nullify(pmc_dummy)
 
-  string = 'salinity'
+  string = 'SALINITY_BLOCK'
   if (StringCompareIgnoreCase(pm_auxiliary%ctype,string)) then
     if (associated(simulation%rt_process_model_coupler)) then
       pmc_auxiliary => PMCAuxiliaryCreate()
