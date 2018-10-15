@@ -1,6 +1,9 @@
 module Grid_Unstructured_Polyhedra_module
 
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Geometry_module
   use Grid_Unstructured_Aux_module
@@ -1303,7 +1306,7 @@ subroutine UGridPolyhedraDecompose(ugrid, option)
   call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif
 
-  call VecScatterCreate(vertices_old,is_scatter,vertices_new,is_gather, &
+  call VecScatterCreateWithData(vertices_old,is_scatter,vertices_new,is_gather, &
                         vec_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_gather,ierr);CHKERRQ(ierr)
@@ -2367,7 +2370,7 @@ subroutine UGridPolyhedraComputeOutputInfo(ugrid, nL2G, nG2L, nG2A, option)
   call ISCreateBlock(option%mycomm, 1, ugrid%ngmax, int_array, PETSC_COPY_VALUES, &
                       is_gather, ierr);CHKERRQ(ierr)
 
-  call VecScatterCreate(nat_cv_proc_rank, is_scatter, ghosted_cv_proc_rank, is_gather, &
+  call VecScatterCreateWithData(nat_cv_proc_rank, is_scatter, ghosted_cv_proc_rank, is_gather, &
                         vec_scat, ierr);CHKERRQ(ierr)
   call ISDestroy(is_scatter, ierr);CHKERRQ(ierr)
   call ISDestroy(is_gather, ierr);CHKERRQ(ierr)

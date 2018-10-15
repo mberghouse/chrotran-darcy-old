@@ -11,6 +11,9 @@ module PM_Waste_Form_class
 ! ===========================================================================
 
 #include "petsc/finclude/petscsys.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscsys
   use PM_Base_class
   use Realization_Subsurface_class
@@ -2391,7 +2394,7 @@ end subroutine PMWFSetup
                        PETSC_COPY_VALUES,is,ierr);CHKERRQ(ierr)
   if (allocated(species_indices_in_residual)) &
     deallocate(species_indices_in_residual)
-  call VecScatterCreate(this%data_mediator%vec,PETSC_NULL_IS, &
+  call VecScatterCreateWithData(this%data_mediator%vec,PETSC_NULL_IS, &
                         this%realization%field%tran_r,is, &
                         this%data_mediator%scatter_ctx,ierr);CHKERRQ(ierr)
   call ISDestroy(is,ierr);CHKERRQ(ierr)

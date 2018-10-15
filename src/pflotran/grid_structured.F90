@@ -1,6 +1,9 @@
 module Grid_Structured_module
 
 #include "petsc/finclude/petscsys.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscsys
   use PFLOTRAN_Constants_module
   use Utility_module, only : Equal
@@ -1885,7 +1888,7 @@ subroutine StructGridCreateTVDGhosts(structured_grid,ndof,global_vec, &
   call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif
 
-  call VecScatterCreate(global_vec,is_petsc,ghost_vec,is_ghost, &
+  call VecScatterCreateWithData(global_vec,is_petsc,ghost_vec,is_ghost, &
                         scatter_ctx,ierr);CHKERRQ(ierr)
 
 #if TVD_DEBUG

@@ -1,6 +1,9 @@
 module Geomechanics_Regression_module
  
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Output_Aux_module
   
@@ -295,7 +298,7 @@ subroutine GeomechanicsRegressionCreateMapping(geomechanics_regression, &
 #endif
 
     ! create scatter context
-    call VecScatterCreate(geomechanics_realization%geomech_field% &
+    call VecScatterCreateWithData(geomechanics_realization%geomech_field% &
                           press,is_petsc, &
                           geomechanics_regression%natural_vertex_id_vec, &
                           PETSC_NULL_IS, &
@@ -383,7 +386,7 @@ subroutine GeomechanicsRegressionCreateMapping(geomechanics_regression, &
                          int_array,PETSC_COPY_VALUES,temp_is, &
                          ierr);CHKERRQ(ierr)
 
-    call VecScatterCreate(temp_vec,temp_is, &
+    call VecScatterCreateWithData(temp_vec,temp_is, &
                           geomechanics_regression%vertices_per_process_vec, &
                           PETSC_NULL_IS, &
                           temp_scatter,ierr);CHKERRQ(ierr)
@@ -428,7 +431,7 @@ subroutine GeomechanicsRegressionCreateMapping(geomechanics_regression, &
     call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif
 
-    call VecScatterCreate(geomechanics_realization%geomech_field% &
+    call VecScatterCreateWithData(geomechanics_realization%geomech_field% &
                           press,is_petsc, &
                           geomechanics_regression%vertices_per_process_vec, &
                           PETSC_NULL_IS, &

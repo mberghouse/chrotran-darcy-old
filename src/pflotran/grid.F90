@@ -1,6 +1,9 @@
 module Grid_module
 
 #include "petsc/finclude/petscmat.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscmat
   use Grid_Structured_module
   use Grid_Unstructured_module
@@ -845,7 +848,7 @@ subroutine GridLocalizeRegionsFromCellIDs(grid, region, option)
                      ierr);CHKERRQ(ierr)
   deallocate(tmp_int_array)
   
-  call VecScatterCreate(vec_cell_ids,is_from,vec_cell_ids_loc,is_to, &
+  call VecScatterCreateWithData(vec_cell_ids,is_from,vec_cell_ids_loc,is_to, &
                         vec_scat, ierr);CHKERRQ(ierr)
   call ISDestroy(is_from, ierr);CHKERRQ(ierr)
   call ISDestroy(is_to, ierr);CHKERRQ(ierr)

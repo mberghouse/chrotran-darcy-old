@@ -1,6 +1,9 @@
 module Factory_Surf_Subsurf_module
 
 #include "petsc/finclude/petscsys.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscsys
   use Simulation_Surf_Subsurf_class
 
@@ -830,7 +833,7 @@ subroutine SurfSubsurfCreateSurfSubSurfVScat( &
 
   call VecCreateMPI(option%mycomm,nrow,PETSC_DETERMINE, &
                     corr_dest_ids_vec,ierr);CHKERRQ(ierr)
-  call VecScatterCreate(source_petsc_ids,is_tmp2,corr_dest_ids_vec,is_tmp1, &
+  call VecScatterCreateWithData(source_petsc_ids,is_tmp2,corr_dest_ids_vec,is_tmp1, &
                         scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_tmp1,ierr);CHKERRQ(ierr)
   call ISDestroy(is_tmp2,ierr);CHKERRQ(ierr)

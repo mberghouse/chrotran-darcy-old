@@ -21,6 +21,9 @@ module pflotran_model_module
 #include "petsc/finclude/petscvec.h"
 #include "petsc/finclude/petscviewer.h"
 !#include "finclude/petscvec.h90"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
  
   use petscsys
   use petscvec
@@ -1366,7 +1369,7 @@ end subroutine pflotranModelSetICs
 
 
     ! create scatter context
-    call VecScatterCreate(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
+    call VecScatterCreateWithData(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
                           ierr)
     call ISDestroy(is_from, ierr)
     call ISDestroy(is_to, ierr)
@@ -1408,7 +1411,7 @@ end subroutine pflotranModelSetICs
     deallocate(int_array)
 
     ! create scatter context
-    call VecScatterCreate(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
+    call VecScatterCreateWithData(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
                           ierr)
     call ISDestroy(is_from, ierr)
     call ISDestroy(is_to, ierr)
@@ -1487,7 +1490,7 @@ end subroutine pflotranModelSetICs
 
 
     ! create scatter context
-    call VecScatterCreate(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
+    call VecScatterCreateWithData(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
                           ierr)
     call ISDestroy(is_from, ierr)
     call ISDestroy(is_to, ierr)
@@ -1530,7 +1533,7 @@ end subroutine pflotranModelSetICs
     deallocate(int_array)
 
     ! create scatter context
-    call VecScatterCreate(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
+    call VecScatterCreateWithData(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
                           ierr)
     call ISDestroy(is_from, ierr)
     call ISDestroy(is_to, ierr)
@@ -1778,7 +1781,7 @@ end subroutine pflotranModelSetICs
     deallocate(int_array)
 
     ! create scatter context
-    call VecScatterCreate(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
+    call VecScatterCreateWithData(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
                           ierr)
     call ISDestroy(is_from, ierr)
     call ISDestroy(is_to, ierr)
@@ -1862,7 +1865,7 @@ end subroutine pflotranModelSetICs
 
 
     ! create scatter context
-    call VecScatterCreate(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
+    call VecScatterCreateWithData(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
                           ierr)
     call ISDestroy(is_from, ierr)
     call ISDestroy(is_to, ierr)
@@ -1908,7 +1911,7 @@ end subroutine pflotranModelSetICs
     deallocate(int_array)
 
     ! create scatter context
-    call VecScatterCreate(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
+    call VecScatterCreateWithData(surf_ids, is_from, surf_ids_loc, is_to, vec_scat, &
                           ierr)
     call ISDestroy(is_from, ierr)
     call ISDestroy(is_to, ierr)

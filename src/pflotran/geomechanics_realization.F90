@@ -1,6 +1,9 @@
 module Geomechanics_Realization_class
 
 #include "petsc/finclude/petscsys.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscsys
   use Realization_Base_class
   use Geomechanics_Discretization_module
@@ -494,7 +497,7 @@ subroutine GeomechRealizMapSubsurfGeomechGrid(realization, &
 #endif                              
 
   ! Create scatter context between flow and geomech
-  call VecScatterCreate(realization%field%porosity0,is_subsurf, &
+  call VecScatterCreateWithData(realization%field%porosity0,is_subsurf, &
                         geomech_realization%geomech_field%press, &
                         is_geomech_petsc,scatter,ierr);CHKERRQ(ierr)
                         
@@ -564,7 +567,7 @@ subroutine GeomechRealizMapSubsurfGeomechGrid(realization, &
   call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif  
   
-  call VecScatterCreate(geomech_realization%geomech_field%strain, &
+  call VecScatterCreateWithData(geomech_realization%geomech_field%strain, &
                         is_geomech_petsc_block, &
                         geomech_realization%geomech_field%strain_subsurf, &
                         is_subsurf_petsc_block,scatter,ierr);CHKERRQ(ierr)

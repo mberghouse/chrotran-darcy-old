@@ -1,6 +1,9 @@
 module Factory_Hydrogeophysics_module
 
 #include "petsc/finclude/petscsys.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscsys
   use Simulation_Hydrogeophysics_class
   
@@ -272,7 +275,7 @@ subroutine HydrogeophysicsInitialize(simulation)
 #endif
     ! create scatter between mpi Vec and local seq Vecs (only E4D master is 
     ! relevant)
-    call VecScatterCreate(pflotran_tracer_vec_mpi,is_petsc, &
+    call VecScatterCreateWithData(pflotran_tracer_vec_mpi,is_petsc, &
                           pflotran_tracer_vec_seq,is_natural, &
                           pflotran_scatter,ierr);CHKERRQ(ierr)
 #ifdef DEBUG

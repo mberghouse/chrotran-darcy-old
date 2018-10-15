@@ -1,6 +1,9 @@
 module Grid_Unstructured_Explicit_module
   
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Geometry_module
   use Grid_Unstructured_Aux_module
@@ -984,7 +987,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
 #endif  
   
   ! scatter all the connection data from the old to local
-  call VecScatterCreate(connections_old,is_scatter,connections_local, &
+  call VecScatterCreateWithData(connections_old,is_scatter,connections_local, &
                         is_gather,vec_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_gather,ierr);CHKERRQ(ierr)
   call ISDestroy(is_scatter,ierr);CHKERRQ(ierr)

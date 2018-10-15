@@ -2,6 +2,9 @@ module Grid_Unstructured_Aux_module
 
 !  use Connection_module
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Grid_Unstructured_Cell_module
   use Geometry_module
@@ -601,7 +604,7 @@ subroutine UGridCreateUGDM(unstructured_grid,ugdm,ndof,option)
 #endif
 
   ! Create local to global scatter
-  call VecScatterCreate(ugdm%local_vec,ugdm%is_local_local,ugdm%global_vec, &
+  call VecScatterCreateWithData(ugdm%local_vec,ugdm%is_local_local,ugdm%global_vec, &
                         ugdm%is_local_petsc,ugdm%scatter_ltog, &
                         ierr);CHKERRQ(ierr)
                         
@@ -619,7 +622,7 @@ subroutine UGridCreateUGDM(unstructured_grid,ugdm,ndof,option)
 #endif
 
   ! Create global to local scatter
-  call VecScatterCreate(ugdm%global_vec,ugdm%is_ghosted_petsc,ugdm%local_vec, &
+  call VecScatterCreateWithData(ugdm%global_vec,ugdm%is_ghosted_petsc,ugdm%local_vec, &
                         ugdm%is_ghosted_local,ugdm%scatter_gtol, &
                         ierr);CHKERRQ(ierr)
                         
@@ -697,7 +700,7 @@ subroutine UGridCreateUGDM(unstructured_grid,ugdm,ndof,option)
                    ierr);CHKERRQ(ierr)
   call VecSetBlockSize(vec_tmp,ndof,ierr);CHKERRQ(ierr)
   call VecSetFromOptions(vec_tmp,ierr);CHKERRQ(ierr)
-  call VecScatterCreate(ugdm%global_vec,ugdm%is_local_petsc,vec_tmp, &
+  call VecScatterCreateWithData(ugdm%global_vec,ugdm%is_local_petsc,vec_tmp, &
                         ugdm%is_local_natural,ugdm%scatter_gton, &
                         ierr);CHKERRQ(ierr)
   call VecDestroy(vec_tmp,ierr);CHKERRQ(ierr)
@@ -1226,7 +1229,7 @@ subroutine UGridNaturalToPetsc(ugrid,option,elements_old,elements_local, &
 
   ! scatter all the cell data from the old decomposition (as read in in 
   ! parallel) to the more parmetis-calculated decomposition
-  call VecScatterCreate(elements_old,PETSC_NULL_IS,elements_natural,is_scatter, &
+  call VecScatterCreateWithData(elements_old,PETSC_NULL_IS,elements_natural,is_scatter, &
                         vec_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_scatter,ierr);CHKERRQ(ierr)
   call VecScatterBegin(vec_scatter,elements_old,elements_natural, &
@@ -1679,7 +1682,7 @@ subroutine UGridNaturalToPetsc(ugrid,option,elements_old,elements_local, &
   call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif
 
-  call VecScatterCreate(elements_petsc,is_scatter,elements_local,is_gather, &
+  call VecScatterCreateWithData(elements_petsc,is_scatter,elements_local,is_gather, &
                         vec_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_gather,ierr);CHKERRQ(ierr)

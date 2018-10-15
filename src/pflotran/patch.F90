@@ -1,6 +1,9 @@
 module Patch_module
 
 #include "petsc/finclude/petscsys.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscsys
   use Option_module
   use Grid_module
@@ -4039,7 +4042,7 @@ subroutine PatchCreateFlowConditionDatasetMap(grid,dataset_map_hdf5,cell_ids,nce
   !call VecCreateSeq(PETSC_COMM_SELF,maxval(dataset_map%map(2,:)),map_ids_2,ierr)
   !call VecSet(map_ids_2,0,ierr)
 
-  call VecScatterCreate(map_ids_1,is_from,map_ids_2,is_to,vec_scatter, &
+  call VecScatterCreateWithData(map_ids_1,is_from,map_ids_2,is_to,vec_scatter, &
                         ierr);CHKERRQ(ierr)
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)
   call ISDestroy(is_to,ierr);CHKERRQ(ierr)
@@ -4081,7 +4084,7 @@ subroutine PatchCreateFlowConditionDatasetMap(grid,dataset_map_hdf5,cell_ids,nce
   call VecCreateMPI(option%mycomm,ncells,PETSC_DETERMINE,map_ids_3, &
                     ierr);CHKERRQ(ierr)
 
-  call VecScatterCreate(map_ids_2,is_from,map_ids_3,is_to,vec_scatter, &
+  call VecScatterCreateWithData(map_ids_2,is_from,map_ids_3,is_to,vec_scatter, &
                         ierr);CHKERRQ(ierr)
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)
   call ISDestroy(is_to,ierr);CHKERRQ(ierr)

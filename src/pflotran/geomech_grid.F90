@@ -1,6 +1,9 @@
 module Geomechanics_Grid_module
 
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Geomechanics_Grid_Aux_module
   use Grid_Unstructured_Cell_module
@@ -909,7 +912,7 @@ subroutine GeomechGridLocalizeRegFromVertIDs(geomech_grid,geomech_region, &
 
   deallocate(tmp_int_array)
   
-  call VecScatterCreate(vec_vertex_ids,is_from,vec_vertex_ids_loc,is_to, &
+  call VecScatterCreateWithData(vec_vertex_ids,is_from,vec_vertex_ids_loc,is_to, &
                         vec_scat,ierr);CHKERRQ(ierr)
 
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)

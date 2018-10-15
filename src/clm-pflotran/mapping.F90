@@ -7,6 +7,9 @@ module Mapping_module
 #include "petsc/finclude/petscvec.h"
 #include "petsc/finclude/petscis.h"
 #include "petsc/finclude/petscmat.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
 
   use petscsys
   use petscvec
@@ -975,7 +978,7 @@ contains
 #endif
 
     ! Create VecScatter()
-    call VecScatterCreate(nonzero_row_count_vec,is_from, &
+    call VecScatterCreateWithData(nonzero_row_count_vec,is_from, &
                           nonzero_row_count_loc_vec,is_to, &
                           vec_scat,ierr)
     call ISDestroy(is_from,ierr)
@@ -1060,7 +1063,7 @@ contains
     call VecCreateSeq(PETSC_COMM_SELF,map%s2d_s_ncells,wts_loc_vec,ierr)
 
     ! Create scatter context
-    call VecScatterCreate(row_vec,is_from,row_loc_vec,is_to,vec_scat,ierr)
+    call VecScatterCreateWithData(row_vec,is_from,row_loc_vec,is_to,vec_scat,ierr)
 #ifdef MAP_DEBUG
     call PetscViewerASCIIOpen(mycomm, 'scatter_wts_data.out', viewer, ierr)
     call VecScatterView(vec_scat, viewer,ierr)
@@ -1412,7 +1415,7 @@ contains
 #endif
 
     ! Create 'vscat'
-    call VecScatterCreate(nindex, is_from, N2P, is_to, vscat, ierr)
+    call VecScatterCreateWithData(nindex, is_from, N2P, is_to, vscat, ierr)
     call ISDestroy(is_to,ierr)
     call ISDestroy(is_from,ierr)
 #ifdef MAP_DEBUG
@@ -1481,7 +1484,7 @@ contains
 #endif
 
     ! Create vector scatter
-    call VecScatterCreate(N2P, is_to, pindex_req, is_from, vscat, ierr)
+    call VecScatterCreateWithData(N2P, is_to, pindex_req, is_from, vscat, ierr)
     call ISDestroy(is_to,ierr)
     call ISDestroy(is_from, ierr)
 #ifdef MAP_DEBUG
@@ -1509,7 +1512,7 @@ contains
          PETSC_COPY_VALUES, is_to, ierr)
     call VecRestoreArrayF90(pindex_req,v_loc,ierr)
 
-    call VecScatterCreate(N2P, is_to, pindex_req, is_from, map%s2d_scat_s_gb2disloc, ierr)
+    call VecScatterCreateWithData(N2P, is_to, pindex_req, is_from, map%s2d_scat_s_gb2disloc, ierr)
 #ifdef MAP_DEBUG
     call PetscViewerASCIIOpen(mycomm,'s2d_scat_s_gb2disloc.out',viewer,ierr)
     call VecScatterView(map%s2d_scat_s_gb2disloc,viewer,ierr)

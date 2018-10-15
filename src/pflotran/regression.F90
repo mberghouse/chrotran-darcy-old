@@ -1,6 +1,9 @@
 module Regression_module
  
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Output_Aux_module
   
@@ -303,7 +306,7 @@ subroutine RegressionCreateMapping(regression,realization)
 #endif
 
     ! create scatter context
-    call VecScatterCreate(realization%field%work,is_petsc, &
+    call VecScatterCreateWithData(realization%field%work,is_petsc, &
                           regression%natural_cell_id_vec,PETSC_NULL_IS, &
                           regression%scatter_natural_cell_id_gtos, &
                           ierr);CHKERRQ(ierr)
@@ -382,7 +385,7 @@ subroutine RegressionCreateMapping(regression,realization)
                          int_array,PETSC_COPY_VALUES,temp_is, &
                          ierr);CHKERRQ(ierr)
 
-    call VecScatterCreate(temp_vec,temp_is, &
+    call VecScatterCreateWithData(temp_vec,temp_is, &
                           regression%cells_per_process_vec,PETSC_NULL_IS, &
                           temp_scatter,ierr);CHKERRQ(ierr)
     call ISDestroy(temp_is,ierr);CHKERRQ(ierr)
@@ -424,7 +427,7 @@ subroutine RegressionCreateMapping(regression,realization)
     call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif
 
-    call VecScatterCreate(realization%field%work,is_petsc, &
+    call VecScatterCreateWithData(realization%field%work,is_petsc, &
                           regression%cells_per_process_vec, &
                           PETSC_NULL_IS, &
                           regression%scatter_cells_per_process_gtos, &

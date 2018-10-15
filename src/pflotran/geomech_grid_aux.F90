@@ -1,6 +1,9 @@
 module Geomechanics_Grid_Aux_module
 
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Grid_Unstructured_Cell_module
   use Gauss_module
@@ -428,7 +431,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
   ! Create local to global scatter
   ! Note this will also use the data from ghosted nodes on local rank into
   ! a global vec
-  call VecScatterCreate(gmdm%local_vec,gmdm%is_ghosted_local,gmdm%global_vec, &
+  call VecScatterCreateWithData(gmdm%local_vec,gmdm%is_ghosted_local,gmdm%global_vec, &
                         gmdm%is_ghosted_petsc,gmdm%scatter_ltog, &
                         ierr);CHKERRQ(ierr)
                         
@@ -446,7 +449,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
 #endif
 
   ! Create global to local scatter
-  call VecScatterCreate(gmdm%global_vec,gmdm%is_ghosted_petsc,gmdm%local_vec, &
+  call VecScatterCreateWithData(gmdm%global_vec,gmdm%is_ghosted_petsc,gmdm%local_vec, &
                         gmdm%is_ghosted_local,gmdm%scatter_gtol, &
                         ierr);CHKERRQ(ierr)
                         
@@ -515,7 +518,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
                    ierr);CHKERRQ(ierr)
   call VecSetBlockSize(vec_tmp,ndof,ierr);CHKERRQ(ierr)
   call VecSetFromOptions(vec_tmp,ierr);CHKERRQ(ierr)
-  call VecScatterCreate(gmdm%global_vec,gmdm%is_local_petsc,vec_tmp, &
+  call VecScatterCreateWithData(gmdm%global_vec,gmdm%is_local_petsc,vec_tmp, &
                         gmdm%is_local_natural,gmdm%scatter_gton, &
                         ierr);CHKERRQ(ierr)
   call VecDestroy(vec_tmp,ierr);CHKERRQ(ierr)
@@ -569,7 +572,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
                    ierr);CHKERRQ(ierr)
   call VecSetBlockSize(vec_tmp,ndof,ierr);CHKERRQ(ierr)
   call VecSetFromOptions(vec_tmp,ierr);CHKERRQ(ierr)
-  call VecScatterCreate(gmdm%global_vec_elem,is_tmp_petsc,vec_tmp, &
+  call VecScatterCreateWithData(gmdm%global_vec_elem,is_tmp_petsc,vec_tmp, &
                         is_tmp_natural,gmdm%scatter_gton_elem, &
                         ierr);CHKERRQ(ierr)
   call VecDestroy(vec_tmp,ierr);CHKERRQ(ierr)

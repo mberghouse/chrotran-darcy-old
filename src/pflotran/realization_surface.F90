@@ -26,6 +26,9 @@ private
 
 
 #include "petsc/finclude/petscsys.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
 
   PetscReal, parameter :: eps       = 1.D-8
 
@@ -1187,7 +1190,7 @@ subroutine RealizSurfMapSurfSubsurfGrid( &
   
   call VecCreateMPI(option%mycomm,nrow,PETSC_DETERMINE, &
                     corr_dest_ids_vec,ierr);CHKERRQ(ierr)
-  call VecScatterCreate(source_petsc_ids,is_tmp2,corr_dest_ids_vec,is_tmp1, &
+  call VecScatterCreateWithData(source_petsc_ids,is_tmp2,corr_dest_ids_vec,is_tmp1, &
                         scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_tmp1,ierr);CHKERRQ(ierr)
   call ISDestroy(is_tmp2,ierr);CHKERRQ(ierr)
@@ -1257,7 +1260,7 @@ subroutine RealizSurfMapSurfSubsurfGrid( &
   call VecSetFromOptions(source_petsc_ids_ndof,ierr);CHKERRQ(ierr)
 
   ! Create stridded vectors-scatter context
-  call VecScatterCreate(source_petsc_ids_ndof,is_tmp4, &
+  call VecScatterCreateWithData(source_petsc_ids_ndof,is_tmp4, &
                         corr_dest_ids_vec_ndof,is_tmp3, &
                         scatter_ndof,ierr);CHKERRQ(ierr)
 

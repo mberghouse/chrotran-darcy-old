@@ -1,6 +1,9 @@
 module Grid_Unstructured_module
 
 #include "petsc/finclude/petscvec.h"
+#if PETSC_VERSION_LT(3,11,0)
+#define VecScatterCreateWithData VecScatterCreate
+#endif
   use petscvec
   use Connection_module
   use Grid_Unstructured_Aux_module
@@ -1810,7 +1813,7 @@ subroutine UGridDecompose(unstructured_grid,option)
   call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif
 
-  call VecScatterCreate(vertices_old,is_scatter,vertices_new,is_gather, &
+  call VecScatterCreateWithData(vertices_old,is_scatter,vertices_new,is_gather, &
                         vec_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_gather,ierr);CHKERRQ(ierr)
@@ -3442,7 +3445,7 @@ subroutine UGridMapSideSet(unstructured_grid,face_vertices,n_ss_faces, &
                     sideset_vert_vec,ierr);CHKERRQ(ierr)
   call VecSet(sideset_vert_vec,1.d0,ierr);CHKERRQ(ierr)
 
-  call VecScatterCreate(sideset_vert_vec,is_tmp1, &
+  call VecScatterCreateWithData(sideset_vert_vec,is_tmp1, &
                         Vertex_vec,is_tmp2,scatter_gton,ierr);CHKERRQ(ierr)
   call ISDestroy(is_tmp1,ierr);CHKERRQ(ierr)
   call ISDestroy(is_tmp2,ierr);CHKERRQ(ierr)
@@ -4403,7 +4406,7 @@ subroutine UGridFindCellIDsAfterGrowingStencilWidthByOne(Mat_vert_to_cell, &
   cell_ids_petsc = cell_ids_petsc + 1
 
   ! Create a vec-scatter contex
-  call VecScatterCreate(Vec_cids_local,is_from,Vec_cids_ghosted,is_to, &
+  call VecScatterCreateWithData(Vec_cids_local,is_from,Vec_cids_ghosted,is_to, &
                         vec_scatter,ierr);CHKERRQ(ierr)
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)
   call ISDestroy(is_to,ierr);CHKERRQ(ierr)
@@ -4525,7 +4528,7 @@ subroutine UGridFindNewGhostCellIDsAfterGrowingStencilWidth(unstructured_grid, &
   call ISCreateGeneral(option%mycomm,ngmax_new, &
                        int_array1,PETSC_COPY_VALUES,is_to,ierr);CHKERRQ(ierr)
 
-  call VecScatterCreate(cells_on_proc,is_from,cids_on_proc,is_to,vec_scatter, &
+  call VecScatterCreateWithData(cells_on_proc,is_from,cids_on_proc,is_to,vec_scatter, &
                         ierr);CHKERRQ(ierr)
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)
   call ISDestroy(is_to,ierr);CHKERRQ(ierr)
@@ -4659,7 +4662,7 @@ subroutine UGridFindNewGhostCellIDsAfterGrowingStencilWidth(unstructured_grid, &
                        int_array1,PETSC_COPY_VALUES,is_to,ierr);CHKERRQ(ierr)
   deallocate(int_array1)
   
-  call VecScatterCreate(cids_petsc,is_from,ghosts_petsc,is_to,vec_scatter, &
+  call VecScatterCreateWithData(cids_petsc,is_from,ghosts_petsc,is_to,vec_scatter, &
                         ierr);CHKERRQ(ierr)
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)
   call ISDestroy(is_to,ierr);CHKERRQ(ierr)
@@ -4803,7 +4806,7 @@ subroutine UGridUpdateMeshAfterGrowingStencilWidth(unstructured_grid, &
 
   deallocate(int_array1)
   
-  call VecScatterCreate(elements_petsc,is_from,elements_ghost_cells,is_to,vec_scatter, &
+  call VecScatterCreateWithData(elements_petsc,is_from,elements_ghost_cells,is_to,vec_scatter, &
                         ierr);CHKERRQ(ierr)
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)
   call ISDestroy(is_to,ierr);CHKERRQ(ierr)
@@ -4976,7 +4979,7 @@ subroutine UGridUpdateMeshAfterGrowingStencilWidth(unstructured_grid, &
                     PETSC_DETERMINE, &
                     vertices_loc,ierr);CHKERRQ(ierr)
 
-  call VecScatterCreate(vertices_nat,is_from,vertices_loc,is_to,vec_scatter, &
+  call VecScatterCreateWithData(vertices_nat,is_from,vertices_loc,is_to,vec_scatter, &
                         ierr);CHKERRQ(ierr)
   call ISDestroy(is_from,ierr);CHKERRQ(ierr)
   call ISDestroy(is_to,ierr);CHKERRQ(ierr)
