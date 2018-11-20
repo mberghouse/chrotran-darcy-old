@@ -869,10 +869,16 @@ subroutine PMSubsurfaceFlowCheckConvergence(this,snes,it,xnorm,unorm, &
   PetscReal :: fnorm
   SNESConvergedReason :: reason
   PetscErrorCode :: ierr
+  
+  PetscReal, pointer :: accum(:)
+  
+  call VecGetArrayF90(this%realization%field%flow_accum,accum,ierr);CHKERRQ(ierr)
 
-  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,reason, &
+  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,accum,reason, &
                        this%realization%patch%grid, &
                        this%option,this%solver,ierr)
+                       
+  call VecRestoreArrayF90(this%realization%field%flow_accum,accum,ierr);CHKERRQ(ierr)
   
 end subroutine PMSubsurfaceFlowCheckConvergence
 

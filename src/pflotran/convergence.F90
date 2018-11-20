@@ -55,7 +55,7 @@ end function ConvergenceContextCreate
 
 ! ************************************************************************** !
 
-subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
+subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,accum,reason, &
                            grid,option,solver,ierr)
   ! 
   ! User defined convergence test
@@ -72,6 +72,7 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   PetscReal :: xnorm ! 2-norm of updated solution
   PetscReal :: unorm ! 2-norm of update. PETSc refers to this as snorm
   PetscReal :: fnorm ! 2-norm of updated residual
+  PetscReal, pointer :: accum(:)
   SNESConvergedReason :: reason
   PetscErrorCode :: ierr
   type(solver_type) :: solver
@@ -85,6 +86,7 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   PetscReal :: inorm_solution  !infinity norms
   PetscReal :: inorm_update  
   PetscReal :: inorm_residual  
+  PetscReal :: inorm_tol2
   
   PetscInt :: i, ndof, max_index, min_index
   PetscInt :: icount
@@ -94,6 +96,9 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   PetscReal, allocatable :: inorm_solution_stride(:)
   PetscReal, allocatable :: inorm_update_stride(:)
   PetscReal, allocatable :: inorm_residual_stride(:)
+  
+  PetscReal, pointer :: residual(:)
+  PetscReal, allocatable :: residual_temp(:)
   
   PetscReal :: norm1_solution
   PetscReal :: norm1_update
@@ -210,14 +215,40 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   ! must turn off after each convergence check as a subsequent process
   ! model may not user this custom test
   option%convergence = CONVERGENCE_OFF
-    
+  
 !  if (reason <= 0 .and. solver%check_infinity_norm) then
-  if (solver%check_infinity_norm) then
+  if (reason <= 0 .and. solver%check_infinity_norm) then ! .and. reason >0) then
   
     call SNESGetFunction(snes_,residual_vec,PETSC_NULL_FUNCTION, &
                          PETSC_NULL_INTEGER,ierr);CHKERRQ(ierr)
-
-    call VecNorm(residual_vec,NORM_INFINITY,inorm_residual,ierr);CHKERRQ(ierr)
+    
+    if (associated(accum)) then
+      inorm_tol2=1.d0
+      
+      call VecGetArrayF90(residual_vec,residual,ierr);CHKERRQ(ierr)
+      
+      where (dabs(accum) >= inorm_tol2)
+        residual = residual / accum
+      elsewhere
+        residual = residual / inorm_tol2
+      endwhere
+      
+      call VecRestoreArrayF90(residual_vec,residual,ierr);CHKERRQ(ierr)
+      call VecNorm(residual_vec,NORM_INFINITY,inorm_residual,ierr);CHKERRQ(ierr)
+     
+      call VecGetArrayF90(residual_vec,residual,ierr);CHKERRQ(ierr)
+      
+      where (dabs(accum) >= inorm_tol2)
+        residual = residual * accum
+      elsewhere
+        residual = residual * inorm_tol2
+      endwhere
+      
+      call VecRestoreArrayF90(residual_vec,residual,ierr);CHKERRQ(ierr)
+      
+    else
+      call VecNorm(residual_vec,NORM_INFINITY,inorm_residual,ierr);CHKERRQ(ierr)
+    endif
 
     if (i_iteration > 0) then
       call SNESGetSolutionUpdate(snes_,update_vec,ierr);CHKERRQ(ierr)
@@ -226,15 +257,19 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
       inorm_update = 0.d0
     endif
 
-    if (inorm_residual < solver%newton_inf_res_tol) then
-      reason = 10
-    else
-!      if (reason > 0 .and. inorm_residual > 100.d0*solver%newton_inf_res_tol) &
-!        reason = 0
-    endif
-
     if (inorm_update < solver%newton_inf_upd_tol .and. i_iteration > 0) then
       reason = 11
+    endif
+    
+    if (inorm_residual < solver%newton_inf_res_tol) then
+        reason = 10
+    endif
+    
+    if (solver%newton_inf_res_tol > 0 .and. solver%newton_inf_upd_tol > 0) then
+      if (reason > 0 .and. (inorm_residual > 100*solver%newton_inf_res_tol &
+          .or. inorm_update > 100*solver%newton_inf_upd_tol)) then
+        reason = 0
+      endif
     endif
     
     if (inorm_residual > solver%max_norm) then

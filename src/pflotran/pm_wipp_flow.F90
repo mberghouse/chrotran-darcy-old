@@ -1420,6 +1420,10 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   PetscMPIInt :: int_mpi
   PetscBool :: cell_id_match
   
+  PetscReal, pointer :: accum(:)
+  
+  nullify(accum)
+  
   grid => this%realization%patch%grid
   option => this%realization%option
   field => this%realization%field
@@ -1765,7 +1769,7 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   call VecRestoreArrayReadF90(field%flow_accum2,accum2_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayReadF90(field%flow_xx,X1_p,ierr);CHKERRQ(ierr)
 
-  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,reason, &
+  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,accum,reason, &
                        this%realization%patch%grid, &
                        this%option,this%solver,ierr)
 

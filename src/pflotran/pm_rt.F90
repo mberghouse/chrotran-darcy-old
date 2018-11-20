@@ -980,8 +980,12 @@ subroutine PMRTCheckConvergence(this,snes,it,xnorm,unorm,fnorm,reason,ierr)
   PetscReal :: fnorm
   SNESConvergedReason :: reason
   PetscErrorCode :: ierr
-
-  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,reason, &
+  
+  PetscReal, pointer :: accum(:)
+  
+  nullify(accum)
+  
+  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,accum,reason, &
                        this%realization%patch%grid, &
                        this%option,this%solver,ierr)
 

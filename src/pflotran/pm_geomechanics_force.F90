@@ -328,10 +328,12 @@ subroutine PMGeomechCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
   PetscErrorCode :: ierr
 
   type(grid_type), pointer :: grid
-
+  PetscReal, pointer :: accum(:)
+  
   nullify(grid)
-
-  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,reason, &
+  nullify(accum)
+  
+  call ConvergenceTest(snes,it,xnorm,unorm,fnorm,accum,reason, &
                        grid,this%option,this%solver,ierr)
 
 end subroutine PMGeomechCheckConvergence
