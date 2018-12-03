@@ -15,10 +15,6 @@ module Output_Surface_module
 
   private
 
-#if defined(SCORPIO_WRITE)
-  include "scorpiof.h"
-#endif
-
   ! flags signifying the first time a routine is called during a given
   ! simulation
   PetscBool :: hydrograph_first
@@ -689,20 +685,6 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
   use Patch_module
   use Reaction_Aux_module
 
-#if !defined(PETSC_HAVE_HDF5)
-  implicit none
-  
-  class(realization_surface_type) :: surf_realization
-  class(realization_subsurface_type) :: realization
-  PetscInt :: var_list_type
-
-  call printMsg(surf_realization%option,'')
-  write(surf_realization%option%io_buffer, &
-        '("PFLOTRAN must be compiled with HDF5 to &
-        &write HDF5 formatted structured grids Darn.")')
-  call printErrMsg(surf_realization%option)
-#else
-
 ! 64-bit stuff
 #ifdef PETSC_USE_64BIT_INDICES
 !#define HDF_NATIVE_INTEGER H5T_STD_I64LE
@@ -721,20 +703,6 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
   class(realization_subsurface_type) :: realization
   PetscInt :: var_list_type
 
-#if defined(SCORPIO_WRITE)
-  integer :: file_id
-  integer :: data_type
-  integer :: grp_id
-  integer :: file_space_id
-  integer :: memory_space_id
-  integer :: data_set_id
-  integer :: realization_set_id
-  integer :: prop_id
-  PetscMPIInt :: rank
-  integer :: rank_mpi,file_space_rank_mpi
-  integer :: dims(3)
-  integer :: start(3), length(3), stride(3)
-#else
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type
   integer(HID_T) :: grp_id
@@ -747,7 +715,6 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
   PetscMPIInt :: rank_mpi,file_space_rank_mpi
   integer(HSIZE_T) :: dims(3)
   integer(HSIZE_T) :: start(3), length(3), stride(3)
-#endif
 
   type(grid_type), pointer :: subsurf_grid
   type(grid_type), pointer :: surf_grid
@@ -780,11 +747,6 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
   PetscInt :: ivar, isubvar, var_type
   PetscInt :: vert_count
   PetscErrorCode :: ierr
-
-#ifdef SCORPIO_WRITE
-   option%io_buffer='OutputHDF5UGridXDMF not supported with SCORPIO_WRITE'
-   call printErrMsg(option)
-#else
 
   surf_discretization => surf_realization%discretization
   patch => surf_realization%patch
@@ -998,14 +960,7 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
 
   surf_hdf5_first = PETSC_FALSE
 
-#endif
-!ifdef SCORPIO_WRITE
-#endif
-!ifdef PETSC_HAVE_HDF5
-
 end subroutine OutputSurfaceHDF5UGridXDMF
-
-#if defined(PETSC_HAVE_HDF5)
 
 ! ************************************************************************** !
 
@@ -1033,21 +988,6 @@ subroutine WriteHDF5CoordinatesUGridXDMF(surf_realization,realization, &
   class(realization_subsurface_type) :: realization
   type(option_type), pointer :: option
 
-#if defined(SCORPIO_WRITE)
-  integer :: file_id
-  integer :: data_type
-  integer :: grp_id
-  integer :: file_space_id
-  integer :: memory_space_id
-  integer :: data_set_id
-  integer :: realization_set_id
-  integer :: prop_id
-  integer :: dims(3)
-  integer :: start(3), length(3), stride(3)
-  integer :: rank_mpi,file_space_rank_mpi
-  integer :: hdf5_flag
-  integer, parameter :: ON=1, OFF=0
-#else
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type
   integer(HID_T) :: grp_id
@@ -1061,7 +1001,6 @@ subroutine WriteHDF5CoordinatesUGridXDMF(surf_realization,realization, &
   PetscMPIInt :: rank_mpi,file_space_rank_mpi
   PetscMPIInt :: hdf5_flag
   PetscMPIInt, parameter :: ON=1, OFF=0
-#endif
 
   PetscInt :: istart
   PetscMPIInt :: hdf5_err
@@ -1090,12 +1029,6 @@ subroutine WriteHDF5CoordinatesUGridXDMF(surf_realization,realization, &
 
   surf_grid => surf_realization%patch%grid
   subsurf_grid => realization%patch%grid
-
-#if defined(SCORPIO_WRITE)
-  write(*,*) 'SCORPIO_WRITE'
-  option%io_buffer = 'WriteHDF5CoordinatesUGrid not supported for SCORPIO_WRITE'
-  call printErrMsg(option)
-#else
 
   call VecCreateMPI(option%mycomm,PETSC_DECIDE, &
                     subsurf_grid%unstructured_grid%num_vertices_global, &
@@ -1529,17 +1462,12 @@ subroutine WriteHDF5CoordinatesUGridXDMF(surf_realization,realization, &
   call VecDestroy(natural_y_cell_vec,ierr);CHKERRQ(ierr)
   call VecDestroy(natural_z_cell_vec,ierr);CHKERRQ(ierr)
 
-#endif
-! ifdef SCORPIO_WRITE
-
 end subroutine WriteHDF5CoordinatesUGridXDMF
-#endif
 
 ! ************************************************************************** !
 
 subroutine OutputSurfaceGetVarFromArray(surf_realization,vec,ivar,isubvar,isubvar1)
   ! 
-  ! ifdef PETSC_HAVE_HDF5
   ! This routine extracts variables indexed by ivar from a multivar array
   ! 
   ! Author: Gautam Bisht, LBNL
@@ -1814,8 +1742,6 @@ function OutputSurfaceHDF5FilenameID(output_option,option,var_list_type)
 
 end function OutputSurfaceHDF5FilenameID
 
-#if defined(PETSC_HAVE_HDF5)
-
 ! ************************************************************************** !
 
 subroutine OutputSurfaceGetFlowrates(surf_realization)
@@ -2059,21 +1985,6 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
   type(option_type), pointer :: option
   PetscInt :: var_list_type  
 
-#if defined(SCORPIO_WRITE)
-  integer :: file_id
-  integer :: data_type
-  integer :: grp_id
-  integer :: file_space_id
-  integer :: memory_space_id
-  integer :: data_set_id
-  integer :: realization_set_id
-  integer :: prop_id
-  integer :: dims(3)
-  integer :: start(3), length(3), stride(3)
-  integer :: rank_mpi,file_space_rank_mpi
-  integer :: hdf5_flag
-  integer, parameter :: ON=1, OFF=0
-#else
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type
   integer(HID_T) :: grp_id
@@ -2087,7 +1998,6 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
   PetscMPIInt :: rank_mpi,file_space_rank_mpi
   PetscMPIInt :: hdf5_flag
   PetscMPIInt, parameter :: ON=1, OFF=0
-#endif
 
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
@@ -2142,11 +2052,6 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
   output_option =>surf_realization%output_option
   surf_field => surf_realization%surf_field
 
-#if defined(SCORPIO_WRITE)
-  write(*,*) 'SCORPIO_WRITE'
-  option%io_buffer = 'WriteHDF5FlowratesUGrid not supported for SCORPIO_WRITE'
-  call printErrMsg(option)
-#else
   select case(option%iflowmode)
     case (RICHARDS_MODE)
       ndof=1
@@ -2292,10 +2197,6 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
 
   enddo
 
-#endif
-! #ifdef SCORPIO_WRITE
-
 end subroutine WriteHDF5SurfaceFlowratesUGrid
-#endif
 
 end module Output_Surface_module

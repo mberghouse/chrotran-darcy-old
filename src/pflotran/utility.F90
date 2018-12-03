@@ -28,6 +28,7 @@ module Utility_module
     module procedure ReallocateRealArray2
     module procedure ReallocateRealArray3
     module procedure ReallocateRealArray4
+    module procedure ReallocateBoolArray1
   end interface
   
   interface UtilityReadArray
@@ -43,6 +44,7 @@ module Utility_module
     module procedure DeallocateArray1DReal
     module procedure DeallocateArray2DReal
     module procedure DeallocateArray3DReal
+    module procedure DeallocateArray4DReal
     module procedure DeallocateArray1DLogical
     module procedure DeallocateArray2DLogical
     module procedure DeallocateArray3DLogical
@@ -523,6 +525,32 @@ subroutine ReallocateRealArray4(array,rank2_size)
 end subroutine ReallocateRealArray4
 
 ! ************************************************************************** !
+
+subroutine ReallocateBoolArray1(array,size)
+  !
+  ! Reallocates a bool array to a larger size and copies
+  !
+  ! Author: Dave Ponting
+  ! Date: 10/24/18
+  !
+
+  implicit none
+
+  PetscBool, pointer :: array(:)
+  PetscInt :: size
+
+  PetscBool, allocatable :: array2(:)
+
+  allocate(array2(size))
+  array2(1:size) = array(1:size)
+  deallocate(array)
+  allocate(array(2*size))
+  array = PETSC_FALSE
+  array(1:size) = array2(1:size)
+  size = 2*size
+  deallocate(array2)
+
+end subroutine ReallocateBoolArray1
 
 ! ************************************************************************** !
 
@@ -1543,10 +1571,21 @@ function Equal(value1, value2)
   PetscReal :: value1, value2
 
   Equal = PETSC_FALSE
-  ! using "abs(x) < spacing(y)/2.0" consistently gives same response as "x == y" for reals
-  ! using both gfortran and intel compilers for y around 0.0 and 1.0
-  ! this is setup assuming the "correct value" is on the RHS (second arg)
-  if (dabs(value1 - value2) < spacing(value2)/2.0)  Equal = PETSC_TRUE
+
+  ! using "abs(x) < spacing(y)/2.0" consistently gives same response as 
+  ! "x == y" for reals using both gfortran and intel compilers for y 
+  ! around 0.0 and 1.0 this is setup assuming the "correct value" is on 
+  ! the RHS (second arg)
+
+!  if (dabs(value1 - value2) < spacing(value2)/2.d0) Equal = PETSC_TRUE
+
+  !geh: spacing(0.d0) ~= 2.22d-308 and spacing(0.d0)/2.d0 = 0.d0
+  !     if value1 = value2 = 0.d0, then this will never be true since
+  !     dabs(0.d0 - 0.d0) = 0.d0 is not less than 0.d0.
+  !     therefore, switch division of spacing() by 2.d0 to multiplication
+  !     of dabs() by 2.d0
+
+  if (2.d0*dabs(value1 - value2) < spacing(value2)) Equal = PETSC_TRUE
   
 end function Equal
 
@@ -1883,6 +1922,25 @@ subroutine DeallocateArray3DReal(array)
   nullify(array)
 
 end subroutine DeallocateArray3DReal
+
+! ************************************************************************** !
+
+subroutine DeallocateArray4DReal(array)
+  !
+  ! Deallocates a 4D real array
+  !
+  ! Author: Dave Ponting
+  ! Date: 08/15/18
+  !
+
+  implicit none
+
+  PetscReal, pointer :: array(:,:,:,:)
+
+  if (associated(array)) deallocate(array)
+  nullify(array)
+
+end subroutine DeallocateArray4DReal
 
 ! ************************************************************************** !
 
@@ -2385,7 +2443,7 @@ end subroutine CalcParallelSUM2
 
 ! ************************************************************************** !
 
-subroutine MatCompare(a1,a2,n,m,tol,reltol)
+subroutine MatCompare(a1,a2,n,m,tol,reltol,flagged_err)
 
   !! Daniel Stone, March 2018
   !! Just output warnings and provide place
@@ -2397,10 +2455,14 @@ subroutine MatCompare(a1,a2,n,m,tol,reltol)
   PetscInt :: n, m
   PetscReal, dimension(1:n, 1:m) :: a1, a2
   PetscReal :: tol,reltol
+  PetscBool :: flagged_err
   !PetscBool :: do_rel_err 
 
   PetscInt :: i, j
   PetscReal :: dff,reldff
+
+
+  flagged_err = PETSC_FALSE
 
   do i = 1,n
     do j = 1,m
@@ -2411,6 +2473,7 @@ subroutine MatCompare(a1,a2,n,m,tol,reltol)
                  ", relative difference: ", reldff
         print *, a1(i,j), " compare to ", a2(i,j)
         print *, "..."
+        flagged_err = PETSC_TRUE
       endif
     end do
   end do 

@@ -515,9 +515,9 @@ subroutine OutputObservationTecplotSecTXT(realization_base)
           case(OBSERVATION_SCALAR)
             if (associated(observation%region%coordinates) .and. &
                 .not.observation%at_cell_center) then
-              option%io_buffer = 'Writing of data at coordinates not ' // &
-                'functioning properly for minerals.  Perhaps due to ' // &
-                'non-ghosting of vol frac....>? - geh'
+              option%io_buffer = 'Writing of data at coordinates not &
+                &functioning properly for minerals.  Perhaps due to &
+                &non-ghosting of vol frac....>? - geh'
               call printErrMsg(option)
               call WriteObservationHeaderForCoordSec(fid,realization_base, &
                                                   observation%region, &
@@ -1945,6 +1945,7 @@ subroutine OutputMassBalance(realization_base)
   use Material_Aux_class
   use General_Aux_module, only : general_fmw => fmw_comp
   use WIPP_Flow_Aux_module, only : wipp_flow_fmw => fmw_comp
+  use Well_Data_class
 
   implicit none
 
@@ -1975,7 +1976,7 @@ subroutine OutputMassBalance(realization_base)
   PetscInt :: iconn
   PetscInt :: offset
   PetscInt :: iphase, ispec
-  PetscInt :: icomp
+  PetscInt :: icomp, nmobilecomp
   PetscInt :: max_tran_size
   PetscReal :: sum_area(4)
   PetscReal :: sum_area_global(4)
@@ -2288,6 +2289,19 @@ subroutine OutputMassBalance(realization_base)
           cur_mbr => cur_mbr%next
         enddo
       endif
+
+!  Write out well rates and total headers if required
+
+      if (WellDataGetFlag()) then
+        if (option%iflowmode == TOIL_IMS_MODE &
+            .or. option%iflowmode == TOWG_MODE) then
+          select type(realization_base)
+           class is(realization_subsurface_type)
+             call WriteWellHeaders(fid,icol, &
+                                   realization_base,towg_miscibility_model)
+          end select
+        endif
+      endif
       
 #ifdef YE_FLUX
 !geh      do offset = 1, 4
@@ -2429,7 +2443,7 @@ subroutine OutputMassBalance(realization_base)
       !           where mass is summed across minerals needs to be moved
       !           to reactive_transport.F90.
       option%io_buffer = 'OutputMassBalance() needs to be refactored to &
-        consider species in the gas phase.'
+        &consider species in the gas phase.'
 !      call printErrMsg(option)
     endif
     max_tran_size = max(reaction%naqcomp,reaction%mineral%nkinmnrl, &
@@ -2917,15 +2931,17 @@ subroutine OutputMassBalance(realization_base)
     
     if (option%ntrandof > 0) then
 
-      allocate(sum_mol(reaction%naqcomp,option%transport%nphase))
-      allocate(sum_mol_global(reaction%naqcomp,option%transport%nphase))
+      nmobilecomp = reaction%naqcomp
+      allocate(sum_mol(nmobilecomp,option%transport%nphase))
+      allocate(sum_mol_global(nmobilecomp,option%transport%nphase))
       ! print out cumulative boundary flux
       sum_mol = 0.d0
       do iconn = 1, coupler%connection_set%num_connections
-        sum_mol = sum_mol + rt_auxvars_bc_or_ss(offset+iconn)%mass_balance
+        sum_mol = sum_mol + &
+          rt_auxvars_bc_or_ss(offset+iconn)%mass_balance(1:nmobilecomp,:)
       enddo
 
-      int_mpi = reaction%naqcomp*option%transport%nphase
+      int_mpi = nmobilecomp
       call MPI_Reduce(sum_mol,sum_mol_global,int_mpi, &
                       MPI_DOUBLE_PRECISION,MPI_SUM, &
                       option%io_rank,option%mycomm,ierr)
@@ -2942,10 +2958,11 @@ subroutine OutputMassBalance(realization_base)
       ! print out boundary flux
       sum_mol = 0.d0
       do iconn = 1, coupler%connection_set%num_connections
-        sum_mol = sum_mol + rt_auxvars_bc_or_ss(offset+iconn)%mass_balance_delta 
+        sum_mol = sum_mol + &
+          rt_auxvars_bc_or_ss(offset+iconn)%mass_balance_delta(1:nmobilecomp,:) 
       enddo
 
-      int_mpi = option%transport%nphase*option%ntrandof
+      int_mpi = nmobilecomp
       call MPI_Reduce(sum_mol,sum_mol_global,int_mpi, &
                       MPI_DOUBLE_PRECISION,MPI_SUM, &
                       option%io_rank,option%mycomm,ierr)
@@ -2981,6 +2998,21 @@ subroutine OutputMassBalance(realization_base)
       endif
       cur_mbr => cur_mbr%next
     enddo
+  endif
+
+!  Write out well rates and totals if required
+
+  if (WellDataGetFlag()) then
+    if ( option%myrank == option%io_rank) then
+      if (option%iflowmode == TOIL_IMS_MODE &
+          .or. option%iflowmode == TOWG_MODE) then
+        select type(realization_base)
+         class is(realization_subsurface_type)
+          call WriteWellValues(fid,realization_base, &
+                               output_option%tconv,towg_miscibility_model)
+        end select
+      endif
+    endif
   endif
 
 #ifdef YE_FLUX
@@ -3063,5 +3095,206 @@ subroutine OutputMassBalance(realization_base)
   mass_balance_first = PETSC_FALSE
 
 end subroutine OutputMassBalance
+
+! *************************************************************************** !
+
+subroutine WriteWellHeaders(fid,icol,realization,towg_miscibility_model)
+  !
+  ! Used to write out mas file headers specific to TOIL and TOWG modes
+  ! This routine must match the headers written by write_well_values
+
+  ! Author: Dave Ponting
+  ! Date  : 09/15/18
+
+  use Realization_Subsurface_class
+  use Well_Data_class
+
+  implicit none
+
+  PetscInt,intent(in   ) :: fid
+  PetscInt,intent(inout) :: icol
+  type(realization_subsurface_type) :: realization
+  PetscInt,intent(in   ) :: towg_miscibility_model
+
+  type(well_data_list_type),pointer :: well_data_list
+
+  PetscInt :: iwell,nwell,welltype
+  character(len=MAXSTRINGLENGTH) :: name
+  character(len=MAXSTRINGLENGTH) :: string
+
+!  Find well list and loop over wells
+
+  well_data_list => realization%well_data
+  nwell = getnwell(well_data_list)
+  do iwell = 1,nwell
+
+! Get name of this well
+
+    call getWellNameI(iwell,well_data_list,name)
+    welltype = getWellTypeI(iwell,well_data_list)
+    if (wellType == PROD_WELL_TYPE) then
+
+! Oil production rate and total
+
+      string = trim(name) // ' wopr'
+      call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+      string = trim(name) // ' wopt'
+      call OutputWriteToHeader(fid,string,'m^3','',icol)
+
+! Gas production rate and total
+
+      string = trim(name) // ' wgpr'
+      call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+      string = trim(name) // ' wgpt'
+      call OutputWriteToHeader(fid,string,'m^3','',icol)
+
+! Water production rate and total
+
+      string = trim(name) // ' wwpr'
+      call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+      string = trim(name) // ' wwpt'
+      call OutputWriteToHeader(fid,string,'m^3','',icol)
+
+! Solvent production rate if required
+
+      if( towg_miscibility_model == TOWG_SOLVENT_TL) then
+        string = trim(name) // ' wspr'
+        call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+        string = trim(name) // ' wspt'
+        call OutputWriteToHeader(fid,string,'m^3','',icol)
+      endif
+
+    else
+
+! Oil injection rate and total
+
+      string = trim(name) // ' woir'
+      call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+      string = trim(name) // ' woit'
+      call OutputWriteToHeader(fid,string,'m^3','',icol)
+
+! Gas injection rate and total
+
+      string = trim(name) // ' wgir'
+      call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+      string = trim(name) // ' wgit'
+      call OutputWriteToHeader(fid,string,'m^3','',icol)
+
+! Water injection rate and total
+
+      string = trim(name) // ' wwir'
+      call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+      string = trim(name) // ' wwit'
+      call OutputWriteToHeader(fid,string,'m^3','',icol)
+
+! Solvent injection rate if required
+
+      if( towg_miscibility_model == TOWG_SOLVENT_TL) then
+        string = trim(name) // ' wsir'
+        call OutputWriteToHeader(fid,string,'m^3/d','',icol)
+        string = trim(name) // ' wsit'
+        call OutputWriteToHeader(fid,string,'m^3','',icol)
+      endif
+
+    endif
+
+  enddo
+
+end subroutine WriteWellHeaders
+
+! *************************************************************************** !
+
+subroutine WriteWellValues(fid,realization,tconv,towg_miscibility_model)
+  !
+  ! Used to write out mas file values specific to TOIL and TOWG modes
+  ! This routine must match the headers written by WriteWellHeaders
+  !
+  ! Author: Dave Ponting
+  ! Date  : 09/15/18
+
+  use Realization_Subsurface_class
+  use Well_Data_class
+
+  implicit none
+
+110 format(es14.6)
+
+  PetscInt,intent(in   ) :: fid
+  type(realization_subsurface_type) :: realization
+  PetscReal :: tconv,sign
+  PetscInt :: towg_miscibility_model
+  type(well_data_list_type),pointer :: well_data_list
+
+  PetscInt :: iwell,nwell,welltype
+  PetscReal :: fopriu,fopr,fopt,fgpriu,fgpr,fgpt, &
+               fwpriu,fwpr,fwpt,fspriu,fspr,fspt
+
+!  Find well list and loop over wells
+
+  well_data_list => realization%well_data
+  nwell = getnwell(well_data_list)
+  do iwell = 1,nwell
+
+!  Set up well flow sign (+ ve producers,-ve injectors)
+
+    welltype = getWellTypeI(iwell,well_data_list)
+    if (wellType == PROD_WELL_TYPE) then
+      sign = 1.0
+    else
+      sign =-1.0
+    endif
+
+!  Get values in internal units
+
+   fopriu = getWellTTValI(iwell,W_TARG_OSV,VALTYPE_ACTUAL,well_data_list)
+   fopt   = getWellTTValI(iwell,W_TARG_OSV,VALTYPE_TOTAL ,well_data_list)
+
+   fgpriu = getWellTTValI(iwell,W_TARG_GSV,VALTYPE_ACTUAL,well_data_list)
+   fgpt   = getWellTTValI(iwell,W_TARG_GSV,VALTYPE_TOTAL ,well_data_list)
+
+   fwpriu = getWellTTValI(iwell,W_TARG_WSV,VALTYPE_ACTUAL,well_data_list)
+   fwpt   = getWellTTValI(iwell,W_TARG_WSV,VALTYPE_TOTAL ,well_data_list)
+
+   if( towg_miscibility_model == TOWG_SOLVENT_TL) then
+     fspriu = getWellTTValI(iwell,W_TARG_SSV,VALTYPE_ACTUAL,well_data_list)
+     fspt   = getWellTTValI(iwell,W_TARG_SSV,VALTYPE_TOTAL ,well_data_list)
+   else
+     fspriu = 0.0
+     fspt   = 0.0
+   endif
+
+!  Convert rates to user units (per day not per sec) and sign convention
+
+   fopr = fopriu*tconv*sign
+   fgpr = fgpriu*tconv*sign
+   fwpr = fwpriu*tconv*sign
+   fspr = fspriu*tconv*sign
+
+!  Convert totals to user sign convention
+
+   fopt = fopt*sign
+   fgpt = fgpt*sign
+   fwpt = fwpt*sign
+   fspt = fspt*sign
+
+!--Write out values------------------------------------------------------------
+
+   write(fid,110,advance="no") fopr
+   write(fid,110,advance="no") fopt
+
+   write(fid,110,advance="no") fgpr
+   write(fid,110,advance="no") fgpt
+
+   write(fid,110,advance="no") fwpr
+   write(fid,110,advance="no") fwpt
+
+   if( towg_miscibility_model == TOWG_SOLVENT_TL) then
+     write(fid,110,advance="no") fspr
+     write(fid,110,advance="no") fspt
+   endif
+
+  enddo
+
+end subroutine WriteWellValues
 
 end module Output_Observation_module

@@ -42,6 +42,8 @@ unit_test_dir = $(SRC_DIR)/unittests
 # Import variables/options/rules from PETSc.
 include ${PETSC_DIR}/lib/petsc/conf/variables
 include ${PETSC_DIR}/lib/petsc/conf/rules
+# reseting PETSC_MAKE_STOP_ON_ERROR causes build to stop on error.
+PETSC_MAKE_STOP_ON_ERROR=
 # Those files also include 
 # ${PETSC_DIR}/${PETSC_ARCH}/lib/petsc/conf/petscvariables
 # and 
@@ -185,11 +187,6 @@ ifdef scorpio
   MYFLAGS += ${FC_DEFINE_FLAG}SCORPIO
   MYFLAGS += ${FC_DEFINE_FLAG}SCORPIO_WRITE
   MYFLAGS += -I${SCORPIO_DIR}/include
-endif
-
-ifdef tau
-FC = /ccs/proj/geo002/tau/tau-2.19.1/craycnl/bin/tau_f90.sh -optCompInst -tau_makefile=$(TAU_MAKEFILE)
-FLINKER = /ccs/proj/geo002/tau/tau-2.19.1/craycnl/bin/tau_f90.sh -optCompInst -tau_makefile=$(TAU_MAKEFILE)
 endif
 
 ###############################################################################

@@ -51,6 +51,8 @@ module PM_Base_class
     procedure, public :: ComputeMassBalance => PMBaseComputeMassBalance
     procedure, public :: Destroy => PMBaseThisOnly
     procedure, public :: RHSFunction => PMBaseRHSFunction
+    procedure, public :: IFunction => PMBaseIFunction
+    procedure, public :: IJacobian => PMBaseIJacobian
     procedure, public :: CheckpointBinary => PMBaseCheckpointBinary
     procedure, public :: RestartBinary => PMBaseCheckpointBinary
     procedure, public :: CheckpointHDF5 => PMBaseCheckpointHDF5
@@ -80,6 +82,7 @@ subroutine PMBaseInit(this)
 
   ! Cannot allocate here.  Allocation takes place in daughter class
   this%name = ''
+  this%header = ''
   nullify(this%option)
   nullify(this%output_option)
   nullify(this%realization_base)
@@ -296,6 +299,35 @@ end subroutine PMBaseRHSFunction
 
 ! ************************************************************************** !
 
+subroutine PMBaseIFunction(this,ts,time,U,Udot,F,ierr)
+  implicit none
+  class(pm_base_type) :: this
+  TS :: ts
+  PetscReal :: time
+  Vec :: U, Udot
+  Vec :: F
+  PetscErrorCode :: ierr
+  print *, 'Must extend PMBaseIFunction for: ' // trim(this%name)
+  stop
+end subroutine PMBaseIFunction
+
+! ************************************************************************** !
+
+subroutine PMBaseIJacobian(this,ts,time,U,Udot,shift,A,B,ierr)
+  implicit none
+  class(pm_base_type) :: this
+  TS :: ts
+  PetscReal :: time
+  Vec :: U, Udot
+  PetscReal :: shift
+  Mat :: A, B
+  PetscErrorCode :: ierr
+  print *, 'Must extend PMBaseIJacobian for: ' // trim(this%name)
+  stop
+end subroutine PMBaseIJacobian
+
+! ************************************************************************** !
+
 subroutine PMBaseCheckpointBinary(this,viewer)
   implicit none
 #include "petsc/finclude/petscviewer.h"      
@@ -309,27 +341,14 @@ end subroutine PMBaseCheckpointBinary
 
 subroutine PMBaseCheckpointHDF5(this, pm_grp_id)
 
-#if  !defined(PETSC_HAVE_HDF5)
-  implicit none
-  class(pm_base_type) :: this
-  integer :: pm_grp_id
-  print *, 'PFLOTRAN must be compiled with HDF5 to ' // &
-        'write HDF5 formatted checkpoint file. Darn.'
-  stop
-#else
-
   use hdf5
+
   implicit none
 
   class(pm_base_type) :: this
-#if defined(SCORPIO_WRITE)
-  integer :: pm_grp_id
-#else
   integer(HID_T) :: pm_grp_id
-#endif
 !  print *, 'Must extend PMBaseCheckpointHDF5/RestartHDF5.'
 !  stop
-#endif
 
 end subroutine PMBaseCheckpointHDF5
 

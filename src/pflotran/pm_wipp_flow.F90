@@ -58,6 +58,7 @@ module PM_WIPP_Flow_class
     PetscBool :: scale_linear_system
     Vec :: scaling_vec
     PetscInt, pointer :: dirichlet_dofs(:) ! this array is zero-based indexing
+    PetscInt :: logging_verbosity
   contains
     procedure, public :: Read => PMWIPPFloRead
     procedure, public :: InitializeRun => PMWIPPFloInitializeRun
@@ -168,6 +169,7 @@ subroutine PMWIPPFloInitObject(this)
   this%convergence_test_both = PETSC_TRUE
   this%convergence_flags = 0
   this%convergence_reals = 0.d0
+  this%logging_verbosity = 0
 
 end subroutine PMWIPPFloInitObject
 
@@ -237,15 +239,6 @@ subroutine PMWIPPFloRead(this,input)
         call InputErrorMsg(input,option,keyword,error_string)
       case('GAS_COMPONENT_FORMULA_WEIGHT')
         call InputReadDouble(input,option,fmw_comp(2))
-        call InputErrorMsg(input,option,keyword,error_string)
-      case('FIX_UPWIND_DIRECTION')
-        wippflo_fix_upwind_direction = PETSC_TRUE
-      case('UNFIX_UPWIND_DIRECTION')
-        wippflo_fix_upwind_direction = PETSC_FALSE
-      case('COUNT_UPWIND_DIRECTION_FLIP')
-        wippflo_count_upwind_dir_flip = PETSC_TRUE
-      case('UPWIND_DIR_UPDATE_FREQUENCY')
-        call InputReadInt(input,option,wippflo_upwind_dir_update_freq)
         call InputErrorMsg(input,option,keyword,error_string)
       case('NO_FRACTURE')
         wippflo_use_fracture = PETSC_FALSE
@@ -394,7 +387,7 @@ subroutine PMWIPPFloRead(this,input)
           if (InputCheckExit(input,option)) exit
           if (icount+1 > max_dirichlet_bc) then
             option%io_buffer = 'Must increase size of "max_dirichlet_bc" & 
-              &in PMBragfloRead'
+              &in PMWIPPFloRead'
             call printErrMsg(option)
           endif
           call InputReadInt(input,option,temp_int)
@@ -417,6 +410,9 @@ subroutine PMWIPPFloRead(this,input)
           allocate(this%dirichlet_dofs(icount))       ! convert to zero-based
           this%dirichlet_dofs = int_array(1:icount) - 1 
         endif
+      case('LOGGING_VERBOSITY')
+        call InputReadInt(input,option,this%logging_verbosity)
+        call InputErrorMsg(input,option,keyword,error_string)
       case default
         call InputKeywordUnrecognized(keyword,'WIPP Flow Mode',option)
     end select
@@ -690,8 +686,7 @@ subroutine PMWIPPFloPostSolve(this)
   ! Author: Glenn Hammond
   ! Date: 07/11/17
   
-  use WIPP_Flow_Common_module
-  use WIPP_Flow_Aux_module
+  use Upwind_Direction_module
   use Option_module
 
   implicit none
@@ -701,8 +696,8 @@ subroutine PMWIPPFloPostSolve(this)
   PetscInt, save :: lr = 0, gr = 0, lbr = 0, gbr = 0
   PetscInt, save :: lj = 0, gj = 0, lbj = 0, gbj = 0
 
-  if (wippflo_fix_upwind_direction .and. &
-      wippflo_count_upwind_dir_flip .and. &
+  if (fix_upwind_direction .and. &
+      count_upwind_direction_flip .and. &
       OptionPrintToScreen(this%realization%option)) then
     write(*,'(6x,"Res: ",4i5," : ",4i7)') &
       liq_upwind_flip_count_by_res-lr, &
@@ -744,13 +739,14 @@ subroutine PMWIPPFloUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Author: Glenn Hammond
   ! Date: 07/11/17
   ! 
-
+  use Option_module
   use Realization_Base_class, only : RealizationGetVariable
   use Realization_Subsurface_class, only : RealizationLimitDTByCFL
   use Field_module
   use Global_module, only : GlobalSetAuxVarVecLoc
   use Variables_module, only : LIQUID_SATURATION, GAS_SATURATION
   use WIPP_Flow_Aux_module, only : wippflo_debug_ts_update
+  use Utility_module, only : Equal
 
   implicit none
   
@@ -762,6 +758,7 @@ subroutine PMWIPPFloUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   PetscInt :: num_newton_iterations
   PetscReal :: tfac(:)
   PetscReal :: time_step_max_growth_factor
+  character(len=MAXSTRINGLENGTH) :: string
   
   PetscReal :: dtime(2)
   type(field_type), pointer :: field
@@ -779,6 +776,19 @@ subroutine PMWIPPFloUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   dt = min(min(dtime(1),dtime(2))*dt,time_step_max_growth_factor*dt)
   ! make sure time step is within bounds given in the input deck
   dt = min(dt,dt_max)
+  if (this%logging_verbosity > 0) then
+    if (Equal(dt,dt_max)) then
+      string = 'maximum time step size'
+    else if (minval(dtime) > time_step_max_growth_factor) then
+      string = 'maximum time step growth factor'
+    else if (dtime(1) < dtime(2)) then
+      string = 'gas saturation governor'
+    else
+      string = 'liquid pressure governor'
+    endif
+    string = 'TS update: ' // trim(string)
+    call OptionPrint(string,this%option)
+  endif
   ! do not use the PFLOTRAN dt_min as it will shut down the simulation from
   ! within timestepper_BE. use %minimum_timestep_size, which is specific to 
   ! wipp_flow.
@@ -892,10 +902,7 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   Vec :: diagonal_vec
   PetscReal :: norm
   PetscInt :: matsize
-  PetscInt :: i, irow, icol, ncol
-  PetscInt :: cols(100) ! accommodates 49 connections max
-  PetscReal :: vals(100)
-  PetscReal :: max_abs_val
+  PetscInt :: i, irow
   PetscReal, pointer :: vec_p(:)
   
   call WIPPFloJacobian(snes,xx,A,B,this%realization,this%pmwss_ptr,ierr)
@@ -926,35 +933,21 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   call SNESGetFunction(snes,residual_vec,PETSC_NULL_FUNCTION, &
                        PETSC_NULL_INTEGER,ierr);CHKERRQ(ierr)
   if (this%scale_linear_system) then
-    if (this%option%mycommsize > 1) then
-      this%option%io_buffer = 'WIPP FLOW matrix scaling not allowed in &
-        &parallel.'
-      call printErrMsg(this%option)
-    endif
+!    if (this%option%mycommsize > 1) then
+!      this%option%io_buffer = 'WIPP FLOW matrix scaling not allowed in &
+!        &parallel.'
+!      call printErrMsg(this%option)
+!    endif
     call VecGetLocalSize(this%scaling_vec,matsize,ierr);CHKERRQ(ierr)
     call VecSet(this%scaling_vec,1.d0,ierr);CHKERRQ(ierr)
-    call VecGetArrayReadF90(this%scaling_vec,vec_p,ierr);CHKERRQ(ierr)
+    call VecGetArrayF90(this%scaling_vec,vec_p,ierr);CHKERRQ(ierr)
     do irow = 1, matsize, 2
       vec_p(irow) = this%linear_system_scaling_factor
     enddo
-    call VecRestoreArrayReadF90(this%scaling_vec,vec_p,ierr);CHKERRQ(ierr)
+    call VecRestoreArrayF90(this%scaling_vec,vec_p,ierr);CHKERRQ(ierr)
     call MatDiagonalScale(A,PETSC_NULL_VEC,this%scaling_vec,ierr);CHKERRQ(ierr)
-    call VecGetArrayReadF90(this%scaling_vec,vec_p,ierr);CHKERRQ(ierr)
-    do irow = 1, matsize
-      call MatGetRow(A,irow-1,ncol,cols,vals,ierr);CHKERRQ(ierr)
-      if (ncol > 100) then
-        this%option%io_buffer = 'Increase size of cols() and vals() in &
-                                &PMBragfloJacobian.'
-        call printErrMsg(this%option)
-      endif
-      max_abs_val = 0.d0
-      do icol = 1, ncol
-        max_abs_val = max(dabs(vals(icol)),max_abs_val)
-      enddo
-      call MatRestoreRow(A,irow-1,ncol,cols,vals,ierr);CHKERRQ(ierr)
-      vec_p(irow) = max_abs_val
-    enddo
-    call VecRestoreArrayReadF90(this%scaling_vec,vec_p,ierr);CHKERRQ(ierr)
+    call MatGetRowMaxAbs(A,this%scaling_vec,PETSC_NULL_INTEGER, &
+                         ierr);CHKERRQ(ierr)
 
     call VecReciprocal(this%scaling_vec,ierr);CHKERRQ(ierr)
 
@@ -1115,8 +1108,11 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   field => this%realization%field
   patch => this%realization%patch
 
-  dX_changed = PETSC_FALSE
-  X1_changed = PETSC_FALSE
+  ! If these are changed from true, we must add a global reduction on both
+  ! variables to ensure that their values match across all processes. Otherwise
+  ! PETSc will throw an error in debug mode or ignore the error in optimized.
+  dX_changed = PETSC_TRUE
+  X1_changed = PETSC_TRUE
   
   call VecGetArrayF90(dX,dX_p,ierr);CHKERRQ(ierr)
   if (wippflo_print_update) then
@@ -1431,7 +1427,6 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
   wippflo_auxvars => patch%aux%WIPPFlo%auxvars
   material_auxvars => patch%aux%Material%auxvars
 
-  residual_vec = tVec(0)
   ! check residual terms
   if (this%stored_residual_vec == PETSC_NULL_VEC) then
     residual_vec = field%flow_r
@@ -1691,6 +1686,7 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
     if (this%convergence_flags(MAX_CHANGE_LIQ_PRES_TS) > 0) then
       tempreal3 = this%convergence_reals(MAX_CHANGE_LIQ_PRES_TS)
       tempint3 = this%convergence_flags(MAX_CHANGE_LIQ_PRES_TS)
+      reason_string(6:6) = 'p'
     else
       tempreal3 = this%convergence_reals(MAX_REL_CHANGE_LIQ_PRES_NI)
       tempint3 = this%convergence_flags(MAX_REL_CHANGE_LIQ_PRES_NI)
@@ -1716,7 +1712,7 @@ subroutine PMWIPPFloConvergence(this,snes,it,xnorm,unorm, &
       ! just overwrite the character, the flag/real matches FORCE_ITERATION
       reason_string(7:7) = 'B'
     endif
-    if (option%mycommsize > 1) then
+    if (option%mycommsize > 1 .or. grid%nmax > 9999) then
       write(*,'(4x,"Rsn: ",a10,4es10.2)') reason_string, &
         this%convergence_reals(MAX_NORMAL_RES_LIQ), &
         this%convergence_reals(MAX_NORMAL_RES_GAS), &

@@ -18,10 +18,6 @@ module Output_module
 
   private
 
-#if defined(SCORPIO_WRITE)
-  include "scorpiof.h"
-#endif
-
   PetscInt, parameter :: TECPLOT_INTEGER = 0
   PetscInt, parameter :: TECPLOT_REAL = 1
 
@@ -1056,6 +1052,18 @@ subroutine OutputVariableRead(input,option,output_variable_list)
         call OutputVariableAddToList(output_variable_list,name, &
                                      OUTPUT_GENERIC,units, &
                                      GAS_PERMEABILITY_Z)
+      case ('LIQUID_RELATIVE_PERMEABILITY')
+        units = '-'
+        name = 'Liquid Relative Permeability'
+        call OutputVariableAddToList(output_variable_list,name, &
+                                     OUTPUT_GENERIC,units, &
+                                     LIQUID_REL_PERM)
+      case ('GAS_RELATIVE_PERMEABILITY')
+        units = '-'
+        name = 'Gas Relative Permeability'
+        call OutputVariableAddToList(output_variable_list,name, &
+                                     OUTPUT_GENERIC,units, &
+                                     GAS_REL_PERM)
       case ('SOIL_COMPRESSIBILITY')
         units = ''
         name = 'Compressibility'
@@ -1193,11 +1201,6 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
       endif      
       call PetscLogEventEnd(logging%event_output_hdf5,ierr);CHKERRQ(ierr)
       call PetscTime(tend,ierr);CHKERRQ(ierr)
-#ifdef SCORPIO_WRITE
-      if (option%myrank == 0) write (*,'(" Parallel IO Write method is used in &
-        &writing the output, HDF5_WRITE_GROUP_SIZE = ",i5)') &
-        option%hdf5_write_group_size
-#endif
       write(option%io_buffer,'(f10.2," Seconds to write HDF5 file.")') &
             tend-tstart
       call printMsg(option)
@@ -1639,18 +1642,6 @@ subroutine OutputMAD(realization_base)
   use Variables_module
   use Output_Common_module, only : OutputGetVariableArray
  
-#if !defined(PETSC_HAVE_HDF5)
-  implicit none
-  
-  class(realization_base_type) :: realization_base
-
-  call printMsg(realization_base%option,'')
-  write(realization_base%option%io_buffer, &
-        '("PFLOTRAN must be compiled with HDF5 to ", &
-        &"write HDF5 formatted structured grids.")')
-  call printErrMsg(realization_base%option)
-#else
-
 ! 64-bit stuff
 #ifdef PETSC_USE_64BIT_INDICES
 !#define HDF_NATIVE_INTEGER H5T_STD_I64LE
@@ -1763,7 +1754,7 @@ subroutine OutputMAD(realization_base)
 
   call h5fclose_f(file_id,hdf5_err)
   call h5close_f(hdf5_err)
-#endif
+
 end subroutine OutputMAD
 
 ! ************************************************************************** !

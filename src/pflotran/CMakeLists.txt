@@ -165,6 +165,7 @@ set(UTIL_SOURCES
 	toil_ims_derivs.F90
 	variables.F90
 	derivative_tests.F90
+	derivatives_utilities.F90
 )
 
 set(EOS_SOURCES
@@ -204,6 +205,7 @@ set(MODE_AUX_SOURCES
 	pm_mphase.F90
 	pm_miscible.F90
 	pm_richards.F90
+	pm_richards_ts.F90
 	pm_rt.F90
 	pm_subsurface_flow.F90
 	pm_surface_flow.F90
@@ -348,6 +350,7 @@ set(IO_SOURCES
 set(MISC_SOURCES
 	block_solve.F90
 	block_tridiag.F90
+	characteristic_curves_table.F90
 	checkpoint.F90
 	condition.F90
 	condition_control.F90
@@ -358,11 +361,6 @@ set(MISC_SOURCES
 	data_mediator_vec.F90
 	data_mediator_base.F90
 	debug.F90
-	e4d_mat_inv.F90
-	e4d_run.F90
-	e4d_setup.F90
-	e4d_vars.F90
-	factory_hydrogeophysics.F90
 	factory_pflotran.F90
 	factory_subsurface.F90
 	field.F90
@@ -381,7 +379,6 @@ set(MISC_SOURCES
 	patch.F90
 	pmc_auxiliary.F90
 	pmc_base.F90
-	pmc_hydrogeophysics.F90
 	pmc_subsurface.F90
 	pmc_third_party.F90
 	realization_base.F90
@@ -392,22 +389,23 @@ set(MISC_SOURCES
 	secondary_continuum.F90
 	simulation_aux.F90
 	simulation_base.F90
-	simulation_hydrogeophysics.F90
 	simulation_subsurface.F90
 	solver.F90
 	spline.F90
 	strata.F90
 	timestepper_base.F90
 	timestepper_BE.F90
+	timestepper_TS.F90
 	transport.F90
 	waypoint.F90
 	wipp.F90
-	wrapper_hydrogeophysics.F90
 )
 
 set(WELL_SOURCES
 	well_spec_base.F90
 	well_base.F90
+	well_data.F90
+	well_solver.F90
 	well_flow.F90
 	well_flow_energy.F90
 	well_water_injector.F90

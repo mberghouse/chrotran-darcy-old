@@ -9,8 +9,18 @@ module PFLOTRAN_Constants_module
   private
 
 #include "petsc/finclude/petscsys.h"
-  ! MUST INCREMENT THIS NUMBER EVERYTIME A CHECKPOINT FILE IS MODIFIED TO PREVENT
-  ! COMPATIBILITY ISSUES - geh.
+#define VMAJOR 3
+#define VMINOR 10
+#define VSUBMINOR 2
+#if (PETSC_VERSION_MAJOR < VMAJOR ||                    \
+     (PETSC_VERSION_MAJOR == VMAJOR &&                  \
+      (PETSC_VERSION_MINOR < VMINOR ||                  \
+       (PETSC_VERSION_MINOR == VMINOR &&                \
+        (PETSC_VERSION_SUBMINOR < VSUBMINOR)))))
+#error "Please use PETSc version 3.10.2: 'git checkout v3.10.2' in $PETSC_DIR"
+#endif
+  ! MUST INCREMENT THIS NUMBER EVERYTIME A CHECKPOINT FILE IS 
+  ! MODIFIED TO PREVENT COMPATIBILITY ISSUES - geh.
   PetscInt, parameter, public :: CHECKPOINT_REVISION_NUMBER = 1
   
   PetscInt, parameter, public :: MAXSTRINGLENGTH = 512
@@ -135,7 +145,8 @@ module PFLOTRAN_Constants_module
   PetscInt, parameter, public :: TOIL_IMS_MODE = 8
   PetscInt, parameter, public :: TOWG_MODE = 9
   PetscInt, parameter, public :: WF_MODE = 10
-  
+  PetscInt, parameter, public :: RICHARDS_TS_MODE = 11
+
   ! flow sub-modes
   PetscInt, parameter, public :: TOWG_IMMISCIBLE = 1
   PetscInt, parameter, public :: TOWG_TODD_LONGSTAFF = 2
@@ -291,9 +302,8 @@ module PFLOTRAN_Constants_module
   ! Macros that are used as 'vscatter_index' values
   PetscInt, parameter, public :: SURF_TO_SUBSURF = 1
   PetscInt, parameter, public :: SUBSURF_TO_SURF = 2
-  PetscInt, parameter, public :: SUBSURF_TO_HYDROGEOPHY = 3
-  PetscInt, parameter, public :: SUBSURF_TO_GEOMECHANICS = 4
-  PetscInt, parameter, public :: GEOMECHANICS_TO_SUBSURF = 5
+  PetscInt, parameter, public :: SUBSURF_TO_GEOMECHANICS = 3
+  PetscInt, parameter, public :: GEOMECHANICS_TO_SUBSURF = 4
   
   ! Ice/water/vapor partitioning model
   PetscInt, parameter, public :: PAINTER_EXPLICIT = 1

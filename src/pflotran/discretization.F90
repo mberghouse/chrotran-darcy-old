@@ -236,7 +236,8 @@ subroutine DiscretizationReadRequiredCards(discretization,input,option)
         call InputErrorMsg(input,option,'Z direction','Origin')        
       case('FILE','GRAVITY','INVERT_Z','MAX_CELLS_SHARING_A_VERTEX',&
            'STENCIL_WIDTH','STENCIL_TYPE','FLUX_METHOD','DOMAIN_FILENAME', &
-           'UPWIND_FRACTION_METHOD','PERM_TENSOR_TO_SCALAR_MODEL')
+           'UPWIND_FRACTION_METHOD','PERM_TENSOR_TO_SCALAR_MODEL', &
+           '2ND_ORDER_BOUNDARY_CONDITION')
       case('DXYZ','BOUNDS')
         call InputSkipToEND(input,option,word) 
       case default
@@ -257,22 +258,7 @@ subroutine DiscretizationReadRequiredCards(discretization,input,option)
       select case(unstructured_grid_itype)
         case(IMPLICIT_UNSTRUCTURED_GRID)
           if (index(discretization%filename,'.h5') > 0) then
-#if !defined(PETSC_HAVE_HDF5)
-            option%io_buffer = 'PFLOTRAN must be built with HDF5 ' // &
-              'support to read unstructured grid .h5 files'
-            call printErrMsg(option)
-#else
-
-#ifdef SCORPIO
-            call UGridReadHDF5PIOLib(un_str_grid,discretization%filename,option)
-#else
             call UGridReadHDF5(un_str_grid,discretization%filename,option)
-#endif
-! #ifdef SCORPIO
-
-#endif
-!#if !defined(PETSC_HAVE_HDF5)
-
           else
             call UGridRead(un_str_grid,discretization%filename,option)
           endif
@@ -559,6 +545,13 @@ subroutine DiscretizationRead(discretization,input,option)
                                           option)
         end select
 
+      case('2ND_ORDER_BOUNDARY_CONDITION')
+        if (discretization%itype /= STRUCTURED_GRID) then
+          option%io_buffer = '2ND_ORDER_BOUNDARY_CONDITION only supported &
+            &for structured grids.'
+          call PrintErrMsg(option)
+        endif
+        discretization%grid%structured_grid%second_order_bc = PETSC_TRUE
       case default
         call InputKeywordUnrecognized(word,'GRID',option)
     end select 
@@ -1696,8 +1689,9 @@ subroutine DiscretizationDestroy(discretization)
   nullify(discretization%dm_n_stress_strain_dof)
 
 
-  if (discretization%tvd_ghost_scatter /= PETSC_NULL_VECSCATTER) &
-    call VecScatterDestroy(discretization%tvd_ghost_scatter)
+  if (discretization%tvd_ghost_scatter /= PETSC_NULL_VECSCATTER) then
+    call VecScatterDestroy(discretization%tvd_ghost_scatter,ierr);CHKERRQ(ierr)
+  endif
   
   call GridDestroy(discretization%grid)
   

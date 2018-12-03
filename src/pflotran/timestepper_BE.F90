@@ -27,8 +27,6 @@ module Timestepper_BE_class
     PetscReal, pointer :: tfac(:)
     PetscInt :: ntfac             ! size of tfac
             
-    type(solver_type), pointer :: solver
-  
   contains
     
     procedure, public :: ReadInput => TimestepperBERead
@@ -38,10 +36,8 @@ module Timestepper_BE_class
     procedure, public :: UpdateDT => TimestepperBEUpdateDT
     procedure, public :: CheckpointBinary => TimestepperBECheckpointBinary
     procedure, public :: RestartBinary => TimestepperBERestartBinary
-#if defined(PETSC_HAVE_HDF5)
     procedure, public :: CheckpointHDF5 => TimestepperBECheckpointHDF5
     procedure, public :: RestartHDF5 => TimestepperBERestartHDF5
-#endif
     procedure, public :: Reset => TimestepperBEReset
     procedure, public :: PrintInfo => TimestepperBEPrintInfo
     procedure, public :: InputRecord => TimestepperBEInputRecord
@@ -292,10 +288,6 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
   Vec :: residual_vec
   PetscErrorCode :: ierr
 
-  ! GNU -O3 can fail below in SNESGetFunction() as the compiler can set the
-  ! initial value to -1, which CHKFORTRANNULLOBJECT() interprets as NULL.
-  residual_vec = tVec(0) 
-  
   solver => this%solver
   option => process_model%option
   
@@ -382,7 +374,8 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
       
       write(option%io_buffer,'(''-> Cut time step: snes='',i3, &
            &   '' icut= '',i2,''['',i3,'']'','' t= '',1pe12.5, '' dt= '', &
-           &   1pe12.5)')  snes_reason,icut,this%cumulative_time_step_cuts, &
+           &   1pe12.5)')  snes_reason,icut, &
+           this%cumulative_time_step_cuts+icut, &
            option%time/tconv, &
            this%dt/tconv
       call printMsg(option)
@@ -635,8 +628,7 @@ end subroutine TimestepperBERestartBinary
 
 ! ************************************************************************** !
 
-#if defined(PETSC_HAVE_HDF5)
-subroutine TimestepperBECheckpointHDF5(this, chk_grp_id, option)
+subroutine TimestepperBECheckpointHDF5(this, h5_chk_grp_id, option)
   !
   ! Checkpoints parameters/variables associated with
   ! a time stepper.
@@ -652,24 +644,14 @@ subroutine TimestepperBECheckpointHDF5(this, chk_grp_id, option)
   implicit none
   
   class(timestepper_BE_type) :: this
-  PetscInt :: chk_grp_id
+  integer(HID_T) :: h5_chk_grp_id
   type(option_type) :: option
 
-#if defined(SCORPIO_WRITE)
-  integer :: h5_chk_grp_id
-  integer, pointer :: dims(:)
-  integer, pointer :: start(:)
-  integer, pointer :: stride(:)
-  integer, pointer :: length(:)
-  integer :: timestepper_grp_id
-#else
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
   integer(HID_T) :: timestepper_grp_id
-  integer(HID_T) :: h5_chk_grp_id
-#endif
 
   PetscMPIInt :: dataset_rank
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -681,7 +663,6 @@ subroutine TimestepperBECheckpointHDF5(this, chk_grp_id, option)
   PetscMPIInt :: hdf5_err
 
   string = "Timestepper"
-  h5_chk_grp_id = chk_grp_id
   call h5gcreate_f(h5_chk_grp_id, string, timestepper_grp_id, &
                    hdf5_err, OBJECT_NAMELEN_DEFAULT_F)
 
@@ -778,7 +759,7 @@ end subroutine TimestepperBECheckpointHDF5
 
 ! ************************************************************************** !
 
-subroutine TimestepperBERestartHDF5(this, chk_grp_id, option)
+subroutine TimestepperBERestartHDF5(this, h5_chk_grp_id, option)
   !
   ! Restarts parameters/variables associated with
   ! a time stepper.
@@ -795,24 +776,14 @@ subroutine TimestepperBERestartHDF5(this, chk_grp_id, option)
   implicit none
   
   class(timestepper_BE_type) :: this
-  PetscInt :: chk_grp_id
+  integer(HID_T) :: h5_chk_grp_id
   type(option_type) :: option
 
-#if defined(SCORPIO_WRITE)
-  integer :: h5_chk_grp_id
-  integer, pointer :: dims(:)
-  integer, pointer :: start(:)
-  integer, pointer :: stride(:)
-  integer, pointer :: length(:)
-  integer :: timestepper_grp_id
-#else
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
   integer(HID_T) :: timestepper_grp_id
-  integer(HID_T) :: h5_chk_grp_id
-#endif
 
   PetscMPIInt :: dataset_rank
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -824,7 +795,6 @@ subroutine TimestepperBERestartHDF5(this, chk_grp_id, option)
   PetscMPIInt :: hdf5_err
 
   string = "Timestepper"
-  h5_chk_grp_id = chk_grp_id
   call HDF5GroupOpen(h5_chk_grp_id,string,timestepper_grp_id,option)
 
   allocate(start(1))
@@ -916,7 +886,6 @@ subroutine TimestepperBERestartHDF5(this, chk_grp_id, option)
   deallocate(real_array)
 
 end subroutine TimestepperBERestartHDF5
-#endif
 
 ! ************************************************************************** !
 

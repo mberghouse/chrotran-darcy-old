@@ -1490,16 +1490,6 @@ subroutine PMRTCheckpointHDF5(this, pm_grp_id)
   ! Date: 07/30/15
   ! 
 
-#if  !defined(PETSC_HAVE_HDF5)
-  implicit none
-  class(pm_rt_type) :: this
-  integer :: pm_grp_id
-  type(option_type) :: option
-  print *, 'PFLOTRAN must be compiled with HDF5 to ' // &
-        'write HDF5 formatted checkpoint file. Darn.'
-  stop
-#else
-
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use Option_module
@@ -1521,23 +1511,12 @@ subroutine PMRTCheckpointHDF5(this, pm_grp_id)
   implicit none
 
   class(pm_rt_type) :: this
-#if defined(SCORPIO_WRITE)
-  integer :: pm_grp_id
-#else
   integer(HID_T) :: pm_grp_id
-#endif
 
-#if defined(SCORPIO_WRITE)
-  integer, pointer :: dims(:)
-  integer, pointer :: start(:)
-  integer, pointer :: stride(:)
-  integer, pointer :: length(:)
-#else
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-#endif
 
   PetscMPIInt :: dataset_rank
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -1681,7 +1660,6 @@ subroutine PMRTCheckpointHDF5(this, pm_grp_id)
     call VecDestroy(natural_vec,ierr);CHKERRQ(ierr)
 
    endif
-#endif
 
 end subroutine PMRTCheckpointHDF5
 
@@ -1694,16 +1672,6 @@ subroutine PMRTRestartHDF5(this, pm_grp_id)
   ! Author: Gautam Bisht
   ! Date: 07/30/15
   ! 
-
-#if  !defined(PETSC_HAVE_HDF5)
-  implicit none
-  class(pm_rt_type) :: this
-  integer :: pm_grp_id
-  type(option_type) :: option
-  print *, 'PFLOTRAN must be compiled with HDF5 to ' // &
-        'write HDF5 formatted checkpoint file. Darn.'
-  stop
-#else
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
@@ -1727,23 +1695,12 @@ subroutine PMRTRestartHDF5(this, pm_grp_id)
   implicit none
 
   class(pm_rt_type) :: this
-#if defined(SCORPIO_WRITE)
-  integer :: pm_grp_id
-#else
   integer(HID_T) :: pm_grp_id
-#endif
 
-#if defined(SCORPIO_WRITE)
-  integer, pointer :: dims(:)
-  integer, pointer :: start(:)
-  integer, pointer :: stride(:)
-  integer, pointer :: length(:)
-#else
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-#endif
 
   PetscMPIInt :: dataset_rank
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -1908,8 +1865,6 @@ subroutine PMRTRestartHDF5(this, pm_grp_id)
   deallocate(length)
   deallocate(stride)
   deallocate(int_array)
-
-#endif
 
 end subroutine PMRTRestartHDF5
 

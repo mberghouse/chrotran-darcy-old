@@ -1475,6 +1475,10 @@ subroutine FlowConditionRead(condition,input,option)
                               PETSC_TRUE)
 
   select case(option%iflowmode)
+    case default
+      option%io_buffer = 'The flow mode not supported in original &
+        &FlowConditionRead.'
+      call printMsg(option)
     case(G_MODE)
       option%io_buffer = 'General mode not supported in original &
         &FlowConditionRead.'
@@ -1703,7 +1707,7 @@ subroutine FlowConditionRead(condition,input,option)
       condition%itype(TWO_INTEGER) = concentration%itype
 !#endif
 
-    case(RICHARDS_MODE)
+    case(RICHARDS_MODE, RICHARDS_TS_MODE)
       if (.not.associated(pressure) .and. .not.associated(rate) .and. &
           .not.associated(saturation) .and. .not.associated(well)) then
         option%io_buffer = 'pressure, rate and saturation condition null in &
@@ -3701,9 +3705,7 @@ subroutine ConditionReadValues(input,option,keyword,dataset_base, &
   use Dataset_module
   use Dataset_Base_class
   use Dataset_Ascii_class
-#if defined(PETSC_HAVE_HDF5)
   use hdf5
-#endif
 
   implicit none
 
@@ -3726,11 +3728,9 @@ subroutine ConditionReadValues(input,option,keyword,dataset_base, &
   PetscReal, pointer :: real_buffer(:)
   PetscErrorCode :: ierr
 
-#if defined(PETSC_HAVE_HDF5)
   integer(HID_T) :: file_id
   integer(HID_T) :: prop_id
   PetscMPIInt :: hdf5_err
-#endif
 
   call PetscLogEventBegin(logging%event_flow_condition_read_values, &
                           ierr);CHKERRQ(ierr)
@@ -3784,11 +3784,6 @@ subroutine ConditionReadValues(input,option,keyword,dataset_base, &
                                  &"conditions not currently supported.")')
         call printErrMsg(option)
 #if 0
-#if !defined(PETSC_HAVE_HDF5)
-        write(option%io_buffer,'("PFLOTRAN must be compiled with HDF5 to ", &
-                                 &"read HDF5 formatted flow conditions.")')
-        call printErrMsg(option)
-#else
         if (len_trim(hdf5_path) < 1) then
           option%io_buffer = 'No hdf5 path listed under Flow_Condition: ' // &
                              trim(keyword)
@@ -3841,7 +3836,6 @@ subroutine ConditionReadValues(input,option,keyword,dataset_base, &
         nullify(dims)
         if (associated(real_buffer)) deallocate(real_buffer)
         nullify(real_buffer)
-#endif
 #endif
 ! if 0
       else

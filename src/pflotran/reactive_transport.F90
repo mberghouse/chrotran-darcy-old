@@ -321,10 +321,12 @@ subroutine RTSetup(realization)
     iphase = cur_fluid_property%phase_id
     ! setting of phase diffusion coefficients must come before individual
     ! species below
-    rt_parameter%diffusion_coefficient(:,iphase) = &
-      cur_fluid_property%diffusion_coefficient
-    rt_parameter%diffusion_activation_energy(:) = &
-      cur_fluid_property%diffusion_activation_energy
+    if (iphase <= option%transport%nphase) then
+      rt_parameter%diffusion_coefficient(:,iphase) = &
+        cur_fluid_property%diffusion_coefficient
+      rt_parameter%diffusion_activation_energy(:,iphase) = &
+        cur_fluid_property%diffusion_activation_energy
+    endif
     cur_fluid_property => cur_fluid_property%next
   enddo
 
@@ -4502,27 +4504,6 @@ subroutine RTCheckpointKineticSorptionHDF5(realization, pm_grp_id, checkpoint)
   ! Author: Gautam Bisht, LBNL
   ! Date: 07/30/15
   !
-
-#if  !defined(PETSC_HAVE_HDF5)
-  use Realization_Subsurface_class
-  use Option_module
-
-  implicit none
-
-  type(realization_subsurface_type) :: realization
-  integer :: pm_grp_id
-  PetscBool :: checkpoint
-
-  PetscErrorCode :: ierr
-
-  call printMsg(realization%option,'')
-  write(realization%option%io_buffer, &
-        '("PFLOTRAN must be compiled with HDF5 to &
-        &write HDF5 formatted checkpoint file. Darn.")')
-  call printErrMsg(realization%option)
-
-#else
-
   use Realization_Subsurface_class
   use Patch_module
   use Grid_module
@@ -4534,11 +4515,7 @@ subroutine RTCheckpointKineticSorptionHDF5(realization, pm_grp_id, checkpoint)
                           HDF5ReadDataSetInVec
 
   type(realization_subsurface_type) :: realization
-#if defined(SCORPIO_WRITE)
-  integer :: pm_grp_id
-#else
   integer(HID_T) :: pm_grp_id
-#endif
   PetscBool :: checkpoint
 
   type(option_type), pointer :: option
@@ -4641,7 +4618,6 @@ subroutine RTCheckpointKineticSorptionHDF5(realization, pm_grp_id, checkpoint)
       enddo
     endif
   enddo
-#endif
 
 end subroutine RTCheckpointKineticSorptionHDF5
 

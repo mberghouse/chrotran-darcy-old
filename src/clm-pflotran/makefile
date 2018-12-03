@@ -222,7 +222,7 @@ lib_pflotran_obj = \
 	$(util_obj) $(eos_obj) $(mode_aux_obj) $(mode_obj) \
 	$(shared_mode_aux_obj) $(chem_obj) $(geomech_obj) $(grid_obj) \
 	$(relations_obj) $(properties_obj) $(dataset_obj) $(srcsink_obj) \
-	$(io_obj) $(misc_obj) $(surface_obj) $(solver_obj)
+	$(io_obj) $(misc_obj) $(surface_obj) $(solver_obj) $(well_obj)
 
 pflotran_interface_test_obj = ${pflotran_src}pflotran_interface_main.o
 
@@ -292,7 +292,7 @@ mapping.o : input_aux.o option.o pflotran_constants.o string.o
 pflotran_model.o : characteristic_curves.o characteristic_curves_common.o \
                    clm_pflotran_interface_data.o connection.o coupler.o \
                    discretization.o factory_geomechanics.o \
-                   factory_hydrogeophysics.o factory_pflotran.o \
+                   factory_pflotran.o \
                    factory_subsurface.o factory_surface.o \
                    factory_surfsubsurface.o field.o global_aux.o grid.o \
                    grid_unstructured.o grid_unstructured_aux.o \

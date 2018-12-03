@@ -24,13 +24,12 @@ module WIPP_Flow_Common_module
                          material_auxvar_up, &
                          wippflo_auxvar_dn,global_auxvar_dn, &
                          material_auxvar_dn, &
-                         area, dist, upwind_direction, &
+                         area, dist, upwind_direction_, &
                          wippflo_parameter, &
                          option,v_darcy,Res, &
                          derivative_call, &
-                         fix_upwind_direction, &
-                         update_upwind_direction, &
-                         count_upwind_direction_flip, &
+                         update_upwind_direction_, &
+                         count_upwind_direction_flip_, &
                          debug_connection)
       use WIPP_Flow_Aux_module
       use Global_Aux_module
@@ -44,26 +43,24 @@ module WIPP_Flow_Common_module
       PetscReal :: v_darcy(option%nphase)
       PetscReal :: area
       PetscReal :: dist(-1:3)
-      PetscInt :: upwind_direction(option%nphase)
+      PetscInt :: upwind_direction_(option%nphase)
       type(wippflo_parameter_type) :: wippflo_parameter
       PetscReal :: Res(option%nflowdof)
       PetscBool :: derivative_call
-      PetscBool :: fix_upwind_direction
-      PetscBool :: update_upwind_direction
-      PetscBool :: count_upwind_direction_flip
+      PetscBool :: update_upwind_direction_
+      PetscBool :: count_upwind_direction_flip_
       PetscBool :: debug_connection
     end subroutine FluxDummy
     subroutine BCFluxDummy(ibndtype,auxvar_mapping,auxvars, &
                          wippflo_auxvar_up,global_auxvar_up, &
                          wippflo_auxvar_dn,global_auxvar_dn, &
                          material_auxvar_dn, &
-                         area,dist,upwind_direction, &
+                         area,dist,upwind_direction_, &
                          wippflo_parameter, &
                          option,v_darcy,Res, &
                          derivative_call, &
-                         fix_upwind_direction, &
-                         update_upwind_direction, &
-                         count_upwind_direction_flip, &
+                         update_upwind_direction_, &
+                         count_upwind_direction_flip_, &
                          debug_connection)
       use WIPP_Flow_Aux_module
       use Global_Aux_module
@@ -79,14 +76,13 @@ module WIPP_Flow_Common_module
       class(material_auxvar_type) :: material_auxvar_dn
       PetscReal :: area
       PetscReal :: dist(-1:3)
-      PetscInt :: upwind_direction(option%nphase)
+      PetscInt :: upwind_direction_(option%nphase)
       type(wippflo_parameter_type) :: wippflo_parameter
       PetscReal :: v_darcy(option%nphase)
       PetscReal :: Res(1:option%nflowdof)
       PetscBool :: derivative_call
-      PetscBool :: fix_upwind_direction
-      PetscBool :: update_upwind_direction
-      PetscBool :: count_upwind_direction_flip
+      PetscBool :: update_upwind_direction_
+      PetscBool :: count_upwind_direction_flip_
       PetscBool :: debug_connection
     end subroutine BCFluxDummy
   end interface
@@ -167,13 +163,12 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
                                    material_auxvar_up, &
                                    wippflo_auxvar_dn,global_auxvar_dn, &
                                    material_auxvar_dn, &
-                                   area, dist, upwind_direction, &
+                                   area, dist, upwind_direction_, &
                                    wippflo_parameter, &
                                    option,v_darcy,Res, &
                                    derivative_call, &
-                                   fix_upwind_direction, &
-                                   update_upwind_direction, &
-                                   count_upwind_direction_flip, &
+                                   update_upwind_direction_, &
+                                   count_upwind_direction_flip_, &
                                    debug_connection)
   ! 
   ! Computes the internal flux terms for the residual based on harmonic 
@@ -185,6 +180,7 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
   use Option_module
   use Material_Aux_class
   use Connection_module
+  use Upwind_Direction_module
   
   implicit none
   
@@ -195,13 +191,12 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area
   PetscReal :: dist(-1:3)
-  PetscInt :: upwind_direction(option%nphase)
+  PetscInt :: upwind_direction_(option%nphase)
   type(wippflo_parameter_type) :: wippflo_parameter
   PetscReal :: Res(option%nflowdof)
   PetscBool :: derivative_call
-  PetscBool :: fix_upwind_direction
-  PetscBool :: update_upwind_direction
-  PetscBool :: count_upwind_direction_flip
+  PetscBool :: update_upwind_direction_
+  PetscBool :: count_upwind_direction_flip_
   PetscBool :: debug_connection
 
   PetscReal :: dist_gravity  ! distance along gravity vector
@@ -226,8 +221,6 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
 
   PetscReal :: up_scale, dn_scale
   PetscReal :: dummy
-  PetscInt :: prev_upwind_direction
-  PetscInt :: new_upwind_direction
   PetscInt :: iabs_upwind_direction1
   
   wat_comp_id = option%water_id
@@ -242,7 +235,7 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
 !     use the principle direction stored in the upwind direction array
 !  call material_auxvar_up%PermeabilityTensorToScalar(dist,perm_up)
 !  call material_auxvar_dn%PermeabilityTensorToScalar(dist,perm_dn)
-  iabs_upwind_direction1 = iabs(upwind_direction(1))
+  iabs_upwind_direction1 = iabs(upwind_direction_(1))
   select case(iabs_upwind_direction1)
     case(X_DIRECTION)
       perm_up = material_auxvar_up%permeability(perm_xx_index) 
@@ -294,33 +287,11 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
                      gravity_term
     up_scale = 0.d0
     dn_scale = 0.d0
-    if (fix_upwind_direction) then
-      if (update_upwind_direction .or. count_upwind_direction_flip) then
-        prev_upwind_direction = upwind_direction(iphase)
-        if (delta_pressure >= 0.d0) then
-          ! positive means upstream
-          new_upwind_direction = iabs(prev_upwind_direction)
-        else
-          ! negative means downstream
-          new_upwind_direction = -iabs(prev_upwind_direction)
-        endif 
-        if (count_upwind_direction_flip) then
-          if (new_upwind_direction /= prev_upwind_direction) then
-            if (derivative_call) then
-              liq_upwind_flip_count_by_jac = liq_upwind_flip_count_by_jac + 1
-            else
-              liq_upwind_flip_count_by_res = liq_upwind_flip_count_by_res + 1
-            endif
-          endif
-        endif
-        if (update_upwind_direction) then
-          upwind_direction(iphase) = new_upwind_direction
-        endif
-      endif
-      upwind = (upwind_direction(iphase) > 0)
-    else
-      upwind = (delta_pressure >= 0.d0)
-    endif
+    upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                             derivative_call, &
+                             count_upwind_direction_flip_, &
+                             liq_upwind_flip_count_by_res, &
+                             liq_upwind_flip_count_by_jac)
     if (upwind) then
       up_scale = 1.d0
       mobility = wippflo_auxvar_up%mobility(iphase)
@@ -371,33 +342,11 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
     ! phase properties from the opposite side are used.
     up_scale = 0.d0
     dn_scale = 0.d0
-    if (fix_upwind_direction) then
-      if (update_upwind_direction .or. count_upwind_direction_flip) then
-        prev_upwind_direction = upwind_direction(iphase)
-        if (delta_pressure >= 0.d0) then
-          ! positive means upstream
-          new_upwind_direction = iabs(prev_upwind_direction)
-        else
-          ! negative means downstream
-          new_upwind_direction = -iabs(prev_upwind_direction)
-        endif 
-        if (count_upwind_direction_flip) then
-          if (new_upwind_direction /= prev_upwind_direction) then
-            if (derivative_call) then
-              gas_upwind_flip_count_by_jac = gas_upwind_flip_count_by_jac + 1
-            else
-              gas_upwind_flip_count_by_res = gas_upwind_flip_count_by_res + 1
-            endif
-          endif
-        endif
-        if (update_upwind_direction) then
-          upwind_direction(iphase) = new_upwind_direction
-        endif
-      endif
-      upwind = (upwind_direction(iphase) > 0)
-    else
-      upwind = (delta_pressure >= 0.d0)
-    endif
+    upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                             derivative_call, &
+                             count_upwind_direction_flip_, &
+                             gas_upwind_flip_count_by_res, &
+                             gas_upwind_flip_count_by_jac)
     if (upwind) then
       up_scale = 1.d0
       mobility = wippflo_auxvar_up%mobility(iphase)
@@ -437,13 +386,12 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
                                      material_auxvar_up, &
                                      wippflo_auxvar_dn,global_auxvar_dn, &
                                      material_auxvar_dn, &
-                                     area, dist, upwind_direction, &
+                                     area, dist, upwind_direction_, &
                                      wippflo_parameter, &
                                      option,v_darcy,Res, &
                                      derivative_call, &
-                                     fix_upwind_direction, &
-                                     update_upwind_direction, &
-                                     count_upwind_direction_flip, &
+                                     update_upwind_direction_, &
+                                     count_upwind_direction_flip_, &
                                      debug_connection)
   ! 
   ! Computes the internal flux terms for the residual using a harmonic mean
@@ -455,6 +403,7 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   ! 
   use Option_module
   use Material_Aux_class
+  use Upwind_Direction_module
   
   implicit none
   
@@ -465,13 +414,12 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area   ! area here is really area / alpha
   PetscReal :: dist(-1:3)
-  PetscInt :: upwind_direction(option%nphase)
+  PetscInt :: upwind_direction_(option%nphase)
   type(wippflo_parameter_type) :: wippflo_parameter
   PetscReal :: Res(option%nflowdof)
   PetscBool :: derivative_call
-  PetscBool :: fix_upwind_direction
-  PetscBool :: update_upwind_direction
-  PetscBool :: count_upwind_direction_flip
+  PetscBool :: update_upwind_direction_
+  PetscBool :: count_upwind_direction_flip_
   PetscBool :: debug_connection
 
   PetscReal :: upweight
@@ -497,8 +445,6 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   PetscReal :: temp_perm_up, temp_perm_dn
 
   PetscReal :: up_scale, dn_scale
-  PetscInt :: prev_upwind_direction
-  PetscInt :: new_upwind_direction
   PetscInt :: iabs_upwind_direction1
   PetscReal :: perm_rho_mu_area_up(2), perm_rho_mu_area_dn(2)
   PetscReal :: gravity_
@@ -524,7 +470,7 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
 !     use the principle direction stored in the upwind direction array
 !  call material_auxvar_up%PermeabilityTensorToScalar(dist,perm_up)
 !  call material_auxvar_dn%PermeabilityTensorToScalar(dist,perm_dn)
-  iabs_upwind_direction1 = iabs(upwind_direction(1))
+  iabs_upwind_direction1 = iabs(upwind_direction_(1))
   select case(iabs_upwind_direction1)
     case(X_DIRECTION)
       perm_up = material_auxvar_up%permeability(perm_xx_index) 
@@ -580,33 +526,11 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
 
   up_scale = 0.d0
   dn_scale = 0.d0
-  if (fix_upwind_direction) then
-    if (update_upwind_direction .or. count_upwind_direction_flip) then
-      prev_upwind_direction = upwind_direction(iphase)
-      if (delta_pressure >= 0.d0) then
-        ! positive means upstream
-        new_upwind_direction = iabs(prev_upwind_direction)
-      else
-        ! negative means downstream
-        new_upwind_direction = -iabs(prev_upwind_direction)
-      endif 
-      if (count_upwind_direction_flip) then
-        if (new_upwind_direction /= prev_upwind_direction) then
-          if (derivative_call) then
-            liq_upwind_flip_count_by_jac = liq_upwind_flip_count_by_jac + 1
-          else
-            liq_upwind_flip_count_by_res = liq_upwind_flip_count_by_res + 1
-          endif
-        endif
-      endif
-      if (update_upwind_direction) then
-        upwind_direction(iphase) = new_upwind_direction
-      endif
-    endif
-    upwind = (upwind_direction(iphase) > 0)
-  else
-    upwind = (delta_pressure >= 0.d0)
-  endif
+  upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                           derivative_call, &
+                           count_upwind_direction_flip_, &
+                           liq_upwind_flip_count_by_res, &
+                           liq_upwind_flip_count_by_jac)
   if (upwind) then
     up_scale = 1.d0
     rel_perm = wippflo_auxvar_up%kr(iphase)
@@ -663,33 +587,11 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   ! phase properties from the opposite side are used.
   up_scale = 0.d0
   dn_scale = 0.d0
-  if (fix_upwind_direction) then
-    if (update_upwind_direction .or. count_upwind_direction_flip) then
-      prev_upwind_direction = upwind_direction(iphase)
-      if (delta_pressure >= 0.d0) then
-        ! positive means upstream
-        new_upwind_direction = iabs(prev_upwind_direction)
-      else
-        ! negative means downstream
-        new_upwind_direction = -iabs(prev_upwind_direction)
-      endif 
-      if (count_upwind_direction_flip) then
-        if (new_upwind_direction /= prev_upwind_direction) then
-          if (derivative_call) then
-            gas_upwind_flip_count_by_jac = gas_upwind_flip_count_by_jac + 1
-          else
-            gas_upwind_flip_count_by_res = gas_upwind_flip_count_by_res + 1
-          endif
-        endif
-      endif
-      if (update_upwind_direction) then
-        upwind_direction(iphase) = new_upwind_direction
-      endif
-    endif
-    upwind = (upwind_direction(iphase) > 0)
-  else
-    upwind = (delta_pressure >= 0.d0)
-  endif
+  upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                           derivative_call, &
+                           count_upwind_direction_flip_, &
+                           gas_upwind_flip_count_by_res, &
+                           gas_upwind_flip_count_by_jac)
   if (upwind) then
     up_scale = 1.d0
     rel_perm = wippflo_auxvar_up%kr(iphase)
@@ -728,13 +630,12 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
                                      wippflo_auxvar_up,global_auxvar_up, &
                                      wippflo_auxvar_dn,global_auxvar_dn, &
                                      material_auxvar_dn, &
-                                     area,dist,upwind_direction, &
+                                     area,dist,upwind_direction_, &
                                      wippflo_parameter, &
                                      option,v_darcy,Res, &
                                      derivative_call, &
-                                     fix_upwind_direction, &
-                                     update_upwind_direction, &
-                                     count_upwind_direction_flip, &
+                                     update_upwind_direction_, &
+                                     count_upwind_direction_flip_, &
                                      debug_connection)
   ! 
   ! Computes the boundary flux terms for the residual
@@ -744,6 +645,7 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
   ! 
   use Option_module                              
   use Material_Aux_class
+  use Upwind_Direction_module
   
   implicit none
   
@@ -756,14 +658,13 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
   class(material_auxvar_type) :: material_auxvar_dn
   PetscReal :: area
   PetscReal :: dist(-1:3)
-  PetscInt :: upwind_direction(option%nphase)
+  PetscInt :: upwind_direction_(option%nphase)
   type(wippflo_parameter_type) :: wippflo_parameter
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: Res(1:option%nflowdof)
   PetscBool :: derivative_call
-  PetscBool :: fix_upwind_direction
-  PetscBool :: update_upwind_direction
-  PetscBool :: count_upwind_direction_flip
+  PetscBool :: update_upwind_direction_
+  PetscBool :: count_upwind_direction_flip_
   PetscBool :: debug_connection
   
   PetscInt :: wat_comp_id, air_comp_id
@@ -782,8 +683,6 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
   PetscReal :: tempreal
   PetscReal :: wat_mole_flux, air_mole_flux
   PetscBool :: upwind
-  PetscInt :: prev_upwind_direction
-  PetscInt :: new_upwind_direction
   PetscInt :: iabs_upwind_direction1
   PetscReal :: dummy
   PetscReal :: dn_scale
@@ -799,7 +698,7 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
 !geh: we do not want to use the dot product with the unit vector, instead
 !     use the principle direction stored in the upwind direction array
 !  call material_auxvar_dn%PermeabilityTensorToScalar(dist,perm_dn)
-  iabs_upwind_direction1 = iabs(upwind_direction(1))
+  iabs_upwind_direction1 = iabs(upwind_direction_(1))
   select case(iabs_upwind_direction1)
     case(X_DIRECTION)
       perm_dn = material_auxvar_dn%permeability(perm_xx_index) 
@@ -868,36 +767,11 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
           endif
         endif
         dn_scale = 0.d0
-
-        if (fix_upwind_direction) then
-          if (update_upwind_direction .or. count_upwind_direction_flip) then
-            prev_upwind_direction = upwind_direction(iphase)
-            if (delta_pressure >= 0.d0) then
-              ! positive means upstream
-              new_upwind_direction = iabs(prev_upwind_direction)
-            else
-              ! negative means downstream
-              new_upwind_direction = -iabs(prev_upwind_direction)
-            endif 
-            if (count_upwind_direction_flip) then
-              if (new_upwind_direction /= prev_upwind_direction) then
-                if (derivative_call) then
-                  liq_bc_upwind_flip_count_by_jac = &
-                    liq_bc_upwind_flip_count_by_jac + 1
-                else
-                  liq_bc_upwind_flip_count_by_res = &
-                    liq_bc_upwind_flip_count_by_res + 1
-                endif
-              endif
-            endif
-            if (update_upwind_direction) then
-              upwind_direction(iphase) = new_upwind_direction
-            endif
-          endif
-          upwind = (upwind_direction(iphase) > 0)
-        else
-          upwind = (delta_pressure >= 0.d0)
-        endif
+        upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                                 derivative_call, &
+                                 count_upwind_direction_flip_, &
+                                 liq_bc_upwind_flip_count_by_res, &
+                                 liq_bc_upwind_flip_count_by_jac)
         if (upwind) then
           mobility = wippflo_auxvar_up%mobility(iphase)
         else
@@ -1002,35 +876,11 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
         ! don't expect the derivative to match precisely at delta_pressure = 0
         ! due to potential switch in direction for numerically perturbed
         ! residual
-        if (fix_upwind_direction) then
-          if (update_upwind_direction .or. count_upwind_direction_flip) then
-            prev_upwind_direction = upwind_direction(iphase)
-            if (delta_pressure >= 0.d0) then
-              ! positive means upstream
-              new_upwind_direction = iabs(prev_upwind_direction)
-            else
-              ! negative means downstream
-              new_upwind_direction = -iabs(prev_upwind_direction)
-            endif 
-            if (count_upwind_direction_flip) then
-              if (new_upwind_direction /= prev_upwind_direction) then
-                if (derivative_call) then
-                 gas_bc_upwind_flip_count_by_jac = &
-                   gas_bc_upwind_flip_count_by_jac + 1
-                else
-                 gas_bc_upwind_flip_count_by_res = &
-                   gas_bc_upwind_flip_count_by_res + 1
-                endif
-              endif
-            endif
-            if (update_upwind_direction) then
-              upwind_direction(iphase) = new_upwind_direction
-            endif
-          endif
-          upwind = (upwind_direction(iphase) > 0)
-        else
-          upwind = (delta_pressure >= 0.d0)
-        endif
+        upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                                 derivative_call, &
+                                 count_upwind_direction_flip_, &
+                                 gas_bc_upwind_flip_count_by_res, &
+                                 gas_bc_upwind_flip_count_by_jac)
         if (upwind) then
           mobility = wippflo_auxvar_up%mobility(iphase)
         else
@@ -1094,13 +944,12 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
                                        wippflo_auxvar_up,global_auxvar_up, &
                                        wippflo_auxvar_dn,global_auxvar_dn, &
                                        material_auxvar_dn, &
-                                       area,dist,upwind_direction, &
+                                       area,dist,upwind_direction_, &
                                        wippflo_parameter, &
                                        option,v_darcy,Res, &
                                        derivative_call, &
-                                       fix_upwind_direction, &
-                                       update_upwind_direction, &
-                                       count_upwind_direction_flip, &
+                                       update_upwind_direction_, &
+                                       count_upwind_direction_flip_, &
                                        debug_connection)
   ! 
   ! Computes the boundary flux terms for the residual
@@ -1110,6 +959,7 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
   ! 
   use Option_module                              
   use Material_Aux_class
+  use Upwind_Direction_module
   
   implicit none
   
@@ -1122,14 +972,13 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
   class(material_auxvar_type) :: material_auxvar_dn
   PetscReal :: area ! this is the actual area
   PetscReal :: dist(-1:3)
-  PetscInt :: upwind_direction(option%nphase)
+  PetscInt :: upwind_direction_(option%nphase)
   type(wippflo_parameter_type) :: wippflo_parameter
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: Res(1:option%nflowdof)
   PetscBool :: derivative_call
-  PetscBool :: fix_upwind_direction
-  PetscBool :: update_upwind_direction
-  PetscBool :: count_upwind_direction_flip
+  PetscBool :: update_upwind_direction_
+  PetscBool :: count_upwind_direction_flip_
   PetscBool :: debug_connection
   
   PetscInt :: wat_comp_id, air_comp_id
@@ -1148,8 +997,6 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
   PetscReal :: tempreal
   PetscReal :: wat_mole_flux, air_mole_flux
   PetscBool :: upwind
-  PetscInt :: prev_upwind_direction
-  PetscInt :: new_upwind_direction
   PetscInt :: iabs_upwind_direction1
 
   PetscReal :: dn_scale
@@ -1171,7 +1018,7 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
 !geh: we do not want to use the dot product with the unit vector, instead
 !     use the principle direction stored in the upwind direction array
 !  call material_auxvar_dn%PermeabilityTensorToScalar(dist,perm_dn)
-  iabs_upwind_direction1 = iabs(upwind_direction(1))
+  iabs_upwind_direction1 = iabs(upwind_direction_(1))
   select case(iabs_upwind_direction1)
     case(X_DIRECTION)
       perm_dn = material_auxvar_dn%permeability(perm_xx_index) 
@@ -1234,36 +1081,11 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
         endif
       endif
       dn_scale = 0.d0
-
-      if (fix_upwind_direction) then
-        if (update_upwind_direction .or. count_upwind_direction_flip) then
-          prev_upwind_direction = upwind_direction(iphase)
-          if (delta_pressure >= 0.d0) then
-            ! positive means upstream
-            new_upwind_direction = iabs(prev_upwind_direction)
-          else
-            ! negative means downstream
-            new_upwind_direction = -iabs(prev_upwind_direction)
-          endif 
-          if (count_upwind_direction_flip) then
-            if (new_upwind_direction /= prev_upwind_direction) then
-              if (derivative_call) then
-                liq_bc_upwind_flip_count_by_jac = &
-                  liq_bc_upwind_flip_count_by_jac + 1
-              else
-                liq_bc_upwind_flip_count_by_res = &
-                  liq_bc_upwind_flip_count_by_res + 1
-              endif
-            endif
-          endif
-          if (update_upwind_direction) then
-            upwind_direction(iphase) = new_upwind_direction
-          endif
-        endif
-        upwind = (upwind_direction(iphase) > 0)
-      else
-        upwind = (delta_pressure >= 0.d0)
-      endif
+      upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                               derivative_call, &
+                               count_upwind_direction_flip_, &
+                               liq_bc_upwind_flip_count_by_res, &
+                               liq_bc_upwind_flip_count_by_jac)
       if (upwind) then
         rel_perm = wippflo_auxvar_up%kr(iphase)
       else
@@ -1351,35 +1173,11 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
       ! don't expect the derivative to match precisely at delta_pressure = 0
       ! due to potential switch in direction for numerically perturbed
       ! residual
-      if (fix_upwind_direction) then
-        if (update_upwind_direction .or. count_upwind_direction_flip) then
-          prev_upwind_direction = upwind_direction(iphase)
-          if (delta_pressure >= 0.d0) then
-            ! positive means upstream
-            new_upwind_direction = iabs(prev_upwind_direction)
-          else
-            ! negative means downstream
-            new_upwind_direction = -iabs(prev_upwind_direction)
-          endif 
-          if (count_upwind_direction_flip) then
-            if (new_upwind_direction /= prev_upwind_direction) then
-              if (derivative_call) then
-               gas_bc_upwind_flip_count_by_jac = &
-                 gas_bc_upwind_flip_count_by_jac + 1
-              else
-               gas_bc_upwind_flip_count_by_res = &
-                 gas_bc_upwind_flip_count_by_res + 1
-              endif
-            endif
-          endif
-          if (update_upwind_direction) then
-            upwind_direction(iphase) = new_upwind_direction
-          endif
-        endif
-        upwind = (upwind_direction(iphase) > 0)
-      else
-        upwind = (delta_pressure >= 0.d0)
-      endif
+      upwind = UpwindDirection(upwind_direction_(iphase),delta_pressure, &
+                               derivative_call, &
+                               count_upwind_direction_flip_, &
+                               gas_bc_upwind_flip_count_by_res, &
+                               gas_bc_upwind_flip_count_by_jac)
       if (upwind) then
         rel_perm = wippflo_auxvar_up%kr(iphase)
       else
@@ -1572,7 +1370,7 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
                                  wippflo_auxvar_dn,global_auxvar_dn, &
                                  material_auxvar_dn, &
                                  area, dist, &
-                                 upwind_direction, &
+                                 upwind_direction_, &
                                  wippflo_parameter, &
                                  option,Jup,Jdn)
   ! 
@@ -1584,6 +1382,7 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
   ! 
   use Option_module
   use Material_Aux_class
+  use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
   
@@ -1593,7 +1392,7 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
   type(option_type) :: option
   PetscReal :: area
   PetscReal :: dist(-1:3)
-  PetscInt :: upwind_direction(option%nphase)
+  PetscInt :: upwind_direction_(option%nphase)
   type(wippflo_parameter_type) :: wippflo_parameter
   PetscReal :: Jup(option%nflowdof,option%nflowdof)
   PetscReal :: Jdn(option%nflowdof,option%nflowdof)
@@ -1611,12 +1410,12 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
                    material_auxvar_up, &
                    wippflo_auxvar_dn(ZERO_INTEGER),global_auxvar_dn, &
                    material_auxvar_dn, &
-                   area,dist,upwind_direction, &
+                   area,dist,upwind_direction_, &
                    wippflo_parameter, &
                    option,v_darcy,res_up, &
                    PETSC_TRUE, & ! derivative call 
-                   wippflo_fix_upwind_direction, &
                    PETSC_FALSE, & ! update the upwind direction
+                   ! avoid double counting upwind direction flip
                    PETSC_FALSE, & ! count upwind direction flip
                    PETSC_FALSE)
   res_dn = res_up
@@ -1632,13 +1431,12 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
                      material_auxvar_up, &
                      wippflo_auxvar_dn(ZERO_INTEGER),global_auxvar_dn, &
                      material_auxvar_dn, &
-                     area,dist,upwind_direction, &
+                     area,dist,upwind_direction_, &
                      wippflo_parameter, &
                      option,v_darcy,res_pert, &
                      PETSC_TRUE, & ! derivative call
-                     wippflo_fix_upwind_direction, &
                      PETSC_FALSE, & ! update the upwind direction
-                     wippflo_count_upwind_dir_flip, &
+                     count_upwind_direction_flip, & 
                      PETSC_FALSE)
     if (wippflo_jacobian_test) then
       if (wippflo_jacobian_test_xdof > 0 .and. &
@@ -1658,13 +1456,12 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
                      material_auxvar_up, &
                      wippflo_auxvar_dn(idof),global_auxvar_dn, &
                      material_auxvar_dn, &
-                     area,dist,upwind_direction, &
+                     area,dist,upwind_direction_, &
                      wippflo_parameter, &
                      option,v_darcy,res_pert, &
                      PETSC_TRUE, & ! derivative call
-                     wippflo_fix_upwind_direction, &
                      PETSC_FALSE, & ! update the upwind direction
-                     wippflo_count_upwind_dir_flip, &
+                     count_upwind_direction_flip, & 
                      PETSC_FALSE)
     if (wippflo_jacobian_test) then
       if (wippflo_jacobian_test_xdof > 0 .and. &
@@ -1687,7 +1484,7 @@ subroutine XXBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
                                    global_auxvar_up, &
                                    wippflo_auxvar_dn,global_auxvar_dn, &
                                    material_auxvar_dn, &
-                                   area,dist,upwind_direction, &
+                                   area,dist,upwind_direction_, &
                                    wippflo_parameter, &
                                    option,Jdn)
   ! 
@@ -1700,6 +1497,7 @@ subroutine XXBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
 
   use Option_module 
   use Material_Aux_class
+  use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
 
@@ -1712,7 +1510,7 @@ subroutine XXBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   class(material_auxvar_type) :: material_auxvar_dn
   PetscReal :: area
   PetscReal :: dist(-1:3)
-  PetscInt :: upwind_direction(option%nphase)
+  PetscInt :: upwind_direction_(option%nphase)
   type(wippflo_parameter_type) :: wippflo_parameter
   PetscReal :: Jdn(option%nflowdof,option%nflowdof)
 
@@ -1727,12 +1525,12 @@ subroutine XXBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
                      wippflo_auxvar_up,global_auxvar_up, &
                      wippflo_auxvar_dn(ZERO_INTEGER),global_auxvar_dn, &
                      material_auxvar_dn, &
-                     area,dist,upwind_direction, &
+                     area,dist,upwind_direction_, &
                      wippflo_parameter, &
                      option,v_darcy,res, &
                      PETSC_TRUE, & ! derivative call
-                     wippflo_fix_upwind_direction, &
                      PETSC_FALSE, & ! update the upwind direction
+                     ! avoid double counting upwind direction flip
                      PETSC_FALSE, & ! count upwind direction flip
                      PETSC_FALSE)
 
@@ -1742,13 +1540,12 @@ subroutine XXBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
                        wippflo_auxvar_up,global_auxvar_up, &
                        wippflo_auxvar_dn(idof),global_auxvar_dn, &
                        material_auxvar_dn, &
-                       area,dist,upwind_direction, &
+                       area,dist,upwind_direction_, &
                        wippflo_parameter, &
                        option,v_darcy,res_pert, &
                        PETSC_TRUE, & ! derivative call
-                       wippflo_fix_upwind_direction, &
                        PETSC_FALSE, & ! update the upwind direction
-                       wippflo_count_upwind_dir_flip, &
+                       count_upwind_direction_flip, & 
                        PETSC_FALSE)   
     do irow = 1, option%nflowdof
       Jdn(irow,idof) = (res_pert(irow)-res(irow))/wippflo_auxvar_dn(idof)%pert

@@ -40,10 +40,6 @@ module Option_module
     PetscMPIInt :: hdf5_read_group_size, hdf5_write_group_size
     PetscBool :: broadcast_read
 
-#if defined(SCORPIO)
-    PetscMPIInt :: ioread_group_id, iowrite_group_id
-#endif
-
     character(len=MAXSTRINGLENGTH) :: io_buffer
 
     PetscInt :: fid_out
@@ -67,7 +63,7 @@ module Option_module
     PetscInt :: nmechdof
     PetscInt :: nsec_cells
     PetscInt :: nwells
-    PetscInt :: neos_table_indices
+    PetscInt :: num_table_indices
     PetscBool :: use_th_freezing
 
     PetscBool :: surf_flow_on
@@ -180,6 +176,7 @@ module Option_module
     PetscBool :: use_touch_options
     PetscBool :: overwrite_restart_transport
     PetscBool :: overwrite_restart_flow
+    PetscBool :: overwrite_restart_wf
     PetscInt :: io_handshake_buffer_size
 
     character(len=MAXSTRINGLENGTH) :: initialize_flow_filename
@@ -224,7 +221,6 @@ module Option_module
     PetscBool :: inline_surface_flow
     PetscReal :: inline_surface_Mannings_coeff
     character(len=MAXSTRINGLENGTH) :: inline_surface_region_name
-
 
   end type option_type
 
@@ -444,7 +440,7 @@ subroutine OptionInitRealization(option)
   option%nmechdof = 0
   option%nsec_cells = 0
   option%nwells = 0
-  option%neos_table_indices = 0
+  option%num_table_indices = 0
   option%use_th_freezing = PETSC_FALSE
 
   option%nsurfflowdof = 0
@@ -550,6 +546,7 @@ subroutine OptionInitRealization(option)
   option%use_touch_options = PETSC_FALSE
   option%overwrite_restart_transport = PETSC_FALSE
   option%overwrite_restart_flow = PETSC_FALSE
+  option%overwrite_restart_wf = PETSC_FALSE
 
   option%time = 0.d0
   option%flow_dt = 0.d0

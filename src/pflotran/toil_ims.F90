@@ -713,10 +713,32 @@ subroutine TOilImsUpdateSolution(realization)
   ! 
 
   use Realization_Subsurface_class
+  use Well_Data_class
+  use Option_module
   
   implicit none
   
   type(realization_subsurface_type) :: realization
+  class(well_data_type), pointer :: well_data
+  type(well_data_list_type),pointer :: well_data_list
+  PetscReal :: dt
+  type(option_type), pointer :: option
+
+! Loop over well_data wells if present
+
+  option => realization%option
+  dt = option%flow_dt
+
+  if (WellDataGetFlag()) then
+    well_data_list => realization%well_data
+    well_data => well_data_list%first
+
+    do
+      if (.not.associated(well_data)) exit
+      call well_data%DoUpdate(dt,option)
+      well_data => well_data%next
+    enddo
+  endif
 
   if (realization%option%compute_mass_balance_new) then
     call TOilImsUpdateMassBalance(realization)
@@ -2557,6 +2579,8 @@ subroutine TOilImsAccumDerivative(toil_auxvar,material_auxvar, &
   PetscReal :: J_dff(option%nflowdof,option%nflowdof)
   PetscReal :: Jdum(option%nflowdof,option%nflowdof)  
 
+  PetscBool :: flagged
+
   J_alt = 0.d0
 
   if (.NOT. toil_analytical_derivatives .OR. toil_analytical_derivatives_compare) then
@@ -2621,7 +2645,7 @@ subroutine TOilImsAccumDerivative(toil_auxvar,material_auxvar, &
 
       J_dff = J - J_alt
 
-      call MatCompare(J, J_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol)
+      call MatCompare(J, J_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol,flagged)
 
       call TOilImsAccumulation(toil_auxvar(ZERO_INTEGER), &
                                material_auxvar,soil_heat_capacity,option,Res,&
@@ -2686,7 +2710,10 @@ subroutine ToilImsFluxDerivative(toil_auxvar_up,global_auxvar_up, &
 
   PetscReal :: Jdum1(option%nflowdof,option%nflowdof)  
   PetscReal :: Jdum2(option%nflowdof,option%nflowdof)  
+
+  PetscBool :: flagged
   
+
   Jup = 0.d0
   Jdn = 0.d0
 
@@ -2774,8 +2801,8 @@ subroutine ToilImsFluxDerivative(toil_auxvar_up,global_auxvar_up, &
       Jup_dff = Jup - Jup_alt
       Jdn_dff = Jdn - Jdn_alt
 
-       call MatCompare(Jup, Jup_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol)
-       call MatCompare(Jdn, Jdn_alt, 3, 3, toil_dcomp_tol,toil_dcomp_reltol)
+       call MatCompare(Jup, Jup_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol,flagged)
+       call MatCompare(Jdn, Jdn_alt, 3, 3, toil_dcomp_tol,toil_dcomp_reltol,flagged)
 
       call TOilImsFluxPFL(toil_auxvar_up(ZERO_INTEGER),global_auxvar_up, &
                            material_auxvar_up, &
@@ -2854,6 +2881,8 @@ subroutine ToilImsBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   PetscReal :: Jdn_alt(option%nflowdof,option%nflowdof)
   PetscReal :: J_dff(option%nflowdof,option%nflowdof)
 
+  PetscBool :: flagged
+
   Jdn = 0.d0
   !Jdn_alt = 0.d0
 !geh:print *, 'GeneralBCFluxDerivative'
@@ -2918,7 +2947,7 @@ subroutine ToilImsBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
     if (toil_analytical_derivatives_compare) then
        J_dff = Jdn -  Jdn_alt
 
-       call MatCompare(Jdn, Jdn_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol)
+       call MatCompare(Jdn, Jdn_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol,flagged)
 
       call ToilImsBCFlux(ibndtype,auxvar_mapping,auxvars, &
                          toil_auxvar_up,global_auxvar_up, &
@@ -2977,6 +3006,8 @@ subroutine ToilImsSrcSinkDerivative(option,src_sink_condition, toil_auxvar, &
   PetscReal :: J_alt(option%nflowdof,option%nflowdof)
   PetscReal :: J_dff(option%nflowdof,option%nflowdof)
 
+  PetscBool :: flagged
+
   option%iflag = -3
 
  J_alt = 0.d0
@@ -3022,7 +3053,7 @@ subroutine ToilImsSrcSinkDerivative(option,src_sink_condition, toil_auxvar, &
     if (toil_analytical_derivatives_compare) then
         J_dff = Jac - J_alt
 
-       call MatCompare(Jac, J_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol)
+       call MatCompare(Jac, J_alt, 3, 3, toil_dcomp_tol, toil_dcomp_reltol,flagged)
 
        call TOilImsSrcSink(option,src_sink_condition,toil_auxvar(ZERO_INTEGER), &
                                global_auxvar,dummy_real,scale,Res,j_alt,PETSC_TRUE)
@@ -3059,6 +3090,8 @@ subroutine TOilImsResidual(snes,xx,r,realization,ierr)
   use Coupler_module  
   use Debug_module
   use Material_Aux_class
+  use Well_Solver_module
+  use Well_Data_class
 
 !#define DEBUG_WITH_TECPLOT
 #ifdef DEBUG_WITH_TECPLOT
@@ -3072,7 +3105,7 @@ subroutine TOilImsResidual(snes,xx,r,realization,ierr)
   Vec :: r
   type(realization_subsurface_type) :: realization
   PetscViewer :: viewer
-  PetscErrorCode :: ierr
+  PetscErrorCode :: ierr,jerr
   
   Mat, parameter :: null_mat = PETSC_NULL_MAT
   type(discretization_type), pointer :: discretization
@@ -3102,6 +3135,9 @@ subroutine TOilImsResidual(snes,xx,r,realization,ierr)
   
   PetscReal :: scale
   PetscReal :: ss_flow_vol_flux(realization%option%nphase)
+
+  type(well_data_list_type),pointer :: well_data_list
+  class(well_data_type), pointer :: well_data
 
   PetscInt :: sum_connection
   PetscInt :: local_start, local_end
@@ -3420,6 +3456,21 @@ subroutine TOilImsResidual(snes,xx,r,realization,ierr)
     source_sink => source_sink%next
   enddo
 
+! Loop over well_data wells if present
+
+  if (WellDataGetFlag()) then
+    jerr = 0
+    well_data_list => realization%well_data
+    well_data => well_data_list%first
+
+    do
+      if (.not.associated(well_data)) exit
+        call SolveWell(patch%aux,option,well_data,r_p)
+        call MPI_Barrier(option%mycomm,jerr)
+      well_data => well_data%next
+    enddo
+  endif
+
   if (patch%aux%TOil_ims%inactive_cells_exist) then
     do i=1,patch%aux%TOil_ims%n_inactive_rows
       r_p(patch%aux%TOil_ims%inactive_rows_local(i)) = 0.d0
@@ -3489,6 +3540,7 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
   use Field_module
   use Debug_module
   use Material_Aux_class
+  use Well_Data_class
 
   use AuxVars_Flow_module
 
@@ -3513,6 +3565,9 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: ghosted_id_up, ghosted_id_dn
   Vec, parameter :: null_vec = PETSC_NULL_VEC
+
+  class(well_data_type), pointer :: well_data
+  type(well_data_list_type),pointer :: well_data_list
   
   PetscReal :: Jup(realization%option%nflowdof,realization%option%nflowdof), &
                Jdn(realization%option%nflowdof,realization%option%nflowdof)
@@ -3520,7 +3575,7 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
   type(coupler_type), pointer :: boundary_condition, source_sink
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
-  PetscInt :: iconn
+  PetscInt :: iconn,jerr,nflowdof
   PetscInt :: sum_connection  
   PetscReal :: distance, fraction_upwind
   PetscReal :: distance_gravity 
@@ -3818,7 +3873,24 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
     enddo
     source_sink => source_sink%next
   enddo
-   
+
+! Loop over well_data wells if present
+
+  if( toil_analytical_derivatives ) then
+    if (WellDataGetFlag()) then
+      nflowdof=realization%option%nflowdof
+      jerr = 0
+      well_data_list => realization%well_data
+      well_data => well_data_list%first
+
+      do
+        if (.not.associated(well_data)) exit
+          call well_data%DoIncrJac(option,nflowdof,Jup,A)
+          well_data => well_data%next
+      enddo
+   endif
+  endif
+
   ! SSSandBox not supported 
   !call GeneralSSSandbox(null_vec,A,PETSC_TRUE,grid,material_auxvars, &
   !                      gen_auxvars,option)

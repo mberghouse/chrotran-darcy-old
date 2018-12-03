@@ -32,7 +32,7 @@ module AuxVars_Flow_module
     PetscReal, pointer :: D_den(:,:)    ! (iphase) kmol/m^3 phase
     PetscReal, pointer :: D_den_kg(:,:) ! (iphase) kg/m^3 phase
     PetscReal, pointer :: D_mobility(:,:) ! relative perm / dynamic viscosity
-    PetscReal, pointer :: D_por(:) ! mole fractions (sol var)
+    PetscReal, pointer :: D_por(:)
 
   contains
     !procedure, public :: Init => InitAuxVarFlow
@@ -72,10 +72,12 @@ subroutine AuxVarFlowInit(this,option)
   this%mobility = 0.d0
   allocate(this%viscosity(option%nphase))
   this%viscosity = 0.d0
-  if (option%neos_table_indices > 0) then
-    allocate(this%table_idx(option%neos_table_indices))
+  if (option%num_table_indices > 0) then
+    allocate(this%table_idx(option%num_table_indices))
     this%table_idx = 1
-  end if
+  else
+    nullify(this%table_idx)
+  endif
 
   this%has_derivs = PETSC_FALSE
   if (.not.option%flow%numerical_derivatives) then
@@ -86,7 +88,7 @@ subroutine AuxVarFlowInit(this,option)
     this%D_pres = 0.d0
     allocate(this%D_sat(option%nphase,option%nflowdof))
     this%D_sat = 0.d0
-    allocate(this%D_pc(option%nphase,option%nflowdof))
+    allocate(this%D_pc(option%nphase - ONE_INTEGER,option%nflowdof))
     this%D_pc = 0.d0
     allocate(this%D_den(option%nphase,option%nflowdof))
     this%D_den = 0.d0

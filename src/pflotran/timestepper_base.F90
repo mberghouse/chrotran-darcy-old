@@ -2,6 +2,7 @@ module Timestepper_Base_class
  
 #include "petsc/finclude/petscsys.h"
   use Waypoint_module 
+  use Solver_module
  
   use PFLOTRAN_Constants_module
 
@@ -54,6 +55,8 @@ module Timestepper_Base_class
 
     type(waypoint_type), pointer :: cur_waypoint
     type(waypoint_type), pointer :: prev_waypoint
+
+    type(solver_type), pointer :: solver
 
   contains
     
@@ -669,20 +672,20 @@ end subroutine TimestepperBaseCheckpointBinary
 
 ! ************************************************************************** !
 
-subroutine TimestepperBaseCheckpointHDF5(this, chk_grp_id, option)
+subroutine TimestepperBaseCheckpointHDF5(this, h5_chk_grp_id, option)
   ! 
   ! Checkpoints parameters/variables associated with a time stepper to a HDF5.
   ! 
   ! Author: Gautam Bisht, LBNL
   ! Date: 07/30/15
   ! 
-
   use Option_module
+  use hdf5
 
   implicit none
   
   class(timestepper_base_type) :: this
-  PetscInt :: chk_grp_id
+  integer(HID_T) :: h5_chk_grp_id
   type(option_type) :: option
 
   option%io_buffer = 'TimestepperBaseCheckpointHDF5 must be extended.'
@@ -692,20 +695,20 @@ end subroutine TimestepperBaseCheckpointHDF5
 
 ! ************************************************************************** !
 
-subroutine TimestepperBaseRestartHDF5(this, chk_grp_id, option)
+subroutine TimestepperBaseRestartHDF5(this, h5_chk_grp_id, option)
   ! 
   ! Restart parameters/variables associated with a time stepper to a HDF5.
   ! 
   ! Author: Gautam Bisht, LBNL
   ! Date: 08/16/15
   ! 
-
   use Option_module
+  use hdf5
 
   implicit none
 
   class(timestepper_base_type) :: this
-  PetscInt :: chk_grp_id
+  integer(HID_T) :: h5_chk_grp_id
   type(option_type) :: option
 
   option%io_buffer = 'TimestepperBaseRestartHDF5 must be extended.'
