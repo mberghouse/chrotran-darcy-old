@@ -2963,6 +2963,7 @@ subroutine PMWFSolve(this,time,ierr)
   use Global_Aux_module
   use Reactive_Transport_Aux_module, only : rt_min_saturation
   use Material_Aux_class
+  use Reactive_Transport_Aux_module, only : rt_min_saturation
   use Grid_module
   use Criticality_module
   
