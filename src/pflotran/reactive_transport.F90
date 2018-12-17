@@ -2443,7 +2443,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
       call TFluxCoef(rt_parameter, &
                 global_auxvars(ghosted_id_up), &
                 global_auxvars(ghosted_id_dn), &
-                option,cur_connection_set%area(iconn), &
+                option,area, &
                 patch%internal_velocities(:,sum_connection), &
                 patch%internal_tran_coefs(:,:,sum_connection)*vol_frac_prim, &
                 cur_connection_set%dist(-1,iconn), &
