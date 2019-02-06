@@ -141,8 +141,9 @@ subroutine RTSetup(realization)
   PetscInt :: ghosted_id, iconn, sum_connection
   PetscInt :: iphase, local_id, i
   PetscBool :: error_found
+  PetscBool :: species_dependent_diffusion
   PetscInt :: flag(10)  
-  
+
   option => realization%option
   patch => realization%patch
   grid => patch%grid
@@ -157,10 +158,14 @@ subroutine RTSetup(realization)
   rt_parameter%nimcomp = reaction%immobile%nimmobile
   rt_parameter%ngas = reaction%gas%nactive_gas
   rt_parameter%offset_immobile = reaction%offset_immobile
-  if (reaction%gas%nactive_gas > 0 .and. option%transport%nphase == 1) then
-    option%io_buffer = 'INCLUDE_GAS_PHASE must be included in SUBSURFACE_&
-      &TRANSPORT block when simulating active gases.'
-    call printErrMsg(option)
+
+  if (reaction%gas%nactive_gas > 0) then
+    if (option%transport%nphase == 1) then
+      option%io_buffer = 'The number of transport phases is set &
+        &incorrectly for transport with active gases. Please email &
+        &your input deck to pflotran-dev@googlegroups.com' 
+      call printErrMsg(option)
+    endif
   endif
 
   if (reaction%ncollcomp > 0) then
@@ -332,10 +337,12 @@ subroutine RTSetup(realization)
 
   ! overwrite diffusion coefficients with species specific values
   ! aqueous diffusion
+  species_dependent_diffusion = PETSC_FALSE
   iphase = option%liquid_phase
   cur_generic_parameter => reaction%aq_diffusion_coefficients
   do
     if (.not.associated(cur_generic_parameter)) exit
+    species_dependent_diffusion = PETSC_TRUE
     i = GetPrimarySpeciesIDFromName(cur_generic_parameter%name, &
                                     reaction,PETSC_FALSE,option)
     if (Uninitialized(i)) then
@@ -356,6 +363,7 @@ subroutine RTSetup(realization)
     endif
     ! gas diffusion
     iphase = option%gas_phase
+    species_dependent_diffusion = PETSC_TRUE
     cur_generic_parameter => reaction%gas_diffusion_coefficients
     do
       if (.not.associated(cur_generic_parameter)) exit
@@ -378,6 +386,24 @@ subroutine RTSetup(realization)
       endif
       cur_generic_parameter => cur_generic_parameter%next
     enddo
+  endif
+
+  if (species_dependent_diffusion) then
+    if (reaction%gas%nactive_gas > 0) then
+      if (maxval(reaction%gas%acteqspecid(0,:)) > 1) then
+        option%io_buffer = 'Active gas transprot is not supported when &
+          &gas species are not defined as a one to one match with the &
+          &primary species [e.g. O2(aq) <-> O2(g)].'
+        call printErrMsg(option)
+      endif
+    endif
+    if (reaction%neqcplx > 0) then
+      option%io_buffer = 'Species-dependent diffusion may not be used &
+        &with aqueous speciation since fluxes are currently implemented &
+        &based on the total aqueous component concentration and the &
+        &diffusion of secondary complexes is lumped.'
+      call printErrMsg(option)
+    endif
   endif
  
   list => realization%output_option%output_snap_variable_list
@@ -656,7 +682,13 @@ subroutine RTInitializeTimestep(realization)
   use Realization_Subsurface_class
 
   type(realization_subsurface_type) :: realization
+  PetscErrorCode :: ierr
   
+  ! copying of solution to tran_yy for temporary storage in case of 
+  ! time step cut must be performed here as tran_xx change outside of
+  ! reactive transport (e.g. pm_ufd_decay)
+  call VecCopy(realization%field%tran_xx,realization%field%tran_yy, &
+               ierr);CHKERRQ(ierr)
   call RTUpdateFixedAccumulation(realization)
   ! geh: never use transport coefs evaluated at time k
 !  call RTUpdateTransportCoefs(realization)
@@ -705,8 +737,6 @@ subroutine RTUpdateEquilibriumState(realization)
   reaction => realization%reaction
   grid => patch%grid
 
-  call VecCopy(realization%field%tran_xx,realization%field%tran_yy, &
-               ierr);CHKERRQ(ierr)
   call DiscretizationGlobalToLocal(realization%discretization, &
                                    realization%field%tran_xx, &
                                    realization%field%tran_xx_loc,NTRANDOF)
@@ -4346,8 +4376,8 @@ subroutine RTMaxChange(realization,dcmax,dvfmax)
   implicit none
   
   type(realization_subsurface_type) :: realization
-  PetscReal :: dcmax
-  PetscReal :: dvfmax
+  PetscReal :: dcmax(:)
+  PetscReal :: dvfmax(:)
   
   type(option_type), pointer :: option
   type(field_type), pointer :: field 
@@ -4373,8 +4403,7 @@ subroutine RTMaxChange(realization,dcmax,dvfmax)
   call VecWAXPY(field%tran_dxx,-1.d0,field%tran_xx,field%tran_yy, &
                 ierr);CHKERRQ(ierr)
   
-  call VecStrideNorm(field%tran_dxx,ZERO_INTEGER,NORM_INFINITY,dcmax, &
-                     ierr);CHKERRQ(ierr)
+  call VecStrideNormAll(field%tran_dxx,NORM_INFINITY,dcmax,ierr);CHKERRQ(ierr)
                      
 #if 1
   ! update mineral volume fractions
@@ -4387,7 +4416,7 @@ subroutine RTMaxChange(realization,dcmax,dvfmax)
         delta_volfrac = rt_auxvars(ghosted_id)%mnrl_rate(imnrl)* &
                         reaction%mineral%kinmnrl_molar_vol(imnrl)* &
                         option%tran_dt
-        dvfmax = max(dabs(delta_volfrac),dvfmax)
+        dvfmax(imnrl) = max(dabs(delta_volfrac),dvfmax(imnrl))
       enddo
     enddo
   endif 
