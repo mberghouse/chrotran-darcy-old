@@ -876,6 +876,8 @@ subroutine DiscretizationCreateJacobian(discretization,dm_index,mat_type,Jacobia
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use Option_module
+  ! Below is needed just for debugging AIJ/BAIJ issues.
+  use Input_Aux_module
   
   implicit none
 
@@ -892,6 +894,9 @@ subroutine DiscretizationCreateJacobian(discretization,dm_index,mat_type,Jacobia
   type(dm_ptr_type), pointer :: dm_ptr
   ISLocalToGlobalMapping :: ptmap
   PetscInt :: islocal
+  ! Variables below are for debugging AIJ/BAIJ issues.
+  character(len=MAXSTRINGLENGTH) :: string
+  PetscBool :: bool_flag, allow_new_nonzero_allocation_found
 
   dm_ptr => DiscretizationGetDMPtrFromIndex(discretization,dm_index)
 
@@ -909,6 +914,14 @@ subroutine DiscretizationCreateJacobian(discretization,dm_index,mat_type,Jacobia
   call MatSetOption(Jacobian,MAT_ROW_ORIENTED,PETSC_FALSE,ierr);CHKERRQ(ierr)
   call MatSetOption(Jacobian,MAT_NO_OFF_PROC_ZERO_ROWS,PETSC_TRUE, &
                     ierr);CHKERRQ(ierr)
+  ! RTM: Below stuff is temporary; for debugging BAIJ/AIJ differences.
+  string = '-mat_allow_new_nonzero_allocation'
+  call InputGetCommandLineTruth(string,bool_flag, &
+                                allow_new_nonzero_allocation_found,option)
+  if (allow_new_nonzero_allocation_found) then
+    call MatSetOption(Jacobian,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_FALSE, &
+                      ierr);CHKERRQ(ierr);
+  endif
 
 end subroutine DiscretizationCreateJacobian
 
