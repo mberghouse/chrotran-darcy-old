@@ -431,7 +431,7 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   
   PetscReal :: density_ave, density_kg_ave
   PetscReal :: perm_rho_mu_area_ave_over_dist(2)
-  PetscReal :: area_up, area_dn, area_ave, area_min
+  PetscReal :: area_up, area_dn, area_ave
   PetscReal :: perm_up, perm_dn
   PetscReal :: dummy
   PetscReal :: delta_pressure
@@ -501,7 +501,6 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   area_up = wippflo_auxvar_up%alpha * area
   area_dn = wippflo_auxvar_dn%alpha * area
   area_ave = 0.5*(area_up+area_dn)
-  area_min = min(area_up,area_dn)
   perm_rho_mu_area_up(:) = perm_up * wippflo_auxvar_up%den / &
                            wippflo_auxvar_up%mu * area_up
   perm_rho_mu_area_dn(:) = perm_dn * wippflo_auxvar_dn%den / &
@@ -548,7 +547,7 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
                        wippflo_auxvar_dn%den(iphase))
   ! v_darcy[m/sec] = wat_mole_flux[kmol/sec] / rho[kmol/m^3 phase] / 
   !                  area [m^2]
-  v_darcy(iphase) = wat_mole_flux / density_ave / area_min
+  v_darcy(iphase) = wat_mole_flux / density_ave / area_ave
   Res(wat_comp_id) = Res(wat_comp_id) + wat_mole_flux
   if (debug_connection) then
 !    write(*,'("liq-t1X: ",9es12.4)') &
@@ -609,7 +608,7 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
                        wippflo_auxvar_dn%den(iphase))
   ! v_darcy[m/sec] = air_mole_flux[kmol/sec] / rho[kmol/m^3 phase] / 
   !                  area [m^2]
-  v_darcy(iphase) = air_mole_flux / density_ave / area_min
+  v_darcy(iphase) = air_mole_flux / density_ave / area_ave
   Res(air_comp_id) = Res(air_comp_id) + air_mole_flux
   if (debug_connection) then
     write(*,'(9x,"gas-up,t1l,dp,t2l: ",l1,x,8es12.4)') upwind, &

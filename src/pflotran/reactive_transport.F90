@@ -2464,9 +2464,9 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
       
       area = cur_connection_set%area(iconn)
       if (associated(wippflo_auxvars)) then
-        area = area * &
-               min(wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha, &
-                   wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha)
+        area = area * 0.5d0 * &
+               (wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha + &
+                wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha)
       endif
 #ifndef CENTRAL_DIFFERENCE        
       call TFluxCoef(rt_parameter, &

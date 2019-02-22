@@ -8096,9 +8096,9 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
       area_up = area
       area_dn = area
       if (associated(wippflo_auxvars)) then
-        area = area * &
-               min(wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha, &
-                   wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha)
+        area = area * 0.5d0 * &
+               (wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha + &
+                wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha)
       endif
       ! get volumetic flow rate
       velocity = patch%internal_velocities(iphase,sum_connection) * area

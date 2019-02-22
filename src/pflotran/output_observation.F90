@@ -1292,9 +1292,9 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
                  !geh: no dabs() here
                  cur_connection_set%dist(direction,iconn)
           if (associated(wippflo_auxvars)) then
-            area = area * &
-               min(wippflo_auxvars(ZERO_INTEGER, &
-                                   cur_connection_set%id_up(iconn))%alpha, &
+            area = area * 0.5d0 * &
+                  (wippflo_auxvars(ZERO_INTEGER, &
+                                   cur_connection_set%id_up(iconn))%alpha + &
                    wippflo_auxvars(ZERO_INTEGER, &
                                    cur_connection_set%id_dn(iconn))%alpha)
           endif
