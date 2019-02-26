@@ -450,6 +450,7 @@ subroutine CPRCreateT1(c,  ctx,   ierr)
   endif
 
   call KSPCreate(c,ksp,ierr); CHKERRQ(ierr)
+  call KSPSetOptionsPrefix(ksp,"flow_cpr_",ierr); CHKERRQ(ierr);
 
   select case(ctx%T1_type)
     case('RICHARDSON')
@@ -467,6 +468,7 @@ subroutine CPRCreateT1(c,  ctx,   ierr)
   end select
 
   call KSPGetPC(ksp,prec,ierr); CHKERRQ(ierr)
+  call PCSetOptionsPrefix(prec,"flow_cpr_",ierr); CHKERRQ(ierr)
 
   if (ctx%useGAMG) then
     call PCSetType(prec,PCGAMG,ierr); CHKERRQ(ierr)
