@@ -8057,9 +8057,10 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
   PetscInt :: sum_connection, iconn, num_connections
-  PetscReal, allocatable :: sum_area(:,:), sum_velocity(:,:)
+  PetscReal, allocatable :: sum_area(:,:), sum_velocity(:,:), vol_flow(:,:)
   PetscReal :: area(3), velocity(3)
   PetscReal :: area_up(3), area_dn(3), velocity_up(3), velocity_dn(3)
+  PetscReal :: alpha_up, alpha_dn
   PetscInt :: ghosted_id_up, ghosted_id_dn
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: local_id
@@ -8075,8 +8076,10 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
 
   allocate(sum_velocity(3,grid%nlmax))
   allocate(sum_area(3,grid%nlmax))
+  allocate(vol_flow(3,grid%nlmax))
   sum_velocity(:,:) = 0.d0
   sum_area(:,:) = 0.d0
+  vol_flow(:,:) = 0.d0
 
   ! interior velocities
   connection_set_list => grid%internal_connection_set_list
@@ -8090,22 +8093,19 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
       ghosted_id_dn = cur_connection_set%id_dn(iconn)
       local_id_up = grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
       local_id_dn = grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
-      ! velocities are stored as the downwind face of the upwind cell
       area = cur_connection_set%area(iconn)* &
              cur_connection_set%dist(1:3,iconn)
       area_up = area
       area_dn = area
       if (associated(wippflo_auxvars)) then
-        area = area * 0.5d0 * &
-               (wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha + &
-                wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha)
+        alpha_up = wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha
+        alpha_dn = wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha
+        area = area * 0.5d0 * (alpha_up + alpha_dn)
+        area_up = area_up * alpha_up
+        area_dn = area_dn * alpha_dn
       endif
-      ! get volumetic flow rate
+      ! get volumetic flow rate at the connection:
       velocity = patch%internal_velocities(iphase,sum_connection) * area
-      if (associated(wippflo_auxvars)) then
-        area_up = area_up * wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha
-        area_dn = area_dn * wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha
-      endif
       if (local_id_up > 0) then
         sum_velocity(:,local_id_up) = sum_velocity(:,local_id_up) + velocity
         sum_area(:,local_id_up) = sum_area(:,local_id_up) + dabs(area_up)
@@ -8113,6 +8113,16 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
       if (local_id_dn > 0) then
         sum_velocity(:,local_id_dn) = sum_velocity(:,local_id_dn) + velocity
         sum_area(:,local_id_dn) = sum_area(:,local_id_dn) + dabs(area_dn)
+        if (associated(wippflo_auxvars)) then
+          do i=1,3
+            if (abs(velocity(i)) > 0.d0) then
+              ! velocity(i) this is actually volumetric flow
+              ! this will take the velocity that is perpendicular to the face
+              ! only the non-zero velocity value is perpendicular to the face
+              vol_flow(i,local_id_dn) = velocity(i)
+            endif
+          enddo
+        endif
       endif
     enddo
     cur_connection_set => cur_connection_set%next
@@ -8132,6 +8142,9 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
       velocity = patch%boundary_velocities(iphase,sum_connection)*area
       sum_velocity(:,local_id) = sum_velocity(:,local_id) + velocity
       sum_area(:,local_id) = sum_area(:,local_id) + dabs(area)
+      if (associated(wippflo_auxvars)) then
+        vol_flow(:,local_id) = velocity ! this is actually volumetric flow
+      endif
     enddo
     boundary_condition => boundary_condition%next
   enddo
@@ -8144,6 +8157,10 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
                                  sum_area(i,local_id)
       else
         velocities(i,local_id) = 0.d0
+      endif
+      ! a hack to output volumetric flow at upwind connection face:
+      if (associated(wippflo_auxvars)) then
+        velocities(i,local_id) = vol_flow(i,local_id)
       endif
     enddo
   enddo
