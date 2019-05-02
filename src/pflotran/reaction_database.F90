@@ -2560,6 +2560,10 @@ subroutine BasisInit(reaction,option)
                 surface_complexation%nsrfcplxrxn))
     surface_complexation%srfcplxrxn_surf_type = 0
     
+    allocate(surface_complexation%srfcplxrxn_scale_by_saturation( &
+                surface_complexation%nsrfcplxrxn))
+    surface_complexation%srfcplxrxn_scale_by_saturation = PETSC_FALSE
+    
     allocate(surface_complexation%srfcplxrxn_to_complex(0:icount, &
                                         surface_complexation%nsrfcplxrxn))
     surface_complexation%srfcplxrxn_to_complex = 0
@@ -2722,6 +2726,8 @@ subroutine BasisInit(reaction,option)
                                 reaction%print_all_species
       surface_complexation%srfcplxrxn_surf_type(irxn) = &
         cur_srfcplx_rxn%surface_itype
+      surface_complexation%srfcplxrxn_scale_by_saturation(irxn) = &
+        cur_srfcplx_rxn%scale_by_saturation
       select case(cur_srfcplx_rxn%surface_itype)
         case(ROCK_SURFACE)
           ! nothing to do here as the linkage to rick density is already set

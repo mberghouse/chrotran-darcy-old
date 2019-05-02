@@ -149,6 +149,7 @@ subroutine SurfaceComplexationRead(reaction,input,option)
         call InputErrorMsg(input,option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,MULTIRATE_SCALE_FACTOR')
       case('MINERAL')
+        call SrfCplxSurfaceTypeDupError(srfcplx_rxn%surface_itype,word,option)
         srfcplx_rxn%surface_itype = MINERAL_SURFACE
         num_times_surface_type_set = num_times_surface_type_set + 1
         call InputReadWord(input,option,srfcplx_rxn%surface_name, &
@@ -156,9 +157,11 @@ subroutine SurfaceComplexationRead(reaction,input,option)
         call InputErrorMsg(input,option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,MINERAL_NAME')
       case('ROCK_DENSITY')
+        call SrfCplxSurfaceTypeDupError(srfcplx_rxn%surface_itype,word,option)
         srfcplx_rxn%surface_itype = ROCK_SURFACE
         num_times_surface_type_set = num_times_surface_type_set + 1
       case('COLLOID')
+        call SrfCplxSurfaceTypeDupError(srfcplx_rxn%surface_itype,word,option)
         srfcplx_rxn%surface_itype = COLLOID_SURFACE
         num_times_surface_type_set = num_times_surface_type_set + 1
         call InputReadWord(input,option,srfcplx_rxn%surface_name, &
@@ -174,6 +177,8 @@ subroutine SurfaceComplexationRead(reaction,input,option)
         call InputReadDouble(input,option,srfcplx_rxn%site_density)
         call InputErrorMsg(input,option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,SITE_DENSITY')                   
+      case('SCALE_BY_SATURATION')
+        srfcplx_rxn%scale_by_saturation = PETSC_TRUE
       case('COMPLEXES')
         nullify(prev_srfcplx)
         do
@@ -748,6 +753,10 @@ subroutine RTotalSorbEqSurfCplx1(rt_auxvar,global_auxvar,material_auxvar, &
       site_density(1) = surface_complexation%srfcplxrxn_site_density(irxn)
       num_types_of_sites = 1
   end select
+
+  if (surface_complexation%srfcplxrxn_scale_by_saturation(irxn)) then
+    site_density(:) = site_density(:) * global_auxvar%sat(option%liquid_phase)
+  endif
     
   do isite=1, num_types_of_sites
     ! isite == 1 - immobile (colloids, minerals, etc.)
@@ -1138,5 +1147,47 @@ subroutine RKineticSurfCplx(Res,Jac,compute_derivative,rt_auxvar, &
   ! units of dtotal_sorb = kg water/m^3 bulk
   
 end subroutine RKineticSurfCplx
+
+! ************************************************************************** !
+
+subroutine SrfCplxSurfaceTypeDupError(surface_itype,keyword,option)
+  ! 
+  ! Reports an error if the surface type has already been defined.'
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 05/02/19
+  !
+  use Option_module
+
+  implicit none
+
+  PetscInt :: surface_itype
+  character(len=MAXWORDLENGTH) :: keyword
+  type(option_type) :: option
+
+  character(len=MAXWORDLENGTH) :: word
+
+  if (surface_itype == NULL_SURFACE) return
+
+  select case(surface_itype)
+    case(MINERAL_SURFACE)
+      word = 'MINERAL'
+    case(ROCK_SURFACE)
+      word = 'ROCK_DENSITY'
+    case(COLLOID_SURFACE)
+      word = 'COLLOID'
+    case default
+      option%io_buffer = &
+        'surface_itype not recognized in SrfCplxSurfaceTypeDupError'
+      call PrintErrMsg(option)
+  end select
+
+  option%io_buffer = 'Only one surface type may be defined for &
+    &each surface complexation reaction. The file specifies both "' // &
+    trim(keyword) // '" and "' // trim(word) // &
+    '" for a surface complexation reaction.'
+  call PrintErrMsg(option)
+
+end subroutine SrfCplxSurfaceTypeDupError
 
 end module Reaction_Surface_Complexation_module

@@ -43,6 +43,7 @@ module Reaction_Surface_Complexation_Aux_module
     character(len=MAXWORDLENGTH) :: free_site_name
     PetscBool :: free_site_print_me
     PetscBool :: site_density_print_me
+    PetscBool :: scale_by_saturation
     PetscInt :: surface_itype
     PetscInt :: mineral_id
     character(len=MAXWORDLENGTH) :: surface_name
@@ -90,6 +91,7 @@ module Reaction_Surface_Complexation_Aux_module
     PetscBool, pointer :: srfcplxrxn_site_density_print(:)
     PetscInt, pointer :: srfcplxrxn_to_surf(:)
     PetscInt, pointer :: srfcplxrxn_surf_type(:)
+    PetscBool, pointer :: srfcplxrxn_scale_by_saturation(:)
     PetscInt, pointer :: srfcplxrxn_to_complex(:,:)
     ! site density in 
     ! (1) mol/m^3 bulk 
@@ -187,6 +189,7 @@ function SurfaceComplexationCreate()
 
   nullify(surface_complexation%srfcplxrxn_to_surf)
   nullify(surface_complexation%srfcplxrxn_surf_type)
+  nullify(surface_complexation%srfcplxrxn_scale_by_saturation)
   nullify(surface_complexation%srfcplxrxn_to_complex)
   nullify(surface_complexation%srfcplxrxn_site_density)
   nullify(surface_complexation%srfcplxrxn_stoich_flag) 
@@ -241,6 +244,7 @@ function SurfaceComplexationRxnCreate()
   srfcplxrxn%free_site_name = ''
   srfcplxrxn%free_site_print_me = PETSC_FALSE
   srfcplxrxn%site_density_print_me = PETSC_FALSE
+  srfcplxrxn%scale_by_saturation = PETSC_FALSE
 
   srfcplxrxn%surface_itype = NULL_SURFACE
   srfcplxrxn%mineral_id = 0
@@ -623,6 +627,7 @@ subroutine SurfaceComplexationDestroy(surface_complexation)
   call DeallocateArray(surface_complexation%srfcplxrxn_site_density_print)
   call DeallocateArray(surface_complexation%srfcplxrxn_to_surf)
   call DeallocateArray(surface_complexation%srfcplxrxn_surf_type)
+  call DeallocateArray(surface_complexation%srfcplxrxn_scale_by_saturation)
   call DeallocateArray(surface_complexation%srfcplxrxn_to_complex)
   call DeallocateArray(surface_complexation%srfcplxrxn_site_density)
   call DeallocateArray(surface_complexation%srfcplxrxn_stoich_flag)
