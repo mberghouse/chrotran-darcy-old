@@ -548,7 +548,10 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
 
       if (pressure_bc_type == CONDUCTANCE_BC .or. &
           pressure_bc_type == HET_CONDUCTANCE_BC) then
-        Dq = auxvars(RICHARDS_CONDUCTANCE_DOF)
+!Fang
+!        Dq = auxvars(RICHARDS_PRESSURE_DOF)
+        Dq = global_auxvar_up%conductance(1)
+!print *,'dq-',dq
       else
         Dq = perm_dn / dist(0)
       endif
@@ -828,7 +831,10 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
 
       if (pressure_bc_type == CONDUCTANCE_BC .or. &
           pressure_bc_type == HET_CONDUCTANCE_BC) then
-        Dq = auxvars(RICHARDS_CONDUCTANCE_DOF)
+!Fang - using conductance dataset
+!        Dq = auxvars(RICHARDS_CONDUCTANCE_DOF)
+        Dq = global_auxvar_up%conductance(1)
+!print *,'dq-',dq,global_auxvar_up%conductance, richards_conductance_dof
       else
         Dq = perm_dn / dist(0)
       endif

@@ -44,7 +44,6 @@ module Richards_module
          RichardsUpdateSurfacePress, &
          RichardsResidualInternalConn, &
          RichardsResidualBoundaryConn, &
-         RichardsResidualSourceSink, &
          RichardsJacobianInternalConn, &
          RichardsJacobianBoundaryConn, &
          RichardsJacobianSourceSink
@@ -744,6 +743,7 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
   PetscInt :: iphasebc, iphase, i, istart, iend
   PetscReal, pointer :: xx_loc_p(:)
   PetscReal :: xxbc(realization%option%nflowdof), Pl
+  PetscReal :: xxbc_cond(realization%option%nflowdof)
   PetscErrorCode :: ierr
   Vec :: phi
   
@@ -820,6 +820,13 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
              SURFACE_DIRICHLET,SURFACE_SPILLOVER)
           xxbc(1) = boundary_condition% &
                       flow_aux_real_var(RICHARDS_PRESSURE_DOF,iconn)
+ !Fang
+          if(boundary_condition%flow_condition%itype(RICHARDS_PRESSURE_DOF) &
+                  == HET_CONDUCTANCE_BC )  then
+            xxbc_cond(1) = boundary_condition% &
+                      flow_aux_real_var(RICHARDS_CONDUCTANCE_DOF,iconn)
+            global_auxvars_bc(sum_connection)%conductance = xxbc_cond(1)
+          endif
         case(NEUMANN_BC,ZERO_GRADIENT_BC,UNIT_GRADIENT_BC, &
              SURFACE_ZERO_GRADHEIGHT)
           xxbc(1) = xx_loc_p(istart)
@@ -1985,7 +1992,7 @@ subroutine RichardsResidualAccumulation(r,realization,ierr)
   PetscInt :: local_id, ghosted_id, region_id
   PetscInt :: istart
 
-  PetscReal, pointer :: r_p(:), accum_p(:), accum2_p(:)
+  PetscReal, pointer :: r_p(:), accum_p(:)
   PetscReal :: Res(realization%option%nflowdof)
 
   PetscErrorCode :: ierr
@@ -2007,7 +2014,6 @@ subroutine RichardsResidualAccumulation(r,realization,ierr)
   ! now assign access pointer to local variables
   call VecGetArrayF90(r, r_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
-  call VecGetArrayF90(field%flow_accum2, accum2_p, ierr);CHKERRQ(ierr)
 
   ! Accumulation terms ------------------------------------
   if (.not.option%steady_state) then
@@ -2023,7 +2029,6 @@ subroutine RichardsResidualAccumulation(r,realization,ierr)
            option,Res)
       istart = (local_id-1)*option%nflowdof + 1
       r_p(istart) = r_p(istart) + Res(1)
-      accum2_p(istart) = Res(1)
     enddo
 
     if (option%inline_surface_flow) then
@@ -2036,7 +2041,6 @@ subroutine RichardsResidualAccumulation(r,realization,ierr)
              material_auxvars(ghosted_id),option,Res)
         istart = (local_id-1)*option%nflowdof + 1
         r_p(istart) = r_p(istart) + Res(1)
-        accum2_p(istart) = accum2_p(istart) + Res(1)
       enddo
     endif
 
@@ -2044,7 +2048,6 @@ subroutine RichardsResidualAccumulation(r,realization,ierr)
 
   call VecRestoreArrayF90(r, r_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
-  call VecRestoreArrayF90(field%flow_accum2, accum2_p, ierr);CHKERRQ(ierr)
 
 end subroutine RichardsResidualAccumulation
 

@@ -9,6 +9,9 @@ module Realization_Subsurface_class
   use Input_Aux_module
   use Region_module
   use Condition_module
+#ifdef WELL_CLASS
+  use WellSpec_Base_class
+#endif
   use Well_Data_class
   use Transport_Constraint_module
   use Material_module
@@ -35,7 +38,10 @@ private
 
     type(region_list_type), pointer :: region_list
     type(condition_list_type), pointer :: flow_conditions
-    type(well_data_list_type), pointer :: well_data=>null()
+#ifdef WELL_CLASS
+    type(well_spec_list_type), pointer :: well_specs
+#endif
+    type(well_data_list_type), pointer :: well_data
     type(tran_condition_list_type), pointer :: transport_conditions
     type(tran_constraint_list_type), pointer :: transport_constraints
     
@@ -145,6 +151,10 @@ function RealizationCreate2(option)
 
   allocate(realization%flow_conditions)
   call FlowConditionInitList(realization%flow_conditions)
+#ifdef WELL_CLASS
+  allocate(realization%well_specs)
+  call WellSpecInitList(realization%well_specs)
+#endif
 ! Allocate well_data and create its list of wells
   allocate(realization%well_data)
   call WellDataInitList(realization%well_data,option%nphase)
@@ -629,6 +639,9 @@ subroutine RealizationProcessCouplers(realization)
   
   call PatchProcessCouplers( realization%patch,realization%flow_conditions, &
                              realization%transport_conditions, &
+#ifdef WELL_CLASS
+                             realization%well_specs, &
+#endif
                              realization%option)
   
 end subroutine RealizationProcessCouplers
@@ -930,21 +943,17 @@ subroutine RealProcessFluidProperties(realization)
   ! Author: Glenn Hammond
   ! Date: 01/21/09
   ! 
-
-  use Grid_Grdecl_module, only : GetSatnumSet
-
+  
   implicit none
-
+  
   class(realization_subsurface_type) :: realization
-
+  
   PetscBool :: found
   type(option_type), pointer :: option
   type(fluid_property_type), pointer :: cur_fluid_property
-  PetscInt :: icc, ncc, maxsatn
-  PetscBool :: satnum_set, ccset
-
+  
   option => realization%option
-
+  
   found = PETSC_FALSE
   cur_fluid_property => realization%fluid_properties                            
   do                                      
@@ -960,35 +969,12 @@ subroutine RealProcessFluidProperties(realization)
     end select
     cur_fluid_property => cur_fluid_property%next
   enddo
-
+  
   if (option%ntrandof > 0 .and. .not.found) then
     option%io_buffer = 'A fluid property must be present in input file' // &
                        ' for solute transport'
   endif
-
-  ! If saturation table numbers set,
-  ! check that matches characteristic curves count
-
-  satnum_set = GetSatnumSet(maxsatn)
-  if( satnum_set ) then
-    ccset = associated(realization%patch%characteristic_curves_array)
-    if (ccset) then
-      ncc = size(realization%patch%characteristic_curves_array(:))
-      if( maxsatn > ncc ) then
-        option%io_buffer = &
-         'SATNUM data does not match CHARACTERISTIC CURVES count'
-        call printErrMsg(option)
-      endif
-      do icc = 1, ncc
-        call CharCurvesProcessTables( &
-          realization%patch%characteristic_curves_array(icc)%ptr,option)
-      end do
-    else
-      option%io_buffer = 'SATNUM data but no CHARACTERISTIC CURVES'
-      call printErrMsg(option)
-    end if
-  endif
-
+  
 end subroutine RealProcessFluidProperties
 
 ! ************************************************************************** !
@@ -1031,6 +1017,12 @@ subroutine RealProcessFlowConditions(realization)
           ! find dataset
           call DatasetFindInList(realization%datasets, &
                  cur_flow_condition%sub_condition_ptr(i)%ptr%dataset, &
+                 cur_flow_condition%default_time_storage, &
+                 string,option)
+!Fang
+          ! find conductance dataset
+          call DatasetFindInList(realization%datasets, &
+                 cur_flow_condition%sub_condition_ptr(i)%ptr%conductance, &
                  cur_flow_condition%default_time_storage, &
                  string,option)
           ! find gradient dataset
@@ -1114,14 +1106,14 @@ subroutine RealProcessTranConditions(realization)
   
   if (option%use_mc) then
     call ReactionProcessConstraint(realization%reaction, &
-                     realization%sec_transport_constraint%name, &
-                     realization%sec_transport_constraint%aqueous_species, &
-                     realization%sec_transport_constraint%free_ion_guess, &
-                     realization%sec_transport_constraint%minerals, &
-                     realization%sec_transport_constraint%surface_complexes, &
-                     realization%sec_transport_constraint%colloids, &
-                     realization%sec_transport_constraint%immobile_species, &
-                     realization%option)
+                                   realization%sec_transport_constraint%name, &
+                                   realization%sec_transport_constraint%aqueous_species, &
+                                   realization%sec_transport_constraint%free_ion_guess, &
+                                   realization%sec_transport_constraint%minerals, &
+                                   realization%sec_transport_constraint%surface_complexes, &
+                                   realization%sec_transport_constraint%colloids, &
+                                   realization%sec_transport_constraint%immobile_species, &
+                                   realization%option)
   endif
   
   ! tie constraints to couplers, if not already associated
@@ -1132,16 +1124,19 @@ subroutine RealProcessTranConditions(realization)
     cur_constraint_coupler => cur_condition%constraint_coupler_list
     do
       if (.not.associated(cur_constraint_coupler)) exit
-      ! if aqueous_species exists, it was coupled during the embedded read.
       if (.not.associated(cur_constraint_coupler%aqueous_species)) then
         cur_constraint => realization%transport_constraints%first
         do
           if (.not.associated(cur_constraint)) exit
           if (StringCompare(cur_constraint%name, &
-                            cur_constraint_coupler%constraint_name, &
-                            MAXWORDLENGTH)) then
-            call TranConstraintMapToCoupler(cur_constraint_coupler, &
-                                            cur_constraint)
+                             cur_constraint_coupler%constraint_name, &
+                             MAXWORDLENGTH)) then
+            cur_constraint_coupler%aqueous_species => cur_constraint%aqueous_species
+            cur_constraint_coupler%free_ion_guess => cur_constraint%free_ion_guess
+            cur_constraint_coupler%minerals => cur_constraint%minerals
+            cur_constraint_coupler%surface_complexes => cur_constraint%surface_complexes
+            cur_constraint_coupler%colloids => cur_constraint%colloids
+            cur_constraint_coupler%immobile_species => cur_constraint%immobile_species
             exit
           endif
           cur_constraint => cur_constraint%next
@@ -2563,7 +2558,6 @@ subroutine RealizationDestroyLegacy(realization)
   ! 
 
   use Dataset_module
-  use Output_Eclipse_module, only : ReleaseEwriterBuffers
 
   implicit none
   
@@ -2573,19 +2567,16 @@ subroutine RealizationDestroyLegacy(realization)
     
   call FieldDestroy(realization%field)
 
-  !  call OptionDestroy(realization%option) !geh it will be destroy externally
+!  call OptionDestroy(realization%option) !geh it will be destroy externally
   call OutputOptionDestroy(realization%output_option)
   call RegionDestroyList(realization%region_list)
   
   call FlowConditionDestroyList(realization%flow_conditions)
-
-  !  Destroy the list of wells held by well_data
-  call WellDataDestroyList(realization%well_data, realization%option)
-  !  Release output buffers held by Output_Eclipse_module
-  if (realization%output_option%write_ecl) then
-    call ReleaseEwriterBuffers()
-  endif
-
+#ifdef WELL_CLASS
+  call WellSpecDestroyList(realization%well_specs)
+#endif
+!  Destroy the list of wells held by well_data
+  call WellDataDestroyList(realization%well_data)
   call TranConditionDestroyList(realization%transport_conditions)
   call TranConstraintDestroyList(realization%transport_constraints)
 
@@ -2632,7 +2623,6 @@ subroutine RealizationStrip(this)
   ! 
 
   use Dataset_module
-  use Output_Eclipse_module, only : ReleaseEwriterBuffers
 
   implicit none
   
@@ -2642,12 +2632,9 @@ subroutine RealizationStrip(this)
   call RegionDestroyList(this%region_list)
   
   call FlowConditionDestroyList(this%flow_conditions)
-
-  !  Destroy the list of wells held by well_data
-  call WellDataDestroyList(this%well_data, this%option)
-  !  Release output buffers held by Output_Eclipse_module
-  call ReleaseEwriterBuffers()
-
+#ifdef WELL_CLASS
+  call WellSpecDestroyList(this%well_specs)
+#endif
   call TranConditionDestroyList(this%transport_conditions)
   call TranConstraintDestroyList(this%transport_constraints)
 

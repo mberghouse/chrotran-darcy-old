@@ -11,6 +11,8 @@ module Global_Aux_module
   type, public :: global_auxvar_type
     PetscInt :: istate
     PetscReal :: temp
+!Fang add variable conductance
+    PetscReal, pointer :: conductance(:)
     PetscReal, pointer :: pres(:)
     PetscReal, pointer :: pres_store(:,:)
     PetscReal, pointer :: temp_store(:)
@@ -30,7 +32,6 @@ module Global_Aux_module
     PetscReal, pointer :: reaction_rate_store(:)
     PetscReal, pointer :: dphi(:,:) !geh: why here?
 !geh    PetscReal :: scco2_eq_logK ! SC CO2
-    PetscBool :: istatechng
   end type global_auxvar_type
   
   type, public :: global_type
@@ -105,7 +106,6 @@ subroutine GlobalAuxVarInit(auxvar,option)
   
   auxvar%istate = 0
   auxvar%temp = 0.d0
-  auxvar%istatechng = PETSC_FALSE
 
   ! nullify everthing to begin with and allocate later
   nullify(auxvar%pres)
@@ -133,6 +133,9 @@ subroutine GlobalAuxVarInit(auxvar,option)
     allocate(auxvar%den(nphase))
     auxvar%den = 0.d0
   endif
+!Fang
+  allocate(auxvar%conductance(nphase))
+  auxvar%conductance = 0.d0
   allocate(auxvar%pres(nphase))
   auxvar%pres = 0.d0
   allocate(auxvar%sat(nphase))
@@ -149,7 +152,7 @@ subroutine GlobalAuxVarInit(auxvar,option)
   endif
  
   select case(option%iflowmode)
-    case(RICHARDS_MODE,RICHARDS_TS_MODE)
+    case(RICHARDS_MODE)
 !      if (option%ntrandof > 0) then
 !        allocate(auxvar%den_store(nphase,TWO_INTEGER))
 !        auxvar%den_store = 0.d0
@@ -249,7 +252,6 @@ subroutine GlobalAuxVarCopy(auxvar,auxvar2,option)
   auxvar2%sat = auxvar%sat
   auxvar2%den = auxvar%den
   auxvar2%den_kg = auxvar%den_kg
-  auxvar2%istatechng = auxvar%istatechng
 !  auxvar2%dphi = auxvar%dphi
   
   if (associated(auxvar2%reaction_rate)) then

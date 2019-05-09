@@ -114,6 +114,8 @@ subroutine DatasetScreenForNonCellIndexed(datasets,option)
   class(dataset_base_type), pointer :: cur_dataset
   class(dataset_base_type), pointer :: prev_dataset
   class(dataset_gridded_hdf5_type), pointer :: dataset_gridded_hdf5
+!Fang
+  class(dataset_common_hdf5_type), pointer :: dataset_common_hdf5
   PetscBool :: swapped
   
   cur_dataset => datasets
@@ -125,6 +127,14 @@ subroutine DatasetScreenForNonCellIndexed(datasets,option)
     select type(cur_dataset)
       class is(dataset_map_hdf5_type)
         ! do nothing
+!Fang
+!        cur_dataset%is_cell_indexed = &
+!          DatasetMapHDF5IsCellIndexed(cur_dataset,option)
+!        if (.not.cur_dataset%is_cell_indexed) then
+!          swapped = PETSC_TRUE
+!          dataset_common_hdf5 => DatasetCommonHDF5Create()
+!          call DatasetMapHDF5Copy(cur_dataset,dataset_common_hdf5)
+!        endif
       class is(dataset_global_hdf5_type)
         ! do nothing
       class is(dataset_common_hdf5_type)
