@@ -957,13 +957,13 @@ subroutine printMsgAnyRank1(option)
 
   type(option_type) :: option
 
-  if (option%print_to_screen) call printMsgAnyRank(option%io_buffer)
+  call printMsgAnyRank(option%io_buffer)
 
 end subroutine printMsgAnyRank1
 
 ! ************************************************************************** !
 
-subroutine printMsgAnyRank2(string)
+subroutine printMsgAnyRank2(option,string)
   !
   ! Prints the message from any processor core
   !
@@ -973,9 +973,10 @@ subroutine printMsgAnyRank2(string)
 
   implicit none
 
+  type(option_type) :: option
   character(len=*) :: string
   
-  print *, trim(string)
+  if (option%print_to_screen) print *, trim(string)
 
 end subroutine printMsgAnyRank2
 
