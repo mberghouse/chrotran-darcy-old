@@ -732,7 +732,7 @@ subroutine printErrMsgByRank1(option)
 
   type(option_type) :: option
 
-  call printErrMsgByRank2(option,option%io_buffer)
+  call printErrMsgByRank(option,option%io_buffer)
 
 end subroutine printErrMsgByRank1
 
@@ -780,7 +780,7 @@ subroutine printErrMsgNoStopByRank1(option)
 
   type(option_type) :: option
 
-  call printErrMsgNoStopByRank2(option,option%io_buffer)
+  call printErrMsgNoStopByRank(option,option%io_buffer)
 
 end subroutine printErrMsgNoStopByRank1
 
@@ -957,7 +957,7 @@ subroutine printMsgAnyRank1(option)
 
   type(option_type) :: option
 
-  if (option%print_to_screen) call printMsgAnyRank2(option%io_buffer)
+  if (option%print_to_screen) call printMsgAnyRank(option%io_buffer)
 
 end subroutine printMsgAnyRank1
 
@@ -993,7 +993,7 @@ subroutine printMsgByRank1(option)
 
   type(option_type) :: option
 
-  call printMsgByRank2(option,option%io_buffer)
+  call printMsgByRank(option,option%io_buffer)
 
 end subroutine printMsgByRank1
 
@@ -1287,7 +1287,7 @@ subroutine OptionInitMPI1(option)
   PetscErrorCode :: ierr
 
   call MPI_Init(ierr)
-  call OptionInitMPI2(option,MPI_COMM_WORLD)
+  call OptionInitMPI(option,MPI_COMM_WORLD)
 
 end subroutine OptionInitMPI1
 
