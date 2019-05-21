@@ -680,7 +680,7 @@ subroutine printErrMsg1(option)
 
   type(option_type) :: option
 
-  call printErrMsg2(option,option%io_buffer)
+  call printErrMsg(option,option%io_buffer)
 
 end subroutine printErrMsg1
 
@@ -883,7 +883,7 @@ subroutine printWrnMsg1(option)
 
   type(option_type) :: option
 
-  call printWrnMsg2(option,option%io_buffer)
+  call printWrnMsg(option,option%io_buffer)
 
 end subroutine printWrnMsg1
 
@@ -920,7 +920,7 @@ subroutine printMsg1(option)
 
   type(option_type) :: option
 
-  call printMsg2(option,option%io_buffer)
+  call printMsg(option,option%io_buffer)
 
 end subroutine printMsg1
 
