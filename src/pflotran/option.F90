@@ -957,7 +957,7 @@ subroutine printMsgAnyRank1(option)
 
   type(option_type) :: option
 
-  call printMsgAnyRank(option%io_buffer)
+  call printMsgAnyRank(option,option%io_buffer)
 
 end subroutine printMsgAnyRank1
 
