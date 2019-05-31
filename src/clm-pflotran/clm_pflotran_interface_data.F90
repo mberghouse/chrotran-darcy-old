@@ -77,9 +77,11 @@ module clm_pflotran_interface_data
   !
   Vec :: gflux_surf_pf   ! seq vec
 
-  ! (iv) Saturation
+  ! (iv) Saturation and mass
   Vec :: sat_clm    ! seq vec
   Vec :: sat_pf     ! mpi vec
+  Vec :: mass_clm    ! seq vec
+  Vec :: mass_pf     ! mpi vec
 
   ! (v) Subsurface temperature
   Vec :: temp_clm   ! seq vec
@@ -197,6 +199,8 @@ contains
 
     clm_pf_idata%sat_clm = PETSC_NULL_VEC
     clm_pf_idata%sat_pf = PETSC_NULL_VEC
+    clm_pf_idata%mass_clm = PETSC_NULL_VEC
+    clm_pf_idata%mass_pf = PETSC_NULL_VEC
 
     clm_pf_idata%temp_clm = PETSC_NULL_VEC
     clm_pf_idata%temp_pf = PETSC_NULL_VEC
@@ -287,6 +291,7 @@ contains
     call VecCreateMPI(mycomm,clm_pf_idata%nlpf_sub,PETSC_DECIDE,clm_pf_idata%sat_pf,ierr)
     call VecSet(clm_pf_idata%sat_pf,0.d0,ierr)
 
+    call VecDuplicate(clm_pf_idata%sat_pf,clm_pf_idata%mass_pf,ierr)
     call VecDuplicate(clm_pf_idata%sat_pf,clm_pf_idata%temp_pf,ierr)
     call VecDuplicate(clm_pf_idata%sat_pf,clm_pf_idata%sat_ice_pf,ierr)
     call VecDuplicate(clm_pf_idata%sat_pf,clm_pf_idata%area_top_face_pf,ierr)
@@ -308,6 +313,7 @@ contains
     call VecCreateSeq(PETSC_COMM_SELF,clm_pf_idata%ngclm_sub,clm_pf_idata%sat_clm,ierr)
     call VecSet(clm_pf_idata%sat_clm,0.d0,ierr)
 
+    call VecDuplicate(clm_pf_idata%sat_clm,clm_pf_idata%mass_clm,ierr)
     call VecDuplicate(clm_pf_idata%sat_clm,clm_pf_idata%temp_clm,ierr)
     call VecDuplicate(clm_pf_idata%sat_clm,clm_pf_idata%sat_ice_clm,ierr)
     call VecDuplicate(clm_pf_idata%sat_clm,clm_pf_idata%area_top_face_clm,ierr)
@@ -384,6 +390,8 @@ contains
 
     if(clm_pf_idata%sat_clm           /= PETSC_NULL_VEC) call VecDestroy(clm_pf_idata%sat_clm,ierr)
     if(clm_pf_idata%sat_pf            /= PETSC_NULL_VEC) call VecDestroy(clm_pf_idata%sat_pf,ierr)
+    if(clm_pf_idata%mass_clm          /= PETSC_NULL_VEC) call VecDestroy(clm_pf_idata%mass_clm,ierr)
+    if(clm_pf_idata%mass_pf           /= PETSC_NULL_VEC) call VecDestroy(clm_pf_idata%mass_pf,ierr)
 
     if(clm_pf_idata%temp_clm          /= PETSC_NULL_VEC) call VecDestroy(clm_pf_idata%temp_clm,ierr)
     if(clm_pf_idata%temp_pf           /= PETSC_NULL_VEC) call VecDestroy(clm_pf_idata%temp_pf,ierr)

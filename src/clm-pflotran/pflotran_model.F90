@@ -2763,6 +2763,7 @@ end subroutine pflotranModelSetICs
     use Simulation_Surface_class, only : simulation_surface_type
     use Simulation_Surf_Subsurf_class, only : simulation_surfsubsurface_type
     use Realization_Surface_class, only : realization_surface_type
+    use Material_Aux_class, only : material_auxvar_type
     use clm_pflotran_interface_data
     use Mapping_module
     use TH_Aux_module
@@ -2777,8 +2778,9 @@ end subroutine pflotranModelSetICs
     PetscErrorCode     :: ierr
     PetscInt           :: local_id, ghosted_id
     PetscReal, pointer :: sat_pf_p(:)
-    PetscReal, pointer :: sat_clm_p(:)
+    PetscReal, pointer :: mass_pf_p(:)
     type(TH_auxvar_type),pointer :: TH_auxvars(:)
+    class(material_auxvar_type), pointer :: material_auxvars(:)
 
     select type (simulation => pflotran_model%simulation)
       class is (simulation_subsurface_type)
@@ -2793,18 +2795,30 @@ end subroutine pflotranModelSetICs
     patch           => realization%patch
     grid            => patch%grid
     global_aux_vars => patch%aux%Global%auxvars
+    material_auxvars=> patch%aux%Material%auxvars
     
     ! Save the saturation values
     call VecGetArrayF90(clm_pf_idata%sat_pf, sat_pf_p, ierr)
+    call VecGetArrayF90(clm_pf_idata%mass_pf, mass_pf_p, ierr)
     do local_id=1, grid%nlmax
       ghosted_id=grid%nL2G(local_id)
       sat_pf_p(local_id)=global_aux_vars(ghosted_id)%sat(1)
+      mass_pf_p(local_id)= &
+      global_aux_vars(ghosted_id)%sat(1) * &
+      global_aux_vars(ghosted_id)%den_kg(1) * &
+      material_auxvars(ghosted_id)%volume* &
+      material_auxvars(ghosted_id)%porosity
     enddo
     call VecRestoreArrayF90(clm_pf_idata%sat_pf, sat_pf_p, ierr)
+    call VecRestoreArrayF90(clm_pf_idata%mass_pf, mass_pf_p, ierr)
 
     call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%sat_pf, &
                                     clm_pf_idata%sat_clm)
+
+    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+                                    clm_pf_idata%mass_pf, &
+                                    clm_pf_idata%mass_clm)
 
     if (pflotran_model%option%iflowmode == TH_MODE .and. &
         pflotran_model%option%use_th_freezing) then
@@ -3191,7 +3205,8 @@ end subroutine pflotranModelSetICs
     grid => patch%grid
 
     call VecGetArrayF90(clm_pf_idata%area_top_face_pf, area_p, ierr)
-    if (grid%itype == STRUCTURED_GRID) then
+    select case (grid%itype)
+    case (STRUCTURED_GRID)
       ! Structured grid
       do ghosted_id=1,grid%ngmax
         local_id = grid%nG2L(ghosted_id)
@@ -3201,7 +3216,7 @@ end subroutine pflotranModelSetICs
           area_p(local_id) = area1
         endif
       enddo
-    else if (grid%itype == UNSTRUCTURED_GRID) then
+    case (IMPLICIT_UNSTRUCTURED_GRID)
       ! Unstructured grid
       do local_id = 1,grid%nlmax
         ghosted_id = grid%nL2G(local_id)
@@ -3223,7 +3238,11 @@ end subroutine pflotranModelSetICs
         ! Save face area
         area_p(local_id) = grid%unstructured_grid%face_area(face_id)
       enddo
-    endif
+    case default
+      write(*,*),'grid%itype = ',grid%itype
+      option%io_buffer='pflotranModelGetTopFaceArea: Grid type is not supported'
+      call printErrMsg(option)
+    end select
     call VecRestoreArrayF90(clm_pf_idata%area_top_face_pf, area_p, ierr)
 
     call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
