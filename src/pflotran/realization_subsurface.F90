@@ -90,7 +90,8 @@ private
             RealizUpdateAllCouplerAuxVars, &
             RealizUnInitializedVarsFlow, &
             RealizUnInitializedVarsTran, &
-            RealizationLimitDTByCFL
+            RealizationLimitDTByCFL, &
+            RealGetIntegralFluxConnections
 
   !TODO(intel)
   ! public from Realization_Base_class
@@ -991,6 +992,40 @@ subroutine RealProcessFluidProperties(realization)
   endif
 
 end subroutine RealProcessFluidProperties
+
+! ************************************************************************** !
+
+subroutine RealGetIntegralFluxConnections(realization)
+  ! 
+  ! Sets up linkage for integral flux observations
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 05/31/19
+  ! 
+  use Integral_Flux_module
+
+  implicit none
+
+  class(realization_subsurface_type) :: realization
+
+  type(integral_flux_type), pointer :: integral_flux
+  type(option_type), pointer :: option
+
+  ! linkage of observation to regions and couplers must take place after
+  ! connection list have been created. Must also come after materials have
+  ! been mapped.
+  
+  option => realization%option
+  integral_flux => realization%patch%integral_flux_list%first
+  do
+    if (.not.associated(integral_flux)) exit
+    call PatchGetIntegralFluxConnections(realization%patch,integral_flux, &
+                                         option)
+    call IntegralFluxSizeStorage(integral_flux,option)
+    integral_flux => integral_flux%next
+  enddo
+
+end subroutine RealGetIntegralFluxConnections
 
 ! ************************************************************************** !
 

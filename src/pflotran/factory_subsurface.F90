@@ -1567,6 +1567,9 @@ subroutine SubsurfaceSetupRealization(simulation)
   call SubsurfSandboxesSetup(realization)
   call RealProcessFluidProperties(realization)
   call SubsurfInitMaterialProperties(realization)
+  ! Setup of integral fluxes must come after connection lists are created and
+  ! after material ids have been assign
+  call RealGetIntegralFluxConnections(realization)
   ! assignVolumesToMaterialAuxVars() must be called after
   ! RealizInitMaterialProperties() where the Material object is created
   call SubsurfAssignVolsToMatAuxVars(realization)

@@ -137,7 +137,8 @@ module Patch_module
             PatchGetCompMassInRegion, &
             PatchGetWaterMassInRegion, &
             PatchGetCompMassInRegionAssign, &
-            PatchSetupUpwindDirection
+            PatchSetupUpwindDirection, &
+            PatchGetIntegralFluxConnections
 
 contains
 
@@ -697,19 +698,6 @@ subroutine PatchProcessCouplers(patch,flow_conditions,transport_conditions, &
         endif
     end select
     observation => next_observation
-  enddo
-
-  ! linkage of observation to regions and couplers must take place after
-  ! connection list have been created.
-  ! observation
-  integral_flux => patch%integral_flux_list%first
-  do
-    if (.not.associated(integral_flux)) exit
-    call PatchGetIntegralFluxConnections(patch,integral_flux,option)
-    call IntegralFluxSizeStorage(integral_flux,option)
-    integral_flux => integral_flux%next
-    option%flow%store_fluxes = PETSC_TRUE
-    option%transport%store_fluxes = PETSC_TRUE
   enddo
 
   temp_int = ConnectionGetNumberInList(patch%grid%internal_connection_set_list)
@@ -8438,6 +8426,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   use Connection_module
   use Coupler_module
   use Grid_Unstructured_Cell_module, only : MAX_VERT_PER_FACE
+  use String_module
   
 
   implicit none
@@ -8469,6 +8458,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   PetscInt :: local_id_up
   PetscInt :: ghosted_id
   PetscInt :: ghosted_id_up
+  PetscInt :: ghosted_id_dn
   PetscReal :: fraction_upwind
   PetscReal :: magnitude
   PetscReal :: v1(3), v2(3), cp(3)
@@ -8488,6 +8478,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   PetscInt :: iv1, iv2
   PetscInt :: num_vertices1, num_vertices2
   PetscInt :: num_to_be_found
+  PetscInt :: counts(2)
   PetscErrorCode :: ierr
 
   nullify(yet_to_be_found)
@@ -8592,6 +8583,8 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
         cur_connection_set => grid%internal_connection_set_list%first
         sum_connection = 0
         icount = 0
+        ! reset back to true as any internal connection may apply
+        if (associated(yet_to_be_found)) yet_to_be_found = PETSC_TRUE
       case(2) ! boundary connections
         ! sets up first boundayr condition in list
         if (.not.associated(boundary_condition)) then
@@ -8599,6 +8592,8 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
           sum_connection = 0
           icount = 0
         endif
+        ! reset back to true as any internal connection may apply
+        if (associated(yet_to_be_found)) yet_to_be_found = PETSC_TRUE
         cur_connection_set => boundary_condition%connection_set
     end select
     do
@@ -8736,6 +8731,17 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
           enddo
         endif
         if (found) then
+          if (ipass == 1) then ! internal connections
+            ! ensure that internal connections have two active grid cells
+            ! on either side. otherwise, reject
+            ghosted_id_dn = cur_connection_set%id_dn(iconn)
+            if (patch%imat(ghosted_id_up) <= 0 .or. &
+                patch%imat(ghosted_id_dn) <= 0) then
+              found = PETSC_FALSE
+            endif
+          endif 
+        endif
+        if (found) then
           icount = icount + 1
           if (icount > size(connections)) then
             call ReallocateArray(connections,array_size)
@@ -8772,22 +8778,23 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   call DeallocateArray(yet_to_be_found)
   call DeallocateArray(connections)
 
-  icount = 0
+  counts = 0
   if (associated(integral_flux%internal_connections)) then
-    icount = icount + size(integral_flux%internal_connections)
+    counts(1) = size(integral_flux%internal_connections)
   endif
   if (associated(integral_flux%boundary_connections)) then
-    icount = icount + size(integral_flux%boundary_connections)
+    counts(2) = size(integral_flux%boundary_connections)
   endif
-  call MPI_Allreduce(MPI_IN_PLACE,icount,ONE_INTEGER_MPI,MPIU_INTEGER, &
+  call MPI_Allreduce(MPI_IN_PLACE,counts,TWO_INTEGER_MPI,MPIU_INTEGER, &
                      MPI_SUM,option%mycomm,ierr)
+  icount = sum(counts)
   if (icount == 0) then
     option%io_buffer = 'Zero connections found for INTEGRAL_FLUX "' // &
       trim(adjustl(integral_flux%name)) // &
       '".  Please ensure that the polygon coincides with an internal &
       &cell boundary or a boundary condition.'
     call printErrMsg(option)
-  else if (num_to_be_found > 0 .and. icount /= num_to_be_found) then
+  else if (num_to_be_found > 0 .and. icount < num_to_be_found) then
     write(word,*) num_to_be_found - icount
     option%io_buffer = trim(adjustl(word)) // &
       ' face(s) missed for INTEGRAL_FLUX "' // &
@@ -8796,13 +8803,15 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
       &cell boundary or a boundary condition.'
     call printErrMsg(option)
   else
-    write(option%io_buffer,*) icount
-    option%io_buffer = trim(adjustl(option%io_buffer)) // ' connections found &
-      &for integral flux "' // trim(adjustl(integral_flux%name)) // '".'
+    option%io_buffer = trim(StringWrite(icount)) // ' connections found &
+      &for integral flux "' // trim(adjustl(integral_flux%name)) // '": ' // &
+      trim(StringWrite(counts(1))) // ' internal, ' // &
+      trim(StringWrite(counts(2))) // ' boundary'
     call printMsg(option)
   endif
 
 end subroutine PatchGetIntegralFluxConnections
+
 ! **************************************************************************** !
 
 subroutine PatchCouplerInputRecord(patch)

@@ -109,6 +109,9 @@ subroutine IntegralFluxRead(integral_flux,input,option)
   PetscReal :: x(3), y(3), z(3)
   PetscInt, pointer :: int_array(:,:)
   PetscReal, pointer :: real_array(:,:)
+
+  option%flow%store_fluxes = PETSC_TRUE
+  option%transport%store_fluxes = PETSC_TRUE
   
   input%ierr = 0
   do
