@@ -99,7 +99,7 @@ subroutine GlobalAuxVarInit(auxvar,option)
   implicit none
   
   type(global_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: nphase
   
@@ -242,7 +242,7 @@ subroutine GlobalAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(global_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%istate = auxvar%istate
   auxvar2%hstate = auxvar%hstate

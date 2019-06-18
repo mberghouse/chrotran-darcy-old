@@ -845,7 +845,7 @@ function AqueousSpeciesConstraintCreate(reaction,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   type(aq_species_constraint_type), pointer :: AqueousSpeciesConstraintCreate
 
   type(aq_species_constraint_type), pointer :: constraint
@@ -886,7 +886,7 @@ function GuessConstraintCreate(reaction,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   type(guess_constraint_type), pointer :: GuessConstraintCreate
 
   type(guess_constraint_type), pointer :: constraint
@@ -916,7 +916,7 @@ function ColloidConstraintCreate(reaction,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   type(colloid_constraint_type), pointer :: ColloidConstraintCreate
 
   type(colloid_constraint_type), pointer :: constraint  
@@ -1015,7 +1015,7 @@ function GetPrimarySpeciesIDFromName1(name,reaction,option)
   
   character(len=MAXWORDLENGTH) :: name
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: GetPrimarySpeciesIDFromName1
 
@@ -1041,7 +1041,7 @@ function GetPrimarySpeciesIDFromName2(name,reaction,return_error,option)
   
   character(len=MAXWORDLENGTH) :: name
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: GetPrimarySpeciesIDFromName2
 
@@ -1077,7 +1077,7 @@ function GetPrimarySpeciesIDFromName2(name,reaction,return_error,option)
   if (return_error .and. GetPrimarySpeciesIDFromName2 <= 0) then
     option%io_buffer = 'Species "' // trim(name) // &
       '" not found among primary species in GetPrimarySpeciesIDFromName().'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end function GetPrimarySpeciesIDFromName2
@@ -1158,7 +1158,7 @@ function GetSecondarySpeciesIDFromName1(name,reaction,option)
   implicit none
   character(len=MAXWORDLENGTH) :: name
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: GetSecondarySpeciesIDFromName1
   GetSecondarySpeciesIDFromName1 = &
@@ -1180,7 +1180,7 @@ function GetSecondarySpeciesIDFromName2(name,reaction,return_error,option)
   implicit none
   character(len=MAXWORDLENGTH) :: name
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: GetSecondarySpeciesIDFromName2
   type(aq_species_type), pointer :: species
   PetscInt :: i
@@ -1214,7 +1214,7 @@ function GetSecondarySpeciesIDFromName2(name,reaction,return_error,option)
   if (return_error .and. GetSecondarySpeciesIDFromName2 <= 0) then
     option%io_buffer = 'Species "' // trim(name) // &
       '" not found among Secondary species in GetSecondarySpeciesIDFromName().'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end function GetSecondarySpeciesIDFromName2
@@ -1354,7 +1354,7 @@ subroutine ReactionFitLogKCoef(coefs,logK,name,option,reaction)
   PetscReal :: coefs(FIVE_INTEGER)
   character(len=MAXWORDLENGTH) :: name 
   PetscReal :: logK(reaction%num_dbase_temperatures)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: temp_int(reaction%num_dbase_temperatures), &
               indx(reaction%num_dbase_temperatures)
@@ -1390,7 +1390,7 @@ subroutine ReactionFitLogKCoef(coefs,logK,name,option,reaction)
 
   if (iflag == 1) then
     option%io_buffer = 'In ReactionFitLogKCoef: log K = 500 for ' // trim(name)
-    call printWrnMsg(option)
+    call option%PrintWrnMsg()
   endif
 
   do j = 1, FIVE_INTEGER
@@ -1428,7 +1428,7 @@ subroutine ReactionInitializeLogK(logKcoef,logKs,logK,option,reaction)
   PetscReal :: logKcoef(FIVE_INTEGER)
   PetscReal :: logKs(reaction%num_dbase_temperatures)
   PetscReal :: logK, logK_1D_Array(ONE_INTEGER)
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal :: coefs(FIVE_INTEGER,ONE_INTEGER)
   PetscReal :: temperature
@@ -1507,7 +1507,7 @@ subroutine ReactionInitializeLogK_hpt(logKcoef,logK,option,reaction)
   type(reaction_type) :: reaction
   PetscReal :: logKcoef(17)
   PetscReal :: logK, logK_1D_Array(ONE_INTEGER)
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal :: coefs(17,ONE_INTEGER)
   PetscReal :: temperature, pressure
@@ -2072,7 +2072,7 @@ subroutine ReactionDestroy(reaction,option)
   type(radioactive_decay_rxn_type), pointer :: radioactive_decay_rxn, &
                                                prev_radioactive_decay_rxn
   type(kd_rxn_type), pointer :: kd_rxn, prev_kd_rxn
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (.not.associated(reaction)) return
   

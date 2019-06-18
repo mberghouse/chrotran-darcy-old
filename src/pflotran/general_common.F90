@@ -67,7 +67,7 @@ subroutine GeneralAccumulation(gen_auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   PetscReal :: soil_heat_capacity
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(option%nflowdof) 
   PetscReal :: Jac(option%nflowdof,option%nflowdof)
   PetscBool :: analytical_derivatives
@@ -434,7 +434,7 @@ subroutine GeneralFlux(gen_auxvar_up,global_auxvar_up, &
   type(general_auxvar_type) :: gen_auxvar_up, gen_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area
   PetscReal :: dist(-1:3)
@@ -2464,7 +2464,7 @@ subroutine GeneralBCFlux(ibndtype,auxvar_mapping,auxvars, &
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ibndtype(1:option%nflowdof)
   PetscInt :: auxvar_mapping(GENERAL_MAX_INDEX)
   PetscReal :: auxvars(:) ! from aux_real_var array
@@ -2653,7 +2653,7 @@ subroutine GeneralBCFlux(ibndtype,auxvar_mapping,auxvars, &
             if (analytical_derivatives) then
               option%io_buffer = 'CONDUCTANCE_BC and SEEPAGE_BC need to be &
                 &Verified in GeneralBCFlux().'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
               ddelta_pressure_dpdn = 0.d0
               ddelta_pressure_dTdn = 0.d0
             endif
@@ -2724,7 +2724,7 @@ subroutine GeneralBCFlux(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = &
         'Boundary condition type not recognized in GeneralBCFlux phase loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   if (dabs(v_darcy(iphase)) > 0.d0 .or. mobility > 0.d0) then
     ! q[m^3 phase/sec] = v_darcy[m/sec] * area[m^2]
@@ -3066,7 +3066,7 @@ subroutine GeneralBCFlux(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = &
         'Boundary condition type not recognized in GeneralBCFlux phase loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   if (dabs(v_darcy(iphase)) > 0.d0 .or. mobility > 0.d0) then
@@ -3809,7 +3809,7 @@ subroutine GeneralBCFlux(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = 'Boundary condition type not recognized in ' // &
         'GeneralBCFlux heat conduction loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   ! MJ/s
   Res(energy_id) = Res(energy_id) + heat_flux
@@ -3857,7 +3857,7 @@ subroutine GeneralSrcSink(option,qsrc,flow_src_sink_type,gen_auxvar_ss, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(general_auxvar_type) :: gen_auxvar,gen_auxvar_ss
   type(global_auxvar_type) :: global_auxvar
   PetscReal :: ss_flow_vol_flux(option%nphase)
@@ -3994,7 +3994,7 @@ subroutine GeneralSrcSink(option,qsrc,flow_src_sink_type,gen_auxvar_ss, &
         if (dabs(Res(wat_comp_id)) > 1.d-40 .and. dden_bool > 0.d0) then      
           option%io_buffer = 'Volumetric water injection not set up &
             &for gas state in GeneralSrcSink.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         ! derivative wrt gas pressure
         ! derivative wrt air pressure
@@ -4036,7 +4036,7 @@ subroutine GeneralSrcSink(option,qsrc,flow_src_sink_type,gen_auxvar_ss, &
         if (dabs(Res(air_comp_id)) > 1.d-40 .and. dden_bool > 0.d0) then      
           option%io_buffer = 'Volumetric air injection not set up for &
             &liquid state in GeneralSrcSink as there is no air density.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         ! derivative wrt liquid pressure
         ! derivative wrt air mole fraction
@@ -4163,7 +4163,7 @@ subroutine GeneralAccumDerivative(gen_auxvar,global_auxvar,material_auxvar, &
   type(general_auxvar_type) :: gen_auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: soil_heat_capacity
   PetscReal :: J(option%nflowdof,option%nflowdof)
      
@@ -4232,7 +4232,7 @@ subroutine GeneralFluxDerivative(gen_auxvar_up,global_auxvar_up, &
   type(general_auxvar_type) :: gen_auxvar_up(0:), gen_auxvar_dn(0:)
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: thermal_conductivity_dn(2)
   PetscReal :: thermal_conductivity_up(2)
   PetscReal :: area
@@ -4361,7 +4361,7 @@ subroutine GeneralBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ibndtype(1:option%nflowdof)
   PetscInt :: auxvar_mapping(GENERAL_MAX_INDEX)
   PetscReal :: auxvars(:) ! from aux_real_var array
@@ -4451,7 +4451,7 @@ subroutine GeneralSrcSinkDerivative(option,source_sink,gen_auxvar_ss, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(coupler_type), pointer :: source_sink
   type(general_auxvar_type) :: gen_auxvars(0:), gen_auxvar_ss
   type(global_auxvar_type) :: global_auxvar
@@ -4567,7 +4567,7 @@ subroutine GeneralAuxVarDiff(idof,general_auxvar,global_auxvar, &
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: idof
   type(general_auxvar_type) :: general_auxvar, general_auxvar_pert
   type(global_auxvar_type) :: global_auxvar, global_auxvar_pert
@@ -5091,7 +5091,7 @@ subroutine GeneralAuxVarPrintResult(string,numerical,analytical, &
   PetscReal :: numerical
   PetscReal :: analytical
   PetscReal :: uninitialized_value
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=8) :: word
   character(len=2) :: precision
@@ -5145,7 +5145,7 @@ subroutine GeneralDiffJacobian(string,numerical_jacobian,analytical_jacobian, &
   PetscReal :: perturbation(3)
   PetscReal :: perturbation_tolerance
   type(general_auxvar_type) :: general_auxvar(0:)
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: irow, icol
   

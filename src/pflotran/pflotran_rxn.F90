@@ -70,22 +70,22 @@ subroutine BatchChemInitializeReactions(option, input, reaction)
 
   implicit none
 
-  type(option_type), pointer :: option
-  type(input_type), pointer :: input
+  class(option_type), pointer :: option
+  class(input_type), pointer :: input
   type(reaction_type), pointer :: reaction
   character(len=MAXSTRINGLENGTH) :: string
 
   ! check for a chemistry block in the  input file
   string = "CHEMISTRY"
-  call InputFindStringInFile(input, option, string)
-  if (.not.InputError(input)) then
+  call InputFindStringInFile(input,option, string)
+  if (.not.input%Error()) then
     ! found a chemistry block, initialize the chemistry.
 
     ! NOTE(bja): ReactionInit() only does a first pass through the
     ! input file to check for a select items
     call ReactionInit(reaction, input, option)
     ! rewind the input file to prepare for the second pass
-    call InputFindStringInFile(input, option, string)
+    call InputFindStringInFile(input,option, string)
     ! the second pass through the input file to read the remaining blocks
     call ReactionReadPass2(reaction, input, option)
   else
@@ -130,8 +130,8 @@ subroutine BatchChemProcessConstraints(option, input, reaction, &
   implicit none
 
 
-  type(option_type), pointer :: option
-  type(input_type), pointer :: input
+  class(option_type), pointer :: option
+  class(input_type), pointer :: input
   type(reaction_type), pointer :: reaction
   character(len=MAXSTRINGLENGTH) :: string
   type(global_auxvar_type), pointer :: global_auxvars
@@ -154,26 +154,26 @@ subroutine BatchChemProcessConstraints(option, input, reaction, &
   ! look through the input file
   call InputRewind(input)
   do
-    call InputReadPflotranString(input, option)
-    if (InputError(input)) exit
+    call InputReadPflotranString(input,option)
+    if (input%Error()) exit
 
-    call InputReadWord(input, option, word, PETSC_FALSE)
+    call input%ReadWord(option, word, PETSC_FALSE)
     call StringToUpper(word)
     card = trim(word)
 
     option%io_buffer = 'pflotran card:: ' // trim(card)
-    call printMsg(option)
+    call option%PrintMsg()
 
     select case(trim(card))
       case('CONSTRAINT')
         if (.not.associated(reaction)) then
           option%io_buffer = 'CONSTRAINTs not supported without CHEMISTRY.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         tran_constraint => TranConstraintCreate(option)
-        call InputReadWord(input, option, tran_constraint%name, PETSC_TRUE)
-        call InputErrorMsg(input, option, 'constraint', 'name') 
-        call printMsg(option, tran_constraint%name)
+        call input%ReadWord(option, tran_constraint%name, PETSC_TRUE)
+        call input%ErrorMsg(option, 'constraint', 'name')
+        call option%PrintMsg(tran_constraint%name)
         call TranConstraintReadRT(tran_constraint, reaction, input, option)
         call TranConstraintAddToList(tran_constraint, transport_constraints)
         nullify(tran_constraint)
@@ -196,7 +196,7 @@ subroutine BatchChemProcessConstraints(option, input, reaction, &
      if (.not. associated(tran_constraint)) exit
      ! initialize constraints
      option%io_buffer = "initializing constraint : " // tran_constraint%name
-     call printMsg(option)
+     call option%PrintMsg()
      call ReactionProcessConstraint(reaction, &
                                     tran_constraint%name, &
                                     tran_constraint%aqueous_species, &
@@ -219,7 +219,7 @@ subroutine BatchChemProcessConstraints(option, input, reaction, &
      
      ! equilibrate
      option%io_buffer = "equilibrate constraint : " // tran_constraint%name
-     call printMsg(option)
+     call option%PrintMsg()
      call ReactionEquilibrateConstraint(rt_auxvars, global_auxvars, &
                                         material_auxvars, reaction, &
                                         tran_constraint%name, &
@@ -270,8 +270,8 @@ program pflotran_rxn
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXSTRINGLENGTH) :: filename_out
   type(reaction_type), pointer :: reaction
-  type(option_type), pointer :: option
-  type(input_type), pointer :: input
+  class(option_type), pointer :: option
+  class(input_type), pointer :: input
 
   type(global_auxvar_type), pointer :: global_auxvars
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars
@@ -298,7 +298,7 @@ program pflotran_rxn
   ! check for non-default input filename
   option%input_filename = "pflotran.in"
   string = '-pflotranin'
-  call InputGetCommandLineString(string, option%input_filename, option_found, option)
+  call InputGetCommandLineString(string, option%input_filename,option_found, option)
 
   string = '-output_prefix'
   call InputGetCommandLineString(string, option%global_prefix, option_found, option)

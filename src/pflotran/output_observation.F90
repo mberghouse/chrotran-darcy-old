@@ -132,7 +132,7 @@ subroutine OutputObservationTecplotColumnTXT(realization_base)
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXSTRINGLENGTH) :: string, string2
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   type(output_option_type), pointer :: output_option
@@ -213,7 +213,7 @@ subroutine OutputObservationTecplotColumnTXT(realization_base)
  !             option%io_buffer = 'Writing of data at coordinates not ' // &
  !               'functioning properly for minerals.  Perhaps due to ' // &
  !               'non-ghosting of vol frac....>? - geh'
- !             call printErrMsg(option)
+ !             call option%PrintErrMsg()
               call WriteObservationHeaderForCoord(fid,realization_base, &
                                                   observation%region, &
                                                  observation%print_velocities, &
@@ -405,7 +405,7 @@ subroutine WriteObservationHeader(fid,realization_base,cell_string, &
   
   PetscInt :: variable_count
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option  
   
   option => realization_base%option
@@ -459,7 +459,7 @@ subroutine OutputObservationTecplotSecTXT(realization_base)
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXSTRINGLENGTH) :: string, string2
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   type(output_option_type), pointer :: output_option
@@ -527,7 +527,7 @@ subroutine OutputObservationTecplotSecTXT(realization_base)
               option%io_buffer = 'Writing of data at coordinates not &
                 &functioning properly for minerals.  Perhaps due to &
                 &non-ghosting of vol frac....>? - geh'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
               call WriteObservationHeaderForCoordSec(fid,realization_base, &
                                                   observation%region, &
                                                   observation% &
@@ -728,7 +728,7 @@ subroutine WriteObservationHeaderSec(fid,realization_base,cell_string, &
   
   PetscInt :: i,j
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option  
   
   option => realization_base%option
@@ -824,7 +824,7 @@ subroutine WriteObservationHeaderForBC(fid,realization_base,coupler_name)
   
   PetscInt :: i
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction 
   
   option => realization_base%option
@@ -881,7 +881,7 @@ subroutine WriteObservationDataForCell(fid,realization_base,local_id)
   PetscInt :: local_id
   PetscReal :: temp_real
   PetscInt :: ghosted_id
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
@@ -950,7 +950,7 @@ subroutine WriteObservationDataForCoord(fid,realization_base,region)
   PetscInt :: local_id
   PetscInt :: ghosted_id
   PetscReal :: temp_real
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
@@ -1077,7 +1077,7 @@ subroutine WriteObservationDataForBC(fid,realization_base,patch,connection_set)
   PetscReal :: sum_volumetric_flux_global(realization_base%option%nphase)
   PetscReal :: sum_solute_flux(realization_base%option%ntrandof)
   PetscReal :: sum_solute_flux_global(realization_base%option%ntrandof)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   PetscErrorCode :: ierr
   
@@ -1096,7 +1096,7 @@ subroutine WriteObservationDataForBC(fid,realization_base,patch,connection_set)
       case(WF_MODE)
         option%io_buffer = 'WriteObservationDataForBC() needs to be set up &
           & for WIPP Flow, and perhaps the other multiphase flow modes.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       case(MIS_MODE)
       case(RICHARDS_MODE,RICHARDS_TS_MODE)
         sum_volumetric_flux = 0.d0
@@ -1161,7 +1161,7 @@ subroutine WriteVelocityAtCell(fid,realization_base,local_id)
   
   PetscInt :: fid
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: local_id
   PetscInt :: iphase
 
@@ -1200,7 +1200,7 @@ subroutine WriteVelocityAtCell2(fid,realization_base,local_id,velocities)
   
   PetscInt :: fid
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: local_id
   PetscReal :: velocities(:,:,:)
 
@@ -1248,7 +1248,7 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
   PetscInt :: local_id
 
   PetscInt :: ghosted_id
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
@@ -1348,7 +1348,7 @@ subroutine WriteVelocityAtCoord(fid,realization_base,region)
   PetscInt :: fid
   class(realization_base_type) :: realization_base
   type(region_type) :: region
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: local_id
   PetscInt :: iphase
   PetscReal :: coordinate(3)
@@ -1404,7 +1404,7 @@ function GetVelocityAtCoord(fid,realization_base,local_id,x,y,z,iphase)
   PetscReal :: x, y, z
   
   PetscInt :: ghosted_id
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
@@ -1544,7 +1544,7 @@ subroutine WriteObservationSecondaryDataAtCell(fid,realization_base,local_id,iva
   class(realization_base_type) :: realization_base
   PetscInt :: local_id
   PetscInt :: ghosted_id
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
@@ -1642,7 +1642,7 @@ subroutine OutputIntegralFlux(realization_base)
 
   class(realization_base_type), target :: realization_base
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(output_option_type), pointer :: output_option
@@ -1703,7 +1703,7 @@ subroutine OutputIntegralFlux(realization_base)
   if (option%myrank == option%io_rank) then
 
 !geh    option%io_buffer = '--> write tecplot mass balance file: ' // trim(filename)
-!geh    call printMsg(option)    
+!geh    call option%PrintMsg()
 
     if (output_option%print_column_ids) then
       icol = 1
@@ -1944,7 +1944,7 @@ subroutine OutputMassBalance(realization_base)
 
   class(realization_base_type), target :: realization_base
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(output_option_type), pointer :: output_option
@@ -2012,7 +2012,7 @@ subroutine OutputMassBalance(realization_base)
   if (option%myrank == option%io_rank) then
 
 !geh    option%io_buffer = '--> write tecplot mass balance file: ' // trim(filename)
-!geh    call printMsg(option)    
+!geh    call option%PrintMsg()
 
     if (output_option%print_column_ids) then
       icol = 1
@@ -2249,7 +2249,7 @@ subroutine OutputMassBalance(realization_base)
             if (reaction%primary_species_print(i)) then
 !              option%io_buffer = 'Check OutputObservation to ensure that ' // &
 !                'reactive transport species units are really kmol.'
-!              call printErrMsg(option)
+!              call option%PrintErrMsg()
               string = trim(coupler%name) // ' ' // &
                        trim(reaction%primary_species_names(i))
               call OutputWriteToHeader(fid,string,'mol','',icol)
@@ -2383,7 +2383,7 @@ subroutine OutputMassBalance(realization_base)
         end select
       class default
         option%io_buffer = 'Unrecognized realization class in MassBalance().'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
     int_mpi = option%nflowspec*option%nphase
@@ -2442,7 +2442,7 @@ subroutine OutputMassBalance(realization_base)
       !           to reactive_transport.F90.
       option%io_buffer = 'OutputMassBalance() needs to be refactored to &
         &consider species in the gas phase.'
-!      call printErrMsg(option)
+!      call option%PrintErrMsg()
     endif
     max_tran_size = max(reaction%naqcomp,reaction%mineral%nkinmnrl, &
                         reaction%immobile%nimmobile,reaction%gas%nactive_gas)
@@ -2455,7 +2455,7 @@ subroutine OutputMassBalance(realization_base)
         call RTComputeMassBalance(realization_base,max_tran_size,sum_mol)
       class default
         option%io_buffer = 'Unrecognized realization class in MassBalance().'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
     int_mpi = max_tran_size*8
     call MPI_Reduce(sum_mol,sum_mol_global,int_mpi, &
@@ -3125,7 +3125,7 @@ subroutine OutputEclipseFiles(realization_base)
   implicit none
 
   class(realization_base_type), target :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(output_option_type), pointer :: output_option
@@ -3155,7 +3155,7 @@ subroutine OutputEclipseFiles(realization_base)
 
   if (.not.is_grdecl) then
     option%io_buffer = 'Eclipse file output requires grdecl type input'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   !  Find mass balance
@@ -3172,7 +3172,7 @@ subroutine OutputEclipseFiles(realization_base)
     class default
       option%io_buffer = &
         'Unrecognized realization class in OutputEclipseFiles().'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   int_mpi = option%nflowspec*option%nphase
@@ -3550,7 +3550,7 @@ subroutine WriteWellValues(fid, realization, tconv, towg_miscibility_model, &
 
   PetscInt, intent(in   ) :: fid
   type(realization_subsurface_type) :: realization
-  type(option_type), intent(in), pointer :: option
+  class(option_type), intent(in), pointer :: option
   PetscBool, intent(in) :: wecl
   PetscReal :: sum_kg_global(:,:)
 
@@ -4058,7 +4058,7 @@ subroutine WriteRestValues(realization, option)
   implicit none
 
   type(realization_subsurface_type) :: realization
-  type(option_type), intent(in), pointer :: option
+  class(option_type), intent(in), pointer :: option
   type(well_data_list_type), pointer :: well_data_list
   PetscInt  :: ierr, nlmax, mlmax
   PetscBool :: is_ioproc
@@ -4119,7 +4119,7 @@ subroutine OutputLineRept(realization_base, option)
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   if (     option%iflowmode == TOIL_IMS_MODE &
       .or. option%iflowmode == TOWG_MODE       ) then
@@ -4150,7 +4150,7 @@ subroutine WriteLineRept(realization, option)
   implicit none
 
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscReal :: time, tconv, dt
   type(well_data_list_type), pointer :: well_data_list
@@ -4378,7 +4378,7 @@ subroutine loadLocalSolution(vsoll, nsol, zsol, patch, grid, option)
 
   type(patch_type), pointer :: patch
   type(grid_type ), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: isol
 
@@ -4646,7 +4646,7 @@ subroutine setupEwriterRestMaps(patch, grid, option)
 
   type(patch_type), pointer :: patch
   type(grid_type ), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: nlmax, lid, gid, nid, ierr
 

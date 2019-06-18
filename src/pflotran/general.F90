@@ -52,7 +52,7 @@ subroutine GeneralSetup(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(output_variable_list_type), pointer :: list
@@ -84,17 +84,17 @@ subroutine GeneralSetup(realization)
   error_found = PETSC_FALSE
   if (minval(material_parameter%soil_residual_saturation(:,:)) < 0.d0) then
     option%io_buffer = 'ERROR: Non-initialized soil residual saturation.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   if (minval(material_parameter%soil_heat_capacity(:)) < 0.d0) then
     option%io_buffer = 'ERROR: Non-initialized soil heat capacity.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   if (minval(material_parameter%soil_thermal_conductivity(:,:)) < 0.d0) then
     option%io_buffer = 'ERROR: Non-initialized soil thermal conductivity.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   
@@ -108,35 +108,35 @@ subroutine GeneralSetup(realization)
     if (material_auxvars(ghosted_id)%volume < 0.d0 .and. flag(1) == 0) then
       flag(1) = 1
       option%io_buffer = 'ERROR: Non-initialized cell volume.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%porosity < 0.d0 .and. flag(2) == 0) then
       flag(2) = 1
       option%io_buffer = 'ERROR: Non-initialized porosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%tortuosity < 0.d0 .and. flag(3) == 0) then
       flag(3) = 1
       option%io_buffer = 'ERROR: Non-initialized tortuosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%soil_particle_density < 0.d0 .and. &
         flag(4) == 0) then
       flag(4) = 1
       option%io_buffer = 'ERROR: Non-initialized soil particle density.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (minval(material_auxvars(ghosted_id)%permeability) < 0.d0 .and. &
         flag(5) == 0) then
       option%io_buffer = 'ERROR: Non-initialized permeability.'
-      call printMsg(option)
+      call option%PrintMsg()
       flag(5) = 1
     endif
   enddo
   
   if (error_found .or. maxval(flag) > 0) then
     option%io_buffer = 'Material property errors found in GeneralSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! allocate auxvar data structures for all grid cells  
@@ -198,13 +198,13 @@ subroutine GeneralSetup(realization)
       diffusion_coefficient(LIQUID_PHASE))) then
     option%io_buffer = &
       UninitializedMessage('Liquid phase diffusion coefficient','')
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(patch%aux%General%general_parameter% &
       diffusion_coefficient(GAS_PHASE))) then
     option%io_buffer = &
       UninitializedMessage('Gas phase diffusion coefficient','')
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   list => realization%output_option%output_snap_variable_list
@@ -271,7 +271,7 @@ subroutine GeneralUpdateSolution(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -330,7 +330,7 @@ subroutine GeneralTimeCut(realization)
   implicit none
   
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(global_auxvar_type), pointer :: global_auxvars(:)  
@@ -398,7 +398,7 @@ subroutine GeneralNumericalJacobianTest(xx,realization,B)
   PetscReal, pointer :: vec_p(:), vec2_p(:)
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   PetscReal :: derivative, perturbation
@@ -511,7 +511,7 @@ subroutine GeneralComputeMassBalance(realization,mass_balance)
   PetscReal :: mass_balance(realization%option%nflowspec, &
                             realization%option%nphase)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -575,7 +575,7 @@ subroutine GeneralZeroMassBalanceDelta(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -616,7 +616,7 @@ subroutine GeneralUpdateMassBalance(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -677,7 +677,7 @@ subroutine GeneralUpdateAuxVars(realization,update_state)
   type(realization_subsurface_type) :: realization
   PetscBool :: update_state
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -756,7 +756,7 @@ subroutine GeneralUpdateAuxVars(realization,update_state)
     else
     !hdp - Debugging purposes
     !write(option%io_buffer,'("cell id: ",i7)') natural_id
-    !call printMsg(option)
+    !call option%PrintMsg()
       call GeneralAuxVarCompute(xx_loc_p(ghosted_start:ghosted_end), &
                        gen_auxvars(ZERO_INTEGER,ghosted_id), &
                        global_auxvars(ghosted_id), &
@@ -848,7 +848,7 @@ subroutine GeneralUpdateAuxVars(realization,update_state)
                         option%io_buffer = 'Mixed FLOW_CONDITION "' // &
                           trim(boundary_condition%flow_condition%name) // &
                           '" needs gas pressure defined.'
-                        call printErrMsg(option)
+                        call option%PrintErrMsg()
                       endif
                     ! for air pressure dof
                     case(GENERAL_AIR_PRESSURE_INDEX)
@@ -871,13 +871,13 @@ subroutine GeneralUpdateAuxVars(realization,update_state)
                                 trim(boundary_condition%flow_condition%name) // &
                                 '" needs gas pressure defined to calculate air ' // &
                                 'pressure from temperature.'
-                              call printErrMsg(option)
+                              call option%PrintErrMsg()
                             endif
                           endif
                           xxbc(idof) = gas_pressure - saturation_pressure
                         else
                           option%io_buffer = 'Cannot find boundary constraint for air pressure.'
-                          call printErrMsg(option)
+                          call option%PrintErrMsg()
                         endif
                       else
                         xxbc(idof) = boundary_condition%flow_aux_real_var(real_index,iconn)
@@ -892,7 +892,7 @@ subroutine GeneralUpdateAuxVars(realization,update_state)
 !                        option%io_buffer = 'Mixed FLOW_CONDITION "' // &
 !                          trim(boundary_condition%flow_condition%name) // &
 !                          '" needs saturation defined.'
-!                        call printErrMsg(option)
+!                        call option%PrintErrMsg()
                       endif
                     case(GENERAL_TEMPERATURE_INDEX)
                       real_index = boundary_condition%flow_aux_mapping(variable)
@@ -902,13 +902,13 @@ subroutine GeneralUpdateAuxVars(realization,update_state)
                         option%io_buffer = 'Mixed FLOW_CONDITION "' // &
                           trim(boundary_condition%flow_condition%name) // &
                           '" needs temperature defined.'
-                        call printErrMsg(option)
+                        call option%PrintErrMsg()
                       endif
                   end select
                 case(NEUMANN_BC)
                 case default
                   option%io_buffer = 'Unknown BC type in GeneralUpdateAuxVars().'
-                  call printErrMsg(option)
+                  call option%PrintErrMsg()
               end select
             enddo  
         end select
@@ -926,7 +926,7 @@ subroutine GeneralUpdateAuxVars(realization,update_state)
             xxbc(idof) = boundary_condition%flow_aux_real_var(real_index,iconn)
           else
             option%io_buffer = 'Error setting up boundary condition in GeneralUpdateAuxVars'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         enddo
       endif
@@ -1137,7 +1137,7 @@ subroutine GeneralUpdateFixedAccum(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1262,7 +1262,7 @@ subroutine GeneralResidual(snes,xx,r,realization,ierr)
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(coupler_type), pointer :: boundary_condition
   type(coupler_type), pointer :: source_sink
@@ -1711,7 +1711,7 @@ subroutine GeneralJacobian(snes,xx,A,B,realization,ierr)
   PetscInt, pointer :: zeros(:)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(material_parameter_type), pointer :: material_parameter
   type(general_parameter_type), pointer :: general_parameter
@@ -2024,13 +2024,13 @@ subroutine GeneralJacobian(snes,xx,A,B,realization,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
   endif
 
 !  call MatView(J,PETSC_VIEWER_STDOUT_WORLD,ierr)
@@ -2069,7 +2069,7 @@ function GeneralGetTecplotHeader(realization,icolumn)
   PetscInt :: icolumn
   
   character(len=MAXSTRINGLENGTH) :: string, string2
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field  
   PetscInt :: i
 
@@ -2363,7 +2363,7 @@ subroutine GeneralSSSandbox(residual,Jacobian,compute_derivative, &
   type(general_auxvar_type), pointer :: general_auxvars(:,:)
   
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal, pointer :: r_p(:)
   PetscReal :: res(option%nflowdof)
@@ -2443,7 +2443,7 @@ subroutine GeneralSSSandboxLoadAuxReal(srcsink,aux_real,gen_auxvar,option)
   class(srcsink_sandbox_base_type) :: srcsink
   PetscReal :: aux_real(:)
   type(general_auxvar_type) gen_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   
   aux_real = 0.d0
   select type(srcsink)
@@ -2497,7 +2497,7 @@ subroutine GeneralMapBCAuxVarsToGlobal(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_type), pointer :: cur_connection_set

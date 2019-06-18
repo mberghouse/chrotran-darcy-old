@@ -166,7 +166,7 @@ subroutine DatasetBaseVerify(this,dataset_error,option)
   
   class(dataset_base_type) :: this
   PetscBool :: dataset_error
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (associated(this%time_storage) .or. associated(this%iarray) .or. &
       associated(this%iarray) .or. associated(this%ibuffer) .or. &
@@ -177,27 +177,27 @@ subroutine DatasetBaseVerify(this,dataset_error,option)
     if (this%data_type == 0) then
       option%io_buffer = '"data_type" not defined in dataset: ' // &
                          trim(this%name)
-      call printMsg(option)
+      call option%PrintMsg()
       dataset_error = PETSC_TRUE
     endif
     if (associated(this%ibuffer) .or. associated(this%rbuffer)) then
       if (.not.associated(this%dims)) then
         option%io_buffer = '"dims" not allocated in dataset: ' // &
                            trim(this%name)
-        call printMsg(option)
+        call option%PrintMsg()
         dataset_error = PETSC_TRUE
       endif
       if (this%dims(1) == 0) then
         option%io_buffer = '"dims" not defined in dataset: ' // &
                            trim(this%name)
-        call printMsg(option)
+        call option%PrintMsg()
         dataset_error = PETSC_TRUE
       endif
       if (size(this%dims) /= this%rank) then
         option%io_buffer = 'Size of "dims" not match "rank" in dataset: ' // &
                             trim(this%name)
         dataset_error = PETSC_TRUE
-        call printMsg(option)
+        call option%PrintMsg()
       endif
     endif
     if (associated(this%ibuffer) .and. .not.associated(this%iarray)) then
@@ -210,7 +210,7 @@ subroutine DatasetBaseVerify(this,dataset_error,option)
     endif
   else if (len_trim(this%name) < 1) then
     option%io_buffer = 'ERROR: No value or dataset specified.'
-    call printMsg(option)
+    call option%PrintMsg()
     dataset_error = PETSC_TRUE
   endif
     
@@ -304,7 +304,7 @@ subroutine DatasetBaseInterpolateSpace(this,xx,yy,zz,time,real_value,option)
   PetscReal, intent(in) :: xx, yy, zz
   PetscReal :: time
   PetscReal :: real_value
-  type(option_type) :: option
+  class(option_type) :: option
   
 end subroutine DatasetBaseInterpolateSpace
 
@@ -326,7 +326,7 @@ subroutine DatasetBaseReorder(this,option)
   implicit none
   
   class(dataset_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal, allocatable :: temp_real(:)
   PetscInt :: i, j, k, l
@@ -337,7 +337,7 @@ subroutine DatasetBaseReorder(this,option)
   
   if (this%data_type == DATASET_INTEGER) then
     option%io_buffer = 'Reordering of integer data sets not yet supported.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! set each dim to 1 by default for loop below
@@ -397,7 +397,7 @@ subroutine DatasetBaseGetTimes(this, option, max_sim_time, time_array)
   implicit none
   
   class(dataset_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: max_sim_time
   PetscReal, pointer :: time_array(:)
   
@@ -457,7 +457,7 @@ function DatasetBaseGetPointer(dataset_list, dataset_name, debug_string, &
   class(dataset_base_type), pointer :: dataset_list
   character(len=MAXWORDLENGTH) :: dataset_name
   character(len=MAXSTRINGLENGTH) :: debug_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(dataset_base_type), pointer :: DatasetBaseGetPointer
   PetscBool :: found
@@ -478,7 +478,7 @@ function DatasetBaseGetPointer(dataset_list, dataset_name, debug_string, &
   if (.not.found) then
     option%io_buffer = 'Dataset "' // trim(dataset_name) // '" in "' // &
              trim(debug_string) // '" not found among available datasets.'
-    call printErrMsgByRank(option)    
+    call option%PrintErrMsgByRank()
   endif
 
 end function DatasetBaseGetPointer
@@ -526,7 +526,7 @@ subroutine DatasetBasePrint(this,option)
   implicit none
 
   class(dataset_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (len_trim(this%filename) > 0) then
     write(option%fid_out,'(10x,''Filename: '',a)') trim(this%filename)

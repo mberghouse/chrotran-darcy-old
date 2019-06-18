@@ -34,8 +34,8 @@ subroutine MicrobialRead(microbial,input,option)
   implicit none
   
   type(microbial_type) :: microbial
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: word
   type(microbial_rxn_type), pointer :: microbial_rxn, cur_microbial_rxn
@@ -51,11 +51,11 @@ subroutine MicrobialRead(microbial,input,option)
   nullify(microbial_biomass)
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','CHEMISTRY,MICROBIAL_REACTION')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CHEMISTRY,MICROBIAL_REACTION')
     call StringToUpper(word)   
 
     select case(trim(word))
@@ -64,42 +64,42 @@ subroutine MicrobialRead(microbial,input,option)
         microbial_rxn%reaction = trim(adjustl(input%buf))
         ! set flag for error message
         if (len_trim(microbial_rxn%reaction) < 2) input%ierr = 1
-        call InputErrorMsg(input,option,'reaction string', &
+        call input%ErrorMsg(option,'reaction string', &
                             'CHEMISTRY,MICROBIAL_REACTION,REACTION')     
       case('RATE_CONSTANT')
-        call InputReadDouble(input,option,microbial_rxn%rate_constant)  
-        call InputErrorMsg(input,option,'rate constant', &
+        call input%ReadDouble(option,microbial_rxn%rate_constant)
+        call input%ErrorMsg(option,'rate constant', &
                            'CHEMISTRY,MICROBIAL_REACTION') 
       case('ACTIVATION_ENERGY')
-        call InputReadDouble(input,option,microbial_rxn%activation_energy)  
-        call InputErrorMsg(input,option,'activation energy', &
+        call input%ReadDouble(option,microbial_rxn%activation_energy)
+        call input%ErrorMsg(option,'activation energy', &
                            'CHEMISTRY,MICROBIAL_REACTION') 
-        call InputReadAndConvertUnits(input,microbial_rxn%activation_energy, &
+        call input%ReadAndConvertUnits(microbial_rxn%activation_energy, &
                      'J/mol', &
                      'CHEMISTRY,MICROBIAL_REACTION,ACTIVATION_ENERGY',option)
       case('MONOD')
         monod => MicrobialMonodCreate()
         do 
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
                              'CHEMISTRY,MICROBIAL_REACTION,MONOD')
           call StringToUpper(word)   
           select case(trim(word))
             case('SPECIES_NAME')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'species name', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'species name', &
                            'CHEMISTRY,MICROBIAL_REACTION,MONOD')
               monod%species_name = word
             case('HALF_SATURATION_CONSTANT')
-              call InputReadDouble(input,option,monod%half_saturation_constant)
-              call InputErrorMsg(input,option,'half saturation constant', &
+              call input%ReadDouble(option,monod%half_saturation_constant)
+              call input%ErrorMsg(option,'half saturation constant', &
                                  'CHEMISTRY,MICROBIAL_REACTION,MONOD')
             case('THRESHOLD_CONCENTRATION')
-              call InputReadDouble(input,option,monod%threshold_concentration)  
-              call InputErrorMsg(input,option,'threshold concdntration', &
+              call input%ReadDouble(option,monod%threshold_concentration)
+              call input%ErrorMsg(option,'threshold concdntration', &
                                  'CHEMISTRY,MICROBIAL_REACTION,MONOD')
             case default
               call InputKeywordUnrecognized(word, &
@@ -119,21 +119,21 @@ subroutine MicrobialRead(microbial,input,option)
         inhibition => MicrobialInhibitionCreate()
         do 
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
                              'CHEMISTRY,MICROBIAL_REACTION,INHIBITION')
           call StringToUpper(word)   
           select case(trim(word))
             case('SPECIES_NAME')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'species name', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'species name', &
                                  'CHEMISTRY,MICROBIAL_REACTION,INHIBITION')
               inhibition%species_name = word
             case('TYPE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'inhibition type', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'inhibition type', &
                                  'CHEMISTRY,MICROBIAL_REACTION,INHIBITION')
               call StringToUpper(word)   
               select case(word)
@@ -143,9 +143,9 @@ subroutine MicrobialRead(microbial,input,option)
                   inhibition%itype = INHIBITION_INVERSE_MONOD
                 case('THRESHOLD')
                   inhibition%itype = INHIBITION_THRESHOLD
-                  call InputReadDouble(input,option, &
+                  call input%ReadDouble(option, &
                                        inhibition%inhibition_constant2)  
-                  call InputErrorMsg(input,option,'scaling factor', &
+                  call input%ErrorMsg(option,'scaling factor', &
                                      'CHEMISTRY,MICROBIAL_REACTION,&
                                      &INHIBITION,THRESHOLD_INHIBITION')
                 case default
@@ -153,8 +153,8 @@ subroutine MicrobialRead(microbial,input,option)
                          'CHEMISTRY,MICROBIAL_REACTION,INHIBITION,TYPE',option)
               end select
             case('INHIBITION_CONSTANT')
-              call InputReadDouble(input,option,inhibition%inhibition_constant)  
-              call InputErrorMsg(input,option,'inhibition constant', &
+              call input%ReadDouble(option,inhibition%inhibition_constant)
+              call input%ErrorMsg(option,'inhibition constant', &
                                  'CHEMISTRY,MICROBIAL_REACTION,INHIBITION')
             case default
               call InputKeywordUnrecognized(word, &
@@ -167,7 +167,7 @@ subroutine MicrobialRead(microbial,input,option)
           option%io_buffer = 'A SPECIES_NAME, TYPE, and INHIBITION_CON' // &
             'STANT must be defined for INHIBITION in MICROBIAL_REACTION ' // &
             'with REACTION "' // trim(microbial_rxn%reaction) // '".'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         ! append to list
         if (.not.associated(microbial_rxn%inhibition)) then
@@ -184,21 +184,21 @@ subroutine MicrobialRead(microbial,input,option)
         microbial_biomass => MicrobialBiomassCreate()
         do 
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
                              'CHEMISTRY,MICROBIAL_REACTION,BIOMASS')
           call StringToUpper(word)   
           select case(trim(word))
             case('SPECIES_NAME')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'species name', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'species name', &
                                  'CHEMISTRY,MICROBIAL_REACTION,BIOMASS')
               microbial_biomass%species_name = word
             case('YIELD')
-              call InputReadDouble(input,option,microbial_biomass%yield)
-              call InputErrorMsg(input,option,'yield', &
+              call input%ReadDouble(option,microbial_biomass%yield)
+              call input%ErrorMsg(option,'yield', &
                                  'CHEMISTRY,MICROBIAL_REACTION,BIOMASS')
             case default
               call InputKeywordUnrecognized(word, &
@@ -254,7 +254,7 @@ subroutine RMicrobial(Res,Jac,compute_derivative,rt_auxvar, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   PetscReal :: Res(reaction%ncomp)

@@ -86,7 +86,7 @@ function DatabaseRxnCreateFromRxnString(reaction_string, &
   PetscInt :: im_offset ! offset for aqueous species
   character(len=MAXWORDLENGTH), pointer :: primary_im_species_names(:)
   PetscBool :: consider_immobile_species
-  type(option_type) :: option
+  class(option_type) :: option
     
   type(database_rxn_type), pointer :: DatabaseRxnCreateFromRxnString
 
@@ -181,7 +181,7 @@ function DatabaseRxnCreateFromRxnString(reaction_string, &
             option%io_buffer = 'Keyword "' // trim(word) // &
                '" not recognized in reaction string "' // &
                trim(reaction_string) // '".'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           ! negate if negative stoichiometry
           if (negative_flag) value = -1.0*value
@@ -229,7 +229,7 @@ function DatabaseRxnCreateFromRxnString(reaction_string, &
               option%io_buffer = 'Species ' // trim(word) // &
                 ' in reaction not found among primary aqueous species list.'
             endif
-            call printErrMsg(option)     
+            call option%PrintErrMsg()
           else
             icount = icount + 1
           endif
@@ -303,7 +303,7 @@ subroutine BasisAlignSpeciesInRxn(num_basis_species,basis_names, &
   character(len=MAXWORDLENGTH) :: rxn_species_names(num_rxn_species)
   PetscReal :: rxn_stoich(num_rxn_species)
   PetscInt :: rxn_species_ids(num_rxn_species)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: i_rxn_species
   PetscInt :: i_basis_species
@@ -326,7 +326,7 @@ subroutine BasisAlignSpeciesInRxn(num_basis_species,basis_names, &
       option%io_buffer = trim(rxn_species_names(i_rxn_species)) // &
                ' not found in basis (BasisAlignSpeciesInRxn) for species ' // &
                trim(species_name)
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   enddo
   
@@ -350,7 +350,7 @@ subroutine BasisAlignSpeciesInRxn(num_basis_species,basis_names, &
     write(option%io_buffer,*) &
                    'Number of reaction species does not match original:', &
                     i_rxn_species, num_rxn_species
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine BasisAlignSpeciesInRxn 
@@ -573,7 +573,7 @@ function DatabaseCheckLegitimateLogKs(dbaserxn,species_name,temperatures, &
   type(database_rxn_type), pointer :: dbaserxn
   character(len=MAXWORDLENGTH) :: species_name
   PetscReal :: temperatures(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscBool :: DatabaseCheckLegitimateLogKs
   
@@ -598,7 +598,7 @@ function DatabaseCheckLegitimateLogKs(dbaserxn,species_name,temperatures, &
     option%io_buffer = 'Undefined log Ks for temperatures (' // &
                        trim(adjustl(string)) // ') for species "' // &
                        trim(species_name) // '" in database.'
-    call printWrnMsg(option)
+    call option%PrintWrnMsg()
   endif
   
 end function DatabaseCheckLegitimateLogKs

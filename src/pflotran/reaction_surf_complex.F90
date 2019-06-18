@@ -44,8 +44,8 @@ subroutine SurfaceComplexationRead(reaction,input,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
@@ -76,11 +76,11 @@ subroutine SurfaceComplexationRead(reaction,input,option)
   num_times_surface_type_set = 0
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                         'CHEMISTRY,SURFACE_COMPLEXATION_RXN')
     call StringToUpper(word)
                 
@@ -95,29 +95,29 @@ subroutine SurfaceComplexationRead(reaction,input,option)
         nullify(prev_srfcplx)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
                       
           srfcplx => SurfaceComplexCreate()
-          call InputReadWord(input,option,srfcplx%name,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,srfcplx%name,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
             'CHEMISTRY,SURFACE_COMPLEXATION_RXN,COMPLEX_KINETIC_RATE')
                         
           do
             call InputReadPflotranString(input,option)
-            call InputReadStringErrorMsg(input,option,card)
+            call input%ReadStringErrorMsg(option,card)
             if (InputCheckExit(input,option)) exit
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'word', &
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'word', &
                     'CHEMISTRY,SURFACE_COMPLEXATION_RXN,COMPLEX_KINETIC_RATE') 
             select case(trim(word))
               case('FORWARD_RATE_CONSTANT')
-                call InputReadDouble(input,option,srfcplx%forward_rate)
-                call InputErrorMsg(input,option,'forward_rate', &
+                call input%ReadDouble(option,srfcplx%forward_rate)
+                call input%ErrorMsg(option,'forward_rate', &
                         'CHEMISTRY,SURFACE_COMPLEXATION_RXN,COMPLEX_KINETIC_RATE')
               case('BACKWARD_RATE_CONSTANT')
-                call InputReadDouble(input,option,srfcplx%backward_rate)
-                call InputErrorMsg(input,option,'backward_rate', &
+                call input%ReadDouble(option,srfcplx%backward_rate)
+                call input%ErrorMsg(option,'backward_rate', &
                         'CHEMISTRY,SURFACE_COMPLEXATION_RXN,COMPLEX_KINETIC_RATE')
               case default
                 call InputKeywordUnrecognized(word, &
@@ -145,15 +145,15 @@ subroutine SurfaceComplexationRead(reaction,input,option)
         call UtilityReadArray(srfcplx_rxn%site_fractions,NEG_ONE_INTEGER, &
                               string,input,option) 
       case('MULTIRATE_SCALE_FACTOR')
-        call InputReadDouble(input,option,srfcplx_rxn%kinmr_scale_factor)
-        call InputErrorMsg(input,option,'keyword', &
+        call input%ReadDouble(option,srfcplx_rxn%kinmr_scale_factor)
+        call input%ErrorMsg(option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,MULTIRATE_SCALE_FACTOR')
       case('MINERAL')
         srfcplx_rxn%surface_itype = MINERAL_SURFACE
         num_times_surface_type_set = num_times_surface_type_set + 1
-        call InputReadWord(input,option,srfcplx_rxn%surface_name, &
+        call input%ReadWord(option,srfcplx_rxn%surface_name, &
           PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword', &
+        call input%ErrorMsg(option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,MINERAL_NAME')
       case('ROCK_DENSITY')
         srfcplx_rxn%surface_itype = ROCK_SURFACE
@@ -161,31 +161,31 @@ subroutine SurfaceComplexationRead(reaction,input,option)
       case('COLLOID')
         srfcplx_rxn%surface_itype = COLLOID_SURFACE
         num_times_surface_type_set = num_times_surface_type_set + 1
-        call InputReadWord(input,option,srfcplx_rxn%surface_name, &
+        call input%ReadWord(option,srfcplx_rxn%surface_name, &
           PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword', &
+        call input%ErrorMsg(option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,COLLOID_NAME')
       case('SITE')
-        call InputReadWord(input,option,srfcplx_rxn%free_site_name, &
+        call input%ReadWord(option,srfcplx_rxn%free_site_name, &
           PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword', &
+        call input%ErrorMsg(option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,SITE_NAME')
         ! site density in mol/m^3 bulk
-        call InputReadDouble(input,option,srfcplx_rxn%site_density)
-        call InputErrorMsg(input,option,'keyword', &
+        call input%ReadDouble(option,srfcplx_rxn%site_density)
+        call input%ErrorMsg(option,'keyword', &
           'CHEMISTRY,SURFACE_COMPLEXATION_RXN,SITE_DENSITY')                   
       case('COMPLEXES')
         nullify(prev_srfcplx)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
                       
           temp_srfcplx_count = temp_srfcplx_count + 1
           srfcplx => SurfaceComplexCreate()
           srfcplx%id = temp_srfcplx_count
-          call InputReadWord(input,option,srfcplx%name,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,srfcplx%name,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
             'CHEMISTRY,SURFACE_COMPLEXATION_RXN,COMPLEX_NAME')
                 
           if (.not.associated(srfcplx_rxn%complex_list)) then
@@ -208,7 +208,7 @@ subroutine SurfaceComplexationRead(reaction,input,option)
   if (num_times_surface_type_set > 1) then
     option%io_buffer = 'Surface site type (e.g. MINERAL, ROCK_DENSITY, ' // &
       'COLLOID) may only be set once under the SURFACE_COMPLEXATION_RXN card.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   if (.not.associated(surface_complexation%rxn_list)) then
@@ -293,7 +293,7 @@ subroutine SurfaceComplexationRead(reaction,input,option)
           trim(adjustl(word)) // &
           ') does not match the number of surface fractions (' // &
           trim(adjustl(string)) // ').'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       tempreal = 0.d0
       do i = 1, size(srfcplx_rxn%site_fractions)
@@ -307,7 +307,7 @@ subroutine SurfaceComplexationRead(reaction,input,option)
         option%io_buffer = 'The sum of the surface site fractions for ' // &
           'multirate kinetic sorption does not add up to 1.d0 (' // &
           trim(adjustl(string)) // '.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     case(SRFCMPLX_RXN_KINETIC)
       ! match up rates with their corresponding surface complex
@@ -343,14 +343,14 @@ subroutine SurfaceComplexationRead(reaction,input,option)
         if (.not.found) then
           option%io_buffer = 'Rates for surface complex ' // &
             trim(cur_srfcplx%name) // ' not found in kinetic rate list'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         cur_srfcplx => cur_srfcplx%next
       enddo
       ! check to ensure that rates are matched
       if (associated(rate_list)) then
         option%io_buffer = '# of rates is greater than # of surface complexes'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       nullify(cur_srfcplx)
       nullify(prev_srfcplx)
@@ -391,7 +391,7 @@ subroutine SrfCplxProcessConstraint(surface_complexation,constraint_name, &
   type(surface_complexation_type), pointer :: surface_complexation
   character(len=MAXWORDLENGTH) :: constraint_name
   type(srfcplx_constraint_type), pointer :: constraint
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: found
   PetscInt :: isrfcplx, jsrfcplx
@@ -405,7 +405,7 @@ subroutine SrfCplxProcessConstraint(surface_complexation,constraint_name, &
     option%io_buffer = 'Surface complexation specified in constraint "' // &
       trim(constraint_name) // '" requires that kinetic surface ' // &
       'complexation be defined in the CHEMISTRY section.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   srfcplx_name = ''
@@ -426,7 +426,7 @@ subroutine SrfCplxProcessConstraint(surface_complexation,constraint_name, &
                 'Surface complex ' // trim(constraint%names(isrfcplx)) // &
                 'from CONSTRAINT ' // trim(constraint_name) // &
                 ' not found among kinetic surface complexes.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       constraint_conc(jsrfcplx) = &
         constraint%constraint_conc(isrfcplx)
@@ -460,7 +460,7 @@ subroutine RTotalSorbEqSurfCplx(rt_auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: irxn, ieqrxn
   PetscReal, pointer :: colloid_array_ptr(:)
@@ -524,7 +524,7 @@ subroutine RTotalSorbMultiRateAsEQ(rt_auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: irxn, ikinmrrxn
   PetscInt, parameter :: iphase = 1
@@ -587,7 +587,7 @@ subroutine RMultiRateSorption(Res,Jac,compute_derivative,rt_auxvar, &
   type(reaction_type) :: reaction
   PetscReal :: Res(reaction%ncomp)
   PetscReal :: Jac(reaction%ncomp,reaction%ncomp)
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: irxn, ikinmrrxn
   type(surface_complexation_type), pointer :: surface_complexation
@@ -684,7 +684,7 @@ subroutine RTotalSorbEqSurfCplx1(rt_auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: irxn
   PetscReal :: external_free_site_conc
   PetscReal, pointer :: external_srfcplx_conc(:)
@@ -960,7 +960,7 @@ subroutine RKineticSurfCplx(Res,Jac,compute_derivative,rt_auxvar, &
   type(reaction_type) :: reaction
   PetscReal :: Res(reaction%ncomp)
   PetscReal :: Jac(reaction%ncomp,reaction%ncomp)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: i, j, k, l, icplx, icomp, jcomp, lcomp, ncomp, ncplx
   PetscReal :: ln_conc(reaction%naqcomp)

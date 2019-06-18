@@ -138,7 +138,7 @@ subroutine ImmisAuxVarInit(auxvar,option)
   implicit none
   
   type(Immis_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: var_elem_size, var_node_size
   PetscInt :: nvar 
@@ -196,7 +196,7 @@ subroutine ImmisAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(Immis_auxvar_elem_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%pres = auxvar%pres
   auxvar2%temp = auxvar%temp
@@ -253,7 +253,7 @@ subroutine ImmisAuxVarCompute_NINC(x,auxvar,saturation_function, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(saturation_function_type) :: saturation_function
   PetscReal :: x(option%nflowdof)
@@ -349,7 +349,7 @@ subroutine ImmisAuxVarCompute_NINC(x,auxvar,saturation_function, &
         hg = hg*FMWCO2*option%scale
           !      print *, 'translator', p2, t, dg,hg,visg
       else
-        call printErrMsg(option,'pflow Immis ERROR: Need specify CO2 EOS')
+        call option%PrintErrMsg('pflow Immis ERROR: Need specify CO2 EOS')
       endif
     else      
       call ideal_gaseos_noderiv(p2,t,dg,hg,eng)
@@ -454,7 +454,7 @@ subroutine ImmisAuxVarCompute_WINC(x, delx, auxvar,saturation_function, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(saturation_function_type) :: saturation_function
   PetscReal :: x(option%nflowdof), xx(option%nflowdof), delx(option%nflowdof)
@@ -520,7 +520,7 @@ subroutine ImmisAuxDestroy(aux, option)
   implicit none
 
   type(Immis_type), pointer :: aux
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: iaux, ielem
   
   if (.not.associated(aux)) return

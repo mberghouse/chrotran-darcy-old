@@ -55,7 +55,7 @@ subroutine SurfaceTHSetup(surf_realization)
   
   class(realization_surface_type) :: surf_realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -199,7 +199,7 @@ subroutine SurfaceTHRHSFunction(ts,t,xx,ff,surf_realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(surface_field_type), pointer :: surf_field
   type(coupler_type), pointer :: boundary_condition
   type(coupler_type), pointer :: source_sink
@@ -404,7 +404,7 @@ subroutine SurfaceTHRHSFunction(ts,t,xx,ff,surf_realization,ierr)
           qsrc = source_sink%flow_aux_real_var(ONE_INTEGER,iconn)*area_p(local_id)
         case default
           option%io_buffer = 'Source/Sink flow condition type not recognized'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
       
       esrc = 0.d0
@@ -526,7 +526,7 @@ subroutine SurfaceTHComputeMaxDt(surf_realization,max_allowable_dt)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(surface_field_type), pointer :: surf_field
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_list_type), pointer :: connection_set_list
@@ -713,7 +713,7 @@ subroutine SurfaceTHComputeMaxDt(surf_realization,max_allowable_dt)
     write(option%io_buffer, &
           '("surface_th.F90: SurfaceTHComputeMaxDt --> negative max_allowable_dt!",es15.7)') &
           max_allowable_dt
-    call printErrMsg(option)     
+    call option%PrintErrMsg()
   endif
 
 end subroutine SurfaceTHComputeMaxDt
@@ -749,7 +749,7 @@ subroutine SurfaceTHFlux(surf_auxvar_up, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(Surface_TH_auxvar_type) :: surf_auxvar_up
   type(Surface_TH_auxvar_type) :: surf_auxvar_dn
   type(surface_global_auxvar_type) :: surf_global_auxvar_up
@@ -894,7 +894,7 @@ subroutine SurfaceTHBCFlux(ibndtype, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(Surface_TH_auxvar_type) :: surf_auxvar_up
   type(surface_global_auxvar_type) :: surf_global_auxvar_up
   type(Surface_TH_auxvar_type) :: surf_auxvar_dn
@@ -959,7 +959,7 @@ subroutine SurfaceTHBCFlux(ibndtype, &
       den      =  surf_global_auxvar_dn%den_kg(1)
     case default
       option%io_buffer = 'Unknown pressure_bc_type for surface flow '
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   if (vel>0.d0) then
@@ -974,7 +974,7 @@ subroutine SurfaceTHBCFlux(ibndtype, &
         dtemp = surf_global_auxvar_up%temp - surf_global_auxvar_dn%temp
       case default
         option%io_buffer = 'Unknown temperature_bc_type for surface flow '
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
   endif
 
@@ -1019,7 +1019,7 @@ subroutine SurfaceTHUpdateAuxVars(surf_realization)
 
   class(realization_surface_type) :: surf_realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(surface_field_type), pointer :: surf_field
@@ -1184,7 +1184,7 @@ subroutine EnergyToTemperatureBisection(T,TL,TR,h,energy,Cwi,Pr,option)
   implicit none
 
   PetscReal :: T,TL,TR,h,energy,Cwi,Pr
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscReal :: Tp,rho,rho_t,f,fR,fL,rtol
   PetscInt :: iter,niter
@@ -1200,7 +1200,7 @@ subroutine EnergyToTemperatureBisection(T,TL,TR,h,energy,Cwi,Pr,option)
      print *,"[TL,TR] = ",TL,TR
      print *,"[fL,fR] = ",fL,fR
      write(option%io_buffer,'("surface_th.F90: EnergyToTemperatureBisection --> root is not bracketed")')
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
   T = 0.5d0*(TL+TR)
@@ -1232,7 +1232,7 @@ subroutine EnergyToTemperatureBisection(T,TL,TR,h,energy,Cwi,Pr,option)
   if (found .eqv. PETSC_FALSE) then
      print *,"[TL,T,TR] = ",TL,T,TR
      write(option%io_buffer,'("surface_th.F90: EnergyToTemperatureBisection --> root not found!")')
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
 end subroutine EnergyToTemperatureBisection
@@ -1261,7 +1261,7 @@ subroutine SurfaceTHUpdateTemperature(surf_realization)
   implicit none
 
   class(realization_surface_type) :: surf_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(surface_field_type), pointer :: surf_field
@@ -1371,7 +1371,7 @@ subroutine SurfaceTHUpdateSurfState(surf_realization)
   type(connection_set_type), pointer :: cur_connection_set
   type(dm_ptr_type), pointer :: dm_ptr
   type(grid_type),pointer :: grid,surf_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch,surf_patch
   type(surface_field_type),pointer :: surf_field
   type(Surface_TH_auxvar_type), pointer :: surf_auxvars(:)
@@ -1462,7 +1462,7 @@ subroutine AtmEnergyToTemperatureBisection(T,TL,TR,shift,RHS,Pr,option)
   implicit none
 
   PetscReal :: T,TL,TR,shift,RHS,Pr
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscReal :: Tp,rho,rho_t,f,fR,fL,rtol
   PetscInt :: iter,niter
@@ -1478,7 +1478,7 @@ subroutine AtmEnergyToTemperatureBisection(T,TL,TR,shift,RHS,Pr,option)
      print *,"[TL,TR] = ",TL,TR
      print *,"[fL,fR] = ",fL,fR
      write(option%io_buffer,'("surface_th.F90: AtmEnergyToTemperatureBisection --> root is not bracketed")')
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
   T = 0.5d0*(TL+TR)
@@ -1510,7 +1510,7 @@ subroutine AtmEnergyToTemperatureBisection(T,TL,TR,shift,RHS,Pr,option)
   if (found .eqv. PETSC_FALSE) then
      print *,"[TL,T,TR] = ",TL,T,TR
      write(option%io_buffer,'("surface_th.F90: AtmEnergyToTemperatureBisection --> root not found!")')
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
 end subroutine AtmEnergyToTemperatureBisection
@@ -1539,7 +1539,7 @@ subroutine SurfaceTHImplicitAtmForcing(surf_realization)
   implicit none
 
   class(realization_surface_type) :: surf_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(surface_field_type), pointer :: surf_field

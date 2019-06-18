@@ -77,7 +77,7 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
 
   class(simulation_surfsubsurface_type) :: simulation
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   class(realization_subsurface_type), pointer :: subsurf_realization
   class(realization_surface_type), pointer :: surf_realization
   class(pmc_base_type), pointer :: cur_process_model_coupler
@@ -86,7 +86,7 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
   class(pm_base_type), pointer :: cur_pm, prev_pm
   class(pmc_surface_type), pointer :: pmc_surface
   class(timestepper_surface_type), pointer :: timestepper
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: init_status
   VecScatter :: vscat_surf_to_subsurf
@@ -192,7 +192,7 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
     input => InputCreate(IN_UNIT,option%input_filename,option)    
     string = 'SURFACE_FLOW'
     call InputFindStringInFile(input,option,string)
-    call InputFindStringErrorMsg(input,option,string)  
+    call input%FindStringErrorMsg(option,string)
     call SurfaceReadInput(surf_realization,timestepper%solver, &
                           simulation%waypoint_list_surfsubsurface,input)
     ! Add first waypoint
@@ -329,8 +329,8 @@ subroutine SurfSubsurfaceReadFlowPM(input, option, pm)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   class(pm_base_type), pointer :: pm
 
   character(len=MAXWORDLENGTH) :: word
@@ -345,12 +345,12 @@ subroutine SurfSubsurfaceReadFlowPM(input, option, pm)
   do
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_FALSE)
+    call input%ReadWord(option,word,PETSC_FALSE)
     call StringToUpper(word)
     select case(word)
       case('MODE')
-        call InputReadWord(input,option,word,PETSC_FALSE)
-        call InputErrorMsg(input,option,'mode',error_string)
+        call input%ReadWord(option,word,PETSC_FALSE)
+        call input%ErrorMsg(option,'mode',error_string)
         call StringToUpper(word)
         select case(word)
           case('RICHARDS')
@@ -372,7 +372,7 @@ subroutine SurfSubsurfaceReadFlowPM(input, option, pm)
   if (.not.associated(pm)) then
     option%io_buffer = 'A flow MODE (card) must be included in the ' // &
       'SURFACE_SUBSURFACE block in ' // trim(error_string) // '.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SurfSubsurfaceReadFlowPM
@@ -411,7 +411,7 @@ subroutine SurfSubsurfCreateSurfSubSurfVScats(realization, surf_realization, &
   VecScatter :: surf_to_subsurf
   VecScatter :: subsurf_to_surf
 
-  type(option_type),pointer :: option
+  class(option_type),pointer :: option
   type(grid_unstructured_type),pointer :: subsurf_grid
   type(grid_unstructured_type),pointer :: surf_grid
   type(patch_type),pointer :: cur_patch
@@ -471,7 +471,7 @@ subroutine SurfSubsurfCreateSurfSubSurfVScats(realization, surf_realization, &
   if (found.eqv.PETSC_FALSE) then
     option%io_buffer = 'When running with -DSURFACE_FLOW need to specify ' // &
       ' in the inputfile explicitly region: top '
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call MatCreateAIJ(option%mycomm, &
@@ -739,7 +739,7 @@ subroutine SurfSubsurfCreateSurfSubSurfVScat( &
 
   PetscViewer :: viewer
 
-  type(option_type),pointer :: option
+  class(option_type),pointer :: option
   type(field_type),pointer :: field
   type(surface_field_type),pointer :: surf_field
 
@@ -803,7 +803,7 @@ subroutine SurfSubsurfCreateSurfSubSurfVScat( &
     enddo
     if (max_value<3) then
       option%io_buffer = 'Atleast three vertices need to form a face'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   enddo
 
@@ -871,7 +871,7 @@ subroutine SurfSubsurfCreateSubsurfVecs(subsurf_realization, option, &
   implicit none
 
   class(realization_subsurface_type),pointer :: subsurf_realization
-  type(option_type),pointer :: option
+  class(option_type),pointer :: option
   Vec :: subsurf_pres
   Vec :: subsurf_pres_top_bc
 
@@ -952,7 +952,7 @@ subroutine SurfSubsurfCreateSurfVecs(surf_realization,option,surf_head)
   implicit none
 
   class(realization_surface_type),pointer :: surf_realization
-  type(option_type),pointer :: option
+  class(option_type),pointer :: option
   Vec :: surf_head
 
   PetscErrorCode :: ierr
@@ -980,7 +980,7 @@ subroutine SurfSubsurfInitCommandLineSettings(option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscBool :: option_found

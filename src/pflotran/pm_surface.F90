@@ -84,36 +84,36 @@ subroutine PMSurfaceReadSelectCase(this,input,keyword,found,option)
   implicit none
 
   class(pm_surface_type) :: this
-  type(input_type) :: input
+  class(input_type) :: input
 
   character(len=MAXWORDLENGTH) :: keyword
   PetscBool :: found
-  type(option_type) :: option
+  class(option_type) :: option
 
   found = PETSC_TRUE
   select case(trim(keyword))
 
     case('MAX_PRESSURE_CHANGE')
-      call InputReadDouble(input,option,this%pressure_change_governor)
-      call InputDefaultMsg(input,option,'dpmxe')
+      call input%ReadDouble(option,this%pressure_change_governor)
+      call input%DefaultMsg(option,'dpmxe')
 
     case('MAX_TEMPERATURE_CHANGE')
-      call InputReadDouble(input,option,this%temperature_change_governor)
-      call InputDefaultMsg(input,option,'dtmpmxe')
+      call input%ReadDouble(option,this%temperature_change_governor)
+      call input%DefaultMsg(option,'dtmpmxe')
 
     case('PRESSURE_DAMPENING_FACTOR')
-      call InputReadDouble(input,option,this%pressure_dampening_factor)
-      call InputErrorMsg(input,option,'PRESSURE_DAMPENING_FACTOR', &
+      call input%ReadDouble(option,this%pressure_dampening_factor)
+      call input%ErrorMsg(option,'PRESSURE_DAMPENING_FACTOR', &
                           'TIMESTEPPER')
 
     case('PRESSURE_CHANGE_LIMIT')
-      call InputReadDouble(input,option,this%pressure_change_limit)
-      call InputErrorMsg(input,option,'PRESSURE_CHANGE_LIMIT', &
+      call input%ReadDouble(option,this%pressure_change_limit)
+      call input%ErrorMsg(option,'PRESSURE_CHANGE_LIMIT', &
                           'TIMESTEPPER')
 
     case('TEMPERATURE_CHANGE_LIMIT')
-      call InputReadDouble(input,option,this%temperature_change_limit)
-      call InputErrorMsg(input,option,'TEMPERATURE_CHANGE_LIMIT', &
+      call input%ReadDouble(option,this%temperature_change_limit)
+      call input%ErrorMsg(option,'TEMPERATURE_CHANGE_LIMIT', &
                           'TIMESTEPPER')
     case default
       found = PETSC_FALSE
@@ -143,7 +143,7 @@ subroutine PMSurfaceSetup(this)
   select case(this%surf_realization%discretization%itype)
     case(STRUCTURED_GRID)
       this%option%io_buffer='Surface flow not supported on structured grids'
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
     case(UNSTRUCTURED_GRID)
       this%comm1 => UnstructuredCommunicatorCreate()
   end select
@@ -208,7 +208,7 @@ subroutine PMSurfacePreSolve(this)
   class(pm_surface_type) :: this
   
   this%option%io_buffer = 'PMSurfacePreSolve() must be extended.'
-  call printErrMsg(this%option)  
+  call this%option%PrintErrMsg()
 
 end subroutine PMSurfacePreSolve
 
@@ -227,7 +227,7 @@ subroutine PMSurfacePostSolve(this)
   class(pm_surface_type) :: this
   
   this%option%io_buffer = 'PMSurfacePostSolve() must be extended.'
-  call printErrMsg(this%option)  
+  call this%option%PrintErrMsg()
   
 end subroutine PMSurfacePostSolve
 
@@ -271,7 +271,7 @@ subroutine PMSurfaceUpdateAuxVars(this)
   class(pm_surface_type) :: this
 
   this%option%io_buffer = 'PMSurfaceUpdateAuxVars() must be extended.'
-  call printErrMsg(this%option)
+  call this%option%PrintErrMsg()
 
 end subroutine PMSurfaceUpdateAuxVars
 

@@ -139,7 +139,7 @@ subroutine MphaseAuxVarInit(auxvar,option)
   implicit none
   
   type(mphase_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: var_elem_size, var_node_size
   PetscInt :: nvar 
@@ -193,7 +193,7 @@ subroutine MphaseAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(mphase_auxvar_elem_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%pres = auxvar%pres
   auxvar2%temp = auxvar%temp
@@ -248,7 +248,7 @@ subroutine MphaseAuxVarCompute_NINC(x,auxvar,global_auxvar,iphase,saturation_fun
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(saturation_function_type) :: saturation_function
   PetscReal :: x(option%nflowdof)
@@ -299,7 +299,7 @@ subroutine MphaseAuxVarCompute_NINC(x,auxvar,global_auxvar,iphase,saturation_fun
 !pcl  if (x(3) < 0.d0) then
 !pcl    option%io_buffer = 'CO2 mole fraction below zero.  It is likely ' // &
 !pcl      'that CO2 aqueous concentrations in transport are inconsistent with flow.'
-!pcl    call printErrMsgByRank(option)
+!pcl    call option%PrintErrMsgByRank()
 !pcl  endif
       auxvar%xmol(1) = 1.D0 - auxvar%xmol(2)
       auxvar%pc(:) = 0.D0
@@ -378,7 +378,7 @@ subroutine MphaseAuxVarCompute_NINC(x,auxvar,global_auxvar,iphase,saturation_fun
           hg = hg*FMWCO2*option%scale
           !      print *, 'translator', p2,t,dg,hg,visg
        else
-         call printErrMsg(option,'pflow mphase ERROR: Need specify CO2 EOS')
+         call option%PrintErrMsg('pflow mphase ERROR: Need specify CO2 EOS')
       endif
     else      
       call ideal_gaseos_noderiv(p2,t,dg,hg,eng)
@@ -555,7 +555,7 @@ subroutine MphaseAuxVarCompute_WINC(x,delx,auxvar,global_auxvar,iphase,saturatio
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(saturation_function_type) :: saturation_function
   PetscReal :: x(option%nflowdof), xx(option%nflowdof), delx(option%nflowdof)

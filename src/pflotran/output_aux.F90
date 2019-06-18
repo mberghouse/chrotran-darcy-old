@@ -907,7 +907,7 @@ subroutine OutputVariableAppendDefaults(output_variable_list,option)
   implicit none
 
   type(output_variable_list_type), pointer :: output_variable_list
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXWORDLENGTH) :: name, units
@@ -938,7 +938,7 @@ subroutine OpenAndWriteInputRecord(option)
 
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: filename

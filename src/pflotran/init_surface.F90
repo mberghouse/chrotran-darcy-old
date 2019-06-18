@@ -35,13 +35,13 @@ subroutine SurfaceInitReadRequiredCards(surf_realization,input)
   implicit none
 
   class(realization_surface_type) :: surf_realization
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 
   type(discretization_type), pointer :: discretization
   character(len=MAXSTRINGLENGTH) :: string
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   patch          => surf_realization%patch
   option         => surf_realization%option
@@ -53,12 +53,12 @@ subroutine SurfaceInitReadRequiredCards(surf_realization,input)
   ! GRID information
 !  string = "GRID"
 !  call InputFindStringInFile(input,option,string)
-!  call InputFindStringErrorMsg(input,option,string)
+!  call input%FindStringErrorMsg(option,string)
 
   ! SURFACE_FLOW information
   string = "SURFACE_FLOW"
   call InputFindStringInFile(input,option,string)
-  if (InputError(input)) return
+  if (input%Error()) return
   option%surf_flow_on = PETSC_TRUE
   option%nsurfflowdof = 1
   
@@ -111,8 +111,8 @@ subroutine SurfaceInit(surf_realization,input,option)
   class(realization_surface_type) :: surf_realization
   type(discretization_type),pointer :: discretization
   type(grid_type), pointer :: grid
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   type(grid_unstructured_type), pointer :: un_str_sfgrid
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXWORDLENGTH) :: unstructured_grid_ctype
@@ -125,14 +125,14 @@ subroutine SurfaceInit(surf_realization,input,option)
   word = ''
 
   call InputReadPflotranString(input,option)
-  call InputReadWord(input,option,word,PETSC_TRUE)
-  call InputErrorMsg(input,option,'keyword','SURFACE_FLOW')
+  call input%ReadWord(option,word,PETSC_TRUE)
+  call input%ErrorMsg(option,'keyword','SURFACE_FLOW')
   call StringToUpper(word)
     
   select case(trim(word))
     case ('TYPE')
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      call InputErrorMsg(input,option,'keyword','TYPE')
+      call input%ReadWord(option,word,PETSC_TRUE)
+      call input%ErrorMsg(option,'keyword','TYPE')
       call StringToUpper(word)
 
       select case(trim(word))
@@ -140,8 +140,8 @@ subroutine SurfaceInit(surf_realization,input,option)
           unstructured_grid_itype = IMPLICIT_UNSTRUCTURED_GRID
           unstructured_grid_ctype = 'implicit unstructured'
           discretization%itype = UNSTRUCTURED_GRID
-          call InputReadFilename(input,option,discretization%filename)
-          call InputErrorMsg(input,option,'keyword','filename')
+          call input%ReadFilename(option,discretization%filename)
+          call input%ErrorMsg(option,'keyword','filename')
 
           grid => GridCreate()
           un_str_sfgrid => UGridCreate()
@@ -163,7 +163,7 @@ subroutine SurfaceInit(surf_realization,input,option)
 
         case default
           option%io_buffer = 'Surface-flow supports only unstructured grid'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
   end select
 
@@ -197,7 +197,7 @@ subroutine InitSurfaceSetupRealization(surf_realization,subsurf_realization, &
   class(realization_subsurface_type), pointer :: subsurf_realization
   type(waypoint_list_type) :: waypoint_list
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscErrorCode :: ierr
   
   option => surf_realization%option
@@ -212,7 +212,7 @@ subroutine InitSurfaceSetupRealization(surf_realization,subsurf_realization, &
     case(RICHARDS_MODE,TH_MODE,TH_TS_MODE,RICHARDS_TS_MODE)
     case default
       option%io_buffer = 'For surface-flow only RICHARDS and TH mode implemented'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
   end select
 
   call SurfaceInitReadRegionFiles(surf_realization)
@@ -248,7 +248,7 @@ subroutine InitSurfaceSetupRealization(surf_realization,subsurf_realization, &
   ! override initial conditions if they are to be read from a file
   if (len_trim(option%surf_initialize_flow_filename) > 1) then
     option%io_buffer = 'For surface-flow initial conditions cannot be read from file'
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
   
   select case(option%iflowmode)
@@ -258,7 +258,7 @@ subroutine InitSurfaceSetupRealization(surf_realization,subsurf_realization, &
       call SurfaceTHUpdateAuxVars(surf_realization)
     case default
       option%io_buffer = 'For surface-flow only RICHARDS and TH mode implemented'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
   end select
   
 end subroutine InitSurfaceSetupRealization
@@ -289,7 +289,7 @@ subroutine InitSurfaceSetupSolvers(surf_realization,solver,final_time)
   type(solver_type), pointer :: solver
   PetscReal :: final_time
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(convergence_context_type), pointer :: convergence_context
   SNESLineSearch :: linesearch
   character(len=MAXSTRINGLENGTH) :: string
@@ -297,10 +297,10 @@ subroutine InitSurfaceSetupSolvers(surf_realization,solver,final_time)
   
   option => surf_realization%option
   
-  call printMsg(option,"  Beginning setup of FLOW SNES ")
+  call option%PrintMsg("  Beginning setup of FLOW SNES ")
 
   ! Setup PETSc TS for explicit surface flow solution
-  call printMsg(option,"  Beginning setup of SURF FLOW TS ")
+  call option%PrintMsg("  Beginning setup of SURF FLOW TS ")
 
   call SolverCreateTS(solver,option%mycomm)
   call TSSetProblemType(solver%ts,TS_NONLINEAR, &
@@ -349,7 +349,7 @@ subroutine SurfaceInitMatPropToRegions(surf_realization)
   character(len=MAXSTRINGLENGTH) :: dataset_name
   PetscErrorCode :: ierr
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
   type(surface_field_type), pointer :: surf_field
@@ -395,7 +395,7 @@ subroutine SurfaceInitMatPropToRegions(surf_realization)
       if (.not.associated(strata%region) .and. strata%active) then
         option%io_buffer = 'Reading of material prop from file for' // &
           ' surface flow is not implemented.'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
         !call readMaterialsFromFile(realization,strata%realization_dependent, &
         !                           strata%material_property_filename)
       ! Otherwise, set based on region
@@ -454,23 +454,23 @@ subroutine SurfaceInitMatPropToRegions(surf_realization)
           option%io_buffer = 'No material property for surface material id ' // &
                               trim(adjustl(dataset_name)) &
                               //  ' defined in input file.'
-          call printErrMsgByRank(option)
+          call option%PrintErrMsgByRank()
         endif
       else if (Uninitialized(surf_material_id)) then 
         write(dataset_name,*) grid%nG2A(ghosted_id)
         option%io_buffer = 'Uninitialized surface material id in patch at cell ' // &
                             trim(adjustl(dataset_name))
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       else if (surf_material_id > size(surf_realization%surf_material_property_array)) then
         write(option%io_buffer,*) surf_material_id
         option%io_buffer = 'Unmatched surface material id in patch:' // &
           adjustl(trim(option%io_buffer))
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       else
         option%io_buffer = 'Something messed up with surface material ids. ' // &
           ' Possibly material ids not assigned to all grid cells. ' // &
           ' Contact Glenn!'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       endif
       man0_p(local_id) = surf_material_property%mannings
     enddo ! local_id - loop
@@ -508,7 +508,7 @@ subroutine SurfaceInitReadRegionFiles(surf_realization)
 
   class(realization_surface_type) :: surf_realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(region_type), pointer :: surf_region
   PetscBool :: cell_ids_exists
   PetscBool :: face_ids_exists
@@ -529,7 +529,7 @@ subroutine SurfaceInitReadRegionFiles(surf_realization)
              (.not. vert_ids_exists)) then
           option%io_buffer = '"Regions/' // trim(surf_region%name) // &
               ' is not defined by "Cell Ids" or "Face Ids" or "Vertex Ids".'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         end if
         if (cell_ids_exists .or. face_ids_exists) then
           call HDF5ReadRegionFromFile(surf_realization%patch%grid, &

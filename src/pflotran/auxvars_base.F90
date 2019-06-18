@@ -32,7 +32,7 @@ subroutine AuxVarBaseInit(this,option)
   implicit none
   
   class(auxvar_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   !currently does nothing - could init the base members
   print *, 'Must extend InitBaseAuxVars '

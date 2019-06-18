@@ -48,7 +48,7 @@ subroutine SSSandboxInit(option)
   use petscsys
   use Option_module
   implicit none
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (associated(ss_sandbox_list)) then
     call SSSandboxDestroyList()
@@ -75,8 +75,8 @@ subroutine SSSandboxRead1(input,option)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   call SSSandboxRead(ss_sandbox_list,input,option)
 
@@ -102,8 +102,8 @@ subroutine SSSandboxRead2(local_sandbox_list,input,option)
   implicit none
   
   class(srcsink_sandbox_base_type), pointer :: local_sandbox_list  
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
@@ -115,17 +115,17 @@ subroutine SSSandboxRead2(local_sandbox_list,input,option)
     option%io_buffer = 'Reactive transport may not be simulated when a &
       &SOURCE_SINK_SANDBOX exists in the input file since no source/sink &
       &capability exists in the source/sink sandbox for solute mass.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   nullify(new_sandbox)
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','SOURCE_SINK_SANDBOX')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','SOURCE_SINK_SANDBOX')
     call StringToUpper(word)   
 
     select case(trim(word))
@@ -180,7 +180,7 @@ subroutine SSSandboxSetup(grid,option,output_option)
   implicit none
   
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
   
   class(srcsink_sandbox_base_type), pointer :: cur_sandbox  
@@ -246,7 +246,7 @@ subroutine SSSandbox(residual,Jacobian,compute_derivative, &
   Mat :: Jacobian
   class(material_auxvar_type), pointer :: material_auxvars(:)
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal, pointer :: r_p(:)
   PetscReal :: res(option%nflowdof)
@@ -303,7 +303,7 @@ subroutine SSSandboxUpdate(sandbox_list,option,output_option)
   implicit none
 
   class(srcsink_sandbox_base_type), pointer :: sandbox_list
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
 
   class(srcsink_sandbox_base_type), pointer :: cur_sandbox
@@ -334,7 +334,7 @@ function SSSandboxOutputFilename(option)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: SSSandboxOutputFilename
   character(len=MAXWORDLENGTH) :: word
 
@@ -363,7 +363,7 @@ subroutine SSSandboxOutputHeader(sandbox_list,grid,option,output_option)
   
   class(srcsink_sandbox_base_type), pointer :: sandbox_list
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
 
   class(srcsink_sandbox_base_type), pointer :: cur_srcsink
@@ -461,7 +461,7 @@ subroutine SSSandboxOutput(sandbox_list,option,output_option)
   implicit none
   
   class(srcsink_sandbox_base_type), pointer :: sandbox_list
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
   
   class(srcsink_sandbox_base_type), pointer :: cur_srcsink

@@ -30,7 +30,7 @@ function UnitsConvertToInternal(units,internal_units,option)
   
   character(len=*) :: units
   character(len=MAXWORDLENGTH) :: internal_units
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: units_buff
   character(len=MAXSTRINGLENGTH) :: internal_units_buff1
@@ -73,7 +73,7 @@ function UnitsConvertToInternal(units,internal_units,option)
   
   if (.not.successful) then
     option%io_buffer = error_msg
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   UnitsConvertToInternal = conversion_factor
@@ -609,7 +609,7 @@ function UnitsConvertToExternal(units,units_category,option)
   
   character(len=MAXSTRINGLENGTH) :: units
   character(len=*) :: units_category
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal :: UnitsConvertToExternal
   

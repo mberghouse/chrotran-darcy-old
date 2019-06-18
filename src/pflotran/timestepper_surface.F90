@@ -116,7 +116,7 @@ subroutine TimestepperSurfaceSetTargetTime(this,sync_time,option,stop_flag, &
 
   class(timestepper_surface_type) :: this
   PetscReal :: sync_time
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: stop_flag
   PetscBool :: snapshot_plot_flag
   PetscBool :: observation_plot_flag
@@ -228,7 +228,7 @@ subroutine TimestepperSurfaceStepDT(this,process_model,stop_flag)
   PetscReal :: dtime
   PetscReal :: tmp
   type(solver_type), pointer :: solver
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscErrorCode :: ierr
 
   solver => this%solver
@@ -279,7 +279,7 @@ subroutine TimestepperSurfaceCheckpointBinary(this,viewer,option)
 
   class(timestepper_surface_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(timestepper_surface_header_type), pointer :: header
   PetscBag :: bag
@@ -313,7 +313,7 @@ subroutine TimestepperSurfaceRestartBinary(this,viewer,option)
 
   class(timestepper_surface_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(timestepper_surface_header_type), pointer :: header
   PetscBag :: bag
@@ -462,7 +462,7 @@ subroutine TimestepperSurfacePrintInfo(this,option)
 #include "petsc/finclude/petscts.h"  
 
   class(timestepper_surface_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscErrorCode :: ierr
   

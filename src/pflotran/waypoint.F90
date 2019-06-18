@@ -169,14 +169,14 @@ subroutine WaypointListMerge(waypoint_list1,waypoint_list2,option)
   type(waypoint_list_type), pointer :: waypoint_list1
   type(waypoint_list_type), pointer :: waypoint_list2
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(waypoint_type), pointer :: cur_waypoint, next_waypoint
   
   if (.not.associated(waypoint_list1) .and. &
       .not.associated(waypoint_list2)) then
     option%io_buffer = 'Two null waypoints lists.  Send input deck to &
       &pflotran-dev.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else if (.not.associated(waypoint_list1)) then
     waypoint_list1 => waypoint_list2
     return
@@ -219,7 +219,7 @@ subroutine WaypointListCopyAndMerge(waypoint_list1,waypoint_list2,option)
   type(waypoint_list_type), pointer :: waypoint_list1
   type(waypoint_list_type), pointer :: waypoint_list2
   
-  type(option_type) :: option
+  class(option_type) :: option
  
   type(waypoint_list_type), pointer :: new_waypoint_list
 
@@ -355,7 +355,7 @@ subroutine WaypointListFillIn(waypoint_list,option)
   implicit none
   
   type(waypoint_list_type) :: waypoint_list
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(waypoint_type), pointer :: waypoint, prev_waypoint
   PetscReal :: dt_max = UNINITIALIZED_DOUBLE
@@ -373,7 +373,7 @@ subroutine WaypointListFillIn(waypoint_list,option)
 
   if (dt_max <= 1.d-40) then
     option%io_buffer = 'All values of dt_max in input file uninitialized'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! assign that value to the first waypoint, if waypoint%dt_max not already > 1.d-40
@@ -448,7 +448,7 @@ subroutine WaypointListRemoveExtraWaypnts(waypoint_list,option)
   implicit none
   
   type(waypoint_list_type) :: waypoint_list
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(waypoint_type), pointer :: waypoint, prev_waypoint
   
@@ -471,7 +471,7 @@ subroutine WaypointListRemoveExtraWaypnts(waypoint_list,option)
     write(option%io_buffer,'("Waypoint at time:", 1pe12.4, &
   &       " is beyond the end of simulation")') &
           prev_waypoint%time
-    call printWrnMsg(option)
+    call option%PrintWrnMsg()
     call WaypointDestroy(prev_waypoint)   
     waypoint_list%num_waypoints = waypoint_list%num_waypoints - 1
   enddo
@@ -627,7 +627,7 @@ subroutine WaypointListPrint(list,option,output_option)
   implicit none
   
   type(waypoint_list_type), pointer :: list
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
 
   type(waypoint_type), pointer :: cur_waypoint
@@ -804,7 +804,7 @@ subroutine WaypointPrint(waypoint,option,output_option)
   implicit none
   
   type(waypoint_type), pointer :: waypoint
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
 
   character(len=MAXSTRINGLENGTH) :: string

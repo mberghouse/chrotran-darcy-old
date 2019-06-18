@@ -76,7 +76,7 @@ function PMTOWGCreate(miscibility_model,option)
   class(pm_towg_type), pointer :: PMTOWGCreate
 
   character(len=MAXWORDLENGTH) :: miscibility_model
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   class(pm_towg_type), pointer :: towg_pm
   
@@ -151,12 +151,12 @@ function PMTOWGCreate(miscibility_model,option)
 
   if (Uninitialized(towg_energy_dof)) then 
     option%io_buffer = 'towg_energy_dof not set up'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if  
 
   if (Uninitialized(towg_energy_eq_idx)) then 
     option%io_buffer = 'towg_energy_eq_idx not set up'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if  
 
 
@@ -186,11 +186,11 @@ subroutine PMTOWGRead(this,input)
 
   implicit none
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: keyword 
   class(pm_towg_type) :: this
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: tempreal
   character(len=MAXSTRINGLENGTH) :: error_string
   PetscBool :: found
@@ -208,8 +208,8 @@ subroutine PMTOWGRead(this,input)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
     
     found = PETSC_FALSE
@@ -219,45 +219,45 @@ subroutine PMTOWGRead(this,input)
     
     select case(trim(keyword))
       case('TL_OMEGA')
-        call InputReadDouble(input,option,val_tl_omega)
-        call InputDefaultMsg(input,option,'towg tl_omega')
+        call input%ReadDouble(option,val_tl_omega)
+        call input%DefaultMsg(option,'towg tl_omega')
       case('FMIS' )
         call FMISOWGRead(input,option)
       case('ITOL_SCALED_RESIDUAL')
-        call InputReadDouble(input,option,this%itol_scaled_res)
-        call InputDefaultMsg(input,option,'towg itol_scaled_res')
+        call input%ReadDouble(option,this%itol_scaled_res)
+        call input%DefaultMsg(option,'towg itol_scaled_res')
         this%check_post_convergence = PETSC_TRUE
       case('ITOL_RELATIVE_UPDATE')
-        call InputReadDouble(input,option,this%itol_rel_update)
-        call InputDefaultMsg(input,option,'towg itol_rel_update')
+        call input%ReadDouble(option,this%itol_rel_update)
+        call input%DefaultMsg(option,'towg itol_rel_update')
         this%check_post_convergence = PETSC_TRUE        
       case('TOUGH2_ITOL_SCALED_RESIDUAL')
         ! tgh2_itol_scld_res_e1 is an array: assign same value to all entries
         tempreal = UNINITIALIZED_DOUBLE
-        call InputReadDouble(input,option,tempreal)
+        call input%ReadDouble(option,tempreal)
         ! tempreal will remain uninitialized if the read fails.
-        call InputDefaultMsg(input,option,'tough_itol_scaled_residual_e1')
+        call input%DefaultMsg(option,'tough_itol_scaled_residual_e1')
         if (Initialized(tempreal)) then
           this%tgh2_itol_scld_res_e1 = tempreal
         endif
-        call InputReadDouble(input,option,this%tgh2_itol_scld_res_e2)
-        call InputDefaultMsg(input,option,'tough_itol_scaled_residual_e2')
+        call input%ReadDouble(option,this%tgh2_itol_scld_res_e2)
+        call input%DefaultMsg(option,'tough_itol_scaled_residual_e2')
         this%tough2_conv_criteria = PETSC_TRUE
         this%check_post_convergence = PETSC_TRUE
       case('T2_ITOL_SCALED_RESIDUAL_TEMP')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option, &
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option, &
                            'tough_itol_scaled_residual_e1 for temperature', &
                            error_string)
         this%tgh2_itol_scld_res_e1(3,:) = tempreal
       case('WINDOW_EPSILON') 
-        call InputReadDouble(input,option,towg_window_epsilon)
-        call InputErrorMsg(input,option,'towg window epsilon',error_string)
+        call input%ReadDouble(option,towg_window_epsilon)
+        call input%ErrorMsg(option,'towg window epsilon',error_string)
       ! read this in the gas EOS
       !case('GAS_COMPONENT_FORMULA_WEIGHT')
       !  !geh: assuming gas component is index 2
-      !  call InputReadDouble(input,option,fmw_comp(2))
-      !  call InputErrorMsg(input,option,'gas component formula wt.', &
+      !  call input%ReadDouble(option,fmw_comp(2))
+      !  call input%ErrorMsg(option,'gas component formula wt.', &
       !                     error_string)
       case('ISOTHERMAL')
         towg_isothermal = PETSC_TRUE
@@ -266,19 +266,19 @@ subroutine PMTOWGRead(this,input)
       case('NO_GAS')
         towg_no_gas = PETSC_TRUE
       case('MAXIMUM_PRESSURE_CHANGE')
-        call InputReadDouble(input,option,this%trunc_max_pressure_change)
-        call InputErrorMsg(input,option,'maximum pressure change', &
+        call input%ReadDouble(option,this%trunc_max_pressure_change)
+        call input%ErrorMsg(option,'maximum pressure change', &
                            error_string)
       case('MAX_ITERATION_BEFORE_DAMPING')
-        call InputReadInt(input,option,this%max_it_before_damping)
-        call InputErrorMsg(input,option,'maximum iteration before damping', &
+        call input%ReadInt(option,this%max_it_before_damping)
+        call input%ErrorMsg(option,'maximum iteration before damping', &
                            error_string)
       case('DAMPING_FACTOR')
-        call InputReadDouble(input,option,this%damping_factor)
-        call InputErrorMsg(input,option,'damping factor',error_string)
+        call input%ReadDouble(option,this%damping_factor)
+        call input%ErrorMsg(option,'damping factor',error_string)
       case('DEBUG_CELL')
-        call InputReadInt(input,option,towg_debug_cell_id)
-        call InputErrorMsg(input,option,'debug cell id',error_string)
+        call input%ReadInt(option,towg_debug_cell_id)
+        call input%ErrorMsg(option,'debug cell id',error_string)
       case('TL4P_ALTERNATIVE_DENSITY')
         TL4P_altDensity = PETSC_TRUE
       case('TL4P_NONNEGATIVE_SLVSAT')
@@ -302,7 +302,7 @@ subroutine PMTOWGRead(this,input)
 
   !if (Uninitialized(towg_miscibility_model)) then 
   !  option%io_buffer = 'TOWG MISCIBILITY_MODEL not set up'
-  !  call printErrMsg(option)
+  !  call option%PrintErrMsg()
   !end if  
 
   !here set up functions in TOWG and pm_TOWG_aux based on miscibility model 
@@ -311,7 +311,7 @@ subroutine PMTOWGRead(this,input)
   !    !set up towg and pm_towg_aux functions   
   !  case default
   !    option%io_buffer = 'only immiscible TOWG currently implemented' 
-  !    call printErrMsg(option)
+  !    call option%PrintErrMsg()
   !end select
 
 end subroutine PMTOWGRead
@@ -581,7 +581,7 @@ subroutine PMTOWGUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   type(field_type), pointer :: field
   
 #ifdef PM_TOWG_DEBUG  
-  call printMsg(this%option,'PMTOWG%UpdateTimestep()')
+  call this%option%PrintMsg('PMTOWG%UpdateTimestep()')
 #endif
   
   fac = 0.5d0
@@ -736,8 +736,8 @@ subroutine FMISOWGRead(input,option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscReal:: fmis_av
   PetscReal,parameter:: eps=0.001
@@ -746,10 +746,10 @@ subroutine FMISOWGRead(input,option)
 
 !--Basic read operations-------------------------------------------------------
 
-  call InputReadDouble(input,option,fmis_sl)
-  call InputErrorMsg(input,option,'Lower saturation point',error_string)
-  call InputReadDouble(input,option,fmis_su)
-  call InputErrorMsg(input,option,'Upper saturation point',error_string)
+  call input%ReadDouble(option,fmis_sl)
+  call input%ErrorMsg(option,'Lower saturation point',error_string)
+  call input%ReadDouble(option,fmis_su)
+  call input%ErrorMsg(option,'Upper saturation point',error_string)
 
 !--Order, separation and range checks------------------------------------------
 
@@ -760,7 +760,7 @@ subroutine FMISOWGRead(input,option)
   else
     if( fmis_su<=fmis_sl ) then
       option%io_buffer = 'Second FMIS value must exceed first'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
       fmis_av=0.5*(fmis_sl+fmis_su)
       fmis_sl=fmis_av-0.5*eps
       fmis_su=fmis_av+0.5*eps

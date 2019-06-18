@@ -43,7 +43,7 @@ module CLM_Rxn_Base_class
   
       class(clm_rxn_base_type) :: this
       type(reaction_type) :: reaction
-      type(option_type) :: option
+      class(option_type) :: option
   
     end subroutine Base_Setup 
 
@@ -57,8 +57,8 @@ module CLM_Rxn_Base_class
       implicit none
   
       class(clm_rxn_base_type) :: this
-      type(input_type), pointer :: input
-      type(option_type) :: option
+      class(input_type), pointer :: input
+      class(option_type) :: option
   
     end subroutine Base_Read 
     
@@ -72,8 +72,8 @@ module CLM_Rxn_Base_class
       implicit none
   
       class(clm_rxn_base_type) :: this
-      type(input_type), pointer :: input
-      type(option_type) :: option
+      class(input_type), pointer :: input
+      class(option_type) :: option
   
     end subroutine Base_SkipBlock 
     
@@ -96,7 +96,7 @@ module CLM_Rxn_Base_class
       implicit none
   
       class(clm_rxn_base_type) :: this
-      type(option_type) :: option
+      class(option_type) :: option
       type(reaction_type) :: reaction
       PetscBool :: compute_derivative
       PetscReal :: Res(reaction%ncomp)
@@ -144,7 +144,7 @@ contains
   
     class(clm_rxn_base_type) :: this
     type(reaction_type) :: reaction
-    type(option_type) :: option
+    class(option_type) :: option
   
   end subroutine Base_Setup 
 
@@ -158,8 +158,8 @@ contains
     implicit none
   
     class(clm_rxn_base_type) :: this
-    type(input_type), pointer :: input
-    type(option_type) :: option
+    class(input_type), pointer :: input
+    class(option_type) :: option
   
   end subroutine Base_Read
 
@@ -173,8 +173,8 @@ contains
     implicit none
   
     class(clm_rxn_base_type) :: this
-    type(input_type), pointer :: input
-    type(option_type) :: option
+    class(input_type), pointer :: input
+    class(option_type) :: option
   
   end subroutine Base_SkipBlock   
 
@@ -196,7 +196,7 @@ contains
     implicit none
   
     class(clm_rxn_base_type) :: this
-    type(option_type) :: option
+    class(option_type) :: option
     type(reaction_type) :: reaction
     PetscBool :: compute_derivative
     PetscReal :: Residual(reaction%ncomp)
@@ -528,8 +528,8 @@ subroutine CLMDec_Read(this,input,option)
   implicit none
   
   class(clm_rxn_clmdec_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: word, internal_units
   
@@ -551,11 +551,11 @@ subroutine CLMDec_Read(this,input,option)
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
       'CHEMISTRY,CLM_RXN,CLMDec')
     call StringToUpper(word)   
     select case(trim(word))
@@ -564,68 +564,68 @@ subroutine CLMDec_Read(this,input,option)
         this%litter_decomp_type = LITTER_DECOMP_CLMMICROBE    
 
       case('RESIDUAL_CPOOL')
-        call InputReadDouble(input,option,this%residual_cpool)
-        call InputErrorMsg(input,option,'residual cpool', &
+        call input%ReadDouble(option,this%residual_cpool)
+        call input%ErrorMsg(option,'residual cpool', &
           'CHEMISTRY,CLM_RXN,CLMDec')
 
       case('RESIDUAL_NH4')
-        call InputReadDouble(input,option,this%residual_nh4)
-        call InputErrorMsg(input,option,'residual NH4+', &
+        call input%ReadDouble(option,this%residual_nh4)
+        call input%ErrorMsg(option,'residual NH4+', &
           'CHEMISTRY,CLM_RXN,CLMDec')
 
       case('RESIDUAL_NO3')
-        call InputReadDouble(input,option,this%residual_no3)
-        call InputErrorMsg(input,option,'residual NO3-', &
+        call input%ReadDouble(option,this%residual_no3)
+        call input%ErrorMsg(option,'residual NO3-', &
           'CHEMISTRY,CLM_RXN,CLMDec')
 
       case('HALF_SATURATION_NH4')
-        call InputReadDouble(input,option,this%half_saturation_nh4)
-        call InputErrorMsg(input,option,'NH4 half saturation', &
+        call input%ReadDouble(option,this%half_saturation_nh4)
+        call input%ErrorMsg(option,'NH4 half saturation', &
           'CHEMISTRY,CLM_RXN,CLMDec')
 
       case('HALF_SATURATION_NO3')
-        call InputReadDouble(input,option,this%half_saturation_no3)
-        call InputErrorMsg(input,option,'NO3 half saturation', &
+        call input%ReadDouble(option,this%half_saturation_no3)
+        call input%ErrorMsg(option,'NO3 half saturation', &
           'CHEMISTRY,CLM_RXN,CLMDec')
 
       case('CUTOFF_NH4')
-        call InputReadDouble(input,option,this%cutoff_nh4_0)
-        call InputErrorMsg(input,option,'cutoff_nh4_0', &
+        call input%ReadDouble(option,this%cutoff_nh4_0)
+        call input%ErrorMsg(option,'cutoff_nh4_0', &
           'CHEMISTRY,CLM_RXN,CLMDec')
-        call InputReadDouble(input,option,this%cutoff_nh4_1)
-        call InputErrorMsg(input,option,'cutoff_nh4_1', &
+        call input%ReadDouble(option,this%cutoff_nh4_1)
+        call input%ErrorMsg(option,'cutoff_nh4_1', &
           'CHEMISTRY,CLM_RXN,CLMDec')
         if (this%cutoff_nh4_0 > this%cutoff_nh4_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,CLMDec,' // &
             'NH4+ down regulation cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       case('CUTOFF_NO3')
-        call InputReadDouble(input,option,this%cutoff_no3_0)
-        call InputErrorMsg(input,option,'cutoff_no3_0', &
+        call input%ReadDouble(option,this%cutoff_no3_0)
+        call input%ErrorMsg(option,'cutoff_no3_0', &
           'CHEMISTRY,CLM_RXN,CLMDec,')
-        call InputReadDouble(input,option,this%cutoff_no3_1)
-        call InputErrorMsg(input,option,'cutoff_no3_1', &
+        call input%ReadDouble(option,this%cutoff_no3_1)
+        call input%ErrorMsg(option,'cutoff_no3_1', &
           'CHEMISTRY,CLM_RXN,CLMDec,')
         if (this%cutoff_no3_0 > this%cutoff_no3_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,CLMDec' // &
             'NO3- down regulation cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
 
       case('SMOOTH_NET_N_MINERALIZATION')
-        call InputReadDouble(input,option,this%net_n_min_rate_smooth_0)
-        call InputErrorMsg(input,option,'net_n_min_rate_smooth_0', &
+        call input%ReadDouble(option,this%net_n_min_rate_smooth_0)
+        call input%ErrorMsg(option,'net_n_min_rate_smooth_0', &
           'CHEMISTRY,CLM_RXN,CLMDec')
-        call InputReadDouble(input,option,this%net_n_min_rate_smooth_1)
-        call InputErrorMsg(input,option,'net_n_min_rate_smooth_1', &
+        call input%ReadDouble(option,this%net_n_min_rate_smooth_1)
+        call input%ErrorMsg(option,'net_n_min_rate_smooth_1', &
           'CHEMISTRY,CLM_RXN,CLMDec')
         if (this%net_n_min_rate_smooth_0 > this%net_n_min_rate_smooth_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,CLMDec,' // &
             'Net N mineralization smooth 0 concentration > 1 concentration.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
 
      case('DEBUG_OUTPUT')
@@ -635,19 +635,19 @@ subroutine CLMDec_Read(this,input,option)
        this%bskipn2ojacobian = PETSC_TRUE
 
      case('NH4_INHIBITION_NO3')
-       call InputReadDouble(input,option,this%inhibition_nh4_no3)
-       call InputErrorMsg(input,option,'NH4 inhibition coefficient', &
+       call input%ReadDouble(option,this%inhibition_nh4_no3)
+       call input%ErrorMsg(option,'NH4 inhibition coefficient', &
          'CHEMISTRY,CLM_RXN,CLMDec')
 
      case('N2O_FRAC_MINERALIZATION')
-       call InputReadDouble(input,option,this%n2o_frac_mineralization)
-       call InputErrorMsg(input,option,'n2o fraction from mineralization', &
+       call input%ReadDouble(option,this%n2o_frac_mineralization)
+       call input%ErrorMsg(option,'n2o fraction from mineralization', &
          'CHEMISTRY,CLM_RXN,CLMDec')
 
      case('POOLS')
        do
          call InputReadPflotranString(input,option)
-         if (InputError(input)) exit
+         if (input%Error()) exit
          if (InputCheckExit(input,option)) exit   
 
          allocate(new_pool)
@@ -655,11 +655,11 @@ subroutine CLMDec_Read(this,input,option)
          new_pool%nc_ratio = -999.d0
          nullify(new_pool%next)
 
-         call InputReadWord(input,option,new_pool%name,PETSC_TRUE)
-         call InputErrorMsg(input,option,'pool name', &
+         call input%ReadWord(option,new_pool%name,PETSC_TRUE)
+         call input%ErrorMsg(option,'pool name', &
            'CHEMISTRY,CLM_RXN,CLMDec,POOLS')
-         call InputReadDouble(input,option,temp_real)
-         if (InputError(input)) then
+         call input%ReadDouble(option,temp_real)
+         if (input%Error()) then
            new_pool%nc_ratio = -999.d0
          else
            ! convert CN ratio from mass C/mass N to mol C/mol N
@@ -692,19 +692,19 @@ subroutine CLMDec_Read(this,input,option)
         
         do 
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
 
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
             'CHEMISTRY,CLM_RXN,CLMDec')
           call StringToUpper(word)   
 
           select case(trim(word))
             case('UPSTREAM_POOL')
-              call InputReadWord(input,option, &
+              call input%ReadWord(option, &
                 new_reaction%upstream_pool_name,PETSC_TRUE)
-              call InputErrorMsg(input,option,'upstream pool name', &
+              call input%ErrorMsg(option,'upstream pool name', &
                 'CHEMISTRY,CLM_RXN,CLMDec')
             case('DOWNSTREAM_POOL')
               allocate(new_pool_rxn)
@@ -712,12 +712,12 @@ subroutine CLMDec_Read(this,input,option)
               new_pool_rxn%stoich = 0.d0
               nullify(new_pool_rxn%next)
 
-              call InputReadWord(input,option, &
+              call input%ReadWord(option, &
                  new_pool_rxn%name,PETSC_TRUE)
-              call InputErrorMsg(input,option,'downstream pool name', &
+              call input%ErrorMsg(option,'downstream pool name', &
                 'CHEMISTRY,CLM_RXN,CLMDec')
-              call InputReadDouble(input,option,new_pool_rxn%stoich)
-              call InputErrorMsg(input,option,'Downstream pool stoich', &
+              call input%ReadDouble(option,new_pool_rxn%stoich)
+              call input%ErrorMsg(option,'Downstream pool stoich', &
                 'CHEMISTRY,CLM_RXN,CLMDec' // &
                 'TEMPERATURE RESPONSE FUNCTION')
 
@@ -731,26 +731,26 @@ subroutine CLMDec_Read(this,input,option)
 
             case('RATE_CONSTANT')
               internal_units = 'mol/L-s|1/s|L/mol-s'
-              call InputReadDouble(input,option,rate_constant)
-              call InputErrorMsg(input,option,'rate constant', &
+              call input%ReadDouble(option,rate_constant)
+              call input%ErrorMsg(option,'rate constant', &
                      'CHEMISTRY,CLM_RXN,CLMDec,')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              if (InputError(input)) then
+              call input%ReadWord(option,word,PETSC_TRUE)
+              if (input%Error()) then
                 input%err_buf = 'CLMDec RATE CONSTANT UNITS'
-                call InputDefaultMsg(input,option)
+                call input%DefaultMsg(option)
               else              
                 rate_constant = rate_constant * &
                   UnitsConvertToInternal(word,internal_units,option)
               endif
             case('TURNOVER_TIME')
               internal_units = 'sec'
-              call InputReadDouble(input,option,turnover_time)
-              call InputErrorMsg(input,option,'turnover time', &
+              call input%ReadDouble(option,turnover_time)
+              call input%ErrorMsg(option,'turnover time', &
                      'CHEMISTRY,CLM_RXN,CLMDec')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              if (InputError(input)) then
+              call input%ReadWord(option,word,PETSC_TRUE)
+              if (input%Error()) then
                 input%err_buf = 'CLMDec TURNOVER TIME UNITS'
-                call InputDefaultMsg(input,option)
+                call input%DefaultMsg(option)
               else              
                 turnover_time = turnover_time * &
                   UnitsConvertToInternal(word,internal_units,option)
@@ -767,7 +767,7 @@ subroutine CLMDec_Read(this,input,option)
             'be included in a CLMDec reaction definition, but not both. ' // &
             'See reaction with upstream pool "' // &
             trim(new_reaction%upstream_pool_name) // '".'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         else if (turnover_time > 0.d0) then
           new_reaction%rate_constant = 1.d0 / turnover_time
         else
@@ -805,7 +805,7 @@ subroutine CLMDec_Setup(this,reaction,option)
   implicit none
 
   class(clm_rxn_clmdec_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   
   character(len=MAXWORDLENGTH), allocatable :: pool_names(:)
@@ -935,7 +935,7 @@ subroutine CLMDec_Setup(this,reaction,option)
         option%io_buffer = 'For CLMDec pools with no CN ratio defined, ' // &
           'the user must define two immobile species with the same root ' // &
           'name as the pool with "C" or "N" appended, respectively.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     else ! only one species (e.g. SOMX)
       species_id_pool_c(icount) = &
@@ -947,7 +947,7 @@ subroutine CLMDec_Setup(this,reaction,option)
         if (species_id_pool_c(icount) <= 0) then
           option%io_buffer = 'CLMDec pool: ' // cur_pool%name // 'is not ' // &
             'specified either in the IMMOBILE_SPECIES or PRIMARY_SPECIES!'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         else
           pool_is_aqueous(icount) = PETSC_TRUE
         endif
@@ -976,7 +976,7 @@ subroutine CLMDec_Setup(this,reaction,option)
       option%io_buffer = 'Upstream pool ' // &
         trim(cur_rxn%upstream_pool_name) // &
         'in reaction not found in list of pools.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       this%upstream_c_id(icount) = species_id_pool_c(ipool)
       this%upstream_n_id(icount) = species_id_pool_n(ipool)
@@ -989,7 +989,7 @@ subroutine CLMDec_Setup(this,reaction,option)
           option%io_buffer = 'SOM decomp. reaction with upstream pool ' // &
             trim(cur_rxn%upstream_pool_name) // &
             'has negative C:N ratio in upstream pool.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       endif
     endif
@@ -1008,7 +1008,7 @@ subroutine CLMDec_Setup(this,reaction,option)
           option%io_buffer = 'Downstream pool "' // trim(cur_pool%name) // &
             '" in reaction with upstream pool "' // &
             trim(cur_rxn%upstream_pool_name) // '" not found in list of pools.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         else
           this%downstream_id(icount, jcount) = species_id_pool_c(ipool)
           this%downstream_stoich(icount, jcount) = cur_pool%stoich 
@@ -1021,7 +1021,7 @@ subroutine CLMDec_Setup(this,reaction,option)
               'tracked individually).  Therefore, pool "' // &
               trim(cur_pool%name) // &
              '" may not be used as a downstream pool.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         endif
       endif
@@ -1058,7 +1058,7 @@ subroutine CLMDec_Setup(this,reaction,option)
       if (stoich_c < -1.0d-10) then
         option%io_buffer = 'CLMDec SOM decomposition reaction has negative' // &
           ' respiration fraction!'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
 
       this%mineral_c_stoich(icount) = stoich_c
@@ -1080,7 +1080,7 @@ subroutine CLMDec_Setup(this,reaction,option)
   if (this%species_id_co2 <= 0) then
     option%io_buffer = 'Neither HCO3- nor CO2(aq) is specified in the ' // &
       'input file for CLMDec!'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   word = 'NH4+'
@@ -1105,7 +1105,7 @@ subroutine CLMDec_Setup(this,reaction,option)
   if (this%species_id_nh4 <= 0) then
     option%io_buffer = 'NH4+, NH3(aq) or Ammonium is specified in the input' // &
       'file for CLMDec!'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   word = 'NO3-'
@@ -1181,7 +1181,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
   implicit none
 
   class(clm_rxn_clmdec_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -1442,7 +1442,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
         if (stoich_c < 0.0d0) then
           option%io_buffer = 'CLMDec litter decomposition reaction has' // &
                              'negative respiration fraction!'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
 
         this%mineral_c_stoich(irxn) = stoich_c
@@ -1472,7 +1472,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
         if (this%n_downstream_pools(irxn) .ne. 2) then
           option%io_buffer = 'CLM_Microbe litter decomposition reaction ' // &
                               'more than 2 (bacteria and fungi pools)!'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
 
         do i = 1, this%n_downstream_pools(irxn)
@@ -1927,7 +1927,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
         ispec_d = this%downstream_id(irxn, j)
         if (ispec_d < 0) then
           option%io_buffer = 'Downstream pool species not specified!'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
 
         if (this%downstream_is_aqueous(irxn, j)) then
@@ -1950,7 +1950,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
           else
             option%io_buffer = 'Downstream pool for CLM-Microbe should be' // &
                                'either bacteria or fungi!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         endif
       enddo
@@ -2024,7 +2024,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
           ispec_d = this%downstream_id(irxn, j)
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           if (this%downstream_is_aqueous(irxn, j)) then
             ires_d = ispec_d
@@ -2110,7 +2110,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
           ispec_d = this%downstream_id(irxn, j)
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -2136,7 +2136,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
             else
               option%io_buffer ='Downstream pool for CLM-Microbe should be' // &
                                'either bacteria or fungi!'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
             endif
           endif
         enddo
@@ -2248,7 +2248,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
           ispec_d = this%downstream_id(irxn, j)
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -2274,7 +2274,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
             else
               option%io_buffer ='Downstream pool for CLM-Microbe should be' // &
                                'either bacteria or fungi!'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
             endif
           endif
         enddo
@@ -2353,7 +2353,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
           ispec_d = this%downstream_id(irxn, j)
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           if (this%downstream_is_aqueous(irxn, j)) then
             ires_d = ispec_d
@@ -2496,7 +2496,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
           ispec_d = this%downstream_id(irxn, j)
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -2517,7 +2517,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
             else
               option%io_buffer = 'Downstream pool for CLM-Microbe should ' // &
                                  'be either bacteria or fungi!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
             endif
           endif
         enddo
@@ -2585,7 +2585,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
 
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -2633,7 +2633,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
 
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -2711,7 +2711,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
           ispec_d = this%downstream_id(irxn, j)
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -2735,7 +2735,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
             else
               option%io_buffer = 'Downstream pool for CLM-Microbe should ' // &
                                  'be either bacteria or fungi!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
             endif
           endif
         enddo
@@ -2813,7 +2813,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
 
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -2867,7 +2867,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
 
           if (ispec_d < 0) then
             option%io_buffer = 'Downstream pool species not specified!'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
 
           if (this%downstream_is_aqueous(irxn, j)) then
@@ -3237,84 +3237,84 @@ subroutine PlantNRead(this,input,option)
   implicit none
   
   class(clm_rxn_plantn_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'CHEMISTRY,CLM_RXN,PLANTN')
     call StringToUpper(word)   
 
     select case(trim(word))
       case('RATE_PLANTNTAKE_NH4')
-        call InputReadDouble(input,option,this%rate_plantntake_nh4)
-        call InputErrorMsg(input,option,'rate plantntake nh4+', &
+        call input%ReadDouble(option,this%rate_plantntake_nh4)
+        call input%ErrorMsg(option,'rate plantntake nh4+', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('RATE_PLANTNTAKE_NO3')
-        call InputReadDouble(input,option,this%rate_plantntake_no3)
-        call InputErrorMsg(input,option,'rate plantntake no3-', &
+        call input%ReadDouble(option,this%rate_plantntake_no3)
+        call input%ErrorMsg(option,'rate plantntake no3-', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('RATE_DEPOSITION_NH4')
-        call InputReadDouble(input,option,this%rate_deposition_nh4)
-        call InputErrorMsg(input,option,'rate deposition NH4+', &
+        call input%ReadDouble(option,this%rate_deposition_nh4)
+        call input%ErrorMsg(option,'rate deposition NH4+', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('RATE_DEPOSITION_NO3')
-        call InputReadDouble(input,option,this%rate_deposition_no3)
-        call InputErrorMsg(input,option,'rate deposition NO3-', &
+        call input%ReadDouble(option,this%rate_deposition_no3)
+        call input%ErrorMsg(option,'rate deposition NO3-', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('HALF_SATURATION_NH4')
-        call InputReadDouble(input,option,this%half_saturation_nh4)
-        call InputErrorMsg(input,option,'half saturation NH4', &
+        call input%ReadDouble(option,this%half_saturation_nh4)
+        call input%ErrorMsg(option,'half saturation NH4', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('HALF_SATURATION_NO3')
-        call InputReadDouble(input,option,this%half_saturation_no3)
-        call InputErrorMsg(input,option,'half saturation NO3-', &
+        call input%ReadDouble(option,this%half_saturation_no3)
+        call input%ErrorMsg(option,'half saturation NO3-', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('NH4_INHIBITION_NO3')
-        call InputReadDouble(input,option,this%inhibition_nh4_no3)
-        call InputErrorMsg(input,option,'NH4 inhibition on NO3-', &
+        call input%ReadDouble(option,this%inhibition_nh4_no3)
+        call input%ErrorMsg(option,'NH4 inhibition on NO3-', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('RESIDUAL_NH4')
-        call InputReadDouble(input,option,this%residual_nh4)
-        call InputErrorMsg(input,option,'residual concentration NH4+', &
+        call input%ReadDouble(option,this%residual_nh4)
+        call input%ErrorMsg(option,'residual concentration NH4+', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('RESIDUAL_NO3')
-        call InputReadDouble(input,option,this%residual_no3)
-        call InputErrorMsg(input,option,'residual concentration NO3-', &
+        call input%ReadDouble(option,this%residual_no3)
+        call input%ErrorMsg(option,'residual concentration NO3-', &
           'CHEMISTRY,CLM_RXN,PLANTN')
       case('CUTOFF_NH4')
-        call InputReadDouble(input,option,this%cutoff_nh4_0)
-        call InputErrorMsg(input,option,'cutoff_nh4_0', &
+        call input%ReadDouble(option,this%cutoff_nh4_0)
+        call input%ErrorMsg(option,'cutoff_nh4_0', &
           'CHEMISTRY,CLM_RXN,PLANTN')
-        call InputReadDouble(input,option,this%cutoff_nh4_1)
-        call InputErrorMsg(input,option,'cutoff_nh4_1', &
+        call input%ReadDouble(option,this%cutoff_nh4_1)
+        call input%ErrorMsg(option,'cutoff_nh4_1', &
           'CHEMISTRY,CLM_RXN,PLANTN')
         if (this%cutoff_nh4_0 > this%cutoff_nh4_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,PLANTN,' // &
             'NH4+ cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       case('CUTOFF_NO3')
-        call InputReadDouble(input,option,this%cutoff_no3_0)
-        call InputErrorMsg(input,option,'cutoff_no3_0', &
+        call input%ReadDouble(option,this%cutoff_no3_0)
+        call input%ErrorMsg(option,'cutoff_no3_0', &
           'CHEMISTRY,CLM_RXN,PLANTN')
-        call InputReadDouble(input,option,this%cutoff_no3_1)
-        call InputErrorMsg(input,option,'cutoff_no3_1', &
+        call input%ReadDouble(option,this%cutoff_no3_1)
+        call input%ErrorMsg(option,'cutoff_no3_1', &
           'CHEMISTRY,CLM_RXN,PLANTN')
         if (this%cutoff_no3_0 > this%cutoff_no3_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,PLANTN,' // &
             'NO3- down regulation cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       case('DEBUG_OUTPUT')
         this%bdebugoutput = PETSC_TRUE
@@ -3351,7 +3351,7 @@ subroutine PlantNSetup(this,reaction,option)
   
   class(clm_rxn_plantn_type) :: this
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: word
  
@@ -3376,7 +3376,7 @@ subroutine PlantNSetup(this,reaction,option)
   if (this%ispec_nh4 < 0) then
     option%io_buffer = 'NH4+, NH3(aq) or Ammonium is specified in the input' // &
       'file for PlantN sandbox!'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   word = 'NO3-'
@@ -3397,7 +3397,7 @@ subroutine PlantNSetup(this,reaction,option)
 
   if (this%ispec_plantn < 0) then
     option%io_buffer = 'PlantN is specified in the input file!'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   word = 'Ain'
@@ -3436,7 +3436,7 @@ subroutine PlantNReact(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
   implicit none
 
   class(clm_rxn_plantn_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -3500,7 +3500,7 @@ subroutine PlantNReact(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
 
   if (this%ispec_plantn < 0) then
     option%io_buffer = 'PlantN is not specified in the input file!'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ires_nh4 = -999
@@ -3838,19 +3838,19 @@ subroutine NitrRead(this,input,option)
   implicit none
   
   class(clm_rxn_nitr_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'CHEMISTRY,CLM_RXN,NITRIFICATION')
     call StringToUpper(word)   
 
@@ -3858,11 +3858,11 @@ subroutine NitrRead(this,input,option)
       case('TEMPERATURE_RESPONSE_FUNCTION')
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
 
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
             'CHEMISTRY,CLM_RXN,NITRIFICATION,TEMPERATURE RESPONSE FUNCTION')
           call StringToUpper(word)   
 
@@ -3873,8 +3873,8 @@ subroutine NitrRead(this,input,option)
             case('Q10')
               this%temperature_response_function = &
                 TEMPERATURE_RESPONSE_FUNCTION_Q10    
-              call InputReadDouble(input,option,this%Q10)  
-              call InputErrorMsg(input,option,'Q10', &
+              call input%ReadDouble(option,this%Q10)
+              call input%ErrorMsg(option,'Q10', &
                 'CHEMISTRY,CLM_RXN_NITRIFICATION,TEMPERATURE RESPONSE FUNCTION')
             case default
               call InputKeywordUnrecognized(word, &
@@ -3883,40 +3883,40 @@ subroutine NitrRead(this,input,option)
           end select
         enddo 
       case('RATE_CONSTANT_NO3')
-        call InputReadDouble(input,option,this%k_nitr_max)
-        call InputErrorMsg(input,option,'nitr rate coefficient', &
+        call input%ReadDouble(option,this%k_nitr_max)
+        call input%ErrorMsg(option,'nitr rate coefficient', &
           'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
       case('RATE_CONSTANT_N2O')
-        call InputReadDouble(input,option,this%k_nitr_n2o)
-        call InputErrorMsg(input,option,'N2O rate coefficient', &
+        call input%ReadDouble(option,this%k_nitr_n2o)
+        call input%ErrorMsg(option,'N2O rate coefficient', &
                      'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
       case('RESIDUAL_NH4')
-        call InputReadDouble(input,option,this%residual_conc)
-        call InputErrorMsg(input,option,'residual NH4+', &
+        call input%ReadDouble(option,this%residual_conc)
+        call input%ErrorMsg(option,'residual NH4+', &
                   'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
       case('HALF_SATURATION_NH4')
-        call InputReadDouble(input,option,this%half_saturation)
-        call InputErrorMsg(input,option,'half saturation NH4+', &
+        call input%ReadDouble(option,this%half_saturation)
+        call input%ErrorMsg(option,'half saturation NH4+', &
                   'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
       case('CUTOFF_NH4')
-        call InputReadDouble(input,option,this%cutoff_nh4_0)
-        call InputErrorMsg(input,option,'cutoff_nh4_0', &
+        call input%ReadDouble(option,this%cutoff_nh4_0)
+        call input%ErrorMsg(option,'cutoff_nh4_0', &
           'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
-        call InputReadDouble(input,option,this%cutoff_nh4_1)
-        call InputErrorMsg(input,option,'cutoff_nh4_1', &
+        call input%ReadDouble(option,this%cutoff_nh4_1)
+        call input%ErrorMsg(option,'cutoff_nh4_1', &
           'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
         if (this%cutoff_nh4_0 > this%cutoff_nh4_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,NITRIFICATION,' // &
             'NH4+ cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       case('SMOOTH_NH4_2_N2O')
-        call InputReadDouble(input,option,this%c_nh4_ugg_0)
-        call InputErrorMsg(input,option,'c_nh4_ugg_0', &
+        call input%ReadDouble(option,this%c_nh4_ugg_0)
+        call input%ErrorMsg(option,'c_nh4_ugg_0', &
           'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
-        call InputReadDouble(input,option,this%c_nh4_ugg_1)
-        call InputErrorMsg(input,option,'c_nh4_ugg_1', &
+        call input%ReadDouble(option,this%c_nh4_ugg_1)
+        call input%ErrorMsg(option,'c_nh4_ugg_1', &
           'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
       case('DICKINSON')
         this%bDickinson = PETSC_TRUE
@@ -3954,7 +3954,7 @@ subroutine NitrSetup(this,reaction,option)
   
   class(clm_rxn_nitr_type) :: this
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: word
 
@@ -4006,19 +4006,19 @@ subroutine NitrSetup(this,reaction,option)
   if (this%ispec_nh4 < 0) then
      option%io_buffer = 'CHEMISTRY,CLM_RXN,NITRIFICATION: ' // &
        'NH3(aq), NH4+, or Ammonium is not specified in the input file.'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
   if (this%ispec_no3 < 0) then
      option%io_buffer = 'CHEMISTRY,CLM_RXN,NITRIFICATION: ' // &
                         ' NO3- is not specified in the input file.'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
 !  if (this%ispec_n2o < 0) then
 !     option%io_buffer = 'CHEMISTRY,CLM_RXN,NITRIFICATION: ' // &
 !                        ' N2O(aq) is not specified in the input file.'
-!     call printErrMsg(option)
+!     call option%PrintErrMsg()
 !  endif
 
   word = 'NGASnitr'
@@ -4046,7 +4046,7 @@ subroutine NitrReact(this,Residual,Jacobian,compute_derivative, &
   implicit none
 
   class(clm_rxn_nitr_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -4543,19 +4543,19 @@ subroutine DeniRead(this,input,option)
   implicit none
   
   class(clm_rxn_deni_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'CHEMISTRY,CLM_RXN,DENITRIFICATION')
     call StringToUpper(word)   
 
@@ -4563,11 +4563,11 @@ subroutine DeniRead(this,input,option)
       case('TEMPERATURE_RESPONSE_FUNCTION')
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
 
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
             'CHEMISTRY,CLM_RXN,DENITRIFICATION,TEMPERATURE RESPONSE FUNCTION')
           call StringToUpper(word)   
 
@@ -4578,8 +4578,8 @@ subroutine DeniRead(this,input,option)
             case('Q10')
               this%temperature_response_function = &
                 TEMPERATURE_RESPONSE_FUNCTION_Q10
-              call InputReadDouble(input,option,this%Q10)  
-              call InputErrorMsg(input,option,'Q10', &
+              call input%ReadDouble(option,this%Q10)
+              call input%ErrorMsg(option,'Q10', &
                 'CHEMISTRY,CLM_RXN,DENITRI,TEMPERATURE RESPONSE FUNCTION')
             case default
               call InputKeywordUnrecognized(word, &
@@ -4589,29 +4589,29 @@ subroutine DeniRead(this,input,option)
         enddo 
 
       case('RATE_CONSTANT')
-        call InputReadDouble(input,option,this%k_deni_max)
-        call InputErrorMsg(input,option,'k_deni_max', &
+        call input%ReadDouble(option,this%k_deni_max)
+        call input%ErrorMsg(option,'k_deni_max', &
                  'CHEMISTRY,CLM_RXN,DENITRIFICATION,REACTION')
       case('RESIDUAL_NO3')
-        call InputReadDouble(input,option,this%residual_conc)
-        call InputErrorMsg(input,option,'residual_NO3', &
+        call input%ReadDouble(option,this%residual_conc)
+        call input%ErrorMsg(option,'residual_NO3', &
                   'CHEMISTRY,CLM_RXN,NITRIFICATION,REACTION')
       case('HALF_SATURATION_NO3')
-        call InputReadDouble(input,option,this%half_saturation)
-        call InputErrorMsg(input,option,'half saturation no3-', &
+        call input%ReadDouble(option,this%half_saturation)
+        call input%ErrorMsg(option,'half saturation no3-', &
                  'CHEMISTRY,CLM_RXN,DENITRIFICATION,REACTION')
       case('CUTOFF_NO3')
-        call InputReadDouble(input,option,this%cutoff_no3_0)
-        call InputErrorMsg(input,option,'cutoff_no3_0', &
+        call input%ReadDouble(option,this%cutoff_no3_0)
+        call input%ErrorMsg(option,'cutoff_no3_0', &
           'CHEMISTRY,CLM_RXN,DENITRIFICATION,REACTION')
-        call InputReadDouble(input,option,this%cutoff_no3_1)
-        call InputErrorMsg(input,option,'cutoff_no3_1', &
+        call input%ReadDouble(option,this%cutoff_no3_1)
+        call input%ErrorMsg(option,'cutoff_no3_1', &
           'CHEMISTRY,CLM_RXN,DENITRIFICATION,REACTION')
         if (this%cutoff_no3_0 > this%cutoff_no3_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,DENITRIFICATION,' // &
             'NO3- cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       case('DEBUG_OUTPUT')
         this%bdebugoutput = PETSC_TRUE
@@ -4643,7 +4643,7 @@ subroutine DeniSetup(this,reaction,option)
   
   class(clm_rxn_deni_type) :: this
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: word
  
@@ -4663,7 +4663,7 @@ subroutine DeniSetup(this,reaction,option)
   if (this%ispec_no3 < 0) then
      option%io_buffer = 'CHEMISTRY,CLM_RXN,DENITRIFICATION: ' // &
                         ' NO3- or nitrate is not specified in the input file.'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
   word = 'N2(aq)'
@@ -4673,7 +4673,7 @@ subroutine DeniSetup(this,reaction,option)
   if (this%ispec_n2 < 0) then
      option%io_buffer = 'CHEMISTRY,CLM_RXN,DENITRIFICATION: ' // &
                         ' N2(aq) is not specified in the input file.'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
   word = 'NGASdeni'
@@ -4699,7 +4699,7 @@ subroutine DeniReact(this,Residual,Jacobian,compute_derivative, &
   implicit none
 
   class(clm_rxn_deni_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -4926,7 +4926,7 @@ subroutine RCLMRxnInit(option)
   use petscsys
   use Option_module
   implicit none
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (associated(clmrxn_list)) then
     call RCLMRxnDestroy()
@@ -4960,7 +4960,7 @@ subroutine RCLMRxnSetup(reaction,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(clm_rxn_base_type), pointer :: cur_clmrxn  
 
@@ -4991,8 +4991,8 @@ subroutine RCLMRxnRead1(input,option)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   call RCLMRxnRead(clmrxn_list,input,option)
 
@@ -5014,8 +5014,8 @@ subroutine RCLMRxnRead2(local_clmrxn_list,input,option)
   implicit none
   
   class(clm_rxn_base_type), pointer :: local_clmrxn_list  
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
@@ -5024,11 +5024,11 @@ subroutine RCLMRxnRead2(local_clmrxn_list,input,option)
   nullify(new_clmrxn)
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','CHEMISTRY,CLM_RXN')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CHEMISTRY,CLM_RXN')
     call StringToUpper(word)   
 
     select case(trim(word))
@@ -5047,35 +5047,35 @@ subroutine RCLMRxnRead2(local_clmrxn_list,input,option)
       case('IGNORE_PRODUCTION')
         b_ignore_production = PETSC_TRUE
       case('RESIDUAL_NH4')
-        call InputReadDouble(input,option,residual_nh4)
-        call InputErrorMsg(input,option,'residual nh4','CHEMISTRY,CLMRXN')
+        call input%ReadDouble(option,residual_nh4)
+        call input%ErrorMsg(option,'residual nh4','CHEMISTRY,CLMRXN')
       case('RESIDUAL_NO3')
-        call InputReadDouble(input,option,residual_no3)
-        call InputErrorMsg(input,option,'residual no3','CHEMISTRY,CLMRXN')
+        call input%ReadDouble(option,residual_no3)
+        call input%ErrorMsg(option,'residual no3','CHEMISTRY,CLMRXN')
       case('ACCELERATOR')
-        call InputReadDouble(input,option,accelerator)
-        call InputErrorMsg(input,option,'accelerator','CHEMISTRY,CLMRXN')
+        call input%ReadDouble(option,accelerator)
+        call input%ErrorMsg(option,'accelerator','CHEMISTRY,CLMRXN')
       case('CUTOFF_NH4')
-        call InputReadDouble(input,option,cutoff_nh4_0)
-        call InputErrorMsg(input,option,'cutoff_nh4_0','CHEMISTRY,CLM_RXN')
-        call InputReadDouble(input,option,cutoff_nh4_1)
-        call InputErrorMsg(input,option,'cutoff_nh4_1','CHEMISTRY,CLM_RXN')
+        call input%ReadDouble(option,cutoff_nh4_0)
+        call input%ErrorMsg(option,'cutoff_nh4_0','CHEMISTRY,CLM_RXN')
+        call input%ReadDouble(option,cutoff_nh4_1)
+        call input%ErrorMsg(option,'cutoff_nh4_1','CHEMISTRY,CLM_RXN')
         if (cutoff_nh4_0 > cutoff_nh4_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,' // &
             'NH4+ cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       case('CUTOFF_NO3')
-        call InputReadDouble(input,option,cutoff_no3_0)
-        call InputErrorMsg(input,option,'cutoff_no3_0','CHEMISTRY,CLM_RXN')
-        call InputReadDouble(input,option,cutoff_no3_1)
-        call InputErrorMsg(input,option,'cutoff_no3_1','CHEMISTRY,CLM_RXN')
+        call input%ReadDouble(option,cutoff_no3_0)
+        call input%ErrorMsg(option,'cutoff_no3_0','CHEMISTRY,CLM_RXN')
+        call input%ReadDouble(option,cutoff_no3_1)
+        call input%ErrorMsg(option,'cutoff_no3_1','CHEMISTRY,CLM_RXN')
         if (cutoff_no3_0 > cutoff_no3_1) then
           option%io_buffer = 'CHEMISTRY,CLM_RXN,' // &
             'NO3- down regulation cut off concentration > concentration ' // &
             'where down regulation function = 1.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
 
       case default
@@ -5112,8 +5112,8 @@ subroutine RCLMRxnSkipInput(input,option)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   class(clm_rxn_base_type), pointer :: dummy_list
   
@@ -5141,7 +5141,7 @@ subroutine RCLMRxn(Residual,Jacobian,compute_derivative,rt_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -5254,7 +5254,7 @@ subroutine RCLMRxn(Residual,Jacobian,compute_derivative,rt_auxvar, &
   if (ispec_nh4 < 0) then
     option%io_buffer = 'NH4+, NH3(aq) or Ammonium is specified in the input' // &
       'file for clm_rxn!'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   word = 'NO3-'
@@ -5278,7 +5278,7 @@ subroutine RCLMRxn(Residual,Jacobian,compute_derivative,rt_auxvar, &
         ((.not.is_nh4_aqueous) .and. is_no3_aqueous)) then
       option%io_buffer = 'ERROR: Ammonium and nitrate have different phases: one in aqueous, the other in immobile,' // &
         'please use the same in the input file!'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
 

@@ -125,7 +125,7 @@ subroutine RichardsSetupPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -156,7 +156,7 @@ subroutine RichardsSetupPatch(realization)
   error_found = PETSC_FALSE
   if (minval(material_parameter%soil_residual_saturation(:,:)) < 0.d0) then
     option%io_buffer = 'ERROR: Non-initialized soil residual saturation.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   material_auxvars => patch%aux%Material%auxvars
@@ -169,24 +169,24 @@ subroutine RichardsSetupPatch(realization)
     if (material_auxvars(ghosted_id)%volume < 0.d0 .and. flag(1) == 0) then
       flag(1) = 1
       option%io_buffer = 'ERROR: Non-initialized cell volume.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%porosity < 0.d0 .and. flag(2) == 0) then
       flag(2) = 1
       option%io_buffer = 'ERROR: Non-initialized porosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (minval(material_auxvars(ghosted_id)%permeability) < 0.d0 .and. &
         flag(5) == 0) then
       option%io_buffer = 'ERROR: Non-initialized permeability.'
-      call printMsg(option)
+      call option%PrintMsg()
       flag(5) = 1
     endif
   enddo
 
   if (error_found .or. maxval(flag) > 0) then
     option%io_buffer = 'Material property errors found in RichardsSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! allocate auxvar data structures for all grid cells  
@@ -254,7 +254,7 @@ subroutine RichardsSetupPatch(realization)
         else if( associated(grid%unstructured_grid%polyhedra_grid) ) then
           option%io_buffer = 'richards.F90:RichardsSetupPatch() --> &
              &unsupported grid type, could not compute top cell half heights.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         else !implicit unstructured 
           minz  = 0.0d0
           maxz  = 0.0d0
@@ -277,7 +277,7 @@ subroutine RichardsSetupPatch(realization)
       else
         option%io_buffer = 'richards.F90:RichardsSetupPatch() --> &
           &unsupported grid type, could not compute top cell half heights.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
 
       ! set Manning's coefficient
@@ -309,7 +309,7 @@ subroutine RichardsSetupPatch(realization)
             option%io_buffer = 'richards.F90:RichardsSetupPatch() --> &
               &surface boundary condition, assigned to a region which is &
               &not the boundary of the inline surface region.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         enddo
         sum_connection = sum_connection + coupler%connection_set%num_connections
@@ -399,7 +399,7 @@ subroutine RichardsComputeMassBalancePatch(realization,mass_balance)
   type(realization_subsurface_type) :: realization
   PetscReal :: mass_balance(realization%option%nphase)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -468,7 +468,7 @@ subroutine RichardsZeroMassBalDeltaPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -521,7 +521,7 @@ subroutine RichardsUpdateMassBalancePatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -587,7 +587,7 @@ subroutine RichardsUpdatePermPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -614,7 +614,7 @@ subroutine RichardsUpdatePermPatch(realization)
   if (.not.associated(patch%imat)) then
     option%io_buffer = 'Materials IDs not present in run.  Material ' // &
       ' properties cannot be updated without material ids'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   call VecGetArrayF90(field%perm0_xx,perm0_xx_p,ierr);CHKERRQ(ierr)
@@ -725,7 +725,7 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1054,7 +1054,7 @@ subroutine RichardsUpdateFixedAccumPatch(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1162,7 +1162,7 @@ subroutine RichardsNumericalJacTest(xx,realization)
   PetscReal, pointer :: vec_p(:), vec2_p(:)
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   
@@ -1256,7 +1256,7 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
 
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
 
   call PetscLogEventBegin(logging%event_r_residual,ierr);CHKERRQ(ierr)
@@ -1320,7 +1320,7 @@ subroutine RichardsResidualPreliminaries(xx,r,realization,ierr)
   type(realization_subsurface_type) :: realization
 
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscErrorCode :: ierr
 
   patch => realization%patch
@@ -1372,7 +1372,7 @@ subroutine RichardsUpdateLocalVecs(xx,realization,ierr)
 
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
 
   field => realization%field
@@ -1434,7 +1434,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(region_type), pointer :: region
   type(material_parameter_type), pointer :: material_parameter
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
@@ -1605,7 +1605,7 @@ subroutine RichardsResidualBoundaryConn(r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(region_type), pointer :: region
   type(coupler_type), pointer :: boundary_condition
   type(material_parameter_type), pointer :: material_parameter
@@ -1771,7 +1771,7 @@ subroutine RichardsResidualSourceSink(r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(richards_auxvar_type), pointer :: rich_auxvars(:), rich_auxvars_ss(:)
   type(global_auxvar_type), pointer :: global_auxvars(:), global_auxvars_ss(:)
@@ -1974,7 +1974,7 @@ subroutine RichardsResidualAccumulation(r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(region_type), pointer :: region
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
@@ -2077,7 +2077,7 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
   MatType :: mat_type_A, mat_type_B
   PetscViewer :: viewer
   type(grid_type),  pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: norm
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -2121,13 +2121,13 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
   endif
 
 #if 0
@@ -2145,7 +2145,7 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
 #endif
 
   call PetscLogEventEnd(logging%event_r_jacobian,ierr);CHKERRQ(ierr)
-!  call printErrMsg(option)
+!  call option%PrintErrMsg()
 
   richards_ni_count = richards_ni_count + 1
   
@@ -2195,7 +2195,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
   PetscInt :: sum_connection
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(region_type), pointer :: region
   type(material_parameter_type), pointer :: material_parameter
@@ -2433,7 +2433,7 @@ subroutine RichardsJacobianBoundaryConn(A,realization,ierr)
   PetscInt :: sum_connection  
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(region_type), pointer :: region
   type(material_parameter_type), pointer :: material_parameter
@@ -2607,7 +2607,7 @@ subroutine RichardsJacobianAccumulation(A,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(region_type), pointer :: region
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -2725,7 +2725,7 @@ subroutine RichardsJacobianSourceSink(A,realization,ierr)
   PetscInt :: iconn
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -2897,7 +2897,7 @@ subroutine RichardsMaxChange(realization,dpmax)
   
   class(realization_base_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field 
   PetscReal :: dpmax
   
@@ -3012,7 +3012,7 @@ subroutine RichardsUpdateSurfacePress(realization)
 
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -3049,7 +3049,7 @@ subroutine RichardsUpdateSurfacePress(realization)
 
       if (boundary_condition%flow_condition%itype(RICHARDS_PRESSURE_DOF) /= &
          HET_SURF_SEEPAGE_BC) then
-        call printErrMsg(option,'from_surface_bc is not of type ' // &
+        call option%PrintErrMsg('from_surface_bc is not of type ' // &
                         'HET_SURF_SEEPAGE_BC')
       endif
 
@@ -3110,7 +3110,7 @@ subroutine RichardsComputeCoeffsForSurfFlux(realization)
 
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -3191,7 +3191,7 @@ subroutine RichardsComputeCoeffsForSurfFlux(realization)
                            itype(RICHARDS_PRESSURE_DOF)
 
       if (pressure_bc_type /= HET_SURF_SEEPAGE_BC) then
-        call printErrMsg(option,'from_surface_bc is not of type ' // &
+        call option%PrintErrMsg('from_surface_bc is not of type ' // &
                         'HET_SURF_SEEPAGE_BC')
       endif
 
@@ -3387,7 +3387,7 @@ subroutine RichardsSSSandbox(residual,Jacobian,compute_derivative, &
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal, pointer :: r_p(:)
   PetscReal :: res(option%nflowdof)
@@ -3454,7 +3454,7 @@ subroutine RichardsSSSandboxLoadAuxReal(srcsink,aux_real,global_auxvar, &
   PetscReal :: aux_real(:)
   type(global_auxvar_type) :: global_auxvar
   type(richards_auxvar_type) :: rich_auxvars
-  type(option_type) :: option
+  class(option_type) :: option
   
   aux_real = 0.d0
 

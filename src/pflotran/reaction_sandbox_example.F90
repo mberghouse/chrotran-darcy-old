@@ -82,19 +82,19 @@ subroutine ExampleRead(this,input,option)
   implicit none
   
   class(reaction_sandbox_example_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'CHEMISTRY,REACTION_SANDBOX,TEMPLATE')
     call StringToUpper(word)   
 
@@ -120,23 +120,23 @@ subroutine ExampleRead(this,input,option)
 ! 6. Read the variable
         ! Read the character string indicating which of the primary species
         ! is being decayed.
-        call InputReadWord(input,option,this%species_name,PETSC_TRUE)  
+        call input%ReadWord(option,this%species_name,PETSC_TRUE)
 ! 7. Inform the user of any errors if not read correctly.
-        call InputErrorMsg(input,option,'species_name', &
+        call input%ErrorMsg(option,'species_name', &
                            'CHEMISTRY,REACTION_SANDBOX,EXAMPLE')    
 ! 8. Repeat for other variables
       case('RATE_CONSTANT')
         ! Read the double precision rate constant
-        call InputReadDouble(input,option,this%rate_constant)
-        call InputErrorMsg(input,option,'rate_constant', &
+        call input%ReadDouble(option,this%rate_constant)
+        call input%ErrorMsg(option,'rate_constant', &
                            'CHEMISTRY,REACTION_SANDBOX,EXAMPLE')
         ! Read the units
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        if (InputError(input)) then
+        call input%ReadWord(option,word,PETSC_TRUE)
+        if (input%Error()) then
           ! If units do not exist, assume default units of 1/s which are the
           ! standard internal PFLOTRAN units for this rate constant.
           input%err_buf = 'REACTION_SANDBOX,EXAMPLE,RATE CONSTANT UNITS'
-          call InputDefaultMsg(input,option)
+          call input%DefaultMsg(option)
         else              
           ! If units exist, convert to internal units of 1/s
           internal_units = 'unitless/sec'
@@ -169,7 +169,7 @@ subroutine ExampleSetup(this,reaction,option)
   
   class(reaction_sandbox_example_type) :: this
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
 ! 9. Add code to initialize 
   this%species_id = &
@@ -196,7 +196,7 @@ subroutine ExampleReact(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(reaction_sandbox_example_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   ! the following arrays must be declared after reaction
@@ -225,7 +225,7 @@ subroutine ExampleReact(this,Residual,Jacobian,compute_derivative, &
   !
   !   option%io_buffer = 'NUMERICAL_JACOBIAN_RXN must always be used ' // &
   !                      'due to assumptions in Example'
-  !   call printErrMsg(option)
+  !   call option%PrintErrMsg()
   !
   ! rt_auxvar - Object holding chemistry information (e.g. concentrations,
   !   activity coefficients, mineral volume fractions, etc.).  See

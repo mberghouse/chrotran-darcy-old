@@ -155,8 +155,8 @@ subroutine PMAuxiliaryRead(input, option, this)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   class(pm_auxiliary_type), pointer :: this
 
   character(len=MAXWORDLENGTH) :: word
@@ -165,8 +165,8 @@ subroutine PMAuxiliaryRead(input, option, this)
   PetscReal :: tempreal
 
   error_string = 'SIMULATION,PROCESS_MODELS,AUXILIARY'
-  call InputReadWord(input,option,word,PETSC_FALSE)
-  call InputErrorMsg(input,option,'type',error_string)
+  call input%ReadWord(option,word,PETSC_FALSE)
+  call input%ErrorMsg(option,'type',error_string)
   call StringToUpper(word)
   error_string = trim(error_string) // ',' // trim(word)
 
@@ -184,28 +184,28 @@ subroutine PMAuxiliaryRead(input, option, this)
       do
         call InputReadPflotranString(input,option)
         if (InputCheckExit(input,option)) exit
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword',error_string)
         call StringToUpper(word)
         select case(word)
           case('SPECIES')
             i = i + 1
             if (i > 6) then
               option%io_buffer = 'Number of salinity species exceeded.'
-              call PrintErrMsgToDev(option, &
+              call option%PrintErrMsgToDev(&
                                     'ask for the maximum number of salinity &
                                     &species to be increased')
             endif
-            call InputReadWord(input,option,this%salinity% &
+            call input%ReadWord(option,this%salinity% &
                                  species_names(i),PETSC_TRUE)
-            call InputErrorMsg(input,option,'species_name',error_string)
-            call InputReadDouble(input,option,tempreal)
+            call input%ErrorMsg(option,'species_name',error_string)
+            call input%ReadDouble(option,tempreal)
             if (input%ierr == 0) then
               this%salinity%molecular_weights(i) = tempreal
             else
               ! for now let's print an error message.  Decide on whether to
               ! read from database later.
-              call InputErrorMsg(input,option,'molecular weight',error_string)
+              call input%ErrorMsg(option,'molecular weight',error_string)
             endif
           case default
             error_string = trim(error_string) // 'SALINITY'
@@ -249,7 +249,7 @@ subroutine PMAuxiliarySetFunctionPointer(this,string)
     case default
       this%option%io_buffer = 'Function pointer "' // trim(string) // '" not &
         &found among available functions in PMAuxiliarySetFunctionPointer.'
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
   end select
   
 end subroutine PMAuxiliarySetFunctionPointer

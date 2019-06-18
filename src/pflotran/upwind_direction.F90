@@ -125,7 +125,7 @@ subroutine UpwindDirectionPrintStats(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (fix_upwind_direction .and. &
       count_upwind_direction_flip .and. &

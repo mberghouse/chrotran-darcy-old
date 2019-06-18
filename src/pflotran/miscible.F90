@@ -48,7 +48,7 @@ subroutine MiscibleTimeCut(realization)
   implicit none
   
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   
   PetscReal, pointer :: xx_p(:),yy_p(:)
@@ -113,7 +113,7 @@ subroutine MiscibleSetupPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -129,7 +129,7 @@ subroutine MiscibleSetupPatch(realization)
 !  option%io_buffer = 'Before Miscible can be run, the Miscible_parameter object ' // &
 !                     'must be initialized with the proper variables ' // &
 !                     'MiscibleAuxCreate() is called anyhwere.'
-!  call printErrMsg(option)
+!  call option%PrintErrMsg()
      
 ! Miscible_parameters create *********************************************
   allocate(patch%aux%Miscible%Miscible_parameter%sir(option%nphase, &
@@ -244,7 +244,7 @@ subroutine MiscibleComputeMassBalancePatch(realization,mass_balance)
   type(realization_subsurface_type) :: realization
   PetscReal :: mass_balance(realization%option%nflowspec,1)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -310,7 +310,7 @@ subroutine MiscibleZeroMassBalDeltaPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -363,7 +363,7 @@ subroutine MiscibleUpdateMassBalancePatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -420,7 +420,7 @@ end subroutine MiscibleUpdateMassBalancePatch
   
   PetscInt ::  MiscibleInitGuessCheck
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: cur_patch
   PetscInt :: ipass, ipass0
   PetscErrorCode :: ierr
@@ -469,7 +469,7 @@ end function MiscibleInitGuessCheck
     type(realization_subsurface_type) :: realization
     type(grid_type), pointer :: grid
     type(patch_type), pointer :: patch
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(field_type), pointer :: field
       
     PetscInt :: local_id, ghosted_id, ipass
@@ -540,7 +540,7 @@ subroutine MiscibleUpdateAuxVarsPatch(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -772,7 +772,7 @@ subroutine MiscibleUpdateFixedAccumPatch(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -849,7 +849,7 @@ subroutine MiscibleAccumulation(auxvar,global_auxvar,por,vol,rock_dencpr,option,
   implicit none
 
   type(Miscible_auxvar_elem_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   type(global_auxvar_type) :: global_auxvar
   PetscReal :: Res(1:option%nflowdof) 
   PetscReal :: vol,por,rock_dencpr
@@ -886,7 +886,7 @@ use Option_module
 implicit none
 
 type(Miscible_auxvar_elem_type) :: auxvar
-type(option_type) :: option
+class(option_type) :: option
 type(global_auxvar_type) :: global_auxvar
 PetscReal :: Res(1:option%nflowdof) 
 PetscReal :: vol,por,rock_dencpr
@@ -936,7 +936,7 @@ subroutine MiscibleSourceSink(mmsrc,nsrcpara,psrc,tsrc,hsrc,csrc,auxvar,isrctype
   implicit none
 
   type(Miscible_auxvar_elem_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal Res(1:option%nflowdof) 
   PetscReal, pointer :: mmsrc(:)
   PetscReal psrc(option%nphase),tsrc,hsrc, csrc 
@@ -1096,7 +1096,7 @@ subroutine MiscibleFlux(auxvar_up,por_up,tor_up,dd_up,perm_up, &
   implicit none
   
   type(Miscible_auxvar_elem_type) :: auxvar_up, auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: por_up, por_dn
   PetscReal :: tor_up, tor_dn
   PetscReal :: dd_up, dd_dn
@@ -1188,7 +1188,7 @@ subroutine MiscibleBCFlux(ibndtype,auxvars,auxvar_up,auxvar_dn, &
   
   PetscInt :: ibndtype(:)
   type(Miscible_auxvar_elem_type) :: auxvar_up, auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: dd_up
   PetscReal :: auxvars(:) ! from aux_real_var array
   PetscReal :: por_dn,perm_dn,tor_dn
@@ -1311,7 +1311,7 @@ subroutine MiscibleResidual(snes,xx,r,realization,ierr)
   PetscErrorCode :: ierr
   
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: cur_patch
@@ -1456,7 +1456,7 @@ subroutine MiscibleResidualPatch1(snes,xx,r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(Miscible_parameter_type), pointer :: Miscible_parameter
   type(Miscible_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -1737,7 +1737,7 @@ subroutine MiscibleResidualPatch0(snes,xx,r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(Miscible_parameter_type), pointer :: Miscible_parameter
   type(Miscible_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -1907,7 +1907,7 @@ subroutine MiscibleResidualPatch2(snes,xx,r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(Miscible_parameter_type), pointer :: Miscible_parameter
   type(Miscible_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -2190,13 +2190,13 @@ subroutine MiscibleJacobian(snes,xx,A,B,realization,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
   endif
 #endif
 
@@ -2274,7 +2274,7 @@ subroutine MiscibleJacobianPatch1(snes,xx,A,B,realization,ierr)
            realization%option%nflowdof)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(Miscible_parameter_type), pointer :: Miscible_parameter
   type(Miscible_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -2669,7 +2669,7 @@ subroutine MiscibleJacobianPatch2(snes,xx,A,B,realization,ierr)
            realization%option%nflowdof)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(Miscible_parameter_type), pointer :: Miscible_parameter
   type(Miscible_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -2910,13 +2910,13 @@ subroutine MiscibleJacobianPatch2(snes,xx,A,B,realization,ierr)
   if (realization%debug%norm_Jacobian) then
     call MatNorm(A,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
     call MatNorm(A,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
     call MatNorm(A,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
 !    call GridCreateVector(grid,ONEDOF,debug_vec,GLOBAL)
 !    call MatGetRowMaxAbs(A,debug_vec,PETSC_NULL_INTEGER,ierr)
 !    call VecMax(debug_vec,i,norm,ierr)
@@ -2944,7 +2944,7 @@ subroutine MiscibleMaxChange(realization,dpmax,dcmax)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   PetscReal :: dpmax, dcmax
   PetscReal :: temp
@@ -2992,7 +2992,7 @@ function MiscibleGetTecplotHeader(realization, icolumn)
   PetscInt :: icolumn
   
   character(len=MAXSTRINGLENGTH) :: string, string2
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field  
   PetscInt :: i
   

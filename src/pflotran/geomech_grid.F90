@@ -50,7 +50,7 @@ subroutine CopySubsurfaceGridtoGeomechGrid(ugrid,geomech_grid,option)
   
   type(grid_unstructured_type), pointer :: ugrid
   type(geomech_grid_type), pointer :: geomech_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: local_id
   PetscInt :: ghosted_id
   PetscInt :: vertex_count
@@ -91,7 +91,7 @@ subroutine CopySubsurfaceGridtoGeomechGrid(ugrid,geomech_grid,option)
 
  
 #ifdef GEOMECH_DEBUG
-  call printMsg(option,'Copying unstructured grid to geomechanics grid')
+  call option%PrintMsg('Copying unstructured grid to geomechanics grid')
 #endif
   
   geomech_grid%global_offset_elem = ugrid%global_offset
@@ -114,7 +114,7 @@ subroutine CopySubsurfaceGridtoGeomechGrid(ugrid,geomech_grid,option)
   geomech_grid%nlmax_node = ugrid%num_vertices_natural
 
 #ifdef GEOMECH_DEBUG
-  call printMsg(option,'Removing ghosted elements (cells)')
+  call option%PrintMsg('Removing ghosted elements (cells)')
 #endif
   
   ! Type of element
@@ -124,7 +124,7 @@ subroutine CopySubsurfaceGridtoGeomechGrid(ugrid,geomech_grid,option)
   enddo
 
 #ifdef GEOMECH_DEBUG
-  call printMsg(option,'Reordering nodes (vertices)')
+  call option%PrintMsg('Reordering nodes (vertices)')
 #endif
 
   ! First calculate number of elements on local domain (without ghosted elements)
@@ -338,7 +338,7 @@ subroutine CopySubsurfaceGridtoGeomechGrid(ugrid,geomech_grid,option)
     if (geomech_grid%nlmax_node > geomech_grid%ngmax_node) then
       option%io_buffer = 'Error: nlmax_node cannot be greater than' // &
                          ' ngmax_node.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   enddo
 
@@ -353,7 +353,7 @@ subroutine CopySubsurfaceGridtoGeomechGrid(ugrid,geomech_grid,option)
                      
   if (nlmax_node < 1) then
     option%io_buffer = 'Error: Too many processes for the size of the domain.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! Create an index set of the ranks of each vertex    
@@ -495,7 +495,7 @@ subroutine CopySubsurfaceGridtoGeomechGrid(ugrid,geomech_grid,option)
   
   if (vertex_count /= geomech_grid%ngmax_node - geomech_grid%nlmax_node) then
     option%io_buffer = 'Error in number of ghost nodes!'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 #ifdef GEOMECH_DEBUG
@@ -760,7 +760,7 @@ subroutine GeomechGridLocalizeRegions(grid,region_list,option)
   
   type(gm_region_list_type), pointer :: region_list
   type(geomech_grid_type), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(gm_region_type), pointer :: region
   character(len=MAXSTRINGLENGTH) :: string
@@ -776,7 +776,7 @@ subroutine GeomechGridLocalizeRegions(grid,region_list,option)
       option%io_buffer = 'GeomechGridLocalizeRegions: define region only ' // &
                          'by list of vertices is currently implemented: ' //  &
                           trim(region%name)
-      call printErrMsg(option)     
+      call option%PrintErrMsg()
     else
       call GeomechGridLocalizeRegFromVertIDs(grid,region,option)
     endif
@@ -815,7 +815,7 @@ subroutine GeomechGridLocalizeRegFromVertIDs(geomech_grid,geomech_region, &
 
   type(geomech_grid_type) :: geomech_grid
   type(gm_region_type) :: geomech_region
-  type(option_type) :: option
+  class(option_type) :: option
  
   Vec :: vec_vertex_ids,vec_vertex_ids_loc
   IS :: is_from, is_to
@@ -1090,8 +1090,8 @@ subroutine GeomechSubsurfMapFromFilename(grid,filename,option)
   implicit none
   
   type(geomech_grid_type) :: grid
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: filename
   
   input => InputCreate(IUNIT_TEMP,filename,option)
@@ -1118,8 +1118,8 @@ subroutine GeomechSubsurfMapFromFileId(grid,input,option)
   implicit none
   
   type(geomech_grid_type) :: grid
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
   character(len=1) :: backslash
@@ -1151,10 +1151,10 @@ subroutine GeomechSubsurfMapFromFileId(grid,input,option)
   cell_ids_flow = 0
   
   count = 0
-  call InputReadPflotranString(input, option)
+  call InputReadPflotranString(input,option)
   do 
-    call InputReadInt(input, option, temp_int)
-    if (InputError(input)) exit
+    call input%ReadInt(option, temp_int)
+    if (input%Error()) exit
     count = count + 1
     temp_int_array(count) = temp_int
   enddo
@@ -1166,18 +1166,18 @@ subroutine GeomechSubsurfMapFromFileId(grid,input,option)
 
     ! Read the data
     do
-      call InputReadPflotranString(input, option)
-      if (InputError(input)) exit
-      call InputReadInt(input, option, temp_int)
-      if (InputError(input)) exit
+      call InputReadPflotranString(input,option)
+      if (input%Error()) exit
+      call input%ReadInt(option, temp_int)
+      if (input%Error()) exit
       count = count + 1
       cell_ids_flow(count) = temp_int
 
-      call InputReadInt(input,option,temp_int)
-      if (InputError(input)) then
+      call input%ReadInt(option,temp_int)
+      if (input%Error()) then
         option%io_buffer = 'ERROR while reading ' // &
           'GEOMECHANICS_SUBSURFACE_COUPLING mapping file.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       vertex_ids_geomech(count) = temp_int
       if (count+1 > max_size) then ! resize temporary array
@@ -1213,7 +1213,7 @@ subroutine GeomechSubsurfMapFromFileId(grid,input,option)
     option%io_buffer = &
       'Provide a flow cell_id and a geomech vertex_id per ' // &
       'line in GEOMECHANICS_SUBSURFACE_COUPLING mapping file.'
-    call printErrMsg(option) 
+    call option%PrintErrMsg()
   endif
   
   deallocate(temp_int_array)

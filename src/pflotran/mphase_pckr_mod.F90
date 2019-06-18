@@ -623,7 +623,7 @@ subroutine pckrNH_noderiv(sat, pc, kr, saturation_function, option)
   implicit none
   
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sat(option%nphase),pc(option%nphase),kr(option%nphase)
 
   PetscReal :: pckr_sir(option%nphase)
@@ -667,7 +667,7 @@ subroutine pckrHY_noderiv(sat, hysdat, pc, kr, saturation_function, option)
   implicit none
   
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sat(option%nphase),pc(option%nphase),kr(option%nphase)
   PetscReal :: hysdat(:)
   

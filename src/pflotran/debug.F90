@@ -91,8 +91,8 @@ subroutine DebugRead(debug,input,option)
   implicit none
     
   type(debug_type) :: debug
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
 
@@ -103,8 +103,8 @@ subroutine DebugRead(debug,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','DEBUG')   
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','DEBUG')
     call StringToUpper(keyword)
       
     select case(trim(keyword))
@@ -130,8 +130,8 @@ subroutine DebugRead(debug,input,option)
       case('APPEND_COUNTS_TO_FILENAME','APPEND_COUNTS_TO_FILENAMES')
         debug%verbose_filename = PETSC_TRUE
       case('FORMAT')
-        call InputReadWord(input,option,keyword,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword','DEBUG,FORMAT')   
+        call input%ReadWord(option,keyword,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword','DEBUG,FORMAT')
         call StringToUpper(keyword)
         select case(keyword)
           case('ASCII')
@@ -169,7 +169,7 @@ subroutine DebugCreateViewer(debug,viewer_name_prefix,option,viewer)
 
   type(debug_type), pointer :: debug
   character(len=MAXSTRINGLENGTH), intent(in) :: viewer_name_prefix
-  type(option_type) :: option
+  class(option_type) :: option
   PetscViewer, intent (inout) :: viewer
 
   character(len=MAXWORDLENGTH) :: viewer_name

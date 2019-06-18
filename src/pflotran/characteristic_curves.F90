@@ -108,8 +108,8 @@ subroutine CharacteristicCurvesRead(this,input,option)
   implicit none
   
   class(characteristic_curves_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word, phase_keyword
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -126,15 +126,15 @@ subroutine CharacteristicCurvesRead(this,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
     !-----------------------------------------------------------------------
       case('SATURATION_FUNCTION')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'SATURATION_FUNCTION',error_string)
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'SATURATION_FUNCTION',error_string)
         call StringToUpper(word)
         select case(word)
           case('CONSTANT')
@@ -178,10 +178,10 @@ subroutine CharacteristicCurvesRead(this,input,option)
                            &CAP_PRESSURE_FUNCTION_OW or PC_OW for Pcow; &
                            &CAP_PRESSURE_FUNCTION_WG or PC_WG for Pcwg or; &
                            &CAP_PRESSURE_FUNCTION_OG or PC_OG for Pcog'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       case('SATURATION_FUNCTION_OW','CAP_PRESSURE_FUNCTION_OW','PC_OW')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'SATURATION_FUNCTION_OW',error_string)
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'SATURATION_FUNCTION_OW',error_string)
         call StringToUpper(word)
         select case(word)
           case('VAN_GENUCHTEN','VAN_GENUCHTEN_OW')
@@ -192,9 +192,9 @@ subroutine CharacteristicCurvesRead(this,input,option)
             this%oil_wat_sat_func => SF_XW_constant_Create()
           ! case('TABLE')
           !   this%oil_wat_sat_func => SF_XW_table_Create()
-          !   call InputReadWord(input,option,this%oil_wat_sat_func%table_name, &
+          !   call input%ReadWord(option,this%oil_wat_sat_func%table_name, &
           !                                                           PETSC_TRUE)
-          !   call InputErrorMsg(input,option,'SATURATION_FUNCTION_OW,TABLE', &
+          !   call input%ErrorMsg(option,'SATURATION_FUNCTION_OW,TABLE', &
           !                                                      error_string)
           case default
             call InputKeywordUnrecognized(word,'SATURATION_FUNCTION_OW',option)
@@ -202,13 +202,13 @@ subroutine CharacteristicCurvesRead(this,input,option)
         call SaturationFunctionOWGRead(this%oil_wat_sat_func,input,option)
       case('PC_OW_TABLE')
         this%oil_wat_sat_func => SF_XW_table_Create()
-        call InputReadWord(input,option,this%oil_wat_sat_func%table_name, &
+        call input%ReadWord(option,this%oil_wat_sat_func%table_name, &
                                                                 PETSC_TRUE)
-        call InputErrorMsg(input,option,'SATURATION_FUNCTION_OW,TABLE', &
+        call input%ErrorMsg(option,'SATURATION_FUNCTION_OW,TABLE', &
                                                            error_string)
       case('SATURATION_FUNCTION_WG','CAP_PRESSURE_FUNCTION_WG','PC_WG')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'SATURATION_FUNCTION_WG',error_string)
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'SATURATION_FUNCTION_WG',error_string)
         call StringToUpper(word)
         select case(word)
           case("VAN_GENUCHTEN")
@@ -219,9 +219,9 @@ subroutine CharacteristicCurvesRead(this,input,option)
             this%gas_wat_sat_func => SF_XW_VG_Create()
           ! case('TABLE')
           !   this%gas_wat_sat_func => SF_XW_table_Create()
-          !   call InputReadWord(input,option,this%gas_wat_sat_func%table_name, &
+          !   call input%ReadWord(option,this%gas_wat_sat_func%table_name, &
           !                                                          PETSC_TRUE)
-          !   call InputErrorMsg(input,option,'SATURATION_FUNCTION_WG,TABLE', &
+          !   call input%ErrorMsg(option,'SATURATION_FUNCTION_WG,TABLE', &
           !                                                    error_string)
           case default
             call InputKeywordUnrecognized(word,'SATURATION_FUNCTION_WG',option)
@@ -229,12 +229,12 @@ subroutine CharacteristicCurvesRead(this,input,option)
         call SaturationFunctionOWGRead(this%gas_wat_sat_func,input,option)
       case('PC_WG_TABLE')
         this%gas_wat_sat_func => SF_XW_table_Create()
-        call InputReadWord(input,option,this%gas_wat_sat_func%table_name, &
+        call input%ReadWord(option,this%gas_wat_sat_func%table_name, &
                                                                PETSC_TRUE)
-        call InputErrorMsg(input,option,'PC_WG_TABLE',error_string)
+        call input%ErrorMsg(option,'PC_WG_TABLE',error_string)
       case('SATURATION_FUNCTION_OG','CAP_PRESSURE_FUNCTION_OG','PC_OG')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'SATURATION_FUNCTION_OG',error_string)
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'SATURATION_FUNCTION_OG',error_string)
         call StringToUpper(word)
         select case(word)
           case('VAN_GENUCHTEN_SL','VAN_GENUCHTEN_OG_SL')
@@ -247,12 +247,12 @@ subroutine CharacteristicCurvesRead(this,input,option)
                           &BROOKS_COREY_OG not supported please use:  &
                           &CONSTANT for Pcog = const, TABLE for lookup tables &
                           &VAN_GENUCHTEN_SL for Pcog(Sl)'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           ! case('TABLE')
           !   this%oil_gas_sat_func => SF_OG_table_Create()
-          !   call InputReadWord(input,option,this%oil_gas_sat_func%table_name, &
+          !   call input%ReadWord(option,this%oil_gas_sat_func%table_name, &
           !                                                         PETSC_TRUE)
-          !   call InputErrorMsg(input,option,'SATURATION_FUNCTION_OG,TABLE', &
+          !   call input%ErrorMsg(option,'SATURATION_FUNCTION_OG,TABLE', &
           !                                                    error_string)
           case default
             call InputKeywordUnrecognized(word,'SATURATION_FUNCTION_OG',option)
@@ -260,14 +260,14 @@ subroutine CharacteristicCurvesRead(this,input,option)
         call SaturationFunctionOWGRead(this%oil_gas_sat_func,input,option)
       case('PC_OG_TABLE')
         this%oil_gas_sat_func => SF_OG_table_Create()
-        call InputReadWord(input,option,this%oil_gas_sat_func%table_name, &
+        call input%ReadWord(option,this%oil_gas_sat_func%table_name, &
                                                               PETSC_TRUE)
-        call InputErrorMsg(input,option,'PC_OG_TABLE',error_string)        
+        call input%ErrorMsg(option,'PC_OG_TABLE',error_string)
       case('PERMEABILITY_FUNCTION')
         nullify(rel_perm_function_ptr)
         phase_keyword = 'NONE'
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'PERMEABILITY_FUNCTION',error_string)
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'PERMEABILITY_FUNCTION',error_string)
         call StringToUpper(word)
         select case(word)
           case('MUALEM','MUALEM_VG_LIQ')
@@ -397,14 +397,14 @@ subroutine CharacteristicCurvesRead(this,input,option)
                                &CHARACTERISTIC_CURVES,PERMEABILITY_FUNCTION. &
                                &This is most likely a development issue, and &
                                &not an input deck mistake. '
-            call PrintErrMsgToDev(option,'')
+            call option%PrintErrMsgToDev('')
           case default
             call InputKeywordUnrecognized(word, &
               'PERMEABILITY_FUNCTION,PHASE',option)
         end select
       case('PERMEABILITY_FUNCTION_WAT','KRW')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'PERMEABILITY_FUNCTION_WAT - KRW ', &
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'PERMEABILITY_FUNCTION_WAT - KRW ', &
                            error_string)
         call StringToUpper(word)
         select case(word)
@@ -418,9 +418,9 @@ subroutine CharacteristicCurvesRead(this,input,option)
             this%wat_rel_perm_func_owg => RPF_wat_owg_Burdine_BC_Create()
           ! case('TABLE')
           !   this%wat_rel_perm_func_owg => RPF_wat_owg_table_Create()
-          !   call InputReadWord(input,option, &
+          !   call input%ReadWord(option, &
           !                 this%wat_rel_perm_func_owg%table_name,PETSC_TRUE)
-          !   call InputErrorMsg(input,option, &
+          !   call input%ErrorMsg(option, &
           !                 'PERMEABILITY_FUNCTION_WAT/KRW,TABLE',error_string)
           case default
             call InputKeywordUnrecognized(word, &
@@ -430,12 +430,12 @@ subroutine CharacteristicCurvesRead(this,input,option)
                                                    input,option)
       case('KRW_TABLE')
         this%wat_rel_perm_func_owg => RPF_wat_owg_table_Create()
-        call InputReadWord(input,option, &
+        call input%ReadWord(option, &
                       this%wat_rel_perm_func_owg%table_name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'KRW_TABLE',error_string)        
+        call input%ErrorMsg(option,'KRW_TABLE',error_string)
       case('PERMEABILITY_FUNCTION_GAS','KRG')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'PERMEABILITY_FUNCTION_GAS - KRG ', &
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'PERMEABILITY_FUNCTION_GAS - KRG ', &
                            error_string)
         call StringToUpper(word)
         select case(word)
@@ -451,9 +451,9 @@ subroutine CharacteristicCurvesRead(this,input,option)
             this%gas_rel_perm_func_owg => RPF_gas_owg_TOUGH2_IRP7_Create()
           ! case('TABLE')
           !   this%gas_rel_perm_func_owg => RPF_gas_owg_table_Create()
-          !   call InputReadWord(input,option, &
+          !   call input%ReadWord(option, &
           !                 this%gas_rel_perm_func_owg%table_name,PETSC_TRUE)
-          !   call InputErrorMsg(input,option, &
+          !   call input%ErrorMsg(option, &
           !                 'PERMEABILITY_FUNCTION_GAS/KRG,TABLE',error_string)
           case default
             call InputKeywordUnrecognized(word, &
@@ -463,14 +463,14 @@ subroutine CharacteristicCurvesRead(this,input,option)
                                                    input,option)
       case('KRG_TABLE')
         this%gas_rel_perm_func_owg => RPF_gas_owg_table_Create()
-        call InputReadWord(input,option, &
+        call input%ReadWord(option, &
                       this%gas_rel_perm_func_owg%table_name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'KRG_TABLE',error_string)
+        call input%ErrorMsg(option,'KRG_TABLE',error_string)
       case('PERMEABILITY_FUNCTION_OW','KROW', &
             'PERMEABILITY_FUNCTION_HC','KRH')
         !krh uses same class than krow    
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'PERMEABILITY_FUNCTION_OW/KROW/KRH ',&
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'PERMEABILITY_FUNCTION_OW/KROW/KRH ',&
                            error_string)
         call StringToUpper(word)
         select case(word)
@@ -480,9 +480,9 @@ subroutine CharacteristicCurvesRead(this,input,option)
             this%ow_rel_perm_func_owg => RPF_ow_owg_linear_Create()
           ! case('TABLE')
           !   this%ow_rel_perm_func_owg => RPF_ow_owg_table_Create()
-          !   call InputReadWord(input,option, &
+          !   call input%ReadWord(option, &
           !                 this%ow_rel_perm_func_owg%table_name,PETSC_TRUE)
-          !   call InputErrorMsg(input,option, &
+          !   call input%ErrorMsg(option, &
           !               'PERMEABILITY_FUNCTION_OW/KOW/KRH,TABLE',error_string)
           case default
             call InputKeywordUnrecognized(word, &
@@ -496,12 +496,12 @@ subroutine CharacteristicCurvesRead(this,input,option)
                                                    input,option)
       case('KROW_TABLE','KRH_TABLE')
         this%ow_rel_perm_func_owg => RPF_ow_owg_table_Create()
-        call InputReadWord(input,option, &
+        call input%ReadWord(option, &
                       this%ow_rel_perm_func_owg%table_name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'KROW_TABLE/KRH_TABLE',error_string)        
+        call input%ErrorMsg(option,'KROW_TABLE/KRH_TABLE',error_string)
       case('PERMEABILITY_FUNCTION_OG','KROG')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'PERMEABILITY_FUNCTION_OG - KROG ', &
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'PERMEABILITY_FUNCTION_OG - KROG ', &
                            error_string)
         call StringToUpper(word)
         select case(word)
@@ -509,9 +509,9 @@ subroutine CharacteristicCurvesRead(this,input,option)
             this%og_rel_perm_func_owg => RPF_og_owg_MBC_Create()
           ! case('TABLE')
           !   this%og_rel_perm_func_owg => RPF_og_owg_table_Create()
-          !   call InputReadWord(input,option, &
+          !   call input%ReadWord(option, &
           !                 this%og_rel_perm_func_owg%table_name,PETSC_TRUE)
-          !   call InputErrorMsg(input,option, &
+          !   call input%ErrorMsg(option, &
           !                'PERMEABILITY_FUNCTION_OG/KROG,TABLE',error_string)
           case default
             call InputKeywordUnrecognized(word, &
@@ -521,12 +521,12 @@ subroutine CharacteristicCurvesRead(this,input,option)
                                                    input,option)
       case('KROG_TABLE')
         this%og_rel_perm_func_owg => RPF_og_owg_table_Create()
-        call InputReadWord(input,option, &
+        call input%ReadWord(option, &
                       this%og_rel_perm_func_owg%table_name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'KROG_TABLE',error_string)        
+        call input%ErrorMsg(option,'KROG_TABLE',error_string)
       case('PERMEABILITY_FUNCTION_OIL','KRO')
-        call InputReadWordDbaseCompatible(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'PERMEABILITY_FUNCTION_OIL - KRO ', &
+        call input%ReadWordDbaseCompatible(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'PERMEABILITY_FUNCTION_OIL - KRO ', &
                            error_string)
         call StringToUpper(word)
         select case(word)
@@ -546,11 +546,11 @@ subroutine CharacteristicCurvesRead(this,input,option)
                    &PERMEABILITY_FUNCTION_OW or KROW for krow; &
                    &PERMEABILITY_FUNCTION_OG or KROG for krog; &
                    &PERMEABILITY_FUNCTION_OIL or KRO for kro;'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       case('TABLE')
         char_curves_table => CharCurvesTableCreate()
-        call InputReadWord(input,option,char_curves_table%name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'TABLE',error_string)
+        call input%ReadWord(option,char_curves_table%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'TABLE',error_string)
         call CharCurvesTableRead(char_curves_table,input,option)
         call CharCurvesTableAddToList(char_curves_table, &
                                       this%char_curves_tables)
@@ -589,8 +589,8 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
   implicit none
   
   class(sat_func_base_type) :: saturation_function
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -636,20 +636,20 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
 
     ! base 
     found = PETSC_TRUE
     select case(keyword)
       case('LIQUID_RESIDUAL_SATURATION') 
-        call InputReadDouble(input,option,saturation_function%Sr)
-        call InputErrorMsg(input,option,'LIQUID_RESIDUAL_SATURATION', &
+        call input%ReadDouble(option,saturation_function%Sr)
+        call input%ErrorMsg(option,'LIQUID_RESIDUAL_SATURATION', &
                            error_string)
       case('MAX_CAPILLARY_PRESSURE') 
-        call InputReadDouble(input,option,saturation_function%pcmax)
-        call InputErrorMsg(input,option,'MAX_CAPILLARY_PRESSURE', &
+        call input%ReadDouble(option,saturation_function%pcmax)
+        call input%ErrorMsg(option,'MAX_CAPILLARY_PRESSURE', &
                             error_string)
       case('CALCULATE_INTERFACIAL_TENSION')
         saturation_function%calc_int_tension = PETSC_TRUE
@@ -667,12 +667,12 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_constant_type)
         select case(keyword)
           case('CONSTANT_CAPILLARY_PRESSURE') 
-            call InputReadDouble(input,option,sf%constant_capillary_pressure)
-            call InputErrorMsg(input,option,'constant capillary pressure', &
+            call input%ReadDouble(option,sf%constant_capillary_pressure)
+            call input%ErrorMsg(option,'constant capillary pressure', &
                                error_string)
           case('CONSTANT_SATURATION') 
-            call InputReadDouble(input,option,sf%constant_saturation)
-            call InputErrorMsg(input,option,'constant saturation', &
+            call input%ReadDouble(option,sf%constant_saturation)
+            call input%ErrorMsg(option,'constant saturation', &
                                 error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -682,11 +682,11 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_VG_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,sf%m)
-            call InputErrorMsg(input,option,'m',error_string)
+            call input%ReadDouble(option,sf%m)
+            call input%ErrorMsg(option,'m',error_string)
           case('ALPHA') 
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'alpha',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'alpha',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'van Genuchten saturation function',option)
@@ -695,11 +695,11 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_BC_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,sf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,sf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('ALPHA') 
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'Brooks-Corey saturation function',option)
@@ -708,8 +708,8 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_Linear_type)
         select case(keyword)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'Linear saturation function',option)
@@ -718,20 +718,20 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
         class is(sat_func_mK_type)
           select case(keyword)
             case('SIGMAZ')
-              call InputReadDouble(input,option,sf%sigmaz)
-              call InputErrorMsg(input,option,'sigmaz',error_string)
+              call input%ReadDouble(option,sf%sigmaz)
+              call input%ErrorMsg(option,'sigmaz',error_string)
             case('MUZ')
-              call InputReadDouble(input,option,sf%muz)
-              call InputErrorMsg(input,option,'muz',error_string)
+              call input%ReadDouble(option,sf%muz)
+              call input%ErrorMsg(option,'muz',error_string)
             case('RMAX')
-              call InputReadDouble(input,option,sf%rmax)
-              call InputErrorMsg(input,option,'rmax',error_string)
+              call input%ReadDouble(option,sf%rmax)
+              call input%ErrorMsg(option,'rmax',error_string)
             case('R0')
-              call InputReadDouble(input,option,sf%r0)
-              call InputErrorMsg(input,option,'r0',error_string)
+              call input%ReadDouble(option,sf%r0)
+              call input%ErrorMsg(option,'r0',error_string)
             case('NPARAM')
-              call InputReadInt(input,option,sf%nparam)
-              call InputErrorMsg(input,option,'nparam',error_string)
+              call input%ReadInt(option,sf%nparam)
+              call input%ErrorMsg(option,'nparam',error_string)
             case default
               call InputKeywordUnrecognized(keyword, &
                    'MODIFIED_KOSUGI saturation function',option)
@@ -740,27 +740,27 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_KRP1_type)
         select case(keyword)
           case('KPC') 
-            call InputReadInt(input,option,sf%kpc)
-            call InputErrorMsg(input,option,'KPC',error_string)
+            call input%ReadInt(option,sf%kpc)
+            call input%ErrorMsg(option,'KPC',error_string)
           case('M') 
-            call InputReadDouble(input,option,sf%m)
-            call InputErrorMsg(input,option,'M',error_string)
+            call input%ReadDouble(option,sf%m)
+            call input%ErrorMsg(option,'M',error_string)
           case('PCT_A') 
-            call InputReadDouble(input,option,sf%pct_a)
-            call InputErrorMsg(input,option,'PCT_A',error_string)
+            call input%ReadDouble(option,sf%pct_a)
+            call input%ErrorMsg(option,'PCT_A',error_string)
           case('PCT_EXP') 
-            call InputReadDouble(input,option,sf%pct_exp)
-            call InputErrorMsg(input,option,'PCT_EXP',error_string)
+            call input%ReadDouble(option,sf%pct_exp)
+            call input%ErrorMsg(option,'PCT_EXP',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,sf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,sf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case('IGNORE_PERMEABILITY') 
             sf%ignore_permeability = PETSC_TRUE
-            call InputErrorMsg(input,option,'IGNORE_PERMEABILITY',error_string)
+            call input%ErrorMsg(option,'IGNORE_PERMEABILITY',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'SATURATION_FUNCTION BRAGFLO_KRP1',option)
@@ -769,23 +769,23 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_KRP2_type)
         select case(keyword)
           case('KPC') 
-            call InputReadInt(input,option,sf%kpc)
-            call InputErrorMsg(input,option,'KPC',error_string)
+            call input%ReadInt(option,sf%kpc)
+            call input%ErrorMsg(option,'KPC',error_string)
           case('LAMBDA') 
-            call InputReadDouble(input,option,sf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,sf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('PCT_A') 
-            call InputReadDouble(input,option,sf%pct_a)
-            call InputErrorMsg(input,option,'PCT_A',error_string)
+            call input%ReadDouble(option,sf%pct_a)
+            call input%ErrorMsg(option,'PCT_A',error_string)
           case('PCT_EXP') 
-            call InputReadDouble(input,option,sf%pct_exp)
-            call InputErrorMsg(input,option,'PCT_EXP',error_string)
+            call input%ReadDouble(option,sf%pct_exp)
+            call input%ErrorMsg(option,'PCT_EXP',error_string)
           case('IGNORE_PERMEABILITY') 
             sf%ignore_permeability = PETSC_TRUE
-            call InputErrorMsg(input,option,'IGNORE_PERMEABILITY',error_string)
+            call input%ErrorMsg(option,'IGNORE_PERMEABILITY',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'SATURATION_FUNCTION BRAGFLO_KRP2',option)
@@ -794,27 +794,27 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_KRP3_type)
         select case(keyword)
           case('KPC') 
-            call InputReadInt(input,option,sf%kpc)
-            call InputErrorMsg(input,option,'KPC',error_string)
+            call input%ReadInt(option,sf%kpc)
+            call input%ErrorMsg(option,'KPC',error_string)
           case('LAMBDA') 
-            call InputReadDouble(input,option,sf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,sf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('PCT_A') 
-            call InputReadDouble(input,option,sf%pct_a)
-            call InputErrorMsg(input,option,'PCT_A',error_string)
+            call input%ReadDouble(option,sf%pct_a)
+            call input%ErrorMsg(option,'PCT_A',error_string)
           case('PCT_EXP') 
-            call InputReadDouble(input,option,sf%pct_exp)
-            call InputErrorMsg(input,option,'PCT_EXP',error_string)
+            call input%ReadDouble(option,sf%pct_exp)
+            call input%ErrorMsg(option,'PCT_EXP',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,sf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,sf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case('IGNORE_PERMEABILITY') 
             sf%ignore_permeability = PETSC_TRUE
-            call InputErrorMsg(input,option,'IGNORE_PERMEABILITY',error_string)
+            call input%ErrorMsg(option,'IGNORE_PERMEABILITY',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'SATURATION_FUNCTION BRAGFLO_KRP3',option)
@@ -823,27 +823,27 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_KRP4_type)
         select case(keyword)
           case('KPC') 
-            call InputReadInt(input,option,sf%kpc)
-            call InputErrorMsg(input,option,'KPC',error_string)
+            call input%ReadInt(option,sf%kpc)
+            call input%ErrorMsg(option,'KPC',error_string)
           case('LAMBDA') 
-            call InputReadDouble(input,option,sf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,sf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('PCT_A') 
-            call InputReadDouble(input,option,sf%pct_a)
-            call InputErrorMsg(input,option,'PCT_A',error_string)
+            call input%ReadDouble(option,sf%pct_a)
+            call input%ErrorMsg(option,'PCT_A',error_string)
           case('PCT_EXP') 
-            call InputReadDouble(input,option,sf%pct_exp)
-            call InputErrorMsg(input,option,'PCT_EXP',error_string)
+            call input%ReadDouble(option,sf%pct_exp)
+            call input%ErrorMsg(option,'PCT_EXP',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,sf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,sf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case('IGNORE_PERMEABILITY') 
             sf%ignore_permeability = PETSC_TRUE
-            call InputErrorMsg(input,option,'IGNORE_PERMEABILITY',error_string)
+            call input%ErrorMsg(option,'IGNORE_PERMEABILITY',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'SATURATION_FUNCTION BRAGFLO_KRP4',option)
@@ -852,24 +852,24 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_KRP5_type)
         select case(keyword)
           case('KPC') 
-            call InputReadInt(input,option,sf%kpc)
-            call InputErrorMsg(input,option,'KPC',error_string)
+            call input%ReadInt(option,sf%kpc)
+            call input%ErrorMsg(option,'KPC',error_string)
           case('PCT_A') 
-            call InputReadDouble(input,option,sf%pct_a)
-            call InputErrorMsg(input,option,'PCT_A',error_string)
+            call input%ReadDouble(option,sf%pct_a)
+            call input%ErrorMsg(option,'PCT_A',error_string)
           case('PCT_EXP') 
-            call InputReadDouble(input,option,sf%pct_exp)
-            call InputErrorMsg(input,option,'PCT_EXP',error_string)
+            call input%ReadDouble(option,sf%pct_exp)
+            call input%ErrorMsg(option,'PCT_EXP',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,sf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,sf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case('IGNORE_PERMEABILITY') 
             sf%ignore_permeability = PETSC_TRUE
-            call InputErrorMsg(input,option,'IGNORE_PERMEABILITY',error_string)
+            call input%ErrorMsg(option,'IGNORE_PERMEABILITY',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'SATURATION_FUNCTION BRAGFLO_KRP5',option)
@@ -878,27 +878,27 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_KRP8_type)
         select case(keyword)
           case('KPC') 
-            call InputReadInt(input,option,sf%kpc)
-            call InputErrorMsg(input,option,'KPC',error_string)
+            call input%ReadInt(option,sf%kpc)
+            call input%ErrorMsg(option,'KPC',error_string)
           case('M') 
-            call InputReadDouble(input,option,sf%m)
-            call InputErrorMsg(input,option,'M',error_string)
+            call input%ReadDouble(option,sf%m)
+            call input%ErrorMsg(option,'M',error_string)
           case('PCT_A') 
-            call InputReadDouble(input,option,sf%pct_a)
-            call InputErrorMsg(input,option,'PCT_A',error_string)
+            call input%ReadDouble(option,sf%pct_a)
+            call input%ErrorMsg(option,'PCT_A',error_string)
           case('PCT_EXP') 
-            call InputReadDouble(input,option,sf%pct_exp)
-            call InputErrorMsg(input,option,'PCT_EXP',error_string)
+            call input%ReadDouble(option,sf%pct_exp)
+            call input%ErrorMsg(option,'PCT_EXP',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,sf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,sf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case('IGNORE_PERMEABILITY') 
             sf%ignore_permeability = PETSC_TRUE
-            call InputErrorMsg(input,option,'IGNORE_PERMEABILITY',error_string)
+            call input%ErrorMsg(option,'IGNORE_PERMEABILITY',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'SATURATION_FUNCTION BRAGFLO_KRP8',option)
@@ -921,29 +921,29 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_KRP12_type)
         select case(keyword)
           case('KPC') 
-            call InputReadInt(input,option,sf%kpc)
-            call InputErrorMsg(input,option,'KPC',error_string)
+            call input%ReadInt(option,sf%kpc)
+            call input%ErrorMsg(option,'KPC',error_string)
           case('PCT_A') 
-            call InputReadDouble(input,option,sf%pct_a)
-            call InputErrorMsg(input,option,'PCT_A',error_string)
+            call input%ReadDouble(option,sf%pct_a)
+            call input%ErrorMsg(option,'PCT_A',error_string)
           case('PCT_EXP') 
-            call InputReadDouble(input,option,sf%pct_exp)
-            call InputErrorMsg(input,option,'PCT_EXP',error_string)
+            call input%ReadDouble(option,sf%pct_exp)
+            call input%ErrorMsg(option,'PCT_EXP',error_string)
           case('LAMBDA') 
-            call InputReadDouble(input,option,sf%lambda)
-            call InputErrorMsg(input,option,'lambda',error_string)
+            call input%ReadDouble(option,sf%lambda)
+            call input%ErrorMsg(option,'lambda',error_string)
           case('S_MIN') 
-            call InputReadDouble(input,option,sf%s_min)
-            call InputErrorMsg(input,option,'s_min',error_string)
+            call input%ReadDouble(option,sf%s_min)
+            call input%ErrorMsg(option,'s_min',error_string)
           case('S_EFFMIN') 
-            call InputReadDouble(input,option,sf%s_effmin)
-            call InputErrorMsg(input,option,'s_effmin',error_string)
+            call input%ReadDouble(option,sf%s_effmin)
+            call input%ErrorMsg(option,'s_effmin',error_string)
           case('IGNORE_PERMEABILITY') 
             sf%ignore_permeability = PETSC_TRUE
-            call InputErrorMsg(input,option,'IGNORE_PERMEABILITY',error_string)
+            call input%ErrorMsg(option,'IGNORE_PERMEABILITY',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'ALPHA',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'ALPHA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'SATURATION_FUNCTION BRAGFLO_KRP12',option)
@@ -952,11 +952,11 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class is(sat_func_IGHCC2_Comp_type)
         select case(keyword)
           case('M')
-            call InputReadDouble(input,option,sf%m)
-            call InputErrorMsg(input,option,'m',error_string)
+            call input%ReadDouble(option,sf%m)
+            call input%ErrorMsg(option,'m',error_string)
           case('ALPHA')
-            call InputReadDouble(input,option,sf%alpha)
-            call InputErrorMsg(input,option,'alpha',error_string)
+            call input%ReadDouble(option,sf%alpha)
+            call input%ErrorMsg(option,'alpha',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'saturation function IGHCC2 Comparison',option)
@@ -965,7 +965,7 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       class default
         option%io_buffer = 'Read routine not implemented for ' &
                            // trim(error_string) // '.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     !------------------------------------------
     end select
   enddo
@@ -978,7 +978,7 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
   !------------------------------------------
     class is(sat_func_constant_type)
       option%io_buffer = 'Constant saturation function is being used.'
-      call printWrnMsg(option)
+      call option%PrintWrnMsg()
   !------------------------------------------
     class is(sat_func_VG_type)
   !------------------------------------------
@@ -986,7 +986,7 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       if (.not.smooth) then
         option%io_buffer = 'Brooks-Corey saturation function is being used &
           &without SMOOTH option.'
-        call printWrnMsg(option)
+        call option%PrintWrnMsg()
       endif
   !------------------------------------------
     class is(sat_func_Linear_type)
@@ -997,7 +997,7 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
           &is being used with the IGNORE_PERMEABILITY feature, you must &
           &specify ALPHA (inverse of the threshold capillary pressure). Do &
           &not specify PCT_A or PCT_EXP.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
   !------------------------------------------
   end select
@@ -1019,8 +1019,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
   
   class(rel_perm_func_base_type) :: permeability_function
   character(len=MAXWORDLENGTH) :: phase_keyword
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, new_phase_keyword
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -1110,19 +1110,19 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
 
     ! base 
     found = PETSC_TRUE
     select case(keyword)
       case('LIQUID_RESIDUAL_SATURATION') 
-        call InputReadDouble(input,option,permeability_function%Sr)
-        call InputErrorMsg(input,option,'residual_saturation',error_string)
+        call input%ReadDouble(option,permeability_function%Sr)
+        call input%ErrorMsg(option,'residual_saturation',error_string)
       case('PHASE')
-        call InputReadWord(input,option,new_phase_keyword,PETSC_TRUE)
-        call InputErrorMsg(input,option,'phase',error_string)
+        call input%ReadWord(option,new_phase_keyword,PETSC_TRUE)
+        call input%ErrorMsg(option,'phase',error_string)
         call StringToUpper(phase_keyword) 
       case('SMOOTH')
         smooth = PETSC_TRUE
@@ -1136,8 +1136,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Mualem_VG_liq_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'m',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'m',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Mualem van Genuchten liquid relative permeability function', &
@@ -1147,11 +1147,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Mualem_VG_gas_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'m',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'m',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Mualem van Genuchten gas relative permeability function', &
@@ -1161,8 +1161,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Burdine_BC_liq_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'lambda',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'lambda',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Burdine Brooks-Corey liquid relative permeability function', &
@@ -1172,11 +1172,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Burdine_BC_gas_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'lambda',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'lambda',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Burdine Brooks-Corey gas relative permeability function', &
@@ -1186,11 +1186,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_TOUGH2_IRP7_gas_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'m',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'m',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                    'TOUGH2 IRP7 gas relative permeability function',option)
@@ -1199,8 +1199,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Mualem_BC_liq_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'lambda',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'lambda',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Mualem Brooks-Corey liquid relative permeability function', &
@@ -1210,11 +1210,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Mualem_BC_gas_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'lambda',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'lambda',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Mualem Brooks-Corey gas relative permeability function', &
@@ -1224,8 +1224,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Burdine_VG_liq_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'m',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'m',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Burdine van Genuchten liquid relative permeability function', &
@@ -1235,11 +1235,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Burdine_VG_gas_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'m',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'m',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Burdine van Genuchten gas relative permeability function', &
@@ -1249,11 +1249,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Mualem_Linear_liq_type)
         select case(keyword)
           case('MAX_CAPILLARY_PRESSURE') 
-            call InputReadDouble(input,option,rpf%pcmax)
-            call InputErrorMsg(input,option,'max_capillary_pressure',error_string)
+            call input%ReadDouble(option,rpf%pcmax)
+            call input%ErrorMsg(option,'max_capillary_pressure',error_string)
           case('ALPHA') 
-            call InputReadDouble(input,option,rpf%alpha)
-            call InputErrorMsg(input,option,'alpha',error_string)
+            call input%ReadDouble(option,rpf%alpha)
+            call input%ErrorMsg(option,'alpha',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Mualem Linear liquid relative permeability function', &
@@ -1263,14 +1263,14 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Mualem_Linear_gas_type)
         select case(keyword)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case('MAX_CAPILLARY_PRESSURE') 
-            call InputReadDouble(input,option,rpf%pcmax)
-            call InputErrorMsg(input,option,'max_capillary_pressure',error_string)
+            call input%ReadDouble(option,rpf%pcmax)
+            call input%ErrorMsg(option,'max_capillary_pressure',error_string)
           case('ALPHA') 
-            call InputReadDouble(input,option,rpf%alpha)
-            call InputErrorMsg(input,option,'alpha',error_string)
+            call input%ReadDouble(option,rpf%alpha)
+            call input%ErrorMsg(option,'alpha',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Mualem Linear gas relative permeability function', &
@@ -1288,8 +1288,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_Burdine_Linear_gas_type)
         select case(keyword)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Burdine Linear gas relative permeability function', &
@@ -1299,11 +1299,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP1_liq_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'M',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'M',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1314,11 +1314,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP1_gas_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'M',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'M',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1329,8 +1329,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP2_liq_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'BRAGFLO_KRP2_LIQ relative permeability function', &
@@ -1340,8 +1340,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP2_gas_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'BRAGFLO_KRP2_GAS relative permeability function', &
@@ -1351,11 +1351,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP3_liq_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1366,11 +1366,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP3_gas_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1382,11 +1382,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP4_liq_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1397,11 +1397,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP4_gas_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1412,8 +1412,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP5_liq_type)
         select case(keyword)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1424,8 +1424,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP5_gas_type)
         select case(keyword)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1436,8 +1436,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP8_liq_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'M',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'M',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'BRAGFLO_KRP8_LIQ relative permeability function', &
@@ -1447,8 +1447,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP8_gas_type)
         select case(keyword)
           case('M') 
-            call InputReadDouble(input,option,rpf%m)
-            call InputErrorMsg(input,option,'M',error_string)
+            call input%ReadDouble(option,rpf%m)
+            call input%ErrorMsg(option,'M',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'BRAGFLO_KRP8_GAS relative permeability function', &
@@ -1474,11 +1474,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP11_liq_type)
         select case(keyword)
           case('TOLC') 
-            call InputReadDouble(input,option,rpf%tolc)
-            call InputErrorMsg(input,option,'TOLC',error_string)
+            call input%ReadDouble(option,rpf%tolc)
+            call input%ErrorMsg(option,'TOLC',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                  error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1489,11 +1489,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP11_gas_type)
         select case(keyword)
           case('TOLC') 
-            call InputReadDouble(input,option,rpf%tolc)
-            call InputErrorMsg(input,option,'TOLC',error_string)
+            call input%ReadDouble(option,rpf%tolc)
+            call input%ErrorMsg(option,'TOLC',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                  error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1504,11 +1504,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP12_liq_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                  error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1519,11 +1519,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_KRP12_gas_type)
         select case(keyword)
           case('LAMBDA') 
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
           case('GAS_RESIDUAL_SATURATION') 
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                  error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -1534,8 +1534,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_mK_liq_type)
         select case(keyword)
           case('SIGMAZ')
-            call InputReadDouble(input,option,rpf%sigmaz)
-            call InputErrorMsg(input,option,'sigmaz',error_string)
+            call input%ReadDouble(option,rpf%sigmaz)
+            call input%ErrorMsg(option,'sigmaz',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                  'MODIFIED_KOSUGI liquid relative permeability '//&
@@ -1545,11 +1545,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_mK_gas_type)
         select case(keyword)
           case('SIGMAZ')
-            call InputReadDouble(input,option,rpf%sigmaz)
-            call InputErrorMsg(input,option,'sigmaz',error_string)
+            call input%ReadDouble(option,rpf%sigmaz)
+            call input%ErrorMsg(option,'sigmaz',error_string)
           case('GAS_RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
                  'MODIFIED_KOSUGI gas relative permeability '//&
@@ -1559,11 +1559,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rel_perm_func_constant_type)
         select case(keyword)
           case('RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Sr)
-            call InputErrorMsg(input,option,'Sr',error_string)
+            call input%ReadDouble(option,rpf%Sr)
+            call input%ErrorMsg(option,'Sr',error_string)
           case('RELATIVE_PERMEABILITY') 
-            call InputReadDouble(input,option,rpf%kr)
-            call InputErrorMsg(input,option,'kr',error_string)
+            call input%ReadDouble(option,rpf%kr)
+            call input%ErrorMsg(option,'kr',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'Constant relative permeability function', &
@@ -1573,8 +1573,8 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_IGHCC2_Comp_liq_type)
         select case(keyword)
           case('LAMBDA')
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'lambda',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'lambda',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'IGHCC2 Comparison liq rel perm function', &
@@ -1584,11 +1584,11 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class is(rpf_IGHCC2_Comp_gas_type)
         select case(keyword)
           case('LAMBDA')
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'lambda',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'lambda',error_string)
           case('GAS_RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Srg)
-            call InputErrorMsg(input,option,'Srg',error_string)
+            call input%ReadDouble(option,rpf%Srg)
+            call input%ErrorMsg(option,'Srg',error_string)
           case default
             call InputKeywordUnrecognized(keyword, &
               'IGHCC2 Comparison gas rel perm function', &
@@ -1598,7 +1598,7 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       class default
         option%io_buffer = 'Read routine not implemented for relative ' // &
                            'permeability function class.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     !------------------------------------------
     end select
   enddo
@@ -1613,7 +1613,7 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       ! entering means the new phase keyword was also NONE (the default), so
       ! throw an error and abort:
       option%io_buffer = 'PHASE is not specified for ' // trim(error_string) 
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
   
@@ -1624,7 +1624,7 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       option%io_buffer = 'A liquid-phase relative permeability function &
                          &is being requested for the gas phase under ' &
                          // trim(error_string) // '.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
   
@@ -1635,7 +1635,7 @@ subroutine PermeabilityFunctionRead(permeability_function,phase_keyword, &
       option%io_buffer = 'A gas-phase relative permeability function &
                          &is being requested for the liquid phase under ' &
                          // trim(error_string) // '.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
 
@@ -1694,7 +1694,7 @@ subroutine CharCurvesConvertListToArray(list,array,option)
 
   class(characteristic_curves_type), pointer :: list
   type(characteristic_curves_ptr_type), pointer :: array(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(characteristic_curves_type), pointer :: cur_characteristic_curves
   PetscInt :: count
@@ -1739,7 +1739,7 @@ function CharCurvesGetGetResidualSats(characteristic_curves,option)
   use Option_module
   
   class(characteristic_curves_type) :: characteristic_curves
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: CharCurvesGetGetResidualSats(option%nphase)
   PetscReal :: sgcr_dummy,sowcr_dummy, sogcr_dummy, swco_dummy
@@ -1862,7 +1862,7 @@ function CharCurvesGetGetResidualSats(characteristic_curves,option)
           class default
             option%io_buffer = 'Relative permeability class not supported in &
                   &CharCurvesGetGetResidualSats.'
-            call PrintErrMsgToDev(option,'')
+            call option%PrintErrMsgToDev('')
         end select
         CharCurvesGetGetResidualSats(option%gas_phase) = gas_res_sat
       endif
@@ -1885,7 +1885,7 @@ subroutine GetOWGCriticalAndConnateSats(this,swcr,sgcr,socr,sowcr,sogcr,swco,&
   use Option_module  
   
   class(characteristic_curves_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal,intent(out)::swcr
   PetscReal,intent(out)::sgcr
   PetscReal,intent(out)::socr
@@ -1933,7 +1933,7 @@ function CharacteristicCurvesGetID(characteristic_curves_array, &
     characteristic_curves_array(:)
   character(len=MAXWORDLENGTH) :: characteristic_curves_name
   character(len=MAXWORDLENGTH) :: material_property_name
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: CharacteristicCurvesGetID
 
@@ -1950,7 +1950,7 @@ function CharacteristicCurvesGetID(characteristic_curves_array, &
            '" in material property "' // &
            trim(material_property_name) // &
            '" not found among available characteristic curves.'
-  call printErrMsg(option)    
+  call option%PrintErrMsg()
 
 end function CharacteristicCurvesGetID
 
@@ -1967,7 +1967,7 @@ subroutine CharCurvesProcessTables(this,option)
   use Option_module  
   
   class(characteristic_curves_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(char_curves_table_type), pointer :: char_curves_table_cur
   
@@ -1998,7 +1998,7 @@ subroutine CharacteristicCurvesTest(characteristic_curves,option)
   implicit none
   
   class(characteristic_curves_type) :: characteristic_curves
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: phase
 
@@ -2074,7 +2074,7 @@ subroutine CharacteristicCurvesVerify(characteristic_curves,option)
   implicit none
   
   class(characteristic_curves_type) :: characteristic_curves
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2099,7 +2099,7 @@ subroutine CharacteristicCurvesVerify(characteristic_curves,option)
                        trim(characteristic_curves%name) // '". A &
                        &PERMEABILITY_FUNCTION block must be specified &
                        &for the liquid phase.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   if (associated(characteristic_curves%gas_rel_perm_function) ) then
@@ -2112,7 +2112,7 @@ subroutine CharacteristicCurvesVerify(characteristic_curves,option)
                          trim(characteristic_curves%name) // '". Another &
                          &PERMEABILITY_FUNCTION block must be specified &
                          &for the gas phase.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if
   end if
 
@@ -2134,7 +2134,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
   implicit none
 
   class(characteristic_curves_type) :: characteristic_curves
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscBool :: gas_present, oil_gas_interface_present 
@@ -2163,7 +2163,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                         trim(characteristic_curves%name) // '". A &
                         &PERMEABILITY_FUNCTION_WAT/KRW block must be &
                         &specified for the water phase.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else
     !to avoid that verify for RPF_wat_MBC fails set sgcr and socr to zero
     !real values assigned later once RPF_gas and RPF_oil have been verirified
@@ -2185,7 +2185,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                         trim(characteristic_curves%name) // '". A &
                         &CAP_PRESSURE_FUNCTION_OW/PC_OW block must be &
                         &specified for the water/oil phase interface.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else
     select type (sf => characteristic_curves%oil_wat_sat_func)
       class is(sat_func_xw_constant_type)
@@ -2207,13 +2207,13 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
         /= swco ) then
       option%io_buffer = adjustl(trim(string)) // & 
                          'Swco defined in KRW and PC_XW differs- check input'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if
     if (characteristic_curves%oil_wat_sat_func%GetCriticalSaturation(option) &
         /= swcr ) then
       option%io_buffer = adjustl(trim(string)) // & 
                         'Swcr defined in KRW and PC_XW differs- check input'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if
   end if
 
@@ -2225,7 +2225,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                           trim(characteristic_curves%name) // '". A &
                           &PERMEABILITY_FUNCTION_GAS/KRG block must be &
                           &specified for the gas phase.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       !to avoid that verify for RPF_gas_MBC fails set swcr and socr to zero
       !real values assigned later once RPF_wat and RPF_oil have been verirified      
@@ -2251,7 +2251,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                           trim(characteristic_curves%name) // '". A &
                           &CAP_PRESSURE_FUNCTION_OG/PC_OG block must be &
                           &specified for the oil/gas phase interface.'
-      call printErrMsg(option)      
+      call option%PrintErrMsg()
     else
       select type(sf => characteristic_curves%oil_gas_sat_func )
         class is(sat_func_og_constant_type)
@@ -2274,13 +2274,13 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
           /= sgco ) then
         option%io_buffer = adjustl(trim(string)) // &
                           'Sgco in KRG and PC_OG differs - check input'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       end if
       if (characteristic_curves%oil_gas_sat_func%GetCriticalSaturation( &
           option) /= sgcr ) then
         option%io_buffer = adjustl(trim(string)) // &
                            'Sgcr in KRG and PC_OG differs - check input'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       end if    
     end if    
   end if  ! end check oil/gas capillary pressure (Pcog)
@@ -2292,7 +2292,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                           trim(characteristic_curves%name) // '". A &
                           &PERMEABILITY_FUNCTION_OW/KROW/KRH block must be &
                           &specified for the oil phase in water.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       select type(rpf => characteristic_curves%ow_rel_perm_func_owg)
         class is(rel_perm_ow_owg_MBC_type)
@@ -2307,7 +2307,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                           &defined in CHARACTERISTIC_CURVES " // &
                           trim(characteristic_curves%name) // '". A &
                           &This is not supported in TOIL and TOWG_IMMISCIBLE'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if    
   end if !end oil phase check
 
@@ -2318,7 +2318,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                           trim(characteristic_curves%name) // '". A &
                           &PERMEABILITY_FUNCTION_OIL/KRO block must be &
                           &specified for the oil phase.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       select type(rpf => characteristic_curves%oil_rel_perm_func_owg)
         class is(rel_perm_oil_owg_ecl_type)
@@ -2360,7 +2360,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                     trim(characteristic_curves%name) // '". This is not &
                     &supported in TOWG:Black Oil,SOLVENT. KROW must be &
                     &defined within KRO'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if
     if ( associated(characteristic_curves%og_rel_perm_func_owg) ) then
       option%io_buffer = "KROG (Oil relative permeability in water) &
@@ -2368,7 +2368,7 @@ subroutine CharacteristicCurvesOWGVerify(characteristic_curves,option)
                     trim(characteristic_curves%name) // '". This is not &
                     &supported in TOWG:Black Oil,SOLVENT. KROG must be &
                     &defined within KRO'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if        
   end if !end if oil_perm_3ph_owg
 
@@ -2407,7 +2407,7 @@ subroutine CharCurvesOWGPostReadProcess(cc,option)
   implicit none
 
   class(characteristic_curves_type) :: cc
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: error_string
   character(len=MAXSTRINGLENGTH) :: error_string_search

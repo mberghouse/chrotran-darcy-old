@@ -71,7 +71,7 @@ subroutine OutputGeomechanics(geomech_realization,snapshot_plot_flag, &
   character(len=MAXSTRINGLENGTH) :: string
   PetscErrorCode :: ierr
   PetscLogDouble :: tstart, tend
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   option => geomech_realization%option
 
@@ -150,7 +150,7 @@ subroutine OutputTecplotGeomechanics(geomech_realization)
   character(len=MAXSTRINGLENGTH) :: tmp_global_prefix
   character(len=MAXWORDLENGTH) :: word
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_discretization_type), pointer :: geomech_discretization
   type(geomech_field_type), pointer :: geomech_field
   type(geomech_patch_type), pointer :: patch 
@@ -181,7 +181,7 @@ subroutine OutputTecplotGeomechanics(geomech_realization)
   if (option%myrank == option%io_rank) then
     option%io_buffer = '--> write tecplot geomech output file: ' // &
         trim(filename)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=filename,action="write")
     call OutputTecplotHeader(OUTPUT_UNIT,geomech_realization,icolumn)
   endif
@@ -251,7 +251,7 @@ subroutine WriteTecplotGeomechGridElements(fid,geomech_realization)
   type(realization_geomech_type) :: geomech_realization
 
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch 
   Vec :: global_cconn_vec
   type(gmdm_type), pointer :: gmdm_element
@@ -417,7 +417,7 @@ subroutine OutputTecplotHeader(fid,geomech_realization,icolumn)
   character(len=MAXSTRINGLENGTH) :: string, string2
   character(len=MAXWORDLENGTH) :: word
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch
   type(output_option_type), pointer :: output_option
   PetscInt :: variable_count
@@ -480,7 +480,7 @@ subroutine OutputWriteTecplotZoneHeader(fid,geomech_realization, &
   
   character(len=MAXSTRINGLENGTH) :: string, string2, string3
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   
   grid => geomech_realization%geomech_patch%geomech_grid
@@ -537,7 +537,7 @@ subroutine WriteTecplotGeomechGridVertices(fid,geomech_realization)
   type(realization_geomech_type) :: geomech_realization 
   
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch 
   PetscReal, pointer :: vec_ptr(:)
   Vec :: global_vertex_vec
@@ -597,7 +597,7 @@ subroutine OutputGetVertexCoordinatesGeomech(grid,vec,direction,option)
   type(geomech_grid_type) :: grid
   Vec :: vec
   PetscInt :: direction
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: ivertex
   PetscReal, pointer :: vec_ptr(:)
@@ -777,7 +777,7 @@ subroutine WriteTecplotDataSetNumPerLineGeomech(fid,geomech_realization, &
   PetscInt :: num_per_line
   
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch  
   PetscInt :: i
   PetscInt :: max_proc, max_proc_prefetch
@@ -806,7 +806,7 @@ subroutine WriteTecplotDataSetNumPerLineGeomech(fid,geomech_realization, &
     option%io_buffer = 'Number of values to be written to line in ' // &
       'WriteTecplotDataSetNumPerLine() exceeds 100.  ' // &
       'Must fix format statements.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! maximum number of initial messages  
@@ -827,7 +827,7 @@ subroutine WriteTecplotDataSetNumPerLineGeomech(fid,geomech_realization, &
       max_local_node_size_saved = max_local_size
       write(option%io_buffer,'("max_local_node_size_saved: ",i9)') &
           max_local_size
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     max_local_size = max_local_node_size_saved
     local_size_mpi = grid%nlmax_node
@@ -1231,7 +1231,7 @@ subroutine OutputHDF5UGridXDMFGeomech(geomech_realization,var_list_type)
   type(geomech_field_type), pointer :: field
   type(geomech_patch_type), pointer :: patch
   type(output_option_type), pointer :: output_option
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_variable_type), pointer :: cur_variable
 
   Vec :: global_vec
@@ -1330,7 +1330,7 @@ subroutine OutputHDF5UGridXDMFGeomech(geomech_realization,var_list_type)
     option%io_buffer = '--> appending to hdf5 geomech output file: ' // &
                        trim(filename)
   endif
-  call printMsg(option)
+  call option%PrintMsg()
 
   if (first) then
     ! create a group for the coordinates data set
@@ -1343,7 +1343,7 @@ subroutine OutputHDF5UGridXDMFGeomech(geomech_realization,var_list_type)
   if (option%myrank == option%io_rank) then
     option%io_buffer = '--> write xmf geomech output file: ' // &
                        trim(xmf_filename)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=xmf_filename,action="write")
     call OutputXMFHeaderGeomech(OUTPUT_UNIT, &
                          option%time/output_option%tconv, &
@@ -1482,7 +1482,7 @@ subroutine WriteHDF5CoordinatesXDMFGeomech(geomech_realization, &
   implicit none
 
   type(realization_geomech_type) :: geomech_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type

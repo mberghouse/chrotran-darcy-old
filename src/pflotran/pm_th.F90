@@ -123,11 +123,11 @@ subroutine PMTHRead(this,input)
   implicit none
   
   class(pm_th_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscBool :: found
   PetscInt :: lid, eid
   PetscReal :: tempreal
@@ -143,11 +143,11 @@ subroutine PMTHRead(this,input)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)
 
     found = PETSC_FALSE
@@ -161,79 +161,79 @@ subroutine PMTHRead(this,input)
 
       ! All Residual
       case('RESIDUAL_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%residual_abs_inf_tol(:) = tempreal
         this%residual_scaled_inf_tol(:) = tempreal
 
       ! Absolute Residual
       case('RESIDUAL_ABS_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%residual_abs_inf_tol(:) = tempreal
       case('LIQUID_RESIDUAL_ABS_INF_TOL')
-        call InputReadDouble(input,option,this%residual_abs_inf_tol(lid))
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,this%residual_abs_inf_tol(lid))
+        call input%ErrorMsg(option,word,error_string)
       case('ENERGY_RESIDUAL_ABS_INF_TOL')
-        call InputReadDouble(input,option,this%residual_abs_inf_tol(eid))
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,this%residual_abs_inf_tol(eid))
+        call input%ErrorMsg(option,word,error_string)
 
       ! Scaled Residual
       case('RESIDUAL_SCALED_INF_TOL','ITOL_SCALED_RESIDUAL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%residual_scaled_inf_tol(:) = tempreal
       case('LIQUID_RESIDUAL_SCALED_INF_TOL')
-        call InputReadDouble(input,option,this%residual_scaled_inf_tol(lid))
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,this%residual_scaled_inf_tol(lid))
+        call input%ErrorMsg(option,word,error_string)
       case('ENERGY_RESIDUAL_SCALED_INF_TOL')
-        call InputReadDouble(input,option,this%residual_scaled_inf_tol(eid))
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,this%residual_scaled_inf_tol(eid))
+        call input%ErrorMsg(option,word,error_string)
 
       ! All Updates
       case('UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%abs_update_inf_tol(:) = tempreal
         this%rel_update_inf_tol(:) = tempreal
 
       ! Absolute Updates
       case('ABS_UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%abs_update_inf_tol(:) = tempreal
       case('PRES_ABS_UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%abs_update_inf_tol(1) = tempreal
       case('TEMP_ABS_UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%abs_update_inf_tol(2) = tempreal
 
       ! Relative Updates
       case('REL_UPDATE_INF_TOL','ITOL_RELATIVE_UPDATE')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%rel_update_inf_tol(:) = tempreal
       case('PRES_REL_UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%rel_update_inf_tol(1) = tempreal
       case('TEMP_REL_UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%rel_update_inf_tol(2) = tempreal
 
       case('FREEZING')
         option%use_th_freezing = PETSC_TRUE
         option%io_buffer = ' TH: using FREEZING submode!'
-        call printMsg(option)
+        call option%PrintMsg()
         ! Override the default setting for TH-mode with freezing
         call EOSWaterSetDensity('PAINTER')
         call EOSWaterSetEnthalpy('PAINTER')
       case('ICE_MODEL')
-        call InputReadWord(input,option,word,PETSC_FALSE)
+        call input%ReadWord(option,word,PETSC_FALSE)
         call StringToUpper(word)
         select case (trim(word))
           case ('PAINTER_EXPLICIT')
@@ -251,7 +251,7 @@ subroutine PMTHRead(this,input)
              'Specify PAINTER_EXPLICIT or PAINTER_KARRA_IMPLICIT' // &
              ' or PAINTER_KARRA_EXPLICIT or PAINTER_KARRA_EXPLICIT_NOCRYO ' // &
              ' or DALL_AMICO.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           end select
       case default
         call InputKeywordUnrecognized(word,error_string,option)
@@ -392,7 +392,7 @@ subroutine PMTHUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   PetscInt :: ifac
   
 #ifdef PM_TH_DEBUG
-  call printMsg(this%option,'PMTH%UpdateTimestep()')
+  call this%option%PrintMsg('PMTH%UpdateTimestep()')
 #endif
   
   if (iacceleration > 0) then
@@ -512,7 +512,7 @@ subroutine PMTHCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   PetscReal, pointer :: dX_p(:)
   PetscReal, pointer :: r_p(:)
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(TH_auxvar_type), pointer :: TH_auxvars(:)
@@ -545,7 +545,7 @@ subroutine PMTHCheckUpdatePre(this,line_search,X,dX,changed,ierr)
       if (press_limit < dabs(delP)) then
         write(option%io_buffer,'("dP_trunc:",1i7,2es15.7)') &         
           grid%nG2A(grid%nL2G(local_id)),press_limit,dabs(delP)
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
       endif
       delP = sign(min(dabs(delP),press_limit),delP)
       dX_p(istart) = delP
@@ -571,7 +571,7 @@ subroutine PMTHCheckUpdatePre(this,line_search,X,dX,changed,ierr)
       if (abs(delP) > abs(temp_limit)) then
         write(option%io_buffer,'("dT_trunc:",1i7,2es15.7)') &
           grid%nG2A(grid%nL2G(local_id)),temp_limit,dabs(delP)
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
       endif
       delP = sign(min(dabs(delP),temp_limit),delP)
       dX_p(iend) = delP
@@ -600,24 +600,24 @@ subroutine PMTHCheckUpdatePre(this,line_search,X,dX,changed,ierr)
       if (P0 < P_R .and. P1 > P_R) then
         write(option%io_buffer,'("U -> S:",1i7,2f12.1)') &
           grid%nG2A(grid%nL2G(local_id)),P0,P1 
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #if 0
         ghosted_id = grid%nL2G(local_id)
         call RichardsPrintAuxVars(rich_auxvars(ghosted_id), &
                                   global_auxvars(ghosted_id),ghosted_id)
         write(option%io_buffer,'("Residual:",es15.7)') r_p(istart)
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #endif
       else if (P1 < P_R .and. P0 > P_R) then
         write(option%io_buffer,'("S -> U:",1i7,2f12.1)') &
           grid%nG2A(grid%nL2G(local_id)),P0,P1
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #if 0
         ghosted_id = grid%nL2G(local_id)
         call RichardsPrintAuxVars(rich_auxvars(ghosted_id), &
                                   global_auxvars(ghosted_id),ghosted_id)
         write(option%io_buffer,'("Residual:",es15.7)') r_p(istart)
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #endif
       endif
       ! transition from unsaturated to saturated
@@ -661,7 +661,7 @@ subroutine PMTHCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   PetscReal, pointer :: X0_p(:)
   PetscReal, pointer :: dX_p(:)
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   PetscInt :: local_id, ghosted_id, natural_id
@@ -774,7 +774,7 @@ subroutine PMTHCheckConvergence(this,snes,it,xnorm,unorm,fnorm,reason,ierr)
   PetscErrorCode :: ierr
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   PetscReal, pointer :: r_p(:)

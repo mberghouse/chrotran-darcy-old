@@ -40,9 +40,9 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
   type(grid_unstructured_type) :: unstructured_grid 
   type(unstructured_explicit_type), pointer :: explicit_grid
   character(len=MAXSTRINGLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: string, hint
   character(len=MAXWORDLENGTH) :: word, card
   PetscInt :: fileid, icell, iconn, irank, remainder, temp_int, num_to_read
@@ -92,18 +92,18 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
 
     call InputReadPflotranString(input,option)
     ! read CELL card, though we already know the
-    call InputReadWord(input,option,card,PETSC_TRUE)
+    call input%ReadWord(option,card,PETSC_TRUE)
     word = 'CELLS'
-    call InputErrorMsg(input,option,word,card)
+    call input%ErrorMsg(option,word,card)
     if (.not.StringCompare(word,card)) then
       option%io_buffer = 'Unrecognized keyword "' // trim(card) // &
         '" in explicit grid file.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
   
     hint = 'Explicit Unstructured Grid CELLS'
-    call InputReadInt(input,option,temp_int)
-    call InputErrorMsg(input,option,'number of cells',hint)
+    call input%ReadInt(option,temp_int)
+    call input%ErrorMsg(option,'number of cells',hint)
   endif
   
   call MPI_Bcast(temp_int,ONE_INTEGER_MPI,MPI_INTEGER,option%io_rank, &
@@ -141,18 +141,18 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
       if (irank < remainder) num_to_read = num_to_read + 1
       do icell = 1, num_to_read
         call InputReadPflotranString(input,option)
-        call InputReadStringErrorMsg(input,option,hint)  
-        call InputReadInt(input,option,temp_int)
-        call InputErrorMsg(input,option,'cell id',hint)
+        call input%ReadStringErrorMsg(option,hint)
+        call input%ReadInt(option,temp_int)
+        call input%ErrorMsg(option,'cell id',hint)
         temp_real_array(1,icell) = dble(temp_int)
-        call InputReadDouble(input,option,temp_real_array(2,icell))
-        call InputErrorMsg(input,option,'cell x coordinate',hint)
-        call InputReadDouble(input,option,temp_real_array(3,icell))
-        call InputErrorMsg(input,option,'cell y coordinate',hint)
-        call InputReadDouble(input,option,temp_real_array(4,icell))
-        call InputErrorMsg(input,option,'cell z coordinate',hint)
-        call InputReadDouble(input,option,temp_real_array(5,icell))
-        call InputErrorMsg(input,option,'cell volume',hint)
+        call input%ReadDouble(option,temp_real_array(2,icell))
+        call input%ErrorMsg(option,'cell x coordinate',hint)
+        call input%ReadDouble(option,temp_real_array(3,icell))
+        call input%ErrorMsg(option,'cell y coordinate',hint)
+        call input%ReadDouble(option,temp_real_array(4,icell))
+        call input%ErrorMsg(option,'cell z coordinate',hint)
+        call input%ReadDouble(option,temp_real_array(5,icell))
+        call input%ErrorMsg(option,'cell volume',hint)
       enddo
 
       ! if the cells reside on io_rank
@@ -213,18 +213,18 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
  
     call InputReadPflotranString(input,option)
     ! read CONNECTIONS card, though we already know the
-    call InputReadWord(input,option,card,PETSC_TRUE)
+    call input%ReadWord(option,card,PETSC_TRUE)
     word = 'CONNECTIONS'
-    call InputErrorMsg(input,option,word,card)
+    call input%ErrorMsg(option,word,card)
     if (.not.StringCompare(word,card)) then
       option%io_buffer = 'Unrecognized keyword "' // trim(card) // &
         '" in explicit grid file.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
   
     hint = 'Explicit Unstructured Grid CONNECTIONS'
-    call InputReadInt(input,option,temp_int)
-    call InputErrorMsg(input,option,'number of connections',hint)
+    call input%ReadInt(option,temp_int)
+    call input%ErrorMsg(option,'number of connections',hint)
   endif
   
   int_mpi = 1
@@ -262,21 +262,21 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
       if (irank < remainder) num_to_read = num_to_read + 1
       do iconn = 1, num_to_read
         call InputReadPflotranString(input,option)
-        call InputReadStringErrorMsg(input,option,hint)  
-        call InputReadInt(input,option,temp_int)
-        call InputErrorMsg(input,option,'cell id upwind',hint)
+        call input%ReadStringErrorMsg(option,hint)
+        call input%ReadInt(option,temp_int)
+        call input%ErrorMsg(option,'cell id upwind',hint)
         temp_real_array(1,iconn) = dble(temp_int)
-        call InputReadInt(input,option,temp_int)
-        call InputErrorMsg(input,option,'cell id downwind',hint)
+        call input%ReadInt(option,temp_int)
+        call input%ErrorMsg(option,'cell id downwind',hint)
         temp_real_array(2,iconn) = dble(temp_int)
-        call InputReadDouble(input,option,temp_real_array(3,iconn))
-        call InputErrorMsg(input,option,'face x coordinate',hint)
-        call InputReadDouble(input,option,temp_real_array(4,iconn))
-        call InputErrorMsg(input,option,'face y coordinate',hint)
-        call InputReadDouble(input,option,temp_real_array(5,iconn))
-        call InputErrorMsg(input,option,'face z coordinate',hint)
-        call InputReadDouble(input,option,temp_real_array(6,iconn))
-        call InputErrorMsg(input,option,'face area',hint)
+        call input%ReadDouble(option,temp_real_array(3,iconn))
+        call input%ErrorMsg(option,'face x coordinate',hint)
+        call input%ReadDouble(option,temp_real_array(4,iconn))
+        call input%ErrorMsg(option,'face y coordinate',hint)
+        call input%ReadDouble(option,temp_real_array(5,iconn))
+        call input%ErrorMsg(option,'face z coordinate',hint)
+        call input%ReadDouble(option,temp_real_array(6,iconn))
+        call input%ErrorMsg(option,'face area',hint)
       enddo
 
       ! if the cells reside on io_rank
@@ -338,21 +338,21 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
     call InputReadPflotranString(input,option)
     ! read ELEMENTS card, we only use this for tecplot output
     ! not used while solving the PDEs
-    call InputReadWord(input,option,card,PETSC_TRUE)
+    call input%ReadWord(option,card,PETSC_TRUE)
     word = 'ELEMENTS'
     if (.not.StringCompare(word,card)) return
     card = 'Explicit Unstruct. Grid ELEMENTS'
-    call InputReadInt(input,option,num_elems)
-    call InputErrorMsg(input,option,'number of elements',card)
+    call input%ReadInt(option,num_elems)
+    call input%ErrorMsg(option,'number of elements',card)
         explicit_grid%num_elems = num_elems
     unstructured_grid%max_nvert_per_cell = 8 ! Initial guess
     allocate(explicit_grid%cell_vertices(0:unstructured_grid% &
                                   max_nvert_per_cell,num_elems)) 
     do iconn = 1, num_elems
       call InputReadPflotranString(input,option)
-      call InputReadStringErrorMsg(input,option,card)  
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      call InputErrorMsg(input,option,'element_type',card)
+      call input%ReadStringErrorMsg(option,card)
+      call input%ReadWord(option,word,PETSC_TRUE)
+      call input%ErrorMsg(option,'element_type',card)
       call StringtoUpper(word)
       select case (word)
         case('H')
@@ -370,25 +370,25 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
       end select
       explicit_grid%cell_vertices(0,iconn) = num_vertices
       do ivertex = 1, num_vertices
-        call InputReadInt(input,option,explicit_grid%cell_vertices(ivertex,iconn))
-        call InputErrorMsg(input,option,'vertex id',hint)
+        call input%ReadInt(option,explicit_grid%cell_vertices(ivertex,iconn))
+        call input%ErrorMsg(option,'vertex id',hint)
       enddo
     enddo
     call InputReadPflotranString(input,option)
     ! read VERTICES card, not used for calcuations, only tecplot output
-    call InputReadWord(input,option,card,PETSC_TRUE)
+    call input%ReadWord(option,card,PETSC_TRUE)
     word = 'VERTICES'
-    call InputErrorMsg(input,option,word,card)
+    call input%ErrorMsg(option,word,card)
     if (.not.StringCompare(word,card)) then
       option%io_buffer = 'Unrecognized keyword "' // trim(card) // &
         '" in explicit grid file.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
 
     !at this point, as we read the grid, the output_mesh_type is not known yet 
-    call InputReadInt(input,option,num_grid_vertices)
+    call input%ReadInt(option,num_grid_vertices)
 
-    if (InputError(input)) then
+    if (input%Error()) then
       input%ierr = 0
       !if num_grid_vertices not entered assumes vertex_centered based - default
       explicit_grid%num_vertices = explicit_grid%num_cells_global
@@ -404,16 +404,16 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
     enddo
     do icell = 1, explicit_grid%num_vertices
       call InputReadPflotranString(input,option)
-      call InputReadStringErrorMsg(input,option,card)  
-      call InputReadDouble(input,option, &
+      call input%ReadStringErrorMsg(option,card)
+      call input%ReadDouble(option, &
                            explicit_grid%vertex_coordinates(icell)%x)
-      call InputErrorMsg(input,option,'vertex 1',card)
-      call InputReadDouble(input,option, &
+      call input%ErrorMsg(option,'vertex 1',card)
+      call input%ReadDouble(option, &
                            explicit_grid%vertex_coordinates(icell)%y)
-      call InputErrorMsg(input,option,'vertex 2',card)
-      call InputReadDouble(input,option, &
+      call input%ErrorMsg(option,'vertex 2',card)
+      call input%ReadDouble(option, &
                            explicit_grid%vertex_coordinates(icell)%z)
-      call InputErrorMsg(input,option,'vertex 3',card)
+      call input%ErrorMsg(option,'vertex 3',card)
     enddo
   endif
   
@@ -441,7 +441,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
   implicit none
 
   type(grid_unstructured_type) :: ugrid
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(unstructured_explicit_type), pointer :: explicit_grid
   PetscViewer :: viewer
@@ -492,7 +492,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
   explicit_grid => ugrid%explicit_grid
   
 #if UGRID_DEBUG
-  call printMsg(option,'Adjacency matrix')
+  call option%PrintMsg('Adjacency matrix')
 #endif
 
   num_cells_local_old = size(explicit_grid%cell_ids)
@@ -608,7 +608,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
   call MatView(Adj_mat,viewer,ierr);CHKERRQ(ierr)
   call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
 #endif
-!  call printErrMsg(option,'debugg')
+!  call option%PrintErrMsg('debugg')
 
   ! Create the Dual matrix.
   call MatCreateAIJ(option%mycomm,num_cells_local_old,PETSC_DECIDE, &
@@ -687,7 +687,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
   if (.not.success .or. num_rows /= num_cells_local_old) then
     print *, option%myrank, num_rows, success, num_cells_local_old
     option%io_buffer = 'Error getting IJ row indices from dual matrix'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call MatRestoreRowIJF90(Dual_mat,ZERO_INTEGER,PETSC_FALSE,PETSC_FALSE, &
@@ -741,7 +741,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
     write(string,*) num_rows, temp_int
     option%io_buffer = 'Number of rows in Adj and Dual matrices inconsistent:'
     option%io_buffer = trim(option%io_buffer) // trim(adjustl(string))
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
 
   call VecGetArrayF90(cells_old,vec_ptr,ierr);CHKERRQ(ierr)
@@ -772,7 +772,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
     if (num_cols > ugrid%max_ndual_per_cell) then
       option%io_buffer = &
         'Number of columns in Adj matrix is larger then max_ndual_per_cell.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
     do icol = 1, ugrid%max_ndual_per_cell
       count = count + 1
@@ -795,7 +795,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
     if (num_cols > ugrid%max_ndual_per_cell) then
       option%io_buffer = &
         'Number of columns in Dual matrix is larger then max_ndual_per_cell.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
     do icol = 1, ugrid%max_ndual_per_cell
       count = count + 1
@@ -946,7 +946,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
     write(string,'(2i6)') count, num_connections_total
     option%io_buffer = 'Inconsistent values for num_connections_total: ' // &
       trim(adjustl(string))
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
   num_connections_total = UNINITIALIZED_INTEGER ! set to uninitialized value to catch bugs
   
@@ -976,7 +976,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
                             ierr);CHKERRQ(ierr)
   call ISView(is_gather,viewer,ierr);CHKERRQ(ierr)
   call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
-  call printMsg(option,'Scatter/gathering local connection info')
+  call option%PrintMsg('Scatter/gathering local connection info')
 #endif  
   
   ! scatter all the connection data from the old to local
@@ -1018,7 +1018,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
           write(string,'(2i5)') ghosted_id, conn_id
           option%io_buffer = 'Too many local cells match connection: ' // &
             trim(adjustl(string))
-          call printErrMsgByRank(option)
+          call option%PrintErrMsgByRank()
         endif
       enddo
     enddo
@@ -1065,7 +1065,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
         option%io_buffer = 'downwind cell not found: '
       endif
       option%io_buffer = trim(option%io_buffer) // trim(adjustl(string))
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
     id_up = int_array2d(1,iconn)
     id_dn = int_array2d(2,iconn)
@@ -1253,7 +1253,7 @@ function UGridExplicitSetInternConnect(explicit_grid,upwind_fraction_method, &
   
   type(unstructured_explicit_type) :: explicit_grid
   PetscInt :: upwind_fraction_method
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(connection_set_type), pointer :: connections
   PetscInt :: num_connections
@@ -1339,7 +1339,7 @@ function UGridExplicitSetInternConnect(explicit_grid,upwind_fraction_method, &
       endif
       option%io_buffer = trim(option%io_buffer) // ' Please check the &
         &location of the cell centers and face center.'
-      call printMsgByRank(option)
+      call option%PrintMsgByRank()
     endif
     connections%dist(-1,iconn) = upwind_fraction
     connections%dist(0,iconn) = distance
@@ -1356,7 +1356,7 @@ function UGridExplicitSetInternConnect(explicit_grid,upwind_fraction_method, &
   if (error) then
     option%io_buffer = 'Errors in UGridExplicitSetInternConnect(). &
       &See details above.'
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
   
   UGridExplicitSetInternConnect => connections
@@ -1378,7 +1378,7 @@ subroutine UGridExplicitComputeVolumes(ugrid,option,volume)
   implicit none
   
   type(grid_unstructured_type) :: ugrid
-  type(option_type) :: option
+  class(option_type) :: option
   Vec :: volume
 
   type(unstructured_explicit_type), pointer :: explicit_grid
@@ -1423,7 +1423,7 @@ function UGridExplicitSetBoundaryConnect(explicit_grid,cell_ids, &
   type(point3d_type) :: face_centroids(:)
   PetscReal :: face_areas(:)
   character(len=MAXWORDLENGTH) :: region_name
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(connection_set_type), pointer :: connections
   PetscInt :: num_connections
@@ -1457,7 +1457,7 @@ function UGridExplicitSetBoundaryConnect(explicit_grid,cell_ids, &
       error = PETSC_TRUE
       option%io_buffer = 'Coincident cell and face centroids found at (' // &
         trim(adjustl(string)) // ') '
-      call printMsgByRank(option)
+      call option%PrintMsgByRank()
     endif
     connections%dist(-1,iconn) = 0.d0
     connections%dist(0,iconn) = distance
@@ -1468,7 +1468,7 @@ function UGridExplicitSetBoundaryConnect(explicit_grid,cell_ids, &
     option%io_buffer = 'Coincident cell and face centroids found in ' // &
       'UGridExplicitSetBoundaryConnect() for region "' // trim(region_name) // &
       '".  See details above.'
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
   
   UGridExplicitSetBoundaryConnect => connections
@@ -1497,7 +1497,7 @@ function UGridExplicitSetConnections(explicit_grid,cell_ids,connection_type, &
   type(unstructured_explicit_type) :: explicit_grid
   PetscInt, pointer :: cell_ids(:)
   PetscInt :: connection_type
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(connection_set_type), pointer :: connections
   PetscInt :: num_connections

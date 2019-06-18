@@ -93,8 +93,8 @@ subroutine GasRead(this,input,option)
   implicit none
   
   class(reaction_sandbox_gas_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=21) :: buffer
   PetscInt :: i, previous_ns
@@ -102,11 +102,11 @@ subroutine GasRead(this,input,option)
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
          'CHEMISTRY,REACTION_SANDBOX,GAS')
     
     call StringToUpper(word)
@@ -115,8 +115,8 @@ subroutine GasRead(this,input,option)
       ! need to call this first (or uses default)
       ! if this comes after reading other components, they will be blown away
       previous_ns = this%nspecies
-      call InputReadInt(input,option,this%nspecies)
-      call InputErrorMsg(input,option,'num_gas_species', &
+      call input%ReadInt(option,this%nspecies)
+      call input%ErrorMsg(option,'num_gas_species', &
            'CHEMISTRY,REACTION_SANDBOX,GAS')
       if (previous_ns /= this%nspecies) then
         deallocate(this%aq_vec);allocate(this%aq_vec(this%nspecies))
@@ -135,29 +135,29 @@ subroutine GasRead(this,input,option)
     case('GAS_SPECIES_NAMES')
       buffer = 'gas_species_names_XXX'
       do i=1, this%nspecies
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         this%name_vec(i) = trim(word)
         write(buffer(19:21),'(I3.3)') i
-        call InputErrorMsg(input,option,buffer, &
+        call input%ErrorMsg(option,buffer, &
              'CHEMISTRY,REACTION_SANDBOX,GAS')
       end do
         
     case('RATE_CONSTANTS')
       ! units of: moles / (m^3 gas * sec)
-      call InputReadNDoubles(input,option,this%k,this%nspecies)
-      call InputErrorMsg(input,option,'rate_constants', &
+      call input%ReadNDoubles(option,this%k,this%nspecies)
+      call input%ErrorMsg(option,'rate_constants', &
            'CHEMISTRY,REACTION_SANDBOX,GAS')
       
     case('EQUILIBRIUM_CONSTANTS')
       ! units of: liters gas / (m^3 bulk )
-      call InputReadNDoubles(input,option,this%Keq,this%nspecies)
-      call InputErrorMsg(input,option,'equilibrium_constants', &
+      call input%ReadNDoubles(option,this%Keq,this%nspecies)
+      call input%ErrorMsg(option,'equilibrium_constants', &
            'CHEMISTRY,REACTION_SANDBOX,GAS')
 
     case('MATERIAL_ID_SKIP')
       ! read in material ID to skip gas sorption reaction calc
-      call InputReadInt(input,option,this%material_id_skip)
-      call InputErrorMsg(input,option,'material_id_skip', &
+      call input%ReadInt(option,this%material_id_skip)
+      call input%ErrorMsg(option,'material_id_skip', &
            'CHEMISTRY,REACTION_SANDBOX,GAS')
 
     case default
@@ -188,7 +188,7 @@ subroutine GasSetup(this,reaction,option)
   
   class(reaction_sandbox_gas_type) :: this
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word
@@ -227,7 +227,7 @@ subroutine GasReact(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(reaction_sandbox_gas_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
 
@@ -291,7 +291,7 @@ subroutine GasReact(this,Residual,Jacobian,compute_derivative, &
     if (compute_derivative) then
       option%io_buffer = 'NUMERICAL_JACOBIAN must always be used in SUBSURFACE_TRANSPORT' // &
            ' process model due to assumptions in gas reaction sandbox'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   end if
     

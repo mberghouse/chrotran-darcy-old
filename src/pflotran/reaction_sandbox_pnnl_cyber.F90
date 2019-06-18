@@ -176,8 +176,8 @@ subroutine CyberRead(this,input,option)
   implicit none
   
   class(reaction_sandbox_cyber_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units, units
@@ -187,90 +187,90 @@ subroutine CyberRead(this,input,option)
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)   
 
     select case(trim(word))
       case('F1')
-        call InputReadDouble(input,option,this%f1)  
-        call InputErrorMsg(input,option,'f1',error_string)
+        call input%ReadDouble(option,this%f1)
+        call input%ErrorMsg(option,'f1',error_string)
       case('F2')
-        call InputReadDouble(input,option,this%f2)  
-        call InputErrorMsg(input,option,'f2',error_string)
+        call input%ReadDouble(option,this%f2)
+        call input%ErrorMsg(option,'f2',error_string)
       case('F3')
-        call InputReadDouble(input,option,this%f3)  
-        call InputErrorMsg(input,option,'f3',error_string)
+        call input%ReadDouble(option,this%f3)
+        call input%ErrorMsg(option,'f3',error_string)
       case('K1','K_NO3-')
-        call InputReadDouble(input,option,this%k1)  
-        call InputErrorMsg(input,option,'k1',error_string)
-        call InputReadAndConvertUnits(input,this%k1,'1/sec', &
+        call input%ReadDouble(option,this%k1)
+        call input%ErrorMsg(option,'k1',error_string)
+        call input%ReadAndConvertUnits(this%k1,'1/sec', &
                                       trim(error_string)//',k1',option)
       case('K2','K_NO2-')
-        call InputReadDouble(input,option,this%k2)  
-        call InputErrorMsg(input,option,'k2',error_string)
-        call InputReadAndConvertUnits(input,this%k2,'1/sec', &
+        call input%ReadDouble(option,this%k2)
+        call input%ErrorMsg(option,'k2',error_string)
+        call input%ReadAndConvertUnits(this%k2,'1/sec', &
                                       trim(error_string)//',k2',option)
       case('K3','K_O2(aq)')
-        call InputReadDouble(input,option,this%k3)  
-        call InputErrorMsg(input,option,'k3',error_string)
-        call InputReadAndConvertUnits(input,this%k3,'1/sec', &
+        call input%ReadDouble(option,this%k3)
+        call input%ErrorMsg(option,'k3',error_string)
+        call input%ReadAndConvertUnits(this%k3,'1/sec', &
                                       trim(error_string)//',k3',option)
       case('KA1','KA_NO3-')
-        call InputReadDouble(input,option,this%Ka1)  
-        call InputErrorMsg(input,option,'Ka1',error_string)
-        call InputReadAndConvertUnits(input,this%Ka1,'M', &
+        call input%ReadDouble(option,this%Ka1)
+        call input%ErrorMsg(option,'Ka1',error_string)
+        call input%ReadAndConvertUnits(this%Ka1,'M', &
                                       trim(error_string)//',Ka1',option)
       case('KA2','KA_NO2-')
-        call InputReadDouble(input,option,this%Ka2)  
-        call InputErrorMsg(input,option,'Ka2',error_string)
-        call InputReadAndConvertUnits(input,this%Ka2,'M', &
+        call input%ReadDouble(option,this%Ka2)
+        call input%ErrorMsg(option,'Ka2',error_string)
+        call input%ReadAndConvertUnits(this%Ka2,'M', &
                                       trim(error_string)//',Ka2',option)
       case('KA3','KA_O2(aq)')
-        call InputReadDouble(input,option,this%Ka3)  
-        call InputErrorMsg(input,option,'Ka3',error_string)
-        call InputReadAndConvertUnits(input,this%Ka3,'M', &
+        call input%ReadDouble(option,this%Ka3)
+        call input%ErrorMsg(option,'Ka3',error_string)
+        call input%ReadAndConvertUnits(this%Ka3,'M', &
                                       trim(error_string)//',Ka3',option)
       case('KD1','KD_NO3-')
-        call InputReadDouble(input,option,this%Kd1)  
-        call InputErrorMsg(input,option,'Kd1',error_string)
-        call InputReadAndConvertUnits(input,this%Kd1,'M', &
+        call input%ReadDouble(option,this%Kd1)
+        call input%ErrorMsg(option,'Kd1',error_string)
+        call input%ReadAndConvertUnits(this%Kd1,'M', &
                                       trim(error_string)//',Kd1',option)
       case('KD2','KD_NO2-')
-        call InputReadDouble(input,option,this%Kd2)  
-        call InputErrorMsg(input,option,'Kd2',error_string)
-        call InputReadAndConvertUnits(input,this%Kd2,'M', &
+        call input%ReadDouble(option,this%Kd2)
+        call input%ErrorMsg(option,'Kd2',error_string)
+        call input%ReadAndConvertUnits(this%Kd2,'M', &
                                       trim(error_string)//',Kd2',option)
       case('KD3','KD_O2(aq)')
-        call InputReadDouble(input,option,this%Kd3)  
-        call InputErrorMsg(input,option,'Kd3',error_string)
-        call InputReadAndConvertUnits(input,this%Kd3,'M', &
+        call input%ReadDouble(option,this%Kd3)
+        call input%ErrorMsg(option,'Kd3',error_string)
+        call input%ReadAndConvertUnits(this%Kd3,'M', &
                                       trim(error_string)//',Kd3',option)
       case('KDEG')
-        call InputReadDouble(input,option,this%k_deg)  
-        call InputErrorMsg(input,option,'kdeg',error_string)
-        call InputReadAndConvertUnits(input,this%k_deg,'1/sec', &
+        call input%ReadDouble(option,this%k_deg)
+        call input%ErrorMsg(option,'kdeg',error_string)
+        call input%ReadAndConvertUnits(this%k_deg,'1/sec', &
                                       trim(error_string)//',kdeg',option)
 !      case('F_ACT')
-!        call InputReadDouble(input,option,this%f_act)  
-!        call InputErrorMsg(input,option,'f_act',error_string)
+!        call input%ReadDouble(option,this%f_act)
+!        call input%ErrorMsg(option,'f_act',error_string)
       case('ACTIVATION_ENERGY')
-        call InputReadDouble(input,option,this%activation_energy)  
-        call InputErrorMsg(input,option,'activation energy',error_string)
-        call InputReadAndConvertUnits(input,this%activation_energy,'J/mol', &
+        call input%ReadDouble(option,this%activation_energy)
+        call input%ErrorMsg(option,'activation energy',error_string)
+        call input%ReadAndConvertUnits(this%activation_energy,'J/mol', &
                               trim(error_string)//',activation energy',option)
       case('REFERENCE_TEMPERATURE')
-        call InputReadDouble(input,option,this%reference_temperature)  
-        call InputErrorMsg(input,option,'reference temperature [C]', &
+        call input%ReadDouble(option,this%reference_temperature)
+        call input%ErrorMsg(option,'reference temperature [C]', &
                            error_string)
         this%reference_temperature = this%reference_temperature + 273.15d0
       case('CARBON_CONSUMPTION_SPECIES')
-        call InputReadWord(input,option, &
+        call input%ReadWord(option, &
                            this%carbon_consumption_species,PETSC_TRUE)
-        call InputErrorMsg(input,option,'carbon consumption species', &
+        call input%ErrorMsg(option,'carbon consumption species', &
                            error_string)
       case('STORE_CONSUMPTION_PRODUCTION')
         this%store_cumulative_mass = PETSC_TRUE
@@ -301,7 +301,7 @@ subroutine CyberSetup(this,reaction,option)
   
   class(reaction_sandbox_cyber_type) :: this
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: word
   PetscInt :: irxn
@@ -489,7 +489,7 @@ subroutine CyberAuxiliaryPlotVariables(this,list,reaction,option)
 
   class(reaction_sandbox_cyber_type) :: this
   type(output_variable_list_type), pointer :: list
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   
   character(len=MAXWORDLENGTH) :: names(6)
@@ -548,7 +548,7 @@ subroutine CyberReact(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(reaction_sandbox_cyber_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   ! the following arrays must be declared after reaction
@@ -605,7 +605,7 @@ subroutine CyberReact(this,Residual,Jacobian,compute_derivative, &
   if (reaction%act_coef_update_frequency /= ACT_COEF_FREQUENCY_OFF) then
     option%io_buffer = 'Activity coefficients not currently supported in &
       &CyberReact().'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   temperature_scaling_factor = 1.d0
@@ -901,7 +901,7 @@ subroutine CyberUpdateKineticState(this,rt_auxvar,global_auxvar, &
   implicit none
 
   class(reaction_sandbox_cyber_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar

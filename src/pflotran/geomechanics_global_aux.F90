@@ -76,7 +76,7 @@ subroutine GeomechGlobalAuxVarInit(aux_var,option)
   implicit none
   
   type(geomech_global_auxvar_type) :: aux_var
-  type(option_type) :: option
+  class(option_type) :: option
   
   allocate(aux_var%disp_vector(option%ngeomechdof))
   allocate(aux_var%rel_disp_vector(option%ngeomechdof))
@@ -104,7 +104,7 @@ subroutine GeomechGlobalAuxVarCopy(aux_var,aux_var2,option)
   implicit none
   
   type(geomech_global_auxvar_type) :: aux_var, aux_var2
-  type(option_type) :: option
+  class(option_type) :: option
 
   aux_var%disp_vector = aux_var2%disp_vector
   aux_var%rel_disp_vector = aux_var2%rel_disp_vector

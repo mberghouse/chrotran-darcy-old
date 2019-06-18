@@ -30,7 +30,7 @@ subroutine OutputEKGInit(option,num_steps)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: num_steps
 
   character(len=MAXSTRINGLENGTH) :: filename

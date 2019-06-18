@@ -314,7 +314,7 @@ subroutine WriteEclipseFilesRest( vsoll, nsol, zsol, time, is_ioproc, &
   character(len = 8), intent(in) :: wname(:)
   PetscInt, intent(in) :: wtype(:), wncmpl(:), &
                          ixcmpl(:), iycmpl(:), izcmpl(:), idcmpl(:)
-  type(option_type), intent(in), pointer :: option
+  class(option_type), intent(in), pointer :: option
 
   ! Write the file
 
@@ -731,7 +731,7 @@ subroutine WriteRestFile(vsoll, nsol, zsol, time, is_ioproc, &
   PetscInt, intent(in) :: wtype(:), wncmpl(:), &
                           ixcmpl(:), iycmpl(:), izcmpl(:), idcmpl(:)
 
-  type(option_type), intent(in), pointer :: option
+  class(option_type), intent(in), pointer :: option
 
   PetscInt  :: intehead(nInteHead)
   PetscBool :: logihead(nLogiHead)
@@ -1703,7 +1703,7 @@ subroutine SetupRestMaps(ltoa, option, nlmax, mlmax)
   implicit none
 
   PetscInt :: ltoa(:)
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt, intent(in) ::nlmax, mlmax
 
   PetscInt :: iproct, nproc, ioproc, iproco, lproco, &

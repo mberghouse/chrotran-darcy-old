@@ -148,7 +148,7 @@ function ImmobileConstraintCreate(immobile,option)
   implicit none
   
   type(immobile_type) :: immobile
-  type(option_type) :: option
+  class(option_type) :: option
   type(immobile_constraint_type), pointer :: ImmobileConstraintCreate
 
   type(immobile_constraint_type), pointer :: constraint  
@@ -241,7 +241,7 @@ function GetImmobileSpeciesIDFromName1(name,immobile,option)
   
   character(len=MAXWORDLENGTH) :: name
   type(immobile_type) :: immobile
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: GetImmobileSpeciesIDFromName1
 
@@ -268,7 +268,7 @@ function GetImmobileSpeciesIDFromName2(name,immobile,return_error,option)
   character(len=MAXWORDLENGTH) :: name
   type(immobile_type) :: immobile
   PetscBool :: return_error
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: GetImmobileSpeciesIDFromName2
 
@@ -303,7 +303,7 @@ function GetImmobileSpeciesIDFromName2(name,immobile,return_error,option)
   if (return_error .and. GetImmobileSpeciesIDFromName2 <= 0) then
     option%io_buffer = 'Species "' // trim(name) // &
       '" not founds among immobile species in GetImmobileSpeciesIDFromName().'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end function GetImmobileSpeciesIDFromName2

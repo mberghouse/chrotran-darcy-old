@@ -274,7 +274,7 @@ subroutine TimestepperSteadyStepDT(this, process_model, stop_flag)
   PetscReal :: scaled_fnorm
   Vec :: residual_vec
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(solver_type), pointer :: solver
 
   solver => this%solver

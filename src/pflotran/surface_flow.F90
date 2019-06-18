@@ -108,7 +108,7 @@ subroutine SurfaceFlowKinematic(hw_up, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: hw_up, hw_dn
   PetscReal :: slope
   PetscReal :: mannings_up, mannings_dn
@@ -159,7 +159,7 @@ subroutine SurfaceFlowDiffusion(hw_up, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: hw_up, hw_dn
   PetscReal :: zc_up, zc_dn
   PetscReal :: head_up, head_dn
@@ -274,7 +274,7 @@ subroutine SurfaceFlowRHSFunction(ts,t,xx,ff,surf_realization,ierr)
 
   type(discretization_type), pointer :: discretization
   type(surface_field_type), pointer :: surf_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
   type(coupler_type), pointer :: boundary_condition
@@ -369,14 +369,14 @@ subroutine SurfaceFlowRHSFunction(ts,t,xx,ff,surf_realization,ierr)
         write(*,*) 'In SurfaceFlowFlux: ', surf_global_auxvars(ghosted_id_up)%head(1), &
           surf_global_auxvars(ghosted_id_dn)%head(1),ghosted_id_up,ghosted_id_dn
           option%io_buffer='stopping: -ve head values '
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       endif
 
       select case(option%surface_flow_formulation)
         case (KINEMATIC_WAVE)
           option%io_buffer='Explicit Surface flow not implemented for ' // &
             'Kinematic wave'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         case (DIFFUSION_WAVE)
           call SurfaceFlowFlux(surf_global_auxvars(ghosted_id_up), &
                                zc(ghosted_id_up), &
@@ -466,7 +466,7 @@ subroutine SurfaceFlowRHSFunction(ts,t,xx,ff,surf_realization,ierr)
           qsrc = source_sink%flow_aux_real_var(ONE_INTEGER,iconn)*area_p(local_id)
         case default
           option%io_buffer = 'Source/Sink flow condition type not recognized'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
       
       ff_p(local_id) = ff_p(local_id) + qsrc/area_p(local_id)
@@ -524,7 +524,7 @@ subroutine SurfaceFlowComputeMaxDt(surf_realization,max_allowable_dt)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(surface_field_type), pointer :: surf_field
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_list_type), pointer :: connection_set_list
@@ -683,7 +683,7 @@ subroutine SurfaceFlowFlux(surf_global_auxvar_up, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(surface_global_auxvar_type) :: surf_global_auxvar_up
   type(surface_global_auxvar_type) :: surf_global_auxvar_dn
   PetscReal :: zc_up, zc_dn
@@ -739,7 +739,7 @@ subroutine SurfaceFlowBCFlux(ibndtype, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(surface_global_auxvar_type) :: surf_global_auxvar
   PetscReal :: slope
   PetscReal :: mannings
@@ -799,7 +799,7 @@ subroutine SurfaceFlowUpdateAuxVars(surf_realization)
 
   class(realization_surface_type) :: surf_realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(surface_field_type), pointer :: surf_field
@@ -965,7 +965,7 @@ subroutine SurfaceFlowUpdateSurfState(surf_realization)
   type(connection_set_type), pointer :: cur_connection_set
   type(dm_ptr_type), pointer :: dm_ptr
   type(grid_type),pointer :: grid,surf_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch,surf_patch
   type(surface_field_type),pointer :: surf_field
 

@@ -103,7 +103,7 @@ subroutine OutputHDF5(realization_base,var_list_type)
   
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   type(output_option_type), pointer :: output_option
@@ -366,7 +366,7 @@ subroutine OutputHDF5OpenFile(option, output_option, var_list_type, file_id, &
 
   implicit none
 
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   type(output_option_type), intent(in) :: output_option
   PetscInt, intent(in) :: var_list_type
   character(len=MAXSTRINGLENGTH) :: filename
@@ -441,7 +441,7 @@ subroutine OutputHDF5OpenFile(option, output_option, var_list_type, file_id, &
   else
     option%io_buffer = '--> appending to hdf5 output file: ' // trim(filename)
   endif
-  call printMsg(option)
+  call option%PrintMsg()
 
 end subroutine OutputHDF5OpenFile
 
@@ -454,7 +454,7 @@ subroutine OutputHDF5CloseFile(option, file_id)
 
   implicit none
 
-  type(option_type), intent(in) :: option
+  class(option_type), intent(in) :: option
   integer(HID_T), intent(in) :: file_id
   integer :: hdf5_err
   PetscErrorCode :: ierr
@@ -516,7 +516,7 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
 
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(output_option_type), pointer :: output_option
@@ -630,7 +630,7 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
   else
     option%io_buffer = '--> appending to hdf5 output file: ' // trim(filename_path)
   endif
-  call printMsg(option)
+  call option%PrintMsg()
 
   if (first) then
     ! create a group for the coordinates data set
@@ -642,7 +642,7 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
 
   if (option%myrank == option%io_rank) then
     option%io_buffer = '--> write xmf output file: ' // trim(filename_path)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=xmf_filename,action="write")
     call OutputXMFHeader(OUTPUT_UNIT, &
                          option%time/output_option%tconv, &
@@ -912,7 +912,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
 
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(output_option_type), pointer :: output_option
@@ -1029,7 +1029,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
     option%io_buffer = '--> appending to hdf5 output file: ' // &
                        trim(filename_path)
   endif
-  call printMsg(option)
+  call option%PrintMsg()
   
   domain_filename_path = trim(option%global_prefix) // '-domain.h5'
   domain_filename_header = trim(option%output_file_name_prefix) // '-domain.h5'
@@ -1047,7 +1047,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
       domain_filename_header = domain_filename_path
         ! initialize fortran hdf5 interface 
       option%io_buffer = 'Opening hdf5 file: ' // trim(domain_filename_path)
-!      call printMsg(option)
+!      call option%PrintMsg()
       call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
       call HDF5OpenFileReadOnly(domain_filename_path,file_id2,prop_id,option)
       call h5pclose_f(prop_id,hdf5_err)
@@ -1056,7 +1056,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
       if (hdf5_err /= 0) then
         option%io_buffer = 'HDF5 dataset "' // trim(string) // '" not found &
           &in file "' // trim(domain_filename_path) // '".'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       call h5dget_space_f(data_set_id,file_space_id,hdf5_err)
       ! should be a rank=2 data space
@@ -1070,7 +1070,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
       if (hdf5_err /= 0) then
         option%io_buffer = 'HDF5 dataset "' // trim(string) // '" not found &
           &in file "' // trim(domain_filename_path) // '".'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       call h5dget_space_f(data_set_id,file_space_id,hdf5_err)
       ! should be a rank=2 data space
@@ -1109,7 +1109,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
   
   if (write_xdmf) then
     option%io_buffer = '--> write xmf output file: ' // trim(xmf_filename)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=xmf_filename,action="write")
     call OutputXMFHeader(OUTPUT_UNIT, &
                        option%time/output_option%tconv, &
@@ -1240,7 +1240,7 @@ function OutputHDF5FilenameID(output_option,option,var_list_type)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
   PetscInt :: var_list_type
 
@@ -1270,7 +1270,7 @@ function OutputHDF5FilenameID(output_option,option,var_list_type)
     write(OutputHDF5FilenameID,'(i5)') file_number
   else
     option%io_buffer = 'Plot number exceeds current maximum of 10^5.'
-    call PrintErrMsgToDev(option,'ask for a higher maximum')
+    call option%PrintErrMsgToDev('ask for a higher maximum')
   endif 
   
   OutputHDF5FilenameID = adjustl(OutputHDF5FilenameID)
@@ -1317,7 +1317,7 @@ subroutine WriteHDF5FluxVelocities(name,realization_base,iphase,direction, &
   
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   type(output_option_type), pointer :: output_option
@@ -1432,7 +1432,7 @@ subroutine WriteHDF5Coordinates(name,option,length,array,file_id)
   implicit none
   
   character(len=32) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: length
   PetscReal :: array(:)
   integer(HID_T) :: file_id
@@ -1505,7 +1505,7 @@ subroutine WriteHDF5CoordinatesUGrid(grid,option,file_id)
   implicit none
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type
@@ -1776,7 +1776,7 @@ subroutine WriteHDF5CoordinatesUGridXDMF(realization_base,option,file_id)
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type
@@ -2288,7 +2288,7 @@ subroutine DetermineNumVertices(realization_base,option)
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   type(grid_type), pointer :: grid
   PetscInt :: local_size,vert_count
@@ -2358,7 +2358,7 @@ subroutine WriteHDF5CoordinatesUGridXDMFExplicit(realization_base,option, &
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type
@@ -2619,7 +2619,7 @@ subroutine WriteHDF5FlowratesUGrid(realization_base,option,file_id, &
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: var_list_type  
 
   integer(HID_T) :: file_id
@@ -2697,7 +2697,7 @@ subroutine WriteHDF5FlowratesUGrid(realization_base,option,file_id, &
           output_option%print_hdf5_energy_flowrate) ndof = 2
     case default
       option%io_buffer='FLOWRATE output not supported in this mode'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   call VecGetLocalSize(field%flowrate_inst,local_size,ierr);CHKERRQ(ierr)
@@ -2737,7 +2737,7 @@ subroutine WriteHDF5FlowratesUGrid(realization_base,option,file_id, &
         endif
       case default
         option%io_buffer='FLOWRATE output not implemented in this mode.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
     if (var_list_type==AVERAGED_VARS) string = 'Aveg_' // trim(string) // &
@@ -2866,7 +2866,7 @@ subroutine WriteHDF5FaceVelUGrid(realization_base,option,file_id, &
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: var_list_type
 
   integer(HID_T) :: file_id
@@ -2938,7 +2938,7 @@ subroutine WriteHDF5FaceVelUGrid(realization_base,option,file_id, &
   if (option%nphase == 1 .and. option%transport%nphase > 1) then
     option%io_buffer = 'WriteHDF5FaceVelUGrid not supported for gas &
       &transport without flow in the gas phase.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   call VecGetLocalSize(field%vx_face_inst,local_size,ierr);CHKERRQ(ierr)
   local_size = local_size/(option%nphase*MAX_FACE_PER_CELL + 1)
@@ -3088,7 +3088,7 @@ subroutine OutputHDF5Provenance(option, output_option, file_id)
 
   implicit none
 
-  type(option_type), intent(in) :: option
+  class(option_type), intent(in) :: option
   type(output_option_type), intent(in) :: output_option
   integer(HID_T), intent(in) :: file_id
 
@@ -3132,7 +3132,7 @@ subroutine OutputHDF5Provenance_PFLOTRAN(option, provenance_id, string_type)
 
   implicit none
 
-  type(option_type), intent(in) :: option
+  class(option_type), intent(in) :: option
   integer(HID_T), intent(in) :: provenance_id
   integer(HID_T), intent(in) :: string_type
 
@@ -3209,11 +3209,11 @@ subroutine OutputHDF5Provenance_input(option, pflotran_id)
 
   implicit none
 
-  type(option_type), intent(in) :: option
+  class(option_type), intent(in) :: option
   integer(HID_T), intent(in) :: pflotran_id
 
   integer(HID_T) :: input_string_type
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscInt :: i, input_line_count
   character(len=MAXSTRINGLENGTH), allocatable :: input_buffer(:)
   PetscMPIInt :: hdf5_err
@@ -3222,7 +3222,7 @@ subroutine OutputHDF5Provenance_input(option, pflotran_id)
   input => InputCreate(IN_UNIT, option%input_filename, option)
   input_line_count = InputGetLineCount(input,option)
   allocate(input_buffer(input_line_count))
-  call InputReadToBuffer(input, input_buffer, option)
+  call InputReadToBuffer(input,input_buffer, option)
   call h5tcopy_f(H5T_FORTRAN_S1, input_string_type, hdf5_err)
   size_t_int = MAXWORDLENGTH
   call h5tset_size_f(input_string_type, size_t_int, hdf5_err)

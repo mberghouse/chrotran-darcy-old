@@ -65,7 +65,7 @@ subroutine RTTimeCut(realization)
   
   type(realization_subsurface_type) :: realization
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   PetscErrorCode :: ierr
 
@@ -122,7 +122,7 @@ subroutine RTSetup(realization)
   type(realization_subsurface_type) :: realization
   
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(output_variable_list_type), pointer :: list
   type(reaction_type), pointer :: reaction
@@ -164,7 +164,7 @@ subroutine RTSetup(realization)
       option%io_buffer = 'The number of transport phases is set &
         &incorrectly for transport with active gases. Please email &
         &your input deck to pflotran-dev@googlegroups.com' 
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
 
@@ -209,24 +209,24 @@ subroutine RTSetup(realization)
     if (material_auxvars(ghosted_id)%volume < 0.d0 .and. flag(1) == 0) then
       flag(1) = 1
       option%io_buffer = 'Non-initialized cell volume.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%porosity < 0.d0 .and. flag(2) == 0) then
       flag(2) = 1
       option%io_buffer = 'Non-initialized porosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%tortuosity < 0.d0 .and. flag(3) == 0) then
       flag(3) = 1
       option%io_buffer = 'Non-initialized tortuosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (reaction%neqkdrxn > 0) then
       if (material_auxvars(ghosted_id)%soil_particle_density < 0.d0 .and. &
           flag(4) == 0) then
         flag(4) = 1
         option%io_buffer = 'Non-initialized soil particle density.'
-        call printMsg(option)
+        call option%PrintMsg()
       endif
     endif
     if (associated(reaction%surface_complexation)) then
@@ -238,7 +238,7 @@ subroutine RTSetup(realization)
               flag(4) == 0) then
             flag(4) = 1
             option%io_buffer = 'Non-initialized soil particle density.'
-            call printMsg(option)
+            call option%PrintMsg()
           endif
         enddo
       endif
@@ -248,7 +248,7 @@ subroutine RTSetup(realization)
   if (maxval(flag) > 0) then
     option%io_buffer = &
       'Material property errors found in RTSetup (reactive transport).'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   
 !============== Create secondary continuum variables - SK 2/5/13 ===============
@@ -349,7 +349,7 @@ subroutine RTSetup(realization)
       option%io_buffer = 'Species "' // trim(cur_generic_parameter%name) // &
         '" listed in aqueous diffusion coefficient list not found among &
         &aqueous species.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     rt_parameter%diffusion_coefficient(i,iphase) = &
         cur_generic_parameter%rvalue
@@ -359,7 +359,7 @@ subroutine RTSetup(realization)
     if (rt_parameter%nphase <= 1) then
       option%io_buffer = 'GAS_DIFFUSION_COEFFICIENTS may not be set when &
         &an ACTIVE_GAS is not included in the CHEMISTRY block'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     ! gas diffusion
     iphase = option%gas_phase
@@ -382,7 +382,7 @@ subroutine RTSetup(realization)
         option%io_buffer = 'Species "' // trim(cur_generic_parameter%name) // &
           '" listed in gas diffusion coefficient list has no aqueous &
           &counterpart'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       cur_generic_parameter => cur_generic_parameter%next
     enddo
@@ -394,7 +394,7 @@ subroutine RTSetup(realization)
         option%io_buffer = 'Active gas transprot is not supported when &
           &gas species are not defined as a one to one match with the &
           &primary species [e.g. O2(aq) <-> O2(g)].'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     endif
     if (reaction%neqcplx > 0) then
@@ -402,7 +402,7 @@ subroutine RTSetup(realization)
         &with aqueous speciation since fluxes are currently implemented &
         &based on the total aqueous component concentration and the &
         &diffusion of secondary complexes is lumped.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
  
@@ -436,7 +436,7 @@ subroutine RTComputeMassBalance(realization,max_size,sum_mol)
   type(realization_subsurface_type) :: realization
   PetscInt :: max_size
   PetscReal :: sum_mol(max_size,8)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -588,7 +588,7 @@ subroutine RTZeroMassBalanceDelta(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_bc(:)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_ss(:)
@@ -636,7 +636,7 @@ subroutine RTUpdateMassBalance(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_bc(:)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_ss(:)
@@ -722,7 +722,7 @@ subroutine RTUpdateEquilibriumState(realization)
   type(realization_subsurface_type) :: realization
 
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   type(grid_type), pointer :: grid
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
@@ -810,7 +810,7 @@ subroutine RTUpdateKineticState(realization)
   type(realization_subsurface_type) :: realization
 
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   type(grid_type), pointer :: grid
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
@@ -893,7 +893,7 @@ subroutine RTUpdateFixedAccumulation(realization)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)  
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1019,7 +1019,7 @@ subroutine RTUpdateTransportCoefs(realization)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1190,7 +1190,7 @@ subroutine RTUpdateRHSCoefs(realization)
   
   type(global_auxvar_type), pointer :: global_auxvars(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1250,7 +1250,7 @@ subroutine RTCalculateRHS_t0(realization)
   type(realization_subsurface_type) :: realization
   
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1318,7 +1318,7 @@ subroutine RTCalculateRHS_t1(realization)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1359,7 +1359,7 @@ subroutine RTCalculateRHS_t1(realization)
   
   iphase = 1
   option%io_buffer = 'RTCalculateRHS_t1 must be refactored'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 #if 0
 !geh - activity coef updates must always be off!!!
@@ -1556,7 +1556,7 @@ subroutine RTCalculateTransportMatrix(realization,T)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1801,7 +1801,7 @@ subroutine RTReact(realization)
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(reaction_type), pointer :: reaction
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(sec_transport_type), pointer :: rt_sec_transport_vars(:)
   PetscInt :: local_id, ghosted_id
   PetscInt :: istart, iend, iendaq
@@ -2001,7 +2001,7 @@ subroutine RTComputeBCMassBalanceOS(realization)
   PetscInt :: local_id, ghosted_id
   PetscInt, parameter :: iphase = 1
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -2168,7 +2168,7 @@ subroutine RTNumericalJacobianTest(realization)
   PetscReal, pointer :: vec_p(:), vec2_p(:)
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   
@@ -2259,7 +2259,7 @@ subroutine RTResidual(snes,xx,r,realization,ierr)
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscViewer :: viewer  
   
   character(len=MAXSTRINGLENGTH) :: string
@@ -2356,7 +2356,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
   PetscInt, parameter :: iphase = 1
   PetscInt :: i, istart, iend                        
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -2663,7 +2663,7 @@ subroutine RTResidualNonFlux(snes,xx,r,realization,ierr)
   PetscInt :: idof
   PetscInt :: offset
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -3003,7 +3003,7 @@ subroutine RTResidualEquilibrateCO2(r,realization)
   PetscInt :: iflag
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -3222,7 +3222,7 @@ subroutine RTJacobianFlux(snes,xx,A,B,realization,ierr)
   PetscInt :: local_id, ghosted_id
   PetscInt :: istart, iend                        
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reactive_transport_param_type), pointer :: rt_parameter
@@ -3487,7 +3487,7 @@ subroutine RTJacobianNonFlux(snes,xx,A,B,realization,ierr)
   PetscInt :: istart, iend
   PetscInt :: offset, idof                  
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -3570,7 +3570,7 @@ subroutine RTJacobianNonFlux(snes,xx,A,B,realization,ierr)
         if (realization%reaction%ncomp /= realization%reaction%naqcomp) then
           option%io_buffer = 'Current multicomponent implementation is for '// &
                              'aqueous reactions only'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         
         if (rt_sec_transport_vars(local_id)%sec_jac_update) then
@@ -3578,7 +3578,7 @@ subroutine RTJacobianNonFlux(snes,xx,A,B,realization,ierr)
         else
           option%io_buffer = 'RT secondary continuum term in primary '// &
                              'jacobian not updated'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
          
         Jup = Jup - jac_transport                                                                   
@@ -3601,7 +3601,7 @@ subroutine RTJacobianNonFlux(snes,xx,A,B,realization,ierr)
     
     if (reaction%ncoll > 0) then
       option%io_buffer = 'Source/sink not yet implemented for colloids'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
 
     cur_connection_set => source_sink%connection_set
@@ -3742,7 +3742,7 @@ subroutine RTJacobianEquilibrateCO2(J,realization)
   PetscInt :: local_id, ghosted_id
   PetscInt :: idof                  
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -3831,7 +3831,7 @@ subroutine RTUpdateActivityCoefficients(realization,update_cells,update_bcs)
   PetscBool :: update_bcs
   PetscBool :: update_cells
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -3929,7 +3929,7 @@ subroutine RTUpdateAuxVars(realization,update_cells,update_bcs, &
   PetscBool :: update_cells
   PetscBool :: update_activity_coefs
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
@@ -4352,7 +4352,7 @@ subroutine RTMaxChange(realization,dcmax,dvfmax)
   PetscReal :: dcmax(:)
   PetscReal :: dvfmax(:)
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field 
   type(reaction_type), pointer :: reaction
   type(patch_type), pointer :: patch
@@ -4419,7 +4419,7 @@ subroutine RTJumpStartKineticSorption(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
@@ -4471,7 +4471,7 @@ subroutine RTCheckpointKineticSorptionBinary(realization,viewer,checkpoint)
   PetscViewer :: viewer
   PetscBool :: checkpoint
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -4565,7 +4565,7 @@ subroutine RTCheckpointKineticSorptionHDF5(realization, pm_grp_id, checkpoint)
   integer(HID_T) :: pm_grp_id
   PetscBool :: checkpoint
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -4695,7 +4695,7 @@ subroutine RTExplicitAdvection(realization)
   
   PetscInt :: local_id, ghosted_id
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
@@ -4827,22 +4827,22 @@ subroutine RTExplicitAdvection(realization)
   if (reaction%ncoll > 0) then
     option%io_buffer = &
       'Need to add colloidal source/sinks to RTExplicitAdvection()'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (patch%aux%RT%rt_parameter%nphase > 1) then
     option%io_buffer = &
       'Need to add multiphase source/sinks to RTExplicitAdvection()'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (reaction%ncomp /= reaction%naqcomp) then
     option%io_buffer = &
       'Need to account for non-aqueous species to RTExplicitAdvection()'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (option%compute_mass_balance_new) then  
     option%io_buffer = &
       'Mass balance not yet supported in RTExplicitAdvection()'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 ! Interior Flux Terms -----------------------------------
@@ -5136,7 +5136,7 @@ subroutine RTDestroy(realization)
   type(realization_subsurface_type) :: realization
   
 #ifdef OS_STATISTICS
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscErrorCode :: ierr
   
   PetscReal :: temp_real_in(3), temp_real_out(3)

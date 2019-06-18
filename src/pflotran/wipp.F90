@@ -163,46 +163,46 @@ subroutine FractureRead(this,input,option)
   implicit none
   
   class(fracture_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: word
 
   option%flow%fracture_on = PETSC_TRUE
   
   do
       call InputReadPflotranString(input,option)
-      call InputReadStringErrorMsg(input,option, &
+      call input%ReadStringErrorMsg(option, &
                                     'MATERIAL_PROPERTY,WIPP-FRACTURE')
           
       if (InputCheckExit(input,option)) exit
           
-      if (InputError(input)) exit
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      call InputErrorMsg(input,option,'keyword', &
+      if (input%Error()) exit
+      call input%ReadWord(option,word,PETSC_TRUE)
+      call input%ErrorMsg(option,'keyword', &
                           'MATERIAL_PROPERTY,WIPP-FRACTURE')   
       select case(trim(word))
         case('INITIATING_PRESSURE')
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                                 this%init_pressure)
-          call InputErrorMsg(input,option, &
+          call input%ErrorMsg(option, &
                               'initiating pressure of fracturing', &
                               'MATERIAL_PROPERTY,WIPP-FRACTURE')
         case('ALTERED_PRESSURE')
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                                 this%altered_pressure)
-          call InputErrorMsg(input,option, &
+          call input%ErrorMsg(option, &
                               'altered pressure of fracturing', &
                               'MATERIAL_PROPERTY,WIPP-FRACTURE')
         case('MAXIMUM_FRACTURE_POROSITY')
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                                 this%maximum_porosity)
-          call InputErrorMsg(input,option, &
+          call input%ErrorMsg(option, &
                               'maximum fracture porosity', &
                               'MATERIAL_PROPERTY,WIPP-FRACTURE')
         case('FRACTURE_EXPONENT')
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                               this%porosity_exponent)
-          call InputErrorMsg(input,option, &
+          call input%ErrorMsg(option, &
                           'dimensionless fracture exponent for porosity', &
                               'MATERIAL_PROPERTY,WIPP-FRACTURE')
         case('ALTER_PERM_X')
@@ -515,14 +515,14 @@ subroutine CreepClosureRead(this,input,option)
   implicit none
   
   class(creep_closure_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: keyword, word, internal_units
   character(len=MAXSTRINGLENGTH) :: error_string = 'CREEP_CLOSURE'
-  type(input_type), pointer :: input2
+  class(input_type), pointer :: input2
   PetscInt :: temp_int
   PetscReal :: time_units_conversion
 
@@ -534,20 +534,20 @@ subroutine CreepClosureRead(this,input,option)
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
       case('FILENAME') 
-        call InputReadFilename(input,option,filename)
-        call InputErrorMsg(input,option,'FILENAME',error_string)
+        call input%ReadFilename(option,filename)
+        call input%ErrorMsg(option,'FILENAME',error_string)
       case('SHUTDOWN_PRESSURE')
-        call InputReadDouble(input,option,this%shutdown_pressure)
-        call InputErrorMsg(input,option,'shutdown pressure',error_string)
+        call input%ReadDouble(option,this%shutdown_pressure)
+        call input%ErrorMsg(option,'shutdown pressure',error_string)
       case('TIME_CLOSEOFF')
-        call InputReadDouble(input,option,this%time_closeoff)
-        call InputErrorMsg(input,option,'time closeoff',error_string)
+        call input%ReadDouble(option,this%time_closeoff)
+        call input%ErrorMsg(option,'time closeoff',error_string)
      case default
         call InputKeywordUnrecognized(keyword,'CREEP_CLOSURE',option)
     end select
@@ -555,7 +555,7 @@ subroutine CreepClosureRead(this,input,option)
   
   if (len_trim(filename) < 1) then
     option%io_buffer = 'FILENAME must be specified for CREEP_CLOSURE.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   this%lookup_table => LookupTableCreateGeneral(TWO_INTEGER)
@@ -564,23 +564,23 @@ subroutine CreepClosureRead(this,input,option)
   input2%ierr = 0
   do
     call InputReadPflotranString(input2,option)
-    if (InputError(input2)) exit
+    if (input2%Error()) exit
 
-    call InputReadWord(input2,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input2,option,'keyword',error_string)
+    call input2%ReadWord(option,keyword,PETSC_TRUE)
+    call input2%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
       case('NUM_TIMES') 
-        call InputReadInt(input2,option,this%num_times)
-        call InputErrorMsg(input2,option,'number of times',error_string)
+        call input2%ReadInt(option,this%num_times)
+        call input2%ErrorMsg(option,'number of times',error_string)
       case('NUM_VALUES_PER_TIME') 
-        call InputReadInt(input2,option,this%num_values_per_time)
-        call InputErrorMsg(input2,option,'number of pressure',error_string)
+        call input2%ReadInt(option,this%num_values_per_time)
+        call input2%ErrorMsg(option,'number of pressure',error_string)
       case('TIME_UNITS') 
         internal_units = 'sec'
-        call InputReadWord(input2,option,word,PETSC_TRUE) 
-        call InputErrorMsg(input2,option,'UNITS','CONDITION')   
+        call input2%ReadWord(option,word,PETSC_TRUE)
+        call input2%ErrorMsg(option,'UNITS','CONDITION')
         call StringToLower(word)
         time_units_conversion = UnitsConvertToInternal(word, &
                                 internal_units,option)
@@ -589,7 +589,7 @@ subroutine CreepClosureRead(this,input,option)
             Uninitialized(this%num_values_per_time)) then
           option%io_buffer = 'NUM_TIMES and NUM_VALUES_PER_TIME must be ' // &
             'specified prior to reading the corresponding arrays.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         this%lookup_table%dims(1) = this%num_times
         this%lookup_table%dims(2) = this%num_values_per_time
@@ -622,19 +622,19 @@ subroutine CreepClosureRead(this,input,option)
   
   if (size(this%lookup_table%axis1%values) /= this%num_times) then
     option%io_buffer = 'Number of times does not match NUM_TIMES.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   if (size(this%lookup_table%axis2%values) /= &
     this%num_times*this%num_values_per_time) then
     option%io_buffer = 'Number of pressures does not match NUM_TIMES * ' // &
                        'NUM_VALUES_PER_TIME.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (size(this%lookup_table%data) /= &
     this%num_times*this%num_values_per_time) then
     option%io_buffer = 'Number of porosities does not match NUM_TIMES * ' // &
                        'NUM_VALUES_PER_TIME.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! set limits
@@ -686,7 +686,7 @@ subroutine CreepClosureConvertListToArray(list,array,option)
   
   class(creep_closure_type), pointer :: list
   class(creep_closure_ptr_type), pointer :: array(:)
-  type(option_type) :: option
+  class(option_type) :: option
     
   class(creep_closure_type), pointer :: cur_creep_closure
   PetscInt :: count
@@ -742,7 +742,7 @@ function CreepClosureGetID(creep_closure_array, &
     creep_closure_array(:)
   character(len=MAXWORDLENGTH) :: creep_closure_name
   character(len=MAXWORDLENGTH) :: material_property_name
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: CreepClosureGetID
 
@@ -763,7 +763,7 @@ function CreepClosureGetID(creep_closure_array, &
            '" in material property "' // &
            trim(material_property_name) // &
            '" not found among available creep closure tables.'
-  call printErrMsg(option)    
+  call option%PrintErrMsg()
 
 end function CreepClosureGetID
 
@@ -948,8 +948,8 @@ subroutine KlinkenbergRead(this,input,option)
   implicit none
   
   class(klinkenberg_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string = 'KLINKENBERG_EFFECT'
@@ -961,17 +961,17 @@ subroutine KlinkenbergRead(this,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
       case('A') 
-        call InputReadDouble(input,option,this%a)
-        call InputErrorMsg(input,option,'a',error_string)
+        call input%ReadDouble(option,this%a)
+        call input%ErrorMsg(option,'a',error_string)
       case('B') 
-        call InputReadDouble(input,option,this%b)
-        call InputErrorMsg(input,option,'b',error_string)
+        call input%ReadDouble(option,this%b)
+        call input%ErrorMsg(option,'b',error_string)
      case default
         call InputKeywordUnrecognized(keyword,error_string,option)
     end select
@@ -980,12 +980,12 @@ subroutine KlinkenbergRead(this,input,option)
   if (Uninitialized(this%a)) then
     option%io_buffer = &
       'Parameter "a" must be included to model the Klinkenberg Effect.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%b)) then
     option%io_buffer = &
       'Parameter "b" must be included to model the Klinkenberg Effect.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine KlinkenbergRead
@@ -1187,8 +1187,8 @@ subroutine WIPPRead(input,option)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   type(wipp_type), pointer :: wipp
   character(len=MAXWORDLENGTH) :: keyword
@@ -1203,8 +1203,8 @@ subroutine WIPPRead(input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
@@ -1303,7 +1303,7 @@ subroutine WIPPCCVerify(saturation_func, &
   PetscReal :: capillary_pressure
   PetscReal :: liq_rel_perm
   PetscReal :: gas_rel_perm
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: sswr
   PetscReal :: lswr
@@ -1403,7 +1403,7 @@ subroutine WIPPCCVerify(saturation_func, &
     print *, 'lswr: ', lswr, ltype
     print *, 'gswr: ', gswr, gtype
     option%io_buffer = 'Unequal liquid residual saturations.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
  
   if ((Initialized(ssgr) .and. .not.Equal(ssgr,lsgr)) .or. &
@@ -1412,7 +1412,7 @@ subroutine WIPPCCVerify(saturation_func, &
     print *, 'lsgr: ', lsgr, ltype
     print *, 'gsgr: ', gsgr, gtype
     option%io_buffer = 'Unequal gas residual saturations.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
  
   if ((Initialized(slamda) .and. .not.Equal(slamda,llamda)) .or. &
@@ -1421,7 +1421,7 @@ subroutine WIPPCCVerify(saturation_func, &
     print *, 'llamda: ', llamda, ltype
     print *, 'glamda: ', glamda, gtype
     option%io_buffer = 'Unequal lambdas.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
  
 end subroutine WIPPCCVerify
@@ -1454,7 +1454,7 @@ subroutine WIPPCharacteristicCurves(saturation, &
   PetscReal :: capillary_pressure
   PetscReal :: liq_rel_perm
   PetscReal :: gas_rel_perm
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal, parameter :: tolc = 1.d-2 ! read from input file below perms
   PetscReal, parameter :: soceffmin = 1.d-3 ! read from input file below perms

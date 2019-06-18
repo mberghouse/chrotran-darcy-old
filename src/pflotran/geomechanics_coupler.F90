@@ -202,9 +202,9 @@ subroutine GeomechCouplerRead(coupler,input,option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(geomech_coupler_type) :: coupler
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
 
@@ -212,19 +212,19 @@ subroutine GeomechCouplerRead(coupler,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS COUPLER')   
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS COUPLER')
     call StringToUpper(word)      
     
     select case(trim(word))
     
       case('GEOMECHANICS_REGION')
-        call InputReadWord(input,option,coupler%region_name,PETSC_TRUE)
+        call input%ReadWord(option,coupler%region_name,PETSC_TRUE)
       case('GEOMECHANICS_CONDITION')
-        call InputReadWord(input,option,coupler%geomech_condition_name, &
+        call input%ReadWord(option,coupler%geomech_condition_name, &
                            PETSC_TRUE)
       case default
         call InputKeywordUnrecognized(word, &

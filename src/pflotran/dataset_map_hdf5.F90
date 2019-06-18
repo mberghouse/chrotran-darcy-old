@@ -125,8 +125,8 @@ subroutine DatasetMapHDF5Read(this,input,option)
   implicit none
   
   class(dataset_map_hdf5_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   PetscBool :: found
@@ -138,19 +138,19 @@ subroutine DatasetMapHDF5Read(this,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','DATASET')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','DATASET')
     call StringToUpper(keyword)   
       
     call DatasetCommonHDF5ReadSelectCase(this,input,keyword,found,option)
     if (.not.found) then
       select case(trim(keyword))
         case('MAP_HDF5_DATASET_NAME') 
-          call InputReadWord(input,option,this%h5_dataset_map_name,PETSC_TRUE)
-          call InputErrorMsg(input,option,'map dataset name','DATASET')
+          call input%ReadWord(option,this%h5_dataset_map_name,PETSC_TRUE)
+          call input%ErrorMsg(option,'map dataset name','DATASET')
         case('MAP_FILENAME_NAME') 
-          call InputReadWord(input,option,this%map_filename,PETSC_TRUE)
-          call InputErrorMsg(input,option,'map filename','DATASET')
+          call input%ReadWord(option,this%map_filename,PETSC_TRUE)
+          call input%ErrorMsg(option,'map filename','DATASET')
         case default
           call InputKeywordUnrecognized(keyword,'dataset',option)
       end select
@@ -185,7 +185,7 @@ subroutine DatasetMapHDF5Load(this,option)
   implicit none
   
   class(dataset_map_hdf5_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   if (DatasetCommonHDF5Load(this,option)) then
     if (.not.associated(this%mapping)) then
@@ -218,7 +218,7 @@ subroutine DatasetMapHDF5ReadData(this,option)
   implicit none
   
   class(dataset_map_hdf5_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   integer(HID_T) :: file_id
   integer(HID_T) :: file_space_id
@@ -247,7 +247,7 @@ subroutine DatasetMapHDF5ReadData(this,option)
   ! open the file
   call h5open_f(hdf5_err)
   option%io_buffer = 'Opening hdf5 file: ' // trim(this%filename)
-  call printMsg(option)
+  call option%PrintMsg()
   
   ! set read file access property
   call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
@@ -260,7 +260,7 @@ subroutine DatasetMapHDF5ReadData(this,option)
   ! the dataset is actually stored in a group.  the group contains
   ! a "data" dataset and optionally a "time" dataset.
   option%io_buffer = 'Opening group: ' // trim(this%hdf5_dataset_name)
-  call printMsg(option)  
+  call option%PrintMsg()
   call HDF5GroupOpen(file_id,this%hdf5_dataset_name,grp_id,option)
 
   time_dim = -1
@@ -293,7 +293,7 @@ subroutine DatasetMapHDF5ReadData(this,option)
     if ((ndims_h5 == 2 .and. .not.associated(this%time_storage)) .or. &
         (ndims_h5 == 1 .and. associated(this%time_storage))) then
       option%io_buffer = 'Inconsistent dimensions in dataset file.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     ! rank in space will always be 1
     this%rank = 1
@@ -308,13 +308,13 @@ subroutine DatasetMapHDF5ReadData(this,option)
     if (num_data_values/num_times /= this%dims(1)) then
       option%io_buffer = &
         'Number of values in dataset does not match dimensions.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (associated(this%time_storage) .and. &
         num_times_in_h5_file /= num_times) then
       option%io_buffer = &
         'Number of times does not match last dimension of data array.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (.not.associated(this%rarray)) then
       allocate(this%rarray(this%dims(1)))
@@ -393,10 +393,10 @@ subroutine DatasetMapHDF5ReadData(this,option)
   call PetscLogEventEnd(logging%event_h5dread_f,ierr);CHKERRQ(ierr)
 
   option%io_buffer = 'Closing group: ' // trim(this%hdf5_dataset_name)
-  call printMsg(option)  
+  call option%PrintMsg()
   call h5gclose_f(grp_id,hdf5_err)  
   option%io_buffer = 'Closing hdf5 file: ' // trim(this%filename)
-  call printMsg(option)  
+  call option%PrintMsg()
   call h5fclose_f(file_id,hdf5_err)
   call h5close_f(hdf5_err)
   
@@ -424,7 +424,7 @@ subroutine DatasetMapHDF5ReadMap(this,option)
   implicit none
   
   class(dataset_map_hdf5_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   integer(HID_T) :: file_id
   integer(HID_T) :: file_space_id
@@ -451,7 +451,7 @@ subroutine DatasetMapHDF5ReadMap(this,option)
   ! open the file
   call h5open_f(hdf5_err)
   option%io_buffer = 'Opening hdf5 file: ' // trim(this%map_filename)
-  call printMsg(option)
+  call option%PrintMsg()
   
   ! set read file access property
   call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
@@ -464,7 +464,7 @@ subroutine DatasetMapHDF5ReadMap(this,option)
   ! the dataset is actually stored in a group.  the group contains
   ! a "data" dataset and optionally a "time" dataset.
   option%io_buffer = 'Opening group: ' // trim(this%h5_dataset_map_name)
-  call printMsg(option)  
+  call option%PrintMsg()
   call HDF5GroupOpen(file_id,this%h5_dataset_map_name,grp_id,option)
   
   ! Open the "data" dataset
@@ -477,7 +477,7 @@ subroutine DatasetMapHDF5ReadMap(this,option)
   if (ndims_hdf5 /= 2) then
     option%io_buffer='Dimension of '// trim(this%h5_dataset_map_name) // &
       '/Data dataset in ' // trim(this%filename) // ' is not equal to 2.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! Get dimensions of dataset
@@ -506,7 +506,7 @@ subroutine DatasetMapHDF5ReadMap(this,option)
   ! TOdo: Only read part of data
 !  option%io_buffer='Gautam: Modify code for reading HDF5 to generate mapping '//&
 !   'of dataset'
-!  call printMsg(option)
+!  call option%PrintMsg()
 !  nids_local=dims_h5(2)
 !  length(:) = dims_h5(:)
 !  offset(:) = 0
@@ -545,10 +545,10 @@ subroutine DatasetMapHDF5ReadMap(this,option)
   call h5dclose_f(dataset_id,hdf5_err)  
   
   option%io_buffer = 'Closing group: ' // trim(this%hdf5_dataset_name)
-  call printMsg(option)  
+  call option%PrintMsg()
   call h5gclose_f(grp_id,hdf5_err)  
   option%io_buffer = 'Closing hdf5 file: ' // trim(this%filename)
-  call printMsg(option)  
+  call option%PrintMsg()
   call h5fclose_f(file_id,hdf5_err)
   call h5close_f(hdf5_err)  
   
@@ -572,7 +572,7 @@ subroutine DatasetMapHDF5Print(this,option)
   implicit none
   
   class(dataset_map_hdf5_type), target :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(dataset_common_hdf5_type), pointer :: dataset_hdf5
 

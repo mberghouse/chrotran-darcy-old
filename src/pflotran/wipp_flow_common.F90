@@ -39,7 +39,7 @@ module WIPP_Flow_Common_module
       type(wippflo_auxvar_type) :: wippflo_auxvar_up, wippflo_auxvar_dn
       type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
       class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-      type(option_type) :: option
+      class(option_type) :: option
       PetscReal :: v_darcy(option%nphase)
       PetscReal :: area
       PetscReal :: dist(-1:3)
@@ -67,7 +67,7 @@ module WIPP_Flow_Common_module
       use Option_module
       use Material_Aux_class
       implicit none
-      type(option_type) :: option
+      class(option_type) :: option
       PetscInt :: ibndtype(1:option%nflowdof)
       PetscInt :: auxvar_mapping(WIPPFLO_MAX_INDEX)
       PetscReal :: auxvars(:) ! from aux_real_var array
@@ -125,7 +125,7 @@ subroutine WIPPFloAccumulation(wippflo_auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   PetscReal :: soil_heat_capacity
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(option%nflowdof) 
   PetscBool :: debug_cell
   
@@ -187,7 +187,7 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
   type(wippflo_auxvar_type) :: wippflo_auxvar_up, wippflo_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area
   PetscReal :: dist(-1:3)
@@ -410,7 +410,7 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   type(wippflo_auxvar_type) :: wippflo_auxvar_up, wippflo_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area   ! area here is really area / alpha
   PetscReal :: dist(-1:3)
@@ -648,7 +648,7 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ibndtype(1:option%nflowdof)
   PetscInt :: auxvar_mapping(WIPPFLO_MAX_INDEX)
   PetscReal :: auxvars(:) ! from aux_real_var array
@@ -811,7 +811,7 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = &
         'Boundary condition type not recognized in WIPPFloBCFlux phase loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   if (dabs(v_darcy(iphase)) > 0.d0 .or. mobility > 0.d0) then
     ! q[m^3 phase/sec] = v_darcy[m/sec] * area[m^2]
@@ -919,7 +919,7 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = &
         'Boundary condition type not recognized in WIPPFloBCFlux phase loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   if (dabs(v_darcy(iphase)) > 0.d0 .or. mobility > 0.d0) then
@@ -962,7 +962,7 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ibndtype(1:option%nflowdof)
   PetscInt :: auxvar_mapping(WIPPFLO_MAX_INDEX)
   PetscReal :: auxvars(:) ! from aux_real_var array
@@ -1121,7 +1121,7 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = &
         'Boundary condition type not recognized in BRAGFloBCFlux phase loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   if (dabs(v_darcy(iphase)) > 0.d0 .or. rel_perm > 0.d0) then
     ! q[m^3 phase/sec] = v_darcy[m/sec] * area[m^2]
@@ -1212,7 +1212,7 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = &
         'Boundary condition type not recognized in BRAGFloBCFlux phase loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   if (dabs(v_darcy(iphase)) > 0.d0 .or. rel_perm > 0.d0) then
@@ -1247,7 +1247,7 @@ subroutine WIPPFloSrcSink(option,qsrc,flow_src_sink_type, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: qsrc(:)
   PetscInt :: flow_src_sink_type
   type(wippflo_auxvar_type) :: wippflo_auxvar
@@ -1338,7 +1338,7 @@ subroutine WIPPFloAccumDerivative(wippflo_auxvar,global_auxvar, &
   type(wippflo_auxvar_type) :: wippflo_auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: soil_heat_capacity
   PetscReal :: J(option%nflowdof,option%nflowdof)
      
@@ -1388,7 +1388,7 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
   type(wippflo_auxvar_type) :: wippflo_auxvar_up(0:), wippflo_auxvar_dn(0:)
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: area
   PetscReal :: dist(-1:3)
   PetscInt :: upwind_direction_(option%nphase)
@@ -1500,7 +1500,7 @@ subroutine XXBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ibndtype(1:option%nflowdof)
   PetscInt :: auxvar_mapping(WIPPFLO_MAX_INDEX)
   PetscReal :: auxvars(:) ! from aux_real_var array
@@ -1569,7 +1569,7 @@ subroutine WIPPFloSrcSinkDerivative(option,qsrc,flow_src_sink_type, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: qsrc(:)
   PetscInt :: flow_src_sink_type
   type(wippflo_auxvar_type) :: wippflo_auxvars(0:)

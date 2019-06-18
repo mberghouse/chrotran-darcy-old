@@ -42,22 +42,22 @@ subroutine MineralRead(mineral,input,option)
   implicit none
   
   type(mineral_type) :: mineral
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   type(mineral_rxn_type), pointer :: cur_mineral, prev_mineral
            
   nullify(prev_mineral)
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
           
     mineral%nmnrl = mineral%nmnrl + 1
           
     cur_mineral => MineralRxnCreate()
-    call InputReadWord(input,option,cur_mineral%name,PETSC_TRUE)  
-    call InputErrorMsg(input,option,'keyword','CHEMISTRY,MINERALS')    
+    call input%ReadWord(option,cur_mineral%name,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CHEMISTRY,MINERALS')
     if (.not.associated(mineral%mineral_list)) then
       mineral%mineral_list => cur_mineral
       cur_mineral%id = 1
@@ -89,8 +89,8 @@ subroutine MineralReadKinetics(mineral,input,option)
   implicit none
   
   type(mineral_type) :: mineral
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -121,11 +121,11 @@ subroutine MineralReadKinetics(mineral,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,name,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','CHEMISTRY,MINERAL_KINETICS')
+    call input%ReadWord(option,name,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CHEMISTRY,MINERAL_KINETICS')
     
     cur_mineral => mineral%mineral_list
     found = PETSC_FALSE
@@ -139,88 +139,88 @@ subroutine MineralReadKinetics(mineral,input,option)
         tstrxn%rate = UNINITIALIZED_DOUBLE
         do
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,card)
+          call input%ReadStringErrorMsg(option,card)
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
+          call input%ReadWord(option,word,PETSC_TRUE)
           error_string = 'CHEMISTRY,MINERAL_KINETICS'
-          call InputErrorMsg(input,option,'word',error_string)
+          call input%ErrorMsg(option,'word',error_string)
 
           select case(trim(word))
             case('RATE_CONSTANT')
 !             read rate constant
-              call InputReadDouble(input,option,tstrxn%rate)
+              call input%ReadDouble(option,tstrxn%rate)
               if (tstrxn%rate < 0.d0) then
                 tstrxn%rate = 10.d0**tstrxn%rate
               endif
-              call InputErrorMsg(input,option,'rate',error_string)
+              call input%ErrorMsg(option,'rate',error_string)
               ! read units if they exist
               internal_units = 'mol/m^2-sec'
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              if (InputError(input)) then
+              call input%ReadWord(option,word,PETSC_TRUE)
+              if (input%Error()) then
                 input%err_buf = trim(cur_mineral%name) // ' RATE UNITS'
-                call InputDefaultMsg(input,option)
+                call input%DefaultMsg(option)
               else
                 tstrxn%rate = tstrxn%rate * &
                   UnitsConvertToInternal(word,internal_units,option)
               endif
             case('ACTIVATION_ENERGY')
 !             read activation energy for Arrhenius law
-              call InputReadDouble(input,option,tstrxn%activation_energy)
-              call InputErrorMsg(input,option,'activation',error_string)
-              call InputReadAndConvertUnits(input,tstrxn%activation_energy, &
+              call input%ReadDouble(option,tstrxn%activation_energy)
+              call input%ErrorMsg(option,'activation',error_string)
+              call input%ReadAndConvertUnits(tstrxn%activation_energy, &
                                             'J/mol', &
                               trim(error_string)//',activation energy',option)
             case('AFFINITY_THRESHOLD')
 !             read affinity threshold for precipitation
-              call InputReadDouble(input,option,tstrxn%affinity_threshold)
-              call InputErrorMsg(input,option,'affinity threshold', &
+              call input%ReadDouble(option,tstrxn%affinity_threshold)
+              call input%ErrorMsg(option,'affinity threshold', &
                                  error_string)
             case('AFFINITY_POWER')
 !             reads exponent on affinity term
-              call InputReadDouble(input,option,tstrxn%affinity_factor_beta)
-              call InputErrorMsg(input,option,'affinity power',error_string)
+              call input%ReadDouble(option,tstrxn%affinity_factor_beta)
+              call input%ErrorMsg(option,'affinity power',error_string)
             case('MINERAL_SCALE_FACTOR')
 !             read mineral scale factor term
-              call InputReadDouble(input,option,tstrxn%min_scale_factor)
-              call InputErrorMsg(input,option,"Mineral scale fac", &
+              call input%ReadDouble(option,tstrxn%min_scale_factor)
+              call input%ErrorMsg(option,"Mineral scale fac", &
                                  error_string)
             case('TEMKIN_CONSTANT')
 !             reads exponent on affinity term
-              call InputReadDouble(input,option,tstrxn%affinity_factor_sigma)
-              call InputErrorMsg(input,option,"Temkin's constant", &
+              call input%ReadDouble(option,tstrxn%affinity_factor_sigma)
+              call input%ErrorMsg(option,"Temkin's constant", &
                                  error_string)
             case('SURFACE_AREA_POROSITY_POWER')
-              call InputReadDouble(input,option,tstrxn%surf_area_porosity_pwr)
-              call InputErrorMsg(input,option,'surface area porosity power', &
+              call input%ReadDouble(option,tstrxn%surf_area_porosity_pwr)
+              call input%ErrorMsg(option,'surface area porosity power', &
                                  error_string)
             case('SURFACE_AREA_VOL_FRAC_POWER')
-              call InputReadDouble(input,option,tstrxn%surf_area_vol_frac_pwr)
-              call InputErrorMsg(input,option, &
+              call input%ReadDouble(option,tstrxn%surf_area_vol_frac_pwr)
+              call input%ErrorMsg(option, &
                                  'surface area volume fraction power', &
                                  error_string)
             case('RATE_LIMITER')
 !             read rate limiter for precipitation
-              call InputReadDouble(input,option,tstrxn%rate_limiter)
-              call InputErrorMsg(input,option,'rate_limiter',error_string)
+              call input%ReadDouble(option,tstrxn%rate_limiter)
+              call input%ErrorMsg(option,'rate_limiter',error_string)
             case('IRREVERSIBLE')
 !             read flag for irreversible reaction
               option%io_buffer = 'IRREVERSIBLE mineral precipitation/' // &
                 'dissolution no longer supported.  The code is commented out.'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
               tstrxn%irreversible = 1
-              call InputErrorMsg(input,option,'irreversible',error_string)
+              call input%ErrorMsg(option,'irreversible',error_string)
             case('ARMOR_MINERAL')
                     ! read mineral name
-              call InputReadWord(input,option,tstrxn%armor_min_name,PETSC_TRUE)
-              call InputErrorMsg(input,option,'name',error_string)
+              call input%ReadWord(option,tstrxn%armor_min_name,PETSC_TRUE)
+              call input%ErrorMsg(option,'name',error_string)
             case('ARMOR_PWR')
                     ! read power law exponent
-              call InputReadDouble(input,option,tstrxn%armor_pwr)
-              call InputErrorMsg(input,option,'armor_pwr',error_string)
+              call input%ReadDouble(option,tstrxn%armor_pwr)
+              call input%ErrorMsg(option,'armor_pwr',error_string)
             case('ARMOR_CRIT_VOL_FRAC')
                     ! read critical volume fraction
-              call InputReadDouble(input,option,tstrxn%armor_crit_vol_frac)
-              call InputErrorMsg(input,option,'armor_crit_vol_frac',error_string)
+              call input%ReadDouble(option,tstrxn%armor_crit_vol_frac)
+              call input%ErrorMsg(option,'armor_crit_vol_frac',error_string)
 
             case('PREFACTOR')
               error_string = 'CHEMISTRY,MINERAL_KINETICS,PREFACTOR'
@@ -230,36 +230,36 @@ subroutine MineralReadKinetics(mineral,input,option)
               prefactor%activation_energy = UNINITIALIZED_DOUBLE
               do
                 call InputReadPflotranString(input,option)
-                call InputReadStringErrorMsg(input,option,card)
+                call input%ReadStringErrorMsg(option,card)
                 if (InputCheckExit(input,option)) exit
-                call InputReadWord(input,option,word,PETSC_TRUE)
-                call InputErrorMsg(input,option,'word',error_string) 
+                call input%ReadWord(option,word,PETSC_TRUE)
+                call input%ErrorMsg(option,'word',error_string)
                 select case(trim(word))
                   case('RATE_CONSTANT')
                     ! read rate constant
-                    call InputReadDouble(input,option,prefactor%rate)
-                    call InputErrorMsg(input,option,'rate',error_string)
+                    call input%ReadDouble(option,prefactor%rate)
+                    call input%ErrorMsg(option,'rate',error_string)
                     if (prefactor%rate < 0.d0) then
                       prefactor%rate = 10.d0**prefactor%rate
                     endif
                     ! read units if they exist
                     internal_units = 'mol/m^2-sec'
-                    call InputReadWord(input,option,word,PETSC_TRUE)
-                    if (InputError(input)) then
+                    call input%ReadWord(option,word,PETSC_TRUE)
+                    if (input%Error()) then
                       input%err_buf = trim(cur_mineral%name) // &
                                       'PREFACTOR RATE UNITS'
-                      call InputDefaultMsg(input,option)
+                      call input%DefaultMsg(option)
                     else
                       prefactor%rate = prefactor%rate * &
                         UnitsConvertToInternal(word,internal_units,option)
                     endif
                   case('ACTIVATION_ENERGY')
                     ! read activation energy for Arrhenius law
-                    call InputReadDouble(input,option, &
+                    call input%ReadDouble(option, &
                                          prefactor%activation_energy)
-                    call InputErrorMsg(input,option,'activation energy', &
+                    call input%ErrorMsg(option,'activation energy', &
                                        error_string)
-                    call InputReadAndConvertUnits(input, &
+                    call input%ReadAndConvertUnits(&
                                                   prefactor%activation_energy, &
                                                   'J/mol', &
                               trim(error_string)//',activation energy',option)
@@ -267,28 +267,28 @@ subroutine MineralReadKinetics(mineral,input,option)
                     error_string = 'CHEMISTRY,MINERAL_KINETICS,PREFACTOR,&
                                    &SPECIES'
                     prefactor_species => TSPrefactorSpeciesCreate()
-                    call InputReadWord(input,option,prefactor_species%name, &
+                    call input%ReadWord(option,prefactor_species%name, &
                                        PETSC_TRUE)
-                    call InputErrorMsg(input,option,'name',error_string)
+                    call input%ErrorMsg(option,'name',error_string)
                     do
                       call InputReadPflotranString(input,option)
-                      call InputReadStringErrorMsg(input,option,card)
+                      call input%ReadStringErrorMsg(option,card)
                       if (InputCheckExit(input,option)) exit
-                      call InputReadWord(input,option,word,PETSC_TRUE)
-                      call InputErrorMsg(input,option,'keyword',error_string) 
+                      call input%ReadWord(option,word,PETSC_TRUE)
+                      call input%ErrorMsg(option,'keyword',error_string)
                       select case(trim(word))
                         case('ALPHA')
-                          call InputReadDouble(input,option, &
+                          call input%ReadDouble(option, &
                                                prefactor_species%alpha)
-                          call InputErrorMsg(input,option,'alpha',error_string)
+                          call input%ErrorMsg(option,'alpha',error_string)
                         case('BETA')
-                          call InputReadDouble(input,option, &
+                          call input%ReadDouble(option, &
                                                prefactor_species%beta)
-                          call InputErrorMsg(input,option,'beta',error_string)
+                          call input%ErrorMsg(option,'beta',error_string)
                         case('ATTENUATION_COEF')
-                          call InputReadDouble(input,option, &
+                          call input%ReadDouble(option, &
                                             prefactor_species%attenuation_coef)
-                          call InputErrorMsg(input,option, &
+                          call input%ErrorMsg(option, &
                                              'attenuation coefficient', &
                                              error_string)
                         case default
@@ -349,7 +349,7 @@ subroutine MineralReadKinetics(mineral,input,option)
               option%io_buffer = 'Both outer and inner prefactor rate ' // &
                 'constants uninitialized for kinetic mineral ' // &
                 cur_mineral%name // '.'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
             endif
           endif
           if (Uninitialized(cur_prefactor%activation_energy)) then
@@ -379,7 +379,7 @@ subroutine MineralReadKinetics(mineral,input,option)
     if (.not.found) then
       option%io_buffer = 'Mineral "' // trim(name) // '" specified under ' // &
         'CHEMISTRY,MINERAL_KINETICS not found in list of available minerals.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   enddo
  
@@ -391,7 +391,7 @@ subroutine MineralReadKinetics(mineral,input,option)
         cur_mineral%itype == MINERAL_KINETIC) then
       option%io_buffer = 'No rate provided in input file for mineral: ' // &
                trim(cur_mineral%name) // '.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (associated(cur_mineral%tstrxn)) then
       imnrl = imnrl + 1
@@ -428,15 +428,15 @@ subroutine MineralReadFromDatabase(mineral,num_dbase_temperatures,input, &
   
   type(mineral_rxn_type) :: mineral
   PetscInt :: num_dbase_temperatures
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   PetscInt :: ispec
   PetscInt :: itemp
 
   ! read the molar volume
-  call InputReadDouble(input,option,mineral%molar_volume)
-  call InputErrorMsg(input,option,'MINERAL molar volume','DATABASE')            
+  call input%ReadDouble(option,mineral%molar_volume)
+  call input%ErrorMsg(option,'MINERAL molar volume','DATABASE')
   ! convert from cm^3/mol to m^3/mol
   mineral%molar_volume = mineral%molar_volume*1.d-6
   ! create mineral reaction
@@ -445,8 +445,8 @@ subroutine MineralReadFromDatabase(mineral,num_dbase_temperatures,input, &
   endif
   ! read the number of aqueous species in mineral rxn
   mineral%dbaserxn => DatabaseRxnCreate()
-  call InputReadInt(input,option,mineral%dbaserxn%nspec)
-  call InputErrorMsg(input,option,'Number of species in mineral reaction', &
+  call input%ReadInt(option,mineral%dbaserxn%nspec)
+  call input%ErrorMsg(option,'Number of species in mineral reaction', &
                   'DATABASE')  
   ! allocate arrays for rxn
   allocate(mineral%dbaserxn%spec_name(mineral%dbaserxn%nspec))
@@ -457,20 +457,20 @@ subroutine MineralReadFromDatabase(mineral,num_dbase_temperatures,input, &
   mineral%dbaserxn%logK = 0.d0
   ! read in species and stoichiometries
   do ispec = 1, mineral%dbaserxn%nspec
-    call InputReadDouble(input,option,mineral%dbaserxn%stoich(ispec))
-    call InputErrorMsg(input,option,'MINERAL species stoichiometry','DATABASE')            
-    call InputReadQuotedWord(input,option,mineral%dbaserxn% &
+    call input%ReadDouble(option,mineral%dbaserxn%stoich(ispec))
+    call input%ErrorMsg(option,'MINERAL species stoichiometry','DATABASE')
+    call input%ReadQuotedWord(option,mineral%dbaserxn% &
                               spec_name(ispec),PETSC_TRUE)
-    call InputErrorMsg(input,option,'MINERAL species name','DATABASE')            
+    call input%ErrorMsg(option,'MINERAL species name','DATABASE')
   enddo
   !note: logKs read are pK so that K is in the denominator (i.e. Q/K)
   do itemp = 1, num_dbase_temperatures
-    call InputReadDouble(input,option,mineral%dbaserxn%logK(itemp))
-    call InputErrorMsg(input,option,'MINERAL logKs','DATABASE')   
+    call input%ReadDouble(option,mineral%dbaserxn%logK(itemp))
+    call input%ErrorMsg(option,'MINERAL logKs','DATABASE')
   enddo
   ! read the molar weight
-  call InputReadDouble(input,option,mineral%molar_weight)
-  call InputErrorMsg(input,option,'MINERAL molar weight','DATABASE')
+  call input%ReadDouble(option,mineral%molar_weight)
+  call input%ErrorMsg(option,'MINERAL molar weight','DATABASE')
         
 end subroutine MineralReadFromDatabase
 
@@ -497,7 +497,7 @@ subroutine MineralProcessConstraint(mineral,constraint_name,constraint,option)
   character(len=MAXWORDLENGTH) :: constraint_name
   type(mineral_constraint_type), pointer :: constraint
   type(mineral_rxn_type), pointer :: mineral_rxn
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: found
   PetscInt :: imnrl, jmnrl
@@ -537,7 +537,7 @@ subroutine MineralProcessConstraint(mineral,constraint_name,constraint,option)
                 'Mineral ' // trim(constraint%names(imnrl)) // &
                 'from CONSTRAINT ' // trim(constraint_name) // &
                 ' not found among kinetic minerals.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       constraint_vol_frac(jmnrl) = &
         constraint%constraint_vol_frac(imnrl)
@@ -582,7 +582,7 @@ subroutine MineralProcessConstraint(mineral,constraint_name,constraint,option)
           trim(mineral_rxn%name) // '" prevents specifying mineral specific &
           &surface area per mass mineral in constraint "' // &
           trim(constraint_name) // '".'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (mineral_rxn%molar_volume < 1.d-16 .or. &
           Equal(mineral_rxn%molar_volume,500.d0)) then
@@ -590,7 +590,7 @@ subroutine MineralProcessConstraint(mineral,constraint_name,constraint,option)
           trim(mineral_rxn%name) // '" prevents specifying mineral specific &
           &surface area per mass mineral in constraint "' // &
           trim(constraint_name) // '".'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       ! m^2/m^3 = m^2/kg * 1.d-3 kg/g * g/mol / m^3/mol
       tempreal = tempreal * 1.d-3 * mineral_rxn%molar_weight / &
@@ -632,7 +632,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   PetscReal :: Res(reaction%ncomp)
@@ -1064,7 +1064,7 @@ subroutine RMineralRate(imnrl,ln_act,ln_sec_act,rt_auxvar,global_auxvar, &
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(mineral_type) :: mineral
   type(reactive_transport_auxvar_type) :: rt_auxvar
@@ -1233,7 +1233,7 @@ function RMineralSaturationIndex(imnrl,rt_auxvar,global_auxvar,reaction,option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: imnrl
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
@@ -1290,7 +1290,7 @@ subroutine MineralUpdateTempDepCoefs(temp,pres,mineral,use_geothermal_hpt, &
   type(mineral_type) :: mineral
   PetscBool :: use_geothermal_hpt  
   PetscBool :: update_mnrl  
-  type(option_type) :: option
+  class(option_type) :: option
   
   if (.not.use_geothermal_hpt) then
     if (associated(mineral%kinmnrl_logKcoef)) then

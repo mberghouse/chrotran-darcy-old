@@ -54,7 +54,7 @@ subroutine init_span_wagner(option)
   use co2_span_wagner_spline_module
 
   implicit none
-  type(option_type) :: option
+  class(option_type) :: option
   PetscMPIInt :: myrank
 
   if (option%co2eos == EOS_SPAN_WAGNER) then

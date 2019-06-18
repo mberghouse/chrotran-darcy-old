@@ -73,7 +73,7 @@ function GeomechRealizCreate(option)
 
   class(realization_geomech_type), pointer :: GeomechRealizCreate
   class(realization_geomech_type), pointer :: geomech_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   allocate(geomech_realization)
   geomech_realization%id = 0
@@ -155,7 +155,7 @@ subroutine GeomechRealizLocalizeRegions(geomech_realization)
   
   class(realization_geomech_type) :: geomech_realization
   type(geomech_patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   option => geomech_realization%option
 
@@ -183,7 +183,7 @@ subroutine GeomechRealizProcessMatProp(geomech_realization)
   
   class(realization_geomech_type) :: geomech_realization
   type(geomech_patch_type), pointer :: patch  
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   
   option => geomech_realization%option
@@ -223,7 +223,7 @@ subroutine GeomechRealizCreateDiscretization(geomech_realization)
   class(realization_geomech_type) :: geomech_realization
   type(geomech_discretization_type), pointer :: geomech_discretization
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_field_type), pointer :: geomech_field
   type(gmdm_ptr_type), pointer :: dm_ptr
   PetscErrorCode :: ierr
@@ -353,7 +353,7 @@ subroutine GeomechRealizMapSubsurfGeomechGrid(realization, &
   class(realization_subsurface_type), pointer :: realization
   class(realization_geomech_type), pointer :: geomech_realization
   type(geomech_grid_type), pointer :: geomech_grid
-  type(option_type) :: option
+  class(option_type) :: option
   type(grid_type), pointer :: grid
   type(gmdm_type), pointer :: gmdm
   type(gmdm_ptr_type), pointer :: dm_ptr
@@ -502,7 +502,7 @@ subroutine GeomechRealizMapSubsurfGeomechGrid(realization, &
     option%io_buffer = 'The number of cells specified in ' // &
                        'input file might not be same as the ' // &
                        'SUBSURF->GEOMECH mapping used.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 #if GEOMECH_DEBUG
@@ -573,7 +573,7 @@ subroutine GeomechRealizMapSubsurfGeomechGrid(realization, &
     option%io_buffer = 'The number of cells specified in ' // &
                        'input file might not be same as the ' // &
                        'GEOMECH->SUBSURF mapping used.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 #if GEOMECH_DEBUG
@@ -624,7 +624,7 @@ subroutine GeomechGridElemSharedByNodes(geomech_realization,option)
 
   class(realization_geomech_type) :: geomech_realization
   type(geomech_grid_type), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: ielem
   PetscInt :: ivertex
@@ -797,7 +797,7 @@ subroutine GeomechRealizPrintCouplers(geomech_realization)
   
   type(geomech_patch_type), pointer :: patch
   type(geomech_coupler_type), pointer :: cur_coupler
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
  
   option => geomech_realization%option
  
@@ -836,7 +836,7 @@ subroutine GeomechRealizPrintCoupler(coupler,option)
   implicit none
   
   type(geomech_coupler_type) :: coupler
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -945,7 +945,7 @@ subroutine GeomechRealizProcessGeomechConditions(geomech_realization)
   
   type(geomech_condition_type), pointer :: cur_geomech_condition
   type(geomech_sub_condition_type), pointer :: cur_geomech_sub_condition
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: dataset_name
   class(dataset_base_type), pointer :: dataset
@@ -1059,7 +1059,7 @@ subroutine GeomechRealizAddWaypointsToList(geomech_realization,waypoint_list)
   type(geomech_condition_type), pointer :: cur_geomech_condition
   type(geomech_sub_condition_type), pointer :: sub_condition
   type(waypoint_type), pointer :: waypoint, cur_waypoint
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: itime, isub_condition
   PetscReal :: temp_real, final_time
   PetscReal, pointer :: times(:)
@@ -1083,7 +1083,7 @@ subroutine GeomechRealizAddWaypointsToList(geomech_realization,waypoint_list)
     final_time = cur_waypoint%time
   else
     option%io_buffer = 'Final time not found in GeomechRealizAddWaypointsToList'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! add update of geomech conditions
@@ -1103,7 +1103,7 @@ subroutine GeomechRealizAddWaypointsToList(geomech_realization,waypoint_list)
               '" dataset "' // trim(sub_condition%name) // &
               '", the number of times is excessive for synchronization ' // &
               'with waypoints.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           do itime = 1, size(times)
             waypoint => WaypointCreate()

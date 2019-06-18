@@ -41,8 +41,8 @@ subroutine RGasRead(gas_species_list,gas_type,error_msg,input,option)
   type(gas_species_type), pointer :: gas_species_list
   PetscInt :: gas_type
   character(len=MAXSTRINGLENGTH) :: error_msg
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   type(gas_species_type), pointer :: new_gas_species, &
                                      prev_gas_species
@@ -61,11 +61,11 @@ subroutine RGasRead(gas_species_list,gas_type,error_msg,input,option)
   ! read in new gases
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     new_gas_species => GasSpeciesCreate()
-    call InputReadWord(input,option,new_gas_species%name,PETSC_TRUE)  
-    call InputErrorMsg(input,option,'keyword',error_msg)    
+    call input%ReadWord(option,new_gas_species%name,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_msg)
     new_gas_species%itype = gas_type
     if (associated(prev_gas_species)) then
       prev_gas_species%next => new_gas_species
@@ -98,7 +98,7 @@ subroutine RTotalGas(rt_auxvar,global_auxvar,reaction,option)
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt, parameter :: iphase = 2
   PetscInt :: i, j, igas, icomp, jcomp, ncomp
@@ -186,7 +186,7 @@ subroutine RTotalCO2(rt_auxvar,global_auxvar,reaction,option)
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscErrorCode :: ierr
   PetscInt :: iphase

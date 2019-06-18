@@ -411,9 +411,9 @@ subroutine RegionRead(region,input,option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(region_type) :: region
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: keyword, word
 
@@ -421,39 +421,39 @@ subroutine RegionRead(region,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','REGION')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','REGION')
     call StringToUpper(keyword)   
 
     select case(trim(keyword))
     
       case('BLOCK')
         region%def_type = DEFINED_BY_BLOCK
-        call InputReadInt(input,option,region%i1)
-        if (InputError(input)) then
+        call input%ReadInt(option,region%i1)
+        if (input%Error()) then
           input%ierr = 0
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,'REGION')
-          call InputReadInt(input,option,region%i1) 
+          call input%ReadStringErrorMsg(option,'REGION')
+          call input%ReadInt(option,region%i1)
         endif
-        call InputErrorMsg(input,option,'i1','REGION')
-        call InputReadInt(input,option,region%i2)
-        call InputErrorMsg(input,option,'i2','REGION')
-        call InputReadInt(input,option,region%j1)
-        call InputErrorMsg(input,option,'j1','REGION')
-        call InputReadInt(input,option,region%j2)
-        call InputErrorMsg(input,option,'j2','REGION')
-        call InputReadInt(input,option,region%k1)
-        call InputErrorMsg(input,option,'k1','REGION')
-        call InputReadInt(input,option,region%k2)
-        call InputErrorMsg(input,option,'k2','REGION')
+        call input%ErrorMsg(option,'i1','REGION')
+        call input%ReadInt(option,region%i2)
+        call input%ErrorMsg(option,'i2','REGION')
+        call input%ReadInt(option,region%j1)
+        call input%ErrorMsg(option,'j1','REGION')
+        call input%ReadInt(option,region%j2)
+        call input%ErrorMsg(option,'j2','REGION')
+        call input%ReadInt(option,region%k1)
+        call input%ErrorMsg(option,'k1','REGION')
+        call input%ReadInt(option,region%k2)
+        call input%ErrorMsg(option,'k2','REGION')
       case('CARTESIAN_BOUNDARY')
         region%def_type = DEFINED_BY_CARTESIAN_BOUNDARY
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'cartesian boundary face','REGION')
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'cartesian boundary face','REGION')
         call StringToUpper(word)
         select case(word)
           case('WEST')
@@ -471,23 +471,23 @@ subroutine RegionRead(region,input,option)
           case default
             option%io_buffer = 'Cartesian boundary face "' // trim(word) // &
               '" not recognized.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       case('COORDINATE')
         region%def_type = DEFINED_BY_COORD
         allocate(region%coordinates(1))
-        call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%x) 
-        if (InputError(input)) then
+        call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%x)
+        if (input%Error()) then
           input%ierr = 0
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,'REGION')
-          call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%x)
+          call input%ReadStringErrorMsg(option,'REGION')
+          call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%x)
         endif
-        call InputErrorMsg(input,option,'x-coordinate','REGION')
-        call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%y)
-        call InputErrorMsg(input,option,'y-coordinate','REGION')
-        call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%z)
-        call InputErrorMsg(input,option,'z-coordinate','REGION')
+        call input%ErrorMsg(option,'x-coordinate','REGION')
+        call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%y)
+        call input%ErrorMsg(option,'y-coordinate','REGION')
+        call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%z)
+        call input%ErrorMsg(option,'z-coordinate','REGION')
       case('COORDINATES')
         region%def_type = DEFINED_BY_COORD
         call GeometryReadCoordinates(input,option,region%name, &
@@ -498,15 +498,15 @@ subroutine RegionRead(region,input,option)
         endif
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword','REGION')
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword','REGION')
           call StringToUpper(word)   
           select case(trim(word))
             case('TYPE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'polygon type','REGION')
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'polygon type','REGION')
               call StringToUpper(word)
               select case(word)
                 case('BOUNDARY_FACES_IN_VOLUME')
@@ -516,7 +516,7 @@ subroutine RegionRead(region,input,option)
                 case default
                   option%io_buffer = 'REGION->POLYGON->"' // trim(word) // &
                     '" not recognized.'
-                  call printErrMsg(option)
+                  call option%PrintErrMsg()
               end select
             case('XY')
               call GeometryReadCoordinates(input,option,region%name, &
@@ -529,18 +529,18 @@ subroutine RegionRead(region,input,option)
                                          region%polygonal_volume%yz_coordinates)
             case default
               option%io_buffer = 'Keyword not recognized for REGION POLYGON.'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
           end select
         enddo
       case('FILE')
-        call InputReadFilename(input,option,region%filename)
-        call InputErrorMsg(input,option,'filename','REGION')
+        call input%ReadFilename(option,region%filename)
+        call input%ErrorMsg(option,'filename','REGION')
       case('LIST')
         option%io_buffer = 'REGION LIST currently not implemented'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       case('FACE')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'face','REGION')
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'face','REGION')
         call StringToUpper(word)
         select case(word)
           case('WEST')
@@ -558,7 +558,7 @@ subroutine RegionRead(region,input,option)
           case default
             option%io_buffer = 'FACE "' // trim(word) // &
               '" not recognized.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       case default
         call InputKeywordUnrecognized(keyword,'REGION',option)
@@ -584,8 +584,8 @@ subroutine RegionReadFromFilename(region,option,filename)
   implicit none
   
   type(region_type) :: region
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: filename
   
   input => InputCreate(IUNIT_TEMP,filename,option)
@@ -615,8 +615,8 @@ subroutine RegionReadFromFileId(region,input,option)
   implicit none
   
   type(region_type) :: region
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
   character(len=1) :: backslash
@@ -679,10 +679,10 @@ subroutine RegionReadFromFileId(region,input,option)
   !  3) Contains vertex ids that make up the face: MORE than two entries per
   !     line
   count = 0
-  call InputReadPflotranString(input, option)
+  call InputReadPflotranString(input,option)
   do 
-    call InputReadInt(input, option, temp_int)
-    if (InputError(input)) exit
+    call input%ReadInt(option, temp_int)
+    if (input%Error()) exit
     count = count + 1
     temp_int_array(count) = temp_int
   enddo
@@ -698,10 +698,10 @@ subroutine RegionReadFromFileId(region,input,option)
 
     ! Read the data
     do
-      call InputReadPflotranString(input, option)
-      if (InputError(input)) exit
-      call InputReadInt(input, option, temp_int)
-      if (.not.InputError(input)) then
+      call InputReadPflotranString(input,option)
+      if (input%Error()) exit
+      call input%ReadInt(option, temp_int)
+      if (.not.input%Error()) then
         count = count + 1
         cell_ids_p(count) = temp_int
       endif
@@ -739,18 +739,18 @@ subroutine RegionReadFromFileId(region,input,option)
 
     ! Read the data
     do
-      call InputReadPflotranString(input, option)
-      if (InputError(input)) exit
-      call InputReadInt(input, option, temp_int)
-      if (InputError(input)) exit
+      call InputReadPflotranString(input,option)
+      if (input%Error()) exit
+      call input%ReadInt(option, temp_int)
+      if (input%Error()) exit
       count = count + 1
       cell_ids_p(count) = temp_int
 
-      call InputReadInt(input,option,temp_int)
-      if (InputError(input)) then
+      call input%ReadInt(option,temp_int)
+      if (input%Error()) then
         option%io_buffer = 'ERROR while reading the region "' // &
           trim(region%name) // '" from file'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       face_ids_p(count) = temp_int
       if (count+1 > max_size) then ! resize temporary array
@@ -794,19 +794,19 @@ subroutine RegionReadFromFileId(region,input,option)
     ! Read the data
     do
       call InputReadPflotranString(input,option)
-      if (InputError(input)) exit
-      call InputReadInt(input,option,temp_int)
-      if (InputError(input)) exit
+      if (input%Error()) exit
+      call input%ReadInt(option,temp_int)
+      if (input%Error()) exit
       count = count + 1
       vert_id_0_p(count) = temp_int
 
       vert_id_4_p(count) = UNINITIALIZED_INTEGER
       do ii = 1, vert_id_0_p(count)
-        call InputReadInt(input,option,temp_int)
-        if (InputError(input)) then
+        call input%ReadInt(option,temp_int)
+        if (input%Error()) then
           option%io_buffer = 'ERROR while reading the region "' // &
             trim(region%name) // '" from file'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
 
         select case(ii)
@@ -861,9 +861,9 @@ subroutine RegionReadFromFileId(region,input,option)
   count = 1
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
-    call InputReadInt(input,option,temp_int)
-    if (.not.InputError(input)) then
+    if (input%Error()) exit
+    call input%ReadInt(option,temp_int)
+    if (.not.input%Error()) then
       count = count + 1
       temp_int_array(count) = temp_int
       write(*,*) count,temp_int
@@ -908,9 +908,9 @@ subroutine RegionReadSideSet(sideset,filename,option)
   
   type(region_sideset_type) :: sideset
   character(len=MAXSTRINGLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: string, hint
   character(len=MAXWORDLENGTH) :: word
   PetscInt :: num_faces_local_save
@@ -946,11 +946,11 @@ subroutine RegionReadSideSet(sideset,filename,option)
 
   call InputReadPflotranString(input,option)
   string = 'unstructured sideset'
-  call InputReadStringErrorMsg(input,option,hint)  
+  call input%ReadStringErrorMsg(option,hint)
 
   ! read num_faces
-  call InputReadInt(input,option,sideset%nfaces)
-  call InputErrorMsg(input,option,'number of faces',hint)
+  call input%ReadInt(option,sideset%nfaces)
+  call input%ErrorMsg(option,'number of faces',hint)
 
   ! divide faces across ranks
   num_faces_local = sideset%nfaces/option%mycommsize 
@@ -978,9 +978,9 @@ subroutine RegionReadSideSet(sideset,filename,option)
       do iface = 1, num_to_read
         ! read in the vertices defining the cell face
         call InputReadPflotranString(input,option)
-        call InputReadStringErrorMsg(input,option,hint)  
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'face type',hint)
+        call input%ReadStringErrorMsg(option,hint)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'face type',hint)
         call StringToUpper(word)
         select case(word)
           case('Q')
@@ -993,8 +993,8 @@ subroutine RegionReadSideSet(sideset,filename,option)
             option%io_buffer = 'Unknown face type: ' // trim(word)
         end select
         do ivertex = 1, num_vertices
-          call InputReadInt(input,option,temp_int_array(ivertex,iface))
-          call InputErrorMsg(input,option,'vertex id',hint)
+          call input%ReadInt(option,temp_int_array(ivertex,iface))
+          call input%ErrorMsg(option,'vertex id',hint)
         enddo
       enddo
       ! if the faces reside on io_rank
@@ -1065,9 +1065,9 @@ subroutine RegionReadExplicitFaceSet(explicit_faceset,cell_ids,filename,option)
   type(region_explicit_face_type), pointer :: explicit_faceset
   PetscInt, pointer :: cell_ids(:)
   character(len=MAXSTRINGLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: string, hint
   character(len=MAXWORDLENGTH) :: word
   PetscInt :: fileid
@@ -1100,9 +1100,9 @@ subroutine RegionReadExplicitFaceSet(explicit_faceset,cell_ids,filename,option)
 
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
 
-    call InputReadWord(input,option,word,PETSC_FALSE)
+    call input%ReadWord(option,word,PETSC_FALSE)
     call StringToUpper(word)
     hint = trim(word)
   
@@ -1110,8 +1110,8 @@ subroutine RegionReadExplicitFaceSet(explicit_faceset,cell_ids,filename,option)
       case('CONNECTIONS')
         hint = 'Explicit Unstructured Grid CONNECTIONS in file: ' // &
           trim(adjustl(filename))
-        call InputReadInt(input,option,num_connections)
-        call InputErrorMsg(input,option,'number of connections',hint)
+        call input%ReadInt(option,num_connections)
+        call input%ErrorMsg(option,'number of connections',hint)
         
         allocate(cell_ids(num_connections))
         cell_ids = 0
@@ -1125,21 +1125,21 @@ subroutine RegionReadExplicitFaceSet(explicit_faceset,cell_ids,filename,option)
         enddo
         do iconn = 1, num_connections
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,hint)  
-          call InputReadInt(input,option,cell_ids(iconn))
-          call InputErrorMsg(input,option,'cell id',hint)
-          call InputReadDouble(input,option, &
+          call input%ReadStringErrorMsg(option,hint)
+          call input%ReadInt(option,cell_ids(iconn))
+          call input%ErrorMsg(option,'cell id',hint)
+          call input%ReadDouble(option, &
                                explicit_faceset%face_centroids(iconn)%x)
-          call InputErrorMsg(input,option,'face x coordinate',hint)
-          call InputReadDouble(input,option, &
+          call input%ErrorMsg(option,'face x coordinate',hint)
+          call input%ReadDouble(option, &
                                explicit_faceset%face_centroids(iconn)%y)
-          call InputErrorMsg(input,option,'face y coordinate',hint)
-          call InputReadDouble(input,option, &
+          call input%ErrorMsg(option,'face y coordinate',hint)
+          call input%ReadDouble(option, &
                                explicit_faceset%face_centroids(iconn)%z)
-          call InputErrorMsg(input,option,'face z coordinate',hint)
-          call InputReadDouble(input,option, &
+          call input%ErrorMsg(option,'face z coordinate',hint)
+          call input%ReadDouble(option, &
                                explicit_faceset%face_areas(iconn))
-          call InputErrorMsg(input,option,'face area',hint)
+          call input%ErrorMsg(option,'face area',hint)
         enddo
       case default
         call InputKeywordUnrecognized(word, &

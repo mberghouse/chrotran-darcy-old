@@ -208,7 +208,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
   implicit none
 
   type(geomech_grid_type) :: geomech_grid
-  type(option_type) :: option
+  class(option_type) :: option
   type(gmdm_type), pointer :: gmdm
   PetscInt :: ndof
   PetscInt, pointer :: int_ptr(:)
@@ -230,7 +230,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
   ndof_word = adjustl(ndof_word)
   ndof_word = '_' // trim(ndof_word)
   string = 'Vectors_nodes' // ndof_word
-  call printMsg(option,string)
+  call option%PrintMsg(string)
 #endif
 
   ! create global vec
@@ -254,7 +254,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
 
 #if GEOMECH_DEBUG
   string = 'Index_sets_nodes' // ndof_word
-  call printMsg(option,string)
+  call option%PrintMsg(string)
 #endif  
   
   ! SK, Note: All the numbering are to be 0-based before creating IS
@@ -402,7 +402,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
  ! create a local to global mapping
 #if GEOMECH_DEBUG
   string = 'geomech_ISLocalToGlobalMapping' // ndof_word
-  call printMsg(option,string)
+  call option%PrintMsg(string)
 #endif
 
   call ISLocalToGlobalMappingCreateIS(gmdm%is_ghosted_petsc, &
@@ -418,7 +418,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
                
 #if GEOMECH_DEBUG
   string = 'geomech_local to global' // ndof_word
-  call printMsg(option,string)
+  call option%PrintMsg(string)
 #endif
 
   ! Create local to global scatter
@@ -438,7 +438,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
 
 #if GEOMECH_DEBUG
   string = 'geomech_global to local' // ndof_word
-  call printMsg(option,string)
+  call option%PrintMsg(string)
 #endif
 
   ! Create global to local scatter
@@ -456,7 +456,7 @@ subroutine GMCreateGMDM(geomech_grid,gmdm,ndof,option)
 
 #if GEOMECH_DEBUG
   string = 'geomech_local to local' // ndof_word
-  call printMsg(option,string)
+  call option%PrintMsg(string)
 #endif
   
   ! Create local to local scatter.  Essentially remap the global to local as
@@ -603,7 +603,7 @@ subroutine GMGridDMCreateJacobian(geomech_grid,gmdm,mat_type,J,option)
   
   type(geomech_grid_type) :: geomech_grid
   type(gmdm_type) :: gmdm
-  type(option_type) :: option 
+  class(option_type) :: option 
   MatType :: mat_type
   Mat :: J
   IS :: is_tmp
@@ -651,7 +651,7 @@ subroutine GMGridDMCreateJacobian(geomech_grid,gmdm,mat_type,J,option)
     case(MATBAIJ)
     case default
       option%io_buffer = 'MatType not recognized in GMGridDMCreateJacobian'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select 
   
   call MatCreate(option%mycomm,J,ierr);CHKERRQ(ierr)
@@ -686,7 +686,7 @@ subroutine GMGridDMCreateVector(geomech_grid,gmdm,vec,vec_type,option)
   
   type(geomech_grid_type) :: geomech_grid
   type(gmdm_type) :: gmdm
-  type(option_type) :: option 
+  class(option_type) :: option 
   Vec :: vec
   PetscInt :: vec_type
   PetscErrorCode :: ierr
@@ -732,7 +732,7 @@ subroutine GMGridDMCreateVectorElem(geomech_grid,gmdm,vec,vec_type,option)
   
   type(geomech_grid_type) :: geomech_grid
   type(gmdm_type) :: gmdm
-  type(option_type) :: option 
+  class(option_type) :: option 
   Vec :: vec
   PetscInt :: vec_type
   PetscErrorCode :: ierr
@@ -778,7 +778,7 @@ subroutine GMGridMapIndices(geomech_grid,gmdm,nG2L,nL2G,nG2A,option)
   
   type(geomech_grid_type) :: geomech_grid
   type(gmdm_type) :: gmdm
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt, pointer :: nG2L(:)
   PetscInt, pointer :: nL2G(:)
   PetscInt, pointer :: nG2A(:)

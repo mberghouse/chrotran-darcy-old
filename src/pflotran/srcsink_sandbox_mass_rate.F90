@@ -65,8 +65,8 @@ subroutine MassRateRead(this,input,option)
   implicit none
   
   class(srcsink_sandbox_mass_rate_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units
@@ -74,11 +74,11 @@ subroutine MassRateRead(this,input,option)
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'SOURCE_SINK_SANDBOX,MASS_RATE')
     call StringToUpper(word)   
 
@@ -105,11 +105,11 @@ subroutine MassRateRead(this,input,option)
               write(word,*) i
               option%io_buffer = 'Unknown dof #' // trim(adjustl(word)) // &
                                  ' in MassRateRead.'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
           end select
-          call InputReadDouble(input,option,this%rate(i))
-          call InputErrorMsg(input,option,word,'SOURCE_SINK_SANDBOX,MASS_RATE')
-          call InputReadWord(input,option,word,PETSC_TRUE)
+          call input%ReadDouble(option,this%rate(i))
+          call input%ErrorMsg(option,word,'SOURCE_SINK_SANDBOX,MASS_RATE')
+          call input%ReadWord(option,word,PETSC_TRUE)
           if (input%ierr == 0) then            
             this%rate(i) = this%rate(i) * &
               UnitsConvertToInternal(word,internal_units,option)
@@ -140,7 +140,7 @@ subroutine MassRateSetup(this,grid,option)
   
   class(srcsink_sandbox_mass_rate_type) :: this
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   call SSSandboxBaseSetup(this,grid,option)
   ! convert rate from kg/s to mol/s
@@ -154,7 +154,7 @@ subroutine MassRateSetup(this,grid,option)
     case default
       option%io_buffer = 'Rate conversion not set up for flow mode in ' // &
                          'MassRateSetup'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine MassRateSetup 
@@ -176,7 +176,7 @@ subroutine MassRateSrcSink(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(srcsink_sandbox_mass_rate_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: compute_derivative
   PetscReal :: Residual(option%nflowdof)
   PetscReal :: Jacobian(option%nflowdof,option%nflowdof)

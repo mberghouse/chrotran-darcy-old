@@ -18,7 +18,7 @@ module Test_Material_module
 ! ************************************************************************** !
   @TestCase
   type, extends(TestCase) :: Test_Material
-      type(option_type), pointer :: option
+      class(option_type), pointer :: option
       class(material_auxvar_type), pointer :: material
       procedure(runMethod), pointer :: userMethod => null()
     contains

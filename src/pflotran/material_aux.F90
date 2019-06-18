@@ -174,7 +174,7 @@ subroutine MaterialAuxVarInit(auxvar,option)
   implicit none
   
   class(material_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   
   auxvar%id = UNINITIALIZED_INTEGER
   auxvar%volume = UNINITIALIZED_DOUBLE
@@ -220,7 +220,7 @@ subroutine MaterialAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   class(material_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
   
   auxvar2%volume = auxvar%volume
   auxvar2%porosity = auxvar%porosity
@@ -249,7 +249,7 @@ subroutine MaterialAuxSetPermTensorModel(model,option)
   implicit none
 
   PetscInt :: model
-  type(option_type) :: option
+  class(option_type) :: option
 
   !! simple if longwinded little safety measure here, the calling routine
   !! should also check that model is a sane number but in principle this
@@ -263,7 +263,7 @@ subroutine MaterialAuxSetPermTensorModel(model,option)
   else
     option%io_buffer  = 'MaterialDiagPermTensorToScalar: tensor to scalar &
                          model type is not recognized.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine MaterialAuxSetPermTensorModel

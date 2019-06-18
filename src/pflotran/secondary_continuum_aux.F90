@@ -100,7 +100,7 @@ function SecondaryAuxHeatCreate(option)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(sc_heat_type), pointer :: SecondaryAuxHeatCreate
   
   type(sc_heat_type), pointer :: aux
@@ -149,7 +149,7 @@ function SecondaryAuxRTCreate(option)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(sc_rt_type), pointer :: SecondaryAuxRTCreate
   
   type(sc_rt_type), pointer :: aux

@@ -325,7 +325,7 @@ subroutine SF_WIPP_Verify(this,name,option)
   
   class(sat_func_WIPP_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: num_errors
@@ -341,24 +341,24 @@ subroutine SF_WIPP_Verify(this,name,option)
   if (.not.this%ignore_permeability) then
     if (Uninitialized(this%pct_a)) then
       option%io_buffer = UninitializedMessage('PCT_A',string)
-      call printMsg(option)
+      call option%PrintMsg()
       num_errors = num_errors + 1
     endif   
     if (Uninitialized(this%pct_exp)) then
       option%io_buffer = UninitializedMessage('PCT_EXP',string)
-      call printMsg(option)
+      call option%PrintMsg()
       num_errors = num_errors + 1
     endif 
   else
     if (Uninitialized(this%alpha)) then
       option%io_buffer = UninitializedMessage('ALPHA',string)
-      call printMsg(option)
+      call option%PrintMsg()
       num_errors = num_errors + 1
     endif   
   endif
   if (Uninitialized(this%kpc)) then
     option%io_buffer = UninitializedMessage('KPC',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif 
    
@@ -366,7 +366,7 @@ subroutine SF_WIPP_Verify(this,name,option)
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' // trim(string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SF_WIPP_Verify
@@ -383,10 +383,10 @@ subroutine SF_WIPP_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'SF_WIPP_CapillaryPressure must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine SF_WIPP_CapillaryPressure
 
@@ -402,10 +402,10 @@ subroutine SF_WIPP_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'SF_WIPP_Saturation must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine SF_WIPP_Saturation
 
@@ -517,7 +517,7 @@ subroutine SF_KRP1_Verify(this,name,option)
   
   class(sat_func_KRP1_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: num_errors
@@ -533,19 +533,19 @@ subroutine SF_KRP1_Verify(this,name,option)
   
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (num_errors > 0) then
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' // trim(string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SF_KRP1_Verify
@@ -574,7 +574,7 @@ subroutine SF_KRP1_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: lambda
   PetscReal :: Se2
@@ -591,7 +591,7 @@ subroutine SF_KRP1_CapillaryPressure(this,liquid_saturation, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP1_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -646,7 +646,7 @@ subroutine SF_KRP1_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: lambda
   PetscReal :: Se2
@@ -664,7 +664,7 @@ subroutine SF_KRP1_Saturation(this,capillary_pressure, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP1_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -731,7 +731,7 @@ subroutine SF_KRP2_Verify(this,name,option)
   
   class(sat_func_KRP2_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -745,7 +745,7 @@ subroutine SF_KRP2_Verify(this,name,option)
   
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif    
 
 end subroutine SF_KRP2_Verify
@@ -772,7 +772,7 @@ subroutine SF_KRP2_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
 
@@ -787,7 +787,7 @@ subroutine SF_KRP2_CapillaryPressure(this,liquid_saturation, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP2_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -826,7 +826,7 @@ subroutine SF_KRP2_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1     
   
@@ -841,7 +841,7 @@ subroutine SF_KRP2_Saturation(this,capillary_pressure, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP2_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -902,7 +902,7 @@ subroutine SF_KRP3_Verify(this,name,option)
   
   class(sat_func_KRP3_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: num_errors
@@ -918,19 +918,19 @@ subroutine SF_KRP3_Verify(this,name,option)
   num_errors = 0
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (num_errors > 0) then
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' // trim(string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
 
 end subroutine SF_KRP3_Verify
@@ -958,7 +958,7 @@ subroutine SF_KRP3_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   
@@ -973,7 +973,7 @@ subroutine SF_KRP3_CapillaryPressure(this,liquid_saturation, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP3_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1015,7 +1015,7 @@ subroutine SF_KRP3_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2    
   PetscReal :: term
@@ -1031,7 +1031,7 @@ subroutine SF_KRP3_Saturation(this,capillary_pressure, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP3_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1094,7 +1094,7 @@ subroutine SF_KRP4_Verify(this,name,option)
   
   class(sat_func_KRP4_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: num_errors
@@ -1110,19 +1110,19 @@ subroutine SF_KRP4_Verify(this,name,option)
   num_errors = 0
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (num_errors > 0) then
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' // trim(string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
 
 end subroutine SF_KRP4_Verify
@@ -1150,7 +1150,7 @@ subroutine SF_KRP4_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   
@@ -1165,7 +1165,7 @@ subroutine SF_KRP4_CapillaryPressure(this,liquid_saturation, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP4_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1207,7 +1207,7 @@ subroutine SF_KRP4_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2  
   PetscReal :: term
@@ -1223,7 +1223,7 @@ subroutine SF_KRP4_Saturation(this,capillary_pressure, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP1_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1286,7 +1286,7 @@ subroutine SF_KRP5_Verify(this,name,option)
   
   class(sat_func_KRP5_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: num_errors
@@ -1302,19 +1302,19 @@ subroutine SF_KRP5_Verify(this,name,option)
   num_errors = 0
   if (Uninitialized(this%pcmax)) then
     option%io_buffer = UninitializedMessage('MAX_CAPILLARY_PRESSURE',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif   
   if (num_errors > 0) then
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' // trim(string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
 
 end subroutine SF_KRP5_Verify
@@ -1341,7 +1341,7 @@ subroutine SF_KRP5_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   PetscReal :: dummy_lambda
@@ -1357,7 +1357,7 @@ subroutine SF_KRP5_CapillaryPressure(this,liquid_saturation, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP5_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1396,7 +1396,7 @@ subroutine SF_KRP5_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   
@@ -1411,7 +1411,7 @@ subroutine SF_KRP5_Saturation(this,capillary_pressure, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP5_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1471,7 +1471,7 @@ subroutine SF_KRP8_Verify(this,name,option)
   
   class(sat_func_KRP8_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: num_errors
@@ -1487,19 +1487,19 @@ subroutine SF_KRP8_Verify(this,name,option)
   
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif    
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif 
   if (num_errors > 0) then
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' // trim(string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SF_KRP8_Verify
@@ -1527,7 +1527,7 @@ subroutine SF_KRP8_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: lambda
   PetscReal :: Se1
@@ -1544,7 +1544,7 @@ subroutine SF_KRP8_CapillaryPressure(this,liquid_saturation, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP8_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1591,7 +1591,7 @@ subroutine SF_KRP8_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: lambda
   PetscReal :: Se1
@@ -1609,7 +1609,7 @@ subroutine SF_KRP8_Saturation(this,capillary_pressure, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP8_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -1676,7 +1676,7 @@ subroutine SF_KRP9_Verify(this,name,option)
   
   class(sat_func_KRP9_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -1714,7 +1714,7 @@ subroutine SF_KRP9_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal, parameter :: a = 3783.0145d0
@@ -1764,7 +1764,7 @@ subroutine SF_KRP9_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: dS_dSe
@@ -1831,7 +1831,7 @@ subroutine SF_KRP11_Verify(this,name,option)
   
   class(sat_func_KRP11_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscReal :: tempreal
@@ -1873,7 +1873,7 @@ subroutine SF_KRP11_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   dpc_dsatl = 0.d0
   capillary_pressure = 0.0d0
@@ -1902,7 +1902,7 @@ subroutine SF_KRP11_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   dsat_dpres = 0.d0
   liquid_saturation = 1.d0
@@ -1955,7 +1955,7 @@ subroutine SF_KRP12_Verify(this,name,option)
   
   class(sat_func_KRP12_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
   PetscInt :: num_errors
@@ -1971,24 +1971,24 @@ subroutine SF_KRP12_Verify(this,name,option)
  
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%s_min)) then
     option%io_buffer = UninitializedMessage('S_MIN',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%s_effmin)) then
     option%io_buffer = UninitializedMessage('S_EFFMIN',string)
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (num_errors > 0) then
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' // trim(string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine SF_KRP12_Verify
@@ -2016,7 +2016,7 @@ subroutine SF_KRP12_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se21
   PetscReal :: Se1
@@ -2033,7 +2033,7 @@ subroutine SF_KRP12_CapillaryPressure(this,liquid_saturation, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP12_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -2073,7 +2073,7 @@ subroutine SF_KRP12_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se21
   
@@ -2088,7 +2088,7 @@ subroutine SF_KRP12_Saturation(this,capillary_pressure, &
     if (.not.option%pct_updated) then
       option%io_buffer = '!! this%pct has not been updated: &
                          &sat_func_KRP12_type. STOPPING.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%pct_updated = PETSC_FALSE
   endif
@@ -2149,7 +2149,7 @@ subroutine RPF_KRP1_Liq_Verify(this,name,option)
   
   class(rpf_KRP1_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2161,11 +2161,11 @@ subroutine RPF_KRP1_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine RPF_KRP1_Liq_Verify
@@ -2194,7 +2194,7 @@ subroutine RPF_KRP1_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: one_over_m
@@ -2267,7 +2267,7 @@ subroutine RPF_KRP1_Gas_Verify(this,name,option)
   
   class(rpf_KRP1_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2279,11 +2279,11 @@ subroutine RPF_KRP1_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif 
   
 end subroutine RPF_KRP1_Gas_Verify
@@ -2312,7 +2312,7 @@ subroutine RPF_KRP1_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   PetscReal :: Seg
@@ -2384,7 +2384,7 @@ subroutine RPF_KRP2_Liq_Verify(this,name,option)
   
   class(rpf_KRP2_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2396,7 +2396,7 @@ subroutine RPF_KRP2_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   
 end subroutine RPF_KRP2_Liq_Verify
@@ -2425,7 +2425,7 @@ subroutine RPF_KRP2_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: power
@@ -2490,7 +2490,7 @@ subroutine RPF_KRP2_Gas_Verify(this,name,option)
   
   class(rpf_KRP2_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2502,7 +2502,7 @@ subroutine RPF_KRP2_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   
 end subroutine RPF_KRP2_Gas_Verify
@@ -2531,7 +2531,7 @@ subroutine RPF_KRP2_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: Seg
@@ -2599,7 +2599,7 @@ subroutine RPF_KRP3_Liq_Verify(this,name,option)
   
   class(rpf_KRP3_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2611,11 +2611,11 @@ subroutine RPF_KRP3_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif 
   
 end subroutine RPF_KRP3_Liq_Verify
@@ -2639,7 +2639,7 @@ subroutine RPF_KRP3_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   PetscReal :: lambda_exp
@@ -2707,7 +2707,7 @@ subroutine RPF_KRP3_Gas_Verify(this,name,option)
   
   class(rpf_KRP3_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2719,11 +2719,11 @@ subroutine RPF_KRP3_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif 
   
 end subroutine RPF_KRP3_Gas_Verify
@@ -2747,7 +2747,7 @@ subroutine RPF_KRP3_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   PetscReal :: lambda_exp
@@ -2799,7 +2799,7 @@ subroutine RPF_KRP4_Liq_Verify(this,name,option)
   
   class(rpf_KRP4_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2811,11 +2811,11 @@ subroutine RPF_KRP4_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif 
   
 end subroutine RPF_KRP4_Liq_Verify
@@ -2844,7 +2844,7 @@ subroutine RPF_KRP4_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: power
@@ -2892,7 +2892,7 @@ subroutine RPF_KRP4_Gas_Verify(this,name,option)
   
   class(rpf_KRP4_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -2904,11 +2904,11 @@ subroutine RPF_KRP4_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   
 end subroutine RPF_KRP4_Gas_Verify
@@ -2956,7 +2956,7 @@ subroutine RPF_KRP5_Liq_Verify(this,name,option)
   
   class(rpf_KRP5_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2968,7 +2968,7 @@ subroutine RPF_KRP5_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
     
 end subroutine RPF_KRP5_Liq_Verify
@@ -2989,7 +2989,7 @@ subroutine RPF_KRP5_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   
@@ -3050,7 +3050,7 @@ subroutine RPF_KRP5_Gas_Verify(this,name,option)
   
   class(rpf_KRP5_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3062,7 +3062,7 @@ subroutine RPF_KRP5_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
     
 end subroutine RPF_KRP5_Gas_Verify
@@ -3083,7 +3083,7 @@ subroutine RPF_KRP5_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   PetscReal :: dkr_Se2
@@ -3148,7 +3148,7 @@ subroutine RPF_KRP8_Liq_Verify(this,name,option)
   
   class(rpf_KRP8_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3160,7 +3160,7 @@ subroutine RPF_KRP8_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   
 end subroutine RPF_KRP8_Liq_Verify
@@ -3189,7 +3189,7 @@ subroutine RPF_KRP8_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: dkr_dSe1
@@ -3261,7 +3261,7 @@ subroutine RPF_KRP8_Gas_Verify(this,name,option)
   
   class(rpf_KRP8_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3273,7 +3273,7 @@ subroutine RPF_KRP8_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   
 end subroutine RPF_KRP8_Gas_Verify
@@ -3302,7 +3302,7 @@ subroutine RPF_KRP8_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: dkr_dSe1
@@ -3373,7 +3373,7 @@ subroutine RPF_KRP9_Liq_Verify(this,name,option)
   
   class(rpf_KRP9_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3409,7 +3409,7 @@ subroutine RPF_KRP9_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal, parameter :: a = 28.768353d0
   PetscReal, parameter :: b = 1.7241379d0
@@ -3477,7 +3477,7 @@ subroutine RPF_KRP9_Gas_Verify(this,name,option)
   
   class(rpf_KRP9_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -3514,7 +3514,7 @@ subroutine RPF_KRP9_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: liquid_relative_permeability
@@ -3582,7 +3582,7 @@ subroutine RPF_KRP11_Liq_Verify(this,name,option)
   
   class(rpf_KRP11_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3594,11 +3594,11 @@ subroutine RPF_KRP11_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%tolc)) then
     option%io_buffer = UninitializedMessage('TOLC',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_KRP11_Liq_Verify
@@ -3619,7 +3619,7 @@ subroutine RPF_KRP11_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: gas_saturation
   PetscReal :: tol
@@ -3676,7 +3676,7 @@ subroutine RPF_KRP11_Gas_Verify(this,name,option)
   
   class(rpf_KRP11_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3688,11 +3688,11 @@ subroutine RPF_KRP11_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%tolc)) then
     option%io_buffer = UninitializedMessage('TOLC',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_KRP11_Gas_Verify
@@ -3714,7 +3714,7 @@ subroutine RPF_KRP11_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: gas_saturation
   PetscReal :: tol
@@ -3771,7 +3771,7 @@ subroutine RPF_KRP12_Liq_Verify(this,name,option)
   
   class(rpf_KRP12_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3783,11 +3783,11 @@ subroutine RPF_KRP12_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_KRP12_Liq_Verify
@@ -3816,7 +3816,7 @@ subroutine RPF_KRP12_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se1
   PetscReal :: power
@@ -3865,7 +3865,7 @@ subroutine RPF_KRP12_Gas_Verify(this,name,option)
   
   class(rpf_KRP12_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3877,11 +3877,11 @@ subroutine RPF_KRP12_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_KRP12_Gas_Verify
@@ -3905,7 +3905,7 @@ subroutine RPF_KRP12_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se2
   PetscReal :: lambda_exp
@@ -3976,7 +3976,7 @@ subroutine RPF_TOUGH2_IRP7_Gas_Verify(this,name,option)
   
   class(rpf_TOUGH2_IRP7_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -3988,7 +3988,7 @@ subroutine RPF_TOUGH2_IRP7_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   
 end subroutine RPF_TOUGH2_IRP7_Gas_Verify
@@ -4008,7 +4008,7 @@ subroutine RPF_TOUGH2_IRP7_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: liquid_relative_permeability
   PetscReal :: liquid_dkr_sat

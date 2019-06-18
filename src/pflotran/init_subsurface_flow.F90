@@ -47,7 +47,7 @@ subroutine InitSubsurfFlowSetupRealization(realization)
   
   class(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   PetscErrorCode :: ierr
   
@@ -90,7 +90,7 @@ subroutine InitSubsurfFlowSetupRealization(realization)
         call TOWGSetup(realization)
       case default
         option%io_buffer = 'Unknown flowmode found during <Mode>Setup'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
     ! assign initial conditionsRealizAssignFlowInitCond
@@ -132,7 +132,7 @@ subroutine InitSubsurfFlowSetupRealization(realization)
         call TOWGUpdateAuxVars(realization,PETSC_FALSE)
       case default
         option%io_buffer = 'Unknown flowmode found during <Mode>UpdateAuxVars'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
   else ! no flow mode specified
     if (len_trim(realization%nonuniform_velocity_filename) > 0) then
@@ -174,7 +174,7 @@ subroutine InitSubsurfFlowReadInitCond(realization,filename)
   PetscReal, pointer :: vec_p(:)  
   PetscErrorCode :: ierr
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field  
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid

@@ -46,7 +46,7 @@ program pflotran_interface_main
   PetscBool                                 :: pflotranin_option_found
   PetscBool                                 :: input_prefix_option_found
   character(len=MAXSTRINGLENGTH)  , pointer :: strings(:)
-  type(option_type)               , pointer :: option
+  class(option_type)               , pointer :: option
 
   PetscInt                                  :: PRINT_RANK    
   PRINT_RANK = 0
@@ -56,16 +56,16 @@ program pflotran_interface_main
   ! Determine the pflotran inputdeck
   option => OptionCreate()
   string = '-pflotranin'
-  call InputGetCommandLineString(string,option%input_filename, &
+  call InputGetCommandLineString(string,option%input_filename,&
                                  pflotranin_option_found,option)
   string = '-input_prefix'
-  call InputGetCommandLineString(string,option%input_prefix, &
+  call InputGetCommandLineString(string,option%input_prefix,&
                                  input_prefix_option_found,option)
   
   if (pflotranin_option_found .and. input_prefix_option_found) then
     option%io_buffer = 'Cannot specify both "-pflotranin" and ' // &
       '"-input_prefix" on the command lines.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else if (pflotranin_option_found) then
     strings => StringSplit(option%input_filename,'.')
     filename = strings(1)
@@ -94,7 +94,7 @@ program pflotran_interface_main
        nullify(realization)
        nullify(surf_realization)
        pflotran_m%option%io_buffer = "ERROR: pflotran model only works on combinations of subsurface and surface simulations."
-       call printErrMsg(pflotran_m%option)
+       call pflotran_m%option%PrintErrMsg()
    end select
 
   ! Set up CLM cell ids
@@ -123,7 +123,7 @@ program pflotran_interface_main
       enddo
     else
       pflotran_m%option%io_buffer = 'The example can only run with max 2 procs.'
-      call printErrMsg(pflotran_m%option)
+      call pflotran_m%option%PrintErrMsg()
     endif
   endif
 

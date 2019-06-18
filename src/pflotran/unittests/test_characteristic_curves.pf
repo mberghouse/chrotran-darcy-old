@@ -22,7 +22,7 @@ module Test_Characteristic_Curves_module
 ! ************************************************************************** !
   @TestCase
   type, extends(TestCase) :: Test_Characteristic_Curves
-      type(option_type), pointer :: option
+      class(option_type), pointer :: option
       class(characteristic_curves_type), pointer :: cc_const
       class(characteristic_curves_type), pointer :: cc_bcb
       class(characteristic_curves_type), pointer :: cc_bcm

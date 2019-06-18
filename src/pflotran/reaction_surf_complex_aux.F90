@@ -309,7 +309,7 @@ function SurfaceComplexConstraintCreate(surface_complexation,option)
   implicit none
   
   type(surface_complexation_type) :: surface_complexation
-  type(option_type) :: option
+  class(option_type) :: option
   type(srfcplx_constraint_type), pointer :: SurfaceComplexConstraintCreate
 
   type(srfcplx_constraint_type), pointer :: constraint  

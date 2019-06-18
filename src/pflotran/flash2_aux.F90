@@ -135,7 +135,7 @@ subroutine Flash2AuxVarInit(auxvar,option)
   implicit none
   
   type(Flash2_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: var_elem_size, var_node_size
   PetscInt :: nvar 
@@ -193,7 +193,7 @@ subroutine Flash2AuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(Flash2_auxvar_elem_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%pres = auxvar%pres
   auxvar2%temp = auxvar%temp
@@ -250,7 +250,7 @@ subroutine Flash2AuxVarCompute_NINC(x,auxvar,global_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(saturation_function_type) :: saturation_function
   PetscReal :: x(option%nflowdof)
@@ -333,7 +333,7 @@ subroutine Flash2AuxVarCompute_NINC(x,auxvar,global_auxvar, &
         hg = hg * FMWCO2 *option%scale
           !      print *, 'translator', p2, t, dg,hg,visg
       else
-        call printErrMsg(option,'pflow Flash2 ERROR: Need specify CO2 EOS')
+        call option%PrintErrMsg('pflow Flash2 ERROR: Need specify CO2 EOS')
       endif
     else      
       call ideal_gaseos_noderiv(p2, t,dg,hg,eng)
@@ -512,7 +512,7 @@ subroutine Flash2AuxVarCompute_WINC(x, delx, auxvar,global_auxvar,saturation_fun
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(saturation_function_type) :: saturation_function
   PetscReal :: x(option%nflowdof), xx(option%nflowdof), delx(option%nflowdof)
@@ -579,7 +579,7 @@ subroutine Flash2AuxDestroy(aux, option)
   implicit none
 
   type(Flash2_type), pointer :: aux
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: iaux, ielem
   
   if (.not.associated(aux)) return

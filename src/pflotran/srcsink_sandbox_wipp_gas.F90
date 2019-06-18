@@ -84,8 +84,8 @@ subroutine WIPPGasGenerationRead(this,input,option)
   implicit none
   
   class(srcsink_sandbox_wipp_gas_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units
@@ -96,11 +96,11 @@ subroutine WIPPGasGenerationRead(this,input,option)
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_strg)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_strg)
     call StringToUpper(word)   
 
     call SSSandboxBaseSelectCase(this,input,option,word,found)
@@ -109,33 +109,33 @@ subroutine WIPPGasGenerationRead(this,input,option)
     select case(trim(word))
       case('INUNDATED_CORROSION_RATE')
         internal_units = 'unitless/sec'
-        call InputReadDouble(input,option,this%inundated_corrosion_rate)
-        call InputErrorMsg(input,option,'inundated_corrosion_rate',error_strg)
+        call input%ReadDouble(option,this%inundated_corrosion_rate)
+        call input%ErrorMsg(option,'inundated_corrosion_rate',error_strg)
       case('INUNDATED_DEGRADATION_RATE')
         internal_units = 'unitless/sec'
-        call InputReadDouble(input,option,this%inundated_degradation_rate)
-        call InputErrorMsg(input,option,'inundated_degradation_rate',error_strg)
+        call input%ReadDouble(option,this%inundated_degradation_rate)
+        call input%ErrorMsg(option,'inundated_degradation_rate',error_strg)
       case('HUMID_CORROSION_FACTOR')
-        call InputReadDouble(input,option,this%humid_corrosion_factor)
-        call InputErrorMsg(input,option,'humid_corrosion_factor',error_strg)
+        call input%ReadDouble(option,this%humid_corrosion_factor)
+        call input%ErrorMsg(option,'humid_corrosion_factor',error_strg)
       case('HUMID_DEGRADATION_FACTOR')
-        call InputReadDouble(input,option,this%humid_degradation_factor)
-        call InputErrorMsg(input,option,'humid_degradation_factor',error_strg)
+        call input%ReadDouble(option,this%humid_degradation_factor)
+        call input%ErrorMsg(option,'humid_degradation_factor',error_strg)
       case('H2_FE_RATIO')
-        call InputReadDouble(input,option,this%h2_fe_ratio)
-        call InputErrorMsg(input,option,'h2_fe_ratio',error_strg)
+        call input%ReadDouble(option,this%h2_fe_ratio)
+        call input%ErrorMsg(option,'h2_fe_ratio',error_strg)
       case('H2_CH2O_RATIO')
-        call InputReadDouble(input,option,this%h2_ch2o_ratio)
-        call InputErrorMsg(input,option,'h2_ch2o_ratio',error_strg)
+        call input%ReadDouble(option,this%h2_ch2o_ratio)
+        call input%ErrorMsg(option,'h2_ch2o_ratio',error_strg)
       case('ALPHARXN')
-        call InputReadDouble(input,option,this%alpharxn)
-        call InputErrorMsg(input,option,'alpharxn',error_strg)
+        call input%ReadDouble(option,this%alpharxn)
+        call input%ErrorMsg(option,'alpharxn',error_strg)
       case('SOCMIN')
-        call InputReadDouble(input,option,this%smin)
-        call InputErrorMsg(input,option,'socmin',error_strg)
+        call input%ReadDouble(option,this%smin)
+        call input%ErrorMsg(option,'socmin',error_strg)
       case('SATWICK')
-        call InputReadDouble(input,option,this%satwick)
-        call InputErrorMsg(input,option,'satwick',error_strg)
+        call input%ReadDouble(option,this%satwick)
+        call input%ErrorMsg(option,'satwick',error_strg)
       case default
         call InputKeywordUnrecognized(word, &
           'SRCSINK_SANDBOX,WIPP-GAS_GENERATION',option)
@@ -159,7 +159,7 @@ subroutine WIPPGasGenerationSetup(this,grid,option)
   
   class(srcsink_sandbox_wipp_gas_type) :: this
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   call SSSandboxBaseSetup(this,grid,option)
 
@@ -185,7 +185,7 @@ subroutine WIPPGasGenerationSrcSink(this,Residual,Jacobian, &
   implicit none
   
   class(srcsink_sandbox_wipp_gas_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: compute_derivative
   PetscReal :: Residual(option%nflowdof)
   PetscReal :: Jacobian(option%nflowdof,option%nflowdof)
@@ -256,7 +256,7 @@ subroutine WIPPGasGenerationSrcSink(this,Residual,Jacobian, &
   if (compute_derivative) then
     option%io_buffer = 'WIPPGasGenerationSrcSink is not configured for &
       &analytical derivatives.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine WIPPGasGenerationSrcSink

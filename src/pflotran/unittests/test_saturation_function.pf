@@ -16,7 +16,7 @@ module Test_Saturation_Function_module
 
   @TestCase
   type, extends(TestCase) :: Test_Saturation_Function
-     type(option_type), pointer :: option
+     class(option_type), pointer :: option
      type(saturation_function_type), pointer :: sf_Brooks_Corey_Burdine
      type(saturation_function_type), pointer :: sf_van_Genuchten_Mualem
      procedure(runMethod), pointer :: userMethod => null()

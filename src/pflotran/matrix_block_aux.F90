@@ -51,7 +51,7 @@ function MatrixBlockAuxVarCreate(option)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(matrix_block_auxvar_type), pointer :: MatrixBlockAuxVarCreate
   
   type(matrix_block_auxvar_type), pointer :: aux
@@ -82,7 +82,7 @@ subroutine MatrixBlockAuxVarInit1(auxvar,dim1,dim2,dim3,option)
   PetscInt :: dim1
   PetscInt :: dim2
   PetscInt :: dim3
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   allocate(auxvar%dtotal(dim1,dim2,dim3))
   auxvar%dtotal = 0.d0
@@ -105,7 +105,7 @@ subroutine MatrixBlockAuxVarInit2(auxvar,matrix_info,option)
   
   type(matrix_block_auxvar_type) :: auxvar
   type(matrix_block_info_type) :: matrix_info
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   allocate(auxvar%dtotal(matrix_info%dim1,matrix_info%dim2,matrix_info%dim3))
   auxvar%dtotal = 0.d0
@@ -127,7 +127,7 @@ subroutine MatrixBlockAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(matrix_block_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   auxvar%dtotal = auxvar2%dtotal
   
@@ -174,7 +174,7 @@ function MatrixBlockInfoCreate(dim1,dim2,dim3,option)
   PetscInt :: dim1
   PetscInt :: dim2
   PetscInt :: dim3
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(matrix_block_info_type), pointer :: MatrixBlockInfoCreate
   

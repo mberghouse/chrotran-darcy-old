@@ -112,8 +112,8 @@ subroutine CLM_CN_Read(this,input,option)
   implicit none
   
   class(reaction_sandbox_clm_cn_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: word, internal_units
   
@@ -130,11 +130,11 @@ subroutine CLM_CN_Read(this,input,option)
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'CHEMISTRY,REACTION_SANDBOX,CLM-CN')
     call StringToUpper(word)   
 
@@ -142,7 +142,7 @@ subroutine CLM_CN_Read(this,input,option)
       case('POOLS')
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit   
 
           allocate(new_pool)
@@ -150,11 +150,11 @@ subroutine CLM_CN_Read(this,input,option)
           new_pool%CN_ratio = 0.d0
           nullify(new_pool%next)
 
-          call InputReadWord(input,option,new_pool%name,PETSC_TRUE)
-          call InputErrorMsg(input,option,'pool name', &
+          call input%ReadWord(option,new_pool%name,PETSC_TRUE)
+          call input%ErrorMsg(option,'pool name', &
             'CHEMISTRY,REACTION_SANDBOX,CLM-CN,POOLS')
-          call InputReadDouble(input,option,new_pool%CN_ratio)
-          if (InputError(input)) then
+          call input%ReadDouble(option,new_pool%CN_ratio)
+          if (input%Error()) then
             new_pool%CN_ratio = UNINITIALIZED_DOUBLE
           else
             ! convert CN ratio from mass C/mass N to mol C/mol N
@@ -185,60 +185,60 @@ subroutine CLM_CN_Read(this,input,option)
         
         do 
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
 
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
                              'CHEMISTRY,REACTION_SANDBOX,CLM-CN,REACTION')
           call StringToUpper(word)   
 
           select case(trim(word))
             case('UPSTREAM_POOL')
-              call InputReadWord(input,option, &
+              call input%ReadWord(option, &
                                  new_reaction%upstream_pool_name,PETSC_TRUE)
-              call InputErrorMsg(input,option,'upstream pool name', &
+              call input%ErrorMsg(option,'upstream pool name', &
                      'CHEMISTRY,REACTION_SANDBOX,CLM-CN,REACTION')
             case('DOWNSTREAM_POOL')
-              call InputReadWord(input,option, &
+              call input%ReadWord(option, &
                                  new_reaction%downstream_pool_name,PETSC_TRUE)
-              call InputErrorMsg(input,option,'downstream pool name', &
+              call input%ErrorMsg(option,'downstream pool name', &
                      'CHEMISTRY,REACTION_SANDBOX,CLM-CN,REACTION')
             case('RATE_CONSTANT')
-              call InputReadDouble(input,option,rate_constant)
-              call InputErrorMsg(input,option,'rate constant', &
+              call input%ReadDouble(option,rate_constant)
+              call input%ErrorMsg(option,'rate constant', &
                      'CHEMISTRY,REACTION_SANDBOX,CLM-CN,REACTION')
-              call InputReadWord(input,option,word,PETSC_TRUE)
+              call input%ReadWord(option,word,PETSC_TRUE)
               internal_units = 'unitless/sec'
-              if (InputError(input)) then
+              if (input%Error()) then
                 input%err_buf = 'CLM-CN RATE CONSTANT UNITS'
-                call InputDefaultMsg(input,option)
+                call input%DefaultMsg(option)
               else              
                 rate_constant = rate_constant * &
                   UnitsConvertToInternal(word,internal_units,option)
               endif
             case('TURNOVER_TIME')
-              call InputReadDouble(input,option,turnover_time)
-              call InputErrorMsg(input,option,'turnover time', &
+              call input%ReadDouble(option,turnover_time)
+              call input%ErrorMsg(option,'turnover time', &
                      'CHEMISTRY,REACTION_SANDBOX,CLM-CN,REACTION')
-              call InputReadWord(input,option,word,PETSC_TRUE)
+              call input%ReadWord(option,word,PETSC_TRUE)
               internal_units = 'sec'
-              if (InputError(input)) then
+              if (input%Error()) then
                 input%err_buf = 'CLM-CN TURNOVER TIME UNITS'
-                call InputDefaultMsg(input,option)
+                call input%DefaultMsg(option)
               else              
                 turnover_time = turnover_time * &
                   UnitsConvertToInternal(word,internal_units,option)
               endif
             case('RESPIRATION_FRACTION')
-              call InputReadDouble(input,option, &
+              call input%ReadDouble(option, &
                                    new_reaction%respiration_fraction)
-              call InputErrorMsg(input,option,'respiration fraction', &
+              call input%ErrorMsg(option,'respiration fraction', &
                      'CHEMISTRY,REACTION_SANDBOX,CLM-CN,REACTION')
             case('N_INHIBITION')
-              call InputReadDouble(input,option, &
+              call input%ReadDouble(option, &
                                    new_reaction%inhibition_constant)
-              call InputErrorMsg(input,option,'inhibition constant', &
+              call input%ErrorMsg(option,'inhibition constant', &
                      'CHEMISTRY,REACTION_SANDBOX,CLM-CN,REACTION')
             case default
               call InputKeywordUnrecognized(word, &
@@ -252,7 +252,7 @@ subroutine CLM_CN_Read(this,input,option)
             'be included in a CLM-CN reaction definition, but not both. ' // &
             'See reaction with upstream pool "' // &
             trim(new_reaction%upstream_pool_name) // '".'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         else if (turnover_time > 0.d0) then
           new_reaction%rate_constant = 1.d0 / turnover_time
         else
@@ -265,7 +265,7 @@ subroutine CLM_CN_Read(this,input,option)
             'zero and one (i.e. 0. <= rf <= 1.) in a CLM-CN reaction ' // &
             'definition. See reaction with upstream pool "' // &
             trim(new_reaction%upstream_pool_name) // '".'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         ! If no downstream pool exists, ensure that respiration fraction = 1
         if (len_trim(new_reaction%downstream_pool_name) < 1 .and. &
@@ -274,7 +274,7 @@ subroutine CLM_CN_Read(this,input,option)
             '1.0 if no downstream pool is specified in a CLM-CN reaction ' // &
             'definition. See reaction with upstream pool "' // &
             trim(new_reaction%upstream_pool_name) // '".'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         if (associated(this%reactions)) then
           prev_reaction%next => new_reaction
@@ -308,7 +308,7 @@ subroutine CLM_CN_Setup(this,reaction,option)
   
   class(reaction_sandbox_clm_cn_type) :: this
   type(reaction_type) :: reaction  
-  type(option_type) :: option
+  class(option_type) :: option
   
   call CLM_CN_Map(this,reaction,option)
 
@@ -333,7 +333,7 @@ subroutine CLM_CN_Map(this,reaction,option)
   implicit none
 
   class(reaction_sandbox_clm_cn_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   
   character(len=MAXWORDLENGTH), allocatable :: pool_names(:)
@@ -406,7 +406,7 @@ subroutine CLM_CN_Map(this,reaction,option)
         option%io_buffer = 'For CLM-CN pools with no CN ratio defined, ' // &
           'the user must define two immobile species with the same root ' // &
           'name as the pool with "C" or "N" appended, respectively.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     else ! only one species (e.g. SOMX)
       this%pool_id_to_species_id(SOM_INDEX,icount) = &
@@ -439,7 +439,7 @@ subroutine CLM_CN_Map(this,reaction,option)
         trim(cur_rxn%upstream_pool_name) // &
         '" in reaction with downstream pool "' // &
         trim(cur_rxn%downstream_pool_name) // '" not found in list of pools.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (len_trim(cur_rxn%downstream_pool_name) > 0) then
       this%downstream_pool_id(icount) = &
@@ -449,7 +449,7 @@ subroutine CLM_CN_Map(this,reaction,option)
           trim(cur_rxn%downstream_pool_name) // &
           '" in reaction with upstream pool "' // &
           trim(cur_rxn%upstream_pool_name) // '" not found in list of pools.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (this%CN_ratio(this%downstream_pool_id(icount)) < 0.d0) then
         option%io_buffer = 'For CLM-CN reactions, downstream pools ' // &
@@ -457,7 +457,7 @@ subroutine CLM_CN_Map(this,reaction,option)
           ' individually.  Therefore, pool "' // &
           trim(cur_rxn%downstream_pool_name) // &
           '" may not be used as a downstream pool.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     endif
     this%rate_constant(icount) = cur_rxn%rate_constant
@@ -489,7 +489,7 @@ subroutine CLM_CN_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
   implicit none
   
   class(reaction_sandbox_clm_cn_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   ! the following arrays must be declared after reaction

@@ -29,7 +29,7 @@ module Realization_Base_class
     type(patch_list_type), pointer :: patch_list
     type(patch_type), pointer :: patch
 
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(field_type), pointer :: field
     type(debug_type), pointer :: debug
     type(output_option_type), pointer :: output_option
@@ -64,7 +64,7 @@ subroutine RealizationBaseInit(realization_base,option)
   implicit none
   
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   realization_base%id = 0
   if (associated(option)) then

@@ -48,7 +48,7 @@ subroutine DatabaseRead(reaction,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(aq_species_type), pointer :: cur_aq_spec, cur_aq_spec2
   type(gas_species_type), pointer :: cur_gas_spec, cur_gas_spec2
@@ -70,7 +70,7 @@ subroutine DatabaseRead(reaction,option)
   PetscInt :: ispec, itemp, i
   PetscReal :: stoich
   PetscReal :: temp_real
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscInt :: iostat
   PetscInt :: num_nulls
   PetscInt :: num_logKs
@@ -120,28 +120,28 @@ subroutine DatabaseRead(reaction,option)
   
   if (len_trim(reaction%database_filename) < 2) then
     option%io_buffer = 'Database filename not included in input deck.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   input => InputCreate(IUNIT_TEMP,reaction%database_filename,option)
 
   ! read temperatures
   call InputReadPflotranString(input,option)
   ! remove comment
-  call InputReadQuotedWord(input,option,name,PETSC_TRUE)
-  call InputReadInt(input,option,num_logKs)
+  call input%ReadQuotedWord(option,name,PETSC_TRUE)
+  call input%ReadInt(option,num_logKs)
   if (reaction%use_geothermal_hpt) then
     reaction%num_dbase_parameters = num_logKs
-    call InputErrorMsg(input,option,'Number of database parameters','DATABASE')
+    call input%ErrorMsg(option,'Number of database parameters','DATABASE')
   else
     reaction%num_dbase_temperatures = num_logKs
-    call InputErrorMsg(input,option,'Number of database temperatures', &
+    call input%ErrorMsg(option,'Number of database temperatures', &
                        'DATABASE')  
     allocate(reaction%dbase_temperatures(reaction%num_dbase_temperatures))
     reaction%dbase_temperatures = 0.d0 
    
     do itemp = 1, reaction%num_dbase_temperatures
-      call InputReadDouble(input,option,reaction%dbase_temperatures(itemp))
-      call InputErrorMsg(input,option,'Database temperatures','DATABASE')            
+      call input%ReadDouble(option,reaction%dbase_temperatures(itemp))
+      call input%ErrorMsg(option,'Database temperatures','DATABASE')
     enddo
   endif
 
@@ -149,9 +149,9 @@ subroutine DatabaseRead(reaction,option)
   null_name = 'null'
   do ! loop over every entry in the database
     call InputReadPflotranString(input,option)
-    call InputReadStringErrorMsg(input,option,'DATABASE')
+    call input%ReadStringErrorMsg(option,'DATABASE')
 
-    call InputReadQuotedWord(input,option,name,PETSC_TRUE)
+    call input%ReadQuotedWord(option,name,PETSC_TRUE)
     ! 'null's mark the end of a section in the database.  We count these 
     ! to determine which species we are reading.
     ! --
@@ -216,14 +216,14 @@ subroutine DatabaseRead(reaction,option)
             cur_colloid%id = abs(cur_colloid%id)
 
             ! skip the Debye-Huckel ion size parameter (a0)
-            call InputReadDouble(input,option,temp_real)
-            call InputErrorMsg(input,option,'Colloid skip a0','DATABASE')            
+            call input%ReadDouble(option,temp_real)
+            call input%ErrorMsg(option,'Colloid skip a0','DATABASE')
             ! skip the valence
-            call InputReadDouble(input,option,temp_real)
-            call InputErrorMsg(input,option,'Colloid skip Z','DATABASE')            
+            call input%ReadDouble(option,temp_real)
+            call input%ErrorMsg(option,'Colloid skip Z','DATABASE')
             ! read the molar weight
-            call InputReadDouble(input,option,cur_colloid%molar_weight)
-            call InputErrorMsg(input,option,'Colloid molar weight','DATABASE')
+            call input%ReadDouble(option,cur_colloid%molar_weight)
+            call input%ErrorMsg(option,'Colloid molar weight','DATABASE')
             
             cycle ! avoid the aqueous species parameters below
           endif
@@ -240,14 +240,14 @@ subroutine DatabaseRead(reaction,option)
             cur_immobile_spec%id = abs(cur_immobile_spec%id)
 
             ! skip the Debye-Huckel ion size parameter (a0)
-            call InputReadDouble(input,option,temp_real)
-            call InputErrorMsg(input,option,'Immobile skip a0','DATABASE')            
+            call input%ReadDouble(option,temp_real)
+            call input%ErrorMsg(option,'Immobile skip a0','DATABASE')
             ! skip the valence
-            call InputReadDouble(input,option,temp_real)
-            call InputErrorMsg(input,option,'Immobile skip Z','DATABASE')            
+            call input%ReadDouble(option,temp_real)
+            call input%ErrorMsg(option,'Immobile skip Z','DATABASE')
             ! read the molar weight
-            call InputReadDouble(input,option,cur_immobile_spec%molar_weight)
-            call InputErrorMsg(input,option,'Immobile molar weight','DATABASE')
+            call input%ReadDouble(option,cur_immobile_spec%molar_weight)
+            call input%ErrorMsg(option,'Immobile molar weight','DATABASE')
             
             cycle ! avoid the aqueous species parameters below
           endif
@@ -261,8 +261,8 @@ subroutine DatabaseRead(reaction,option)
           if (.not.associated(cur_aq_spec%dbaserxn)) &
             cur_aq_spec%dbaserxn => DatabaseRxnCreate()
           ! read the number of primary species in secondary rxn
-          call InputReadInt(input,option,cur_aq_spec%dbaserxn%nspec)
-          call InputErrorMsg(input,option,'Number of species in aqueous ', &
+          call input%ReadInt(option,cur_aq_spec%dbaserxn%nspec)
+          call input%ErrorMsg(option,'Number of species in aqueous ', &
                           'complex DATABASE')  
           ! allocate arrays for rxn
           allocate(cur_aq_spec%dbaserxn%spec_name(cur_aq_spec%dbaserxn%nspec))
@@ -273,29 +273,29 @@ subroutine DatabaseRead(reaction,option)
           cur_aq_spec%dbaserxn%logK = 0.d0
           ! read in species and stoichiometries
           do ispec = 1, cur_aq_spec%dbaserxn%nspec
-            call InputReadDouble(input,option, &
+            call input%ReadDouble(option, &
                                  cur_aq_spec%dbaserxn%stoich(ispec))
-            call InputErrorMsg(input,option,'EQRXN species stoichiometry', &
+            call input%ErrorMsg(option,'EQRXN species stoichiometry', &
                                'DATABASE')            
-            call InputReadQuotedWord(input,option, &
+            call input%ReadQuotedWord(option, &
                             cur_aq_spec%dbaserxn%spec_name(ispec),PETSC_TRUE)
-            call InputErrorMsg(input,option,'EQRXN species name','DATABASE')            
+            call input%ErrorMsg(option,'EQRXN species name','DATABASE')
           enddo
           !note: logKs read are pK so that K is in the denominator (i.e. Q/K)
           do itemp = 1, num_logKs
-            call InputReadDouble(input,option,cur_aq_spec%dbaserxn%logK(itemp))
-            call InputErrorMsg(input,option,'EQRXN logKs','DATABASE') 
+            call input%ReadDouble(option,cur_aq_spec%dbaserxn%logK(itemp))
+            call input%ErrorMsg(option,'EQRXN logKs','DATABASE')
           enddo
         endif
         ! read the Debye-Huckel ion size parameter (a0)
-        call InputReadDouble(input,option,cur_aq_spec%a0)
-        call InputErrorMsg(input,option,'AQ Species a0','DATABASE')            
+        call input%ReadDouble(option,cur_aq_spec%a0)
+        call input%ErrorMsg(option,'AQ Species a0','DATABASE')
         ! read the valence
-        call InputReadDouble(input,option,cur_aq_spec%Z)
-        call InputErrorMsg(input,option,'AQ Species Z','DATABASE')            
+        call input%ReadDouble(option,cur_aq_spec%Z)
+        call input%ErrorMsg(option,'AQ Species Z','DATABASE')
         ! read the molar weight
-        call InputReadDouble(input,option,cur_aq_spec%molar_weight)
-        call InputErrorMsg(input,option,'AQ Species molar weight','DATABASE')
+        call input%ReadDouble(option,cur_aq_spec%molar_weight)
+        call input%ErrorMsg(option,'AQ Species molar weight','DATABASE')
         
                     
       case(2) ! gas species
@@ -317,16 +317,16 @@ subroutine DatabaseRead(reaction,option)
         if (.not.found) cycle ! go to next line in database
         
         ! read the molar volume
-        call InputReadDouble(input,option,cur_gas_spec%molar_volume)
-        call InputErrorMsg(input,option,'GAS molar volume','DATABASE')
+        call input%ReadDouble(option,cur_gas_spec%molar_volume)
+        call input%ErrorMsg(option,'GAS molar volume','DATABASE')
         ! convert from cm^3/mol to m^3/mol
         cur_gas_spec%molar_volume = cur_gas_spec%molar_volume*1.d-6
         ! create aqueous equilibrium reaction
         if (.not.associated(cur_gas_spec%dbaserxn)) &
           cur_gas_spec%dbaserxn => DatabaseRxnCreate()
         ! read the number of aqueous species in secondary rxn
-        call InputReadInt(input,option,cur_gas_spec%dbaserxn%nspec)
-        call InputErrorMsg(input,option,'Number of species in gas reaction', &
+        call input%ReadInt(option,cur_gas_spec%dbaserxn%nspec)
+        call input%ErrorMsg(option,'Number of species in gas reaction', &
                         'DATABASE')  
         ! allocate arrays for rxn
         allocate(cur_gas_spec%dbaserxn%spec_name(cur_gas_spec%dbaserxn%nspec))
@@ -337,23 +337,23 @@ subroutine DatabaseRead(reaction,option)
         cur_gas_spec%dbaserxn%logK = 0.d0
         ! read in species and stoichiometries
         do ispec = 1, cur_gas_spec%dbaserxn%nspec
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                                cur_gas_spec%dbaserxn%stoich(ispec))
-          call InputErrorMsg(input,option,'GAS species stoichiometry', &
+          call input%ErrorMsg(option,'GAS species stoichiometry', &
                              'DATABASE')            
-          call InputReadQuotedWord(input,option, &
+          call input%ReadQuotedWord(option, &
                                    cur_gas_spec%dbaserxn%spec_name(ispec), &
                                    PETSC_TRUE)
-          call InputErrorMsg(input,option,'GAS species name','DATABASE')            
+          call input%ErrorMsg(option,'GAS species name','DATABASE')
         enddo
         !note: logKs read are pK so that K is in the denominator (i.e. Q/K)
         do itemp = 1, num_logKs
-          call InputReadDouble(input,option,cur_gas_spec%dbaserxn%logK(itemp))
-          call InputErrorMsg(input,option,'GAS logKs','DATABASE')            
+          call input%ReadDouble(option,cur_gas_spec%dbaserxn%logK(itemp))
+          call input%ErrorMsg(option,'GAS logKs','DATABASE')
         enddo
         ! read the molar weight
-        call InputReadDouble(input,option,cur_gas_spec%molar_weight)
-        call InputErrorMsg(input,option,'GAS molar weight','DATABASE')     
+        call input%ReadDouble(option,cur_gas_spec%molar_weight)
+        call input%ErrorMsg(option,'GAS molar weight','DATABASE')
         
                
       case(3) ! minerals
@@ -398,8 +398,8 @@ subroutine DatabaseRead(reaction,option)
           cur_srfcplx%dbaserxn => DatabaseRxnCreate()
             
         ! read the number of aqueous species in surface complexation rxn
-        call InputReadInt(input,option,cur_srfcplx%dbaserxn%nspec)
-        call InputErrorMsg(input,option, &
+        call input%ReadInt(option,cur_srfcplx%dbaserxn%nspec)
+        call input%ErrorMsg(option, &
                      'Number of species in surface complexation reaction', &
                      'DATABASE')  
         ! decrement number of species since free site will not be included
@@ -415,11 +415,11 @@ subroutine DatabaseRead(reaction,option)
         ispec = 0
                                       ! recall that nspec was decremented above
         do i = 1, cur_srfcplx%dbaserxn%nspec+1 
-          call InputReadDouble(input,option,stoich)
-          call InputErrorMsg(input,option, &
+          call input%ReadDouble(option,stoich)
+          call input%ErrorMsg(option, &
                          'SURFACE COMPLEX species stoichiometry','DATABASE')
-          call InputReadQuotedWord(input,option,name,PETSC_TRUE)
-          call InputErrorMsg(input,option,'SURFACE COMPLEX species name', &
+          call input%ReadQuotedWord(option,name,PETSC_TRUE)
+          call input%ErrorMsg(option,'SURFACE COMPLEX species name', &
                              'DATABASE')            
           if (StringStartsWith(name,'>')) then
             cur_srfcplx%free_site_name = name
@@ -432,12 +432,12 @@ subroutine DatabaseRead(reaction,option)
         enddo
         !note: logKs read are pK so that K is in the denominator (i.e. Q/K)
         do itemp = 1, num_logKs
-          call InputReadDouble(input,option,cur_srfcplx%dbaserxn%logK(itemp))
-          call InputErrorMsg(input,option,'SURFACE COMPLEX logKs','DATABASE')            
+          call input%ReadDouble(option,cur_srfcplx%dbaserxn%logK(itemp))
+          call input%ErrorMsg(option,'SURFACE COMPLEX logKs','DATABASE')
         enddo
         ! read the valence
-        call InputReadDouble(input,option,cur_srfcplx%Z)
-        call InputErrorMsg(input,option,'Surface Complex Z','DATABASE')            
+        call input%ReadDouble(option,cur_srfcplx%Z)
+        call input%ErrorMsg(option,'Surface Complex Z','DATABASE')
 
       
     end select
@@ -463,7 +463,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = &
                  'Aqueous primary species (' // trim(cur_aq_spec%name) // &
                  ') duplicated in input file.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_aq_spec2 => cur_aq_spec2%next
     enddo
@@ -477,7 +477,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Aqueous primary species (' // &
                            trim(cur_aq_spec%name) // &
                            ') duplicated as secondary species in input file.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_aq_spec2 => cur_aq_spec2%next
     enddo
@@ -491,7 +491,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Aqueous primary species (' // &
                            trim(cur_aq_spec%name) // &
                            ') duplicated as gas species in input file.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_gas_spec2 => cur_gas_spec2%next
     enddo
@@ -515,7 +515,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Aqueous secondary species (' // &
                            trim(cur_aq_spec%name) // &
                            ') duplicated in input file.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_aq_spec2 => cur_aq_spec2%next
     enddo
@@ -529,7 +529,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Aqueous secondary species (' // &
                            trim(cur_aq_spec%name) // &
                            ') duplicated as gas species in input file.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_gas_spec2 => cur_gas_spec2%next
     enddo
@@ -554,7 +554,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Gas species (' // &
                            trim(cur_aq_spec%name) // &
                            ') duplicated in input file.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_gas_spec2 => cur_gas_spec2%next
     enddo
@@ -575,7 +575,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Mineral (' // &
                            trim(cur_mineral%name) // &
                            ') duplicated in input file.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_mineral2 => cur_mineral2%next
     enddo
@@ -596,7 +596,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Surface complex (' // &
                             trim(cur_srfcplx2%name) // &
                     ') duplicated in master surface complex list.'
-        call printMsg(option)                          
+        call option%PrintMsg()
       endif
       cur_srfcplx2 => cur_srfcplx2%next
     enddo
@@ -627,7 +627,7 @@ subroutine DatabaseRead(reaction,option)
         option%io_buffer = 'Surface complex "' // &
                            trim(cur_srfcplx%name) // &
                            '" not found in master list.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     
       ! ensure that site listed in reaction matches site in complex
@@ -645,7 +645,7 @@ subroutine DatabaseRead(reaction,option)
                              trim(cur_srfcplx_rxn%free_site_name) // &
                              ' not found in surface complex:' // &
                              trim(cur_srfcplx%name)
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       endif
       ! ensure that duplicate surface complexes do not exist in reaction
@@ -660,7 +660,7 @@ subroutine DatabaseRead(reaction,option)
           option%io_buffer = 'Surface complex (' // &
                              trim(cur_srfcplx2%name) // &
                       ') duplicated in input file surface complex reaction.'
-          call printMsg(option)                          
+          call option%PrintMsg()
         endif
         cur_srfcplx2 => cur_srfcplx2%next
       enddo
@@ -669,7 +669,7 @@ subroutine DatabaseRead(reaction,option)
     cur_srfcplx_rxn => cur_srfcplx_rxn%next
   enddo  
   
-  if (flag) call printErrMsg(option,'Species duplicated in input file.')
+  if (flag) call option%PrintErrMsg('Species duplicated in input file.')
 
   ! check that all species, etc. were read
   ! also check whether legitimate logK values exist if non-isothermal and
@@ -684,7 +684,7 @@ subroutine DatabaseRead(reaction,option)
       option%io_buffer = 'Aqueous primary species (' // &
                trim(cur_aq_spec%name) // &
                ') not found in database.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (.not.reaction%use_geothermal_hpt) then
       if (.not.DatabaseCheckLegitimateLogKs(cur_aq_spec%dbaserxn, &
@@ -704,7 +704,7 @@ subroutine DatabaseRead(reaction,option)
       option%io_buffer = &
                'Aqueous secondary species (' // trim(cur_aq_spec%name) // &
                ') not found in database.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (.not.reaction%use_geothermal_hpt) then
       if (.not.DatabaseCheckLegitimateLogKs(cur_aq_spec%dbaserxn, &
@@ -723,7 +723,7 @@ subroutine DatabaseRead(reaction,option)
       flag = PETSC_TRUE
       option%io_buffer = 'Gas species (' // trim(cur_gas_spec%name) // &
                          ') not found in database.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (.not.reaction%use_geothermal_hpt) then
       if (.not.DatabaseCheckLegitimateLogKs(cur_gas_spec%dbaserxn, &
@@ -742,7 +742,7 @@ subroutine DatabaseRead(reaction,option)
       flag = PETSC_TRUE
       option%io_buffer = 'Mineral (' // trim(cur_mineral%name) // &
                ') not found in database.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (.not.reaction%use_geothermal_hpt) then
       if (.not.DatabaseCheckLegitimateLogKs(cur_mineral%dbaserxn, &
@@ -761,7 +761,7 @@ subroutine DatabaseRead(reaction,option)
       flag = PETSC_TRUE
       option%io_buffer = 'Surface species (' // trim(cur_srfcplx%name) // &
                 ') not found in database.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (.not.reaction%use_geothermal_hpt) then
       if (.not.DatabaseCheckLegitimateLogKs(cur_srfcplx%dbaserxn, &
@@ -774,13 +774,13 @@ subroutine DatabaseRead(reaction,option)
     cur_srfcplx => cur_srfcplx%next
   enddo  
     
-  if (flag) call printErrMsg(option,'Species not found in database.')
+  if (flag) call option%PrintErrMsg('Species not found in database.')
   if (.not.option%use_isothermal) then
     !geh: only stop if running with temperature dependent log Ks.
     if (logK_error_flag) then
       option%io_buffer = 'Non-isothermal reactions not possible due to &
         &missing logKs in database.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
 
@@ -820,7 +820,7 @@ subroutine BasisInit(reaction,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(aq_species_type), pointer :: cur_aq_spec
   type(aq_species_type), pointer :: cur_pri_aq_spec
@@ -1118,7 +1118,7 @@ subroutine BasisInit(reaction,option)
         &number of secondary species defined.  Perhaps &
         &DECOUPLED_EQUILIBRIUM_REACTIONS need to be defined?'
     endif
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   allocate(pri_matrix(ncomp_secondary,ncomp_h2o))
@@ -1178,7 +1178,7 @@ subroutine BasisInit(reaction,option)
         option%io_buffer = 'Primary species ' // &
                  trim(cur_pri_aq_spec%name) // &
                  ' found in secondary or gas list.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       pri_matrix(icount,i) = -1.d0
       do ispec=1,cur_pri_aq_spec%dbaserxn%nspec
@@ -1210,7 +1210,7 @@ subroutine BasisInit(reaction,option)
         option%io_buffer = 'Secondary aqueous species ' // &
                  trim(cur_sec_aq_spec%name) // &
                  ' found in primary species list.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       sec_matrix(icount,-i) = -1.d0
       do ispec=1,cur_sec_aq_spec%dbaserxn%nspec
@@ -1242,7 +1242,7 @@ subroutine BasisInit(reaction,option)
         option%io_buffer = 'Gas species ' // &
                  trim(cur_gas_spec%name) // &
                  ' found in primary species list.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       sec_matrix(icount,-i) = -1.d0
       do ispec=1,cur_gas_spec%dbaserxn%nspec
@@ -1796,7 +1796,7 @@ subroutine BasisInit(reaction,option)
        option%iflowmode == FLASH2_MODE)) then
     option%io_buffer = 'An ACTIVE_GAS_SPECIES block must be specified in &
       &CHEMISTRY to run a CO2 flow mode coupled with reactive transport.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   
@@ -1861,7 +1861,7 @@ subroutine BasisInit(reaction,option)
     write(string,'(2i4)') temp_int, mineral%nkinmnrl
     option%io_buffer = 'Inconsistent number of kinetic minerals: ' // &
       trim(string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (mineral%nmnrl > 0) then
@@ -2267,7 +2267,7 @@ subroutine BasisInit(reaction,option)
                 option%io_buffer = 'Kinetic mineral prefactor species "' // &
                   trim(cur_prefactor_species%name) // &
                   '" not found among primary or secondary species.'
-                call printErrMsg(option)
+                call option%PrintErrMsg()
               endif
               mineral%kinmnrl_prefactor_id(j,i,ikinmnrl) = &
                 cur_prefactor_species%id
@@ -2379,7 +2379,7 @@ subroutine BasisInit(reaction,option)
         surface_complexation%nkinsrfcplxrxn) then
       option%io_buffer = 'Inconsistent number of surface complexation &
                          &reactions. (Initial Check)'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   
     ! generic list of surface complexes
@@ -2734,7 +2734,7 @@ subroutine BasisInit(reaction,option)
                                 trim(cur_srfcplx_rxn%surface_name) // &
                                 ' listed in surface complexation &
                                 &reaction not found in kinetic mineral list'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         case(COLLOID_SURFACE)
           surface_complexation%srfcplxrxn_to_surf(irxn) = &
@@ -2744,7 +2744,7 @@ subroutine BasisInit(reaction,option)
                                 trim(cur_srfcplx_rxn%surface_name) // &
                                 ' listed in surface complexation &
                                 &reaction not found in colloid list'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           ! loop over primary species associated with colloid sorption and
           ! add to colloid species list, if not already listed
@@ -2767,7 +2767,7 @@ subroutine BasisInit(reaction,option)
           option%io_buffer = 'No mineral or colloid name specified &
             &for equilibrium surface complexation reaction:' // &
             trim(adjustl(word))
-          call printWrnMsg(option)
+          call option%PrintWrnMsg()
       end select
       surface_complexation%srfcplxrxn_site_density(irxn) = &
         cur_srfcplx_rxn%site_density
@@ -2806,7 +2806,7 @@ subroutine BasisInit(reaction,option)
         surface_complexation%nkinsrfcplxrxn) then
       option%io_buffer = 'Inconsistent number of surface complexation &
                          &reactions. (Final Check)'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     
   endif ! surface_complexation%nsrfcplxrxn > 0
@@ -2840,7 +2840,7 @@ subroutine BasisInit(reaction,option)
     if (minval(reaction%coll_spec_to_pri_spec) < 1) then
       option%io_buffer = 'Species colloid surface complexation reaction not &
                          & recognized among primary species'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     allocate(reaction%total_sorb_mobile_print(reaction%ncollcomp))
     reaction%total_sorb_mobile_print = PETSC_FALSE
@@ -2902,7 +2902,7 @@ subroutine BasisInit(reaction,option)
         if (reaction%eqionx_rxn_to_surf(irxn) < 0) then
           option%io_buffer = 'Mineral ' // trim(cur_ionx_rxn%mineral_name) // &
             ' listed in ion exchange &reaction not found in mineral list'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       endif
       cur_cation => cur_ionx_rxn%cation_list
@@ -2924,7 +2924,7 @@ subroutine BasisInit(reaction,option)
         if (.not.found) then
           option%io_buffer = 'Cation ' // trim(cur_cation%name) // &
                    ' in ion exchange reaction not found in swapped basis.'
-          call printErrMsg(option)  
+          call option%PrintErrMsg()
         endif
         cur_cation => cur_cation%next
       enddo
@@ -2995,7 +2995,7 @@ subroutine BasisInit(reaction,option)
         option%io_buffer = 'Cannot have more than one reactant in &
                            &radioactive decay reaction: (' // &
                            trim(cur_radiodecay_rxn%reaction) // ').'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
 
       ! calculate maximum
@@ -3287,7 +3287,7 @@ subroutine BasisInit(reaction,option)
           option%io_buffer = 'Biomass species "' // &
             trim(cur_microbial_rxn%biomass%species_name) // &
             ' not found among immobile species.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         else
           microbial%biomassid(irxn) = temp_int
           microbial%biomass_yield(irxn) = &
@@ -3301,7 +3301,7 @@ subroutine BasisInit(reaction,option)
           option%io_buffer = 'Biomass species "' // &
             trim(cur_microbial_rxn%biomass%species_name) // &
             ' should not be included in microbial reaction.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif       
       endif
       
@@ -3321,7 +3321,7 @@ subroutine BasisInit(reaction,option)
         if (temp_int == 0) then
           option%io_buffer = 'Monod species "' // &
             trim(cur_monod%species_name) // ' not found in microbial reaction.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         ! if species stoichiometry is > 0., it is a product and cannot be
         ! used in a monod expression.
@@ -3329,7 +3329,7 @@ subroutine BasisInit(reaction,option)
           option%io_buffer = 'Monod species "' // &
             trim(cur_monod%species_name) // ' must be a reactant and not ' // &
             'a product in microbial reaction.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         
         microbial%monod_specid(monod_count) = &
@@ -3358,7 +3358,7 @@ subroutine BasisInit(reaction,option)
           option%io_buffer = 'Inhibition species "' // &
             trim(cur_inhibition%species_name) // &
             ' not found in microbial reaction.'
-          call printWrnMsg(option)
+          call option%PrintWrnMsg()
         endif
         
         microbial%inhibition_specid(inhibition_count) = &
@@ -3407,7 +3407,7 @@ subroutine BasisInit(reaction,option)
         option%io_buffer = 'Species "' // &
         trim(cur_immobile_decay_rxn%species_name) // &
         '" in immobile decay reaction not found among immobile species.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       reaction%immobile%decay_rate_constant(irxn) = &
         cur_immobile_decay_rxn%rate_constant
@@ -3424,7 +3424,7 @@ subroutine BasisInit(reaction,option)
     if (reaction%neqcplx > 0) then
       option%io_buffer = 'Isotherm reactions currently calculated as a &
                          &function of free-ion, not totals.  Contact Glenn!'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   
     ! allocate arrays
@@ -3475,7 +3475,7 @@ subroutine BasisInit(reaction,option)
         option%io_buffer = 'Species ' // trim(cur_kd_rxn%species_name) // &
                  ' in kd reaction &
                  & not found among primary species list.'
-        call printErrMsg(option)     
+        call option%PrintErrMsg()
       endif
       reaction%eqkdtype(irxn) = cur_kd_rxn%itype
       ! associate mineral id
@@ -3487,7 +3487,7 @@ subroutine BasisInit(reaction,option)
           option%io_buffer = 'Mineral ' // trim(cur_ionx_rxn%mineral_name) // &
                              ' listed in kd (linear sorption) &
                              &reaction not found in mineral list'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       endif      
       reaction%eqkddistcoef(irxn) = cur_kd_rxn%Kd
@@ -3986,7 +3986,7 @@ function GetSpeciesBasisID(reaction,option,ncomp_h2o,reaction_name, &
   implicit none
 
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ncomp_h2o
   character(len=MAXWORDLENGTH) :: reaction_name
   character(len=MAXWORDLENGTH) :: species_name
@@ -4026,7 +4026,7 @@ function GetSpeciesBasisID(reaction,option,ncomp_h2o,reaction_name, &
            ' listed in reaction for ' // &
            trim(reaction_name) // &
            ' not found among primary, secondary, or gas species.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end function GetSpeciesBasisID
 
@@ -4056,7 +4056,7 @@ subroutine ReactionDatabaseSetupGases(reaction,num_logKs,option,h2o_id, &
   
   type(reaction_type) :: reaction
   PetscInt :: num_logKs
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: h2o_id
   PetscReal :: temp_high, temp_low
   PetscInt :: itemp_high, itemp_low
@@ -4205,7 +4205,7 @@ subroutine BasisPrint(reaction,title,option)
   
   type(reaction_type) :: reaction
   character(len=*) :: title
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(aq_species_type), pointer :: cur_aq_spec
   type(gas_species_type), pointer :: cur_gas_spec

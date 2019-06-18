@@ -105,8 +105,8 @@ subroutine GeomechanicsRegressionRead(geomechanics_regression,input,option)
   implicit none
   
   type(geomechanics_regression_type), pointer :: geomechanics_regression
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word
   type(geomechanics_regression_variable_type), pointer :: cur_variable, new_variable
@@ -123,8 +123,8 @@ subroutine GeomechanicsRegressionRead(geomechanics_regression,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS_REGRESSION')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS_REGRESSION')
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
@@ -135,8 +135,8 @@ subroutine GeomechanicsRegressionRead(geomechanics_regression,input,option)
           call InputReadPflotranString(input,option)
           if (InputCheckExit(input,option)) exit  
 
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'variable','GEOMECHANICS_REGRESSION,VARIABLES')
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'variable','GEOMECHANICS_REGRESSION,VARIABLES')
           call StringToLower(word)
           new_variable => GeomechanicsRegressionVariableCreate()
           new_variable%name = word
@@ -159,8 +159,8 @@ subroutine GeomechanicsRegressionRead(geomechanics_regression,input,option)
           if (count > max_vertices) then
             call ReallocateArray(int_array,max_vertices)
           endif
-          call InputReadInt(input,option,int_array(count))
-          call InputErrorMsg(input,option,'natural vertex id','GEOMECHANICS_REGRESSION,VERTICES')
+          call input%ReadInt(option,int_array(count))
+          call input%ErrorMsg(option,'natural vertex id','GEOMECHANICS_REGRESSION,VERTICES')
         enddo
         allocate(geomechanics_regression%natural_vertex_ids(count))
         geomechanics_regression%natural_vertex_ids = int_array(1:count)
@@ -168,8 +168,8 @@ subroutine GeomechanicsRegressionRead(geomechanics_regression,input,option)
                           ierr);CHKERRQ(ierr)
         deallocate(int_array)
       case('VERTICES_PER_PROCESS')
-        call InputReadInt(input,option,geomechanics_regression%num_vertices_per_process)
-        call InputErrorMsg(input,option,'num vertices per process','GEOMECHANICS_REGRESSION')
+        call input%ReadInt(option,geomechanics_regression%num_vertices_per_process)
+        call input%ErrorMsg(option,'num vertices per process','GEOMECHANICS_REGRESSION')
       case default
         call InputKeywordUnrecognized(keyword,'GEOMECHANICS_REGRESSION',option)
     end select
@@ -214,7 +214,7 @@ subroutine GeomechanicsRegressionCreateMapping(geomechanics_regression, &
   PetscErrorCode :: ierr
 
   type(geomech_grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   if (.not.associated(geomechanics_regression)) return
   
@@ -229,7 +229,7 @@ subroutine GeomechanicsRegressionCreateMapping(geomechanics_regression, &
       option%io_buffer = 'Natural IDs outside geomechanics domain ' // &
         'requested for geomechanics regression output. ' // &
         'Removing non-existent IDs.'
-      call printWrnMsg(option)
+      call option%PrintWrnMsg()
       count = 0
       allocate(int_array(size(geomechanics_regression%natural_vertex_ids)))
       int_array = 0
@@ -327,7 +327,7 @@ subroutine GeomechanicsRegressionCreateMapping(geomechanics_regression, &
       option%io_buffer = 'Number of vertices per process for ' // &
         'GeomechanicsRegression exceeds minimum number of vertices ' // & 
         'per process.  Truncating.'
-      call printMsg(option)
+      call option%PrintMsg()
       geomechanics_regression%num_vertices_per_process = count
     endif
   
@@ -515,7 +515,7 @@ subroutine GeomechanicsRegressionOutput(geomechanics_regression, &
   character(len=MAXSTRINGLENGTH) :: string
   Vec :: global_vec
   PetscInt :: ivar, isubvar
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_variable_type), pointer :: cur_variable
   type(geomechanics_regression_variable_type), pointer :: cur_variable1
   PetscReal, pointer :: vec_ptr(:), y_ptr(:), z_ptr(:)
@@ -535,7 +535,7 @@ subroutine GeomechanicsRegressionOutput(geomechanics_regression, &
              trim(option%group_prefix) // &  
              '.regression'
     option%io_buffer = '--> write geomechanics_regression output file: ' // trim(string)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=string,action="write")
   endif
     

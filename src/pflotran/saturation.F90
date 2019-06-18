@@ -35,7 +35,7 @@ subroutine SaturationUpdateCoupler(coupler,option,grid,saturation_functions, &
   implicit none
 
   type(coupler_type) :: coupler
-  type(option_type) :: option
+  class(option_type) :: option
   type(grid_type) :: grid
   type(saturation_function_ptr_type) :: saturation_functions(:)
   PetscInt :: sat_func_id(:)
@@ -53,7 +53,7 @@ subroutine SaturationUpdateCoupler(coupler,option,grid,saturation_functions, &
 
   if (option%iflowmode /= RICHARDS_MODE) then
     option%io_buffer = 'SaturationUpdateCoupler is not set up for this flow mode.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! in this case, the saturation is stored within concentration dataset

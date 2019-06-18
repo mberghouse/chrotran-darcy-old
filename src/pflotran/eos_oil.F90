@@ -558,7 +558,7 @@ subroutine EOSOilSetVisDBase(filename,option)
   implicit none
 
   character(len=MAXWORDLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   eos_vis_dbase => EOSDatabaseCreate(filename,'oil_den_database')
   call eos_vis_dbase%Read(option)
@@ -672,7 +672,7 @@ subroutine EOSOilSetDenDBase(filename,option)
   implicit none
 
   character(len=MAXWORDLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   eos_den_dbase => EOSDatabaseCreate(filename,'oil_den_database')
   call eos_den_dbase%Read(option)
@@ -760,7 +760,7 @@ subroutine EOSOilSetEntDBase(filename,option)
   implicit none
 
   character(len=MAXWORDLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   eos_ent_dbase => EOSDatabaseCreate(filename,'oil_ent_database')
   call eos_ent_dbase%Read(option)
@@ -781,7 +781,7 @@ subroutine EOSOilSetEOSDBase(filename,option)
   implicit none
 
   character(len=MAXWORDLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   eos_dbase => EOSDatabaseCreate(filename,'oil_database')
   call eos_dbase%Read(option)
@@ -1645,8 +1645,8 @@ subroutine EOSOilSetPVDO(input,option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: db_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -1702,8 +1702,8 @@ subroutine EOSOilSetPVCO(input,option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: db_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -1781,7 +1781,7 @@ subroutine EOSOilTableProcess(option,FMW_gas,ref_den_gas_kg)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal, intent(in) :: FMW_gas
   PetscReal, intent(in) :: ref_den_gas_kg
 

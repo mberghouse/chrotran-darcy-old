@@ -57,7 +57,7 @@ function SurfSubsurfaceSimulationCreate(option)
   
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   class(simulation_surfsubsurface_type), pointer :: SurfSubsurfaceSimulationCreate
   
@@ -83,7 +83,7 @@ subroutine SurfSubsurfaceSimulationInit(this,option)
   implicit none
   
   class(simulation_surfsubsurface_type) :: this
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   call SubsurfaceSimulationInit(this,option)
   nullify(this%surf_realization)
@@ -117,7 +117,7 @@ subroutine SurfSubsurfaceInitializeRun(this)
   PetscErrorCode :: ierr
   PetscViewer :: viewer
   
-  call printMsg(this%option,'Simulation%InitializeRun()')
+  call this%option%PrintMsg('Simulation%InitializeRun()')
 
   call this%process_model_coupler_list%InitializeRun()
 
@@ -132,7 +132,7 @@ subroutine SurfSubsurfaceInitializeRun(this)
           case (TH_MODE,TH_TS_MODE)
             call pmc%PMCSurfaceGetAuxDataAfterRestart()
           case default
-            call printErrMsg(this%option,'SurfSubsurfaceInitializeRun ' // &
+            call this%option%PrintErrMsg('SurfSubsurfaceInitializeRun ' // &
                   'not supported in current flow mode.')
         end select
     end select
@@ -196,7 +196,7 @@ subroutine SurfSubsurfaceExecuteRun(this)
   final_time = SimulationGetFinalWaypointTime(this)
   append_name = '-restart'
 
-  call printMsg(this%option,'SurfSubsurfaceExecuteRun()')
+  call this%option%PrintMsg('SurfSubsurfaceExecuteRun()')
 
   if (.not.associated(this%surf_realization)) then
     call this%RunToTime(final_time)
@@ -250,7 +250,7 @@ subroutine SurfSubsurfaceFinalizeRun(this)
   
   PetscErrorCode :: ierr
   
-  call printMsg(this%option,'SurfSubsurfaceFinalizeRun()')
+  call this%option%PrintMsg('SurfSubsurfaceFinalizeRun()')
   
   call SubsurfaceFinalizeRun(this)
   !call SurfaceFinalizeRun(this)
@@ -273,7 +273,7 @@ subroutine SurfSubsurfaceSimulationStrip(this)
   
   class(simulation_surfsubsurface_type) :: this
   
-  call printMsg(this%option,'SurfSubsurfaceSimulationStrip()')
+  call this%option%PrintMsg('SurfSubsurfaceSimulationStrip()')
   
   call SubsurfaceSimulationStrip(this)
   call RealizSurfStrip(this%surf_realization)
@@ -307,7 +307,7 @@ subroutine SurfSubsurfaceSimulationRunToTime(this,target_time)
   PetscViewer :: viewer
 
 #ifdef DEBUG
-  call printMsg(this%option,'RunToTime()')
+  call this%option%PrintMsg('RunToTime()')
 #endif
   call this%process_model_coupler_list%RunToTime(target_time,this%stop_flag)
 
@@ -327,7 +327,7 @@ subroutine SurfSubsurfaceSimulationDestroy(simulation)
   
   class(simulation_surfsubsurface_type), pointer :: simulation
   
-  call printMsg(simulation%option,'SimulationDestroy()')
+  call simulation%option%PrintMsg('SimulationDestroy()')
   
   if (.not.associated(simulation)) return
   

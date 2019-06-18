@@ -47,7 +47,7 @@ subroutine OutputVTK(realization_base)
   character(len=MAXSTRINGLENGTH) :: string, string2
   character(len=2) :: free_mol_char, tot_mol_char, sec_mol_char
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch 
@@ -72,7 +72,7 @@ subroutine OutputVTK(realization_base)
   
   if (option%myrank == option%io_rank) then
     option%io_buffer = '--> write vtk output file: ' // trim(filename)
-    call printMsg(option)    
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=filename,action="write")
   
     ! write header
@@ -182,7 +182,7 @@ subroutine OutputVelocitiesVTK(realization_base)
   class(realization_base_type) :: realization_base
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(patch_type), pointer :: patch  
@@ -210,7 +210,7 @@ subroutine OutputVelocitiesVTK(realization_base)
   if (option%myrank == option%io_rank) then
    option%io_buffer = '--> write vtk velocity output file: ' // &
                       trim(filename)
-    call printMsg(option)                      
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=filename,action="write")
   
     ! write header
@@ -319,7 +319,7 @@ subroutine WriteVTKGrid(fid,realization_base)
   
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch  
   PetscInt :: i, j, k, nx, ny, nz
   PetscReal :: x, y, z
@@ -458,7 +458,7 @@ subroutine WriteVTKDataSet(fid,realization_base,dataset_name,array,datatype, &
   PetscInt :: size_flag ! if size_flag /= 0, use size_flag as the local size
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch  
   PetscInt :: i
   PetscInt :: max_proc, max_proc_prefetch

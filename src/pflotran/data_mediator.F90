@@ -29,7 +29,7 @@ subroutine DataMediatorInit(data_mediator_list, option)
   implicit none
   
   class(data_mediator_base_type) :: data_mediator_list
-  type(option_type) :: option
+  class(option_type) :: option
   
   
 end subroutine DataMediatorInit
@@ -52,7 +52,7 @@ subroutine DataMediatorUpdate(data_mediator_list,vec,option)
   
   class(data_mediator_base_type), pointer :: data_mediator_list
   Vec :: vec
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(data_mediator_base_type), pointer :: cur_data_mediator
   PetscErrorCode :: ierr

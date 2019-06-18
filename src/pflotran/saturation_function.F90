@@ -105,7 +105,7 @@ function SaturationFunctionCreate(option)
   implicit none
 
   type(saturation_function_type), pointer :: SaturationFunctionCreate
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(saturation_function_type), pointer :: saturation_function
   
@@ -162,8 +162,8 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
   implicit none
   
   type(saturation_function_type) :: saturation_function
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscInt :: iphase
   
   character(len=MAXWORDLENGTH) :: keyword, word
@@ -175,7 +175,7 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
       option%io_buffer = 'SATURATION_FUNCTION card is no longer ' // &
         'supported for GENERAL mode.  Please use CHARACTERISTIC_' // &
         'CURVES card defined on the PFLOTRAN wiki.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   
   input%ierr = 0
@@ -185,29 +185,29 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','SATURATION_FUNCTION')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','SATURATION_FUNCTION')
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
     
       case('PERMEABILITY_FUNCTION_TYPE') 
-        call InputReadWord(input,option, &
+        call input%ReadWord(option, &
                            saturation_function%permeability_function_ctype, &
                            PETSC_TRUE)
-        call InputErrorMsg(input,option,'permeability function type', &
+        call input%ErrorMsg(option,'permeability function type', &
                            'SATURATION_FUNCTION')
       case('SATURATION_FUNCTION_TYPE') 
-        call InputReadWord(input,option, &
+        call input%ReadWord(option, &
                            saturation_function%saturation_function_ctype, &
                            PETSC_TRUE)
-        call InputErrorMsg(input,option,'saturation function type', &
+        call input%ErrorMsg(option,'saturation function type', &
                            'SATURATION_FUNCTION')
       case('PERMEABILITY_END_POINT')
         select case(option%iflowmode)
           case(FLASH2_MODE)
-            call InputReadWord(input,option,keyword,PETSC_TRUE)
-            call InputErrorMsg(input,option,'keyword','PERMEABILITY_FUNCTION')
+            call input%ReadWord(option,keyword,PETSC_TRUE)
+            call input%ErrorMsg(option,'keyword','PERMEABILITY_FUNCTION')
             call StringToUpper(keyword)   
             select case(trim(keyword))
               case('WATER','WATER_PHASE','LIQUID','LIQUID_PHASE')
@@ -215,12 +215,12 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
               case('CO2','CO2_PHASE','GAS','GAS_PHASE')
                 iphase = 2
             end select
-            call InputReadDouble(input,option,saturation_function%Kr0(iphase))
+            call input%ReadDouble(option,saturation_function%Kr0(iphase))
             word = trim(keyword) // 'permeabiliy end point'
-            call InputErrorMsg(input,option,word,'PERMEABILITY_FUNCTION')
+            call input%ErrorMsg(option,word,'PERMEABILITY_FUNCTION')
           case(MPH_MODE)
-            call InputReadWord(input,option,keyword,PETSC_TRUE)
-            call InputErrorMsg(input,option,'keyword','PERMEABILITY_FUNCTION')
+            call input%ReadWord(option,keyword,PETSC_TRUE)
+            call input%ErrorMsg(option,'keyword','PERMEABILITY_FUNCTION')
             call StringToUpper(keyword)   
             select case(trim(keyword))
               case('WATER','WATER_PHASE','LIQUID','LIQUID_PHASE')
@@ -228,12 +228,12 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
               case('CO2','CO2_PHASE','GAS','GAS_PHASE')
                 iphase = 2
             end select
-            call InputReadDouble(input,option,saturation_function%Kr0(iphase))
+            call input%ReadDouble(option,saturation_function%Kr0(iphase))
             word = trim(keyword) // 'permeabiliy end point'
-            call InputErrorMsg(input,option,word,'PERMEABILITY_FUNCTION')
+            call input%ErrorMsg(option,word,'PERMEABILITY_FUNCTION')
           case(IMS_MODE)
-            call InputReadWord(input,option,keyword,PETSC_TRUE)
-            call InputErrorMsg(input,option,'keyword','PERMEABILITY_FUNCTION')
+            call input%ReadWord(option,keyword,PETSC_TRUE)
+            call input%ErrorMsg(option,'keyword','PERMEABILITY_FUNCTION')
             call StringToUpper(keyword)   
             select case(trim(keyword))
               case('WATER','WATER_PHASE','LIQUID','LIQUID_PHASE')
@@ -241,15 +241,15 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
               case('CO2','CO2_PHASE','GAS','GAS_PHASE')
                 iphase = 2
             end select
-            call InputReadDouble(input,option,saturation_function%Kr0(iphase))
+            call input%ReadDouble(option,saturation_function%Kr0(iphase))
             word = trim(keyword) // 'permeabiliy end point'
-            call InputErrorMsg(input,option,word,'PERMEABILITY_FUNCTION')
+            call input%ErrorMsg(option,word,'PERMEABILITY_FUNCTION')
         end select
       case('RESIDUAL_SATURATION') 
         select case(option%iflowmode)
           case(FLASH2_MODE)
-            call InputReadWord(input,option,keyword,PETSC_TRUE)
-            call InputErrorMsg(input,option,'keyword','SATURATION_FUNCTION')
+            call input%ReadWord(option,keyword,PETSC_TRUE)
+            call input%ErrorMsg(option,'keyword','SATURATION_FUNCTION')
             call StringToUpper(keyword)   
             select case(trim(keyword))
               case('WATER','WATER_PHASE','LIQUID','LIQUID_PHASE')
@@ -257,12 +257,12 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
               case('CO2','CO2_PHASE','GAS','GAS_PHASE')
                 iphase = 2
             end select
-            call InputReadDouble(input,option,saturation_function%Sr(iphase))
+            call input%ReadDouble(option,saturation_function%Sr(iphase))
             word = trim(keyword) // ' residual saturation'
-            call InputErrorMsg(input,option,word,'SATURATION_FUNCTION')
+            call input%ErrorMsg(option,word,'SATURATION_FUNCTION')
           case(MPH_MODE)
-            call InputReadWord(input,option,keyword,PETSC_TRUE)
-            call InputErrorMsg(input,option,'keyword','SATURATION_FUNCTION')
+            call input%ReadWord(option,keyword,PETSC_TRUE)
+            call input%ErrorMsg(option,'keyword','SATURATION_FUNCTION')
             call StringToUpper(keyword)   
             select case(trim(keyword))
               case('WATER','WATER_PHASE','LIQUID','LIQUID_PHASE')
@@ -270,12 +270,12 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
               case('CO2','CO2_PHASE','GAS','GAS_PHASE')
                 iphase = 2
             end select
-            call InputReadDouble(input,option,saturation_function%Sr(iphase))
+            call input%ReadDouble(option,saturation_function%Sr(iphase))
             word = trim(keyword) // ' residual saturation'
-            call InputErrorMsg(input,option,word,'SATURATION_FUNCTION')
+            call input%ErrorMsg(option,word,'SATURATION_FUNCTION')
           case(IMS_MODE)
-            call InputReadWord(input,option,keyword,PETSC_TRUE)
-            call InputErrorMsg(input,option,'keyword','SATURATION_FUNCTION')
+            call input%ReadWord(option,keyword,PETSC_TRUE)
+            call input%ErrorMsg(option,'keyword','SATURATION_FUNCTION')
             call StringToUpper(keyword)   
             select case(trim(keyword))
               case('WATER','WATER_PHASE','LIQUID','LIQUID_PHASE')
@@ -285,19 +285,19 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
               case('OIL','OIL_PHASE','NAPL','NAPL_PHASE')
                 iphase = 3
             end select
-            call InputReadDouble(input,option,saturation_function%Sr(iphase))
+            call input%ReadDouble(option,saturation_function%Sr(iphase))
             word = trim(keyword) // ' residual saturation'
-            call InputErrorMsg(input,option,word,'SATURATION_FUNCTION')
+            call input%ErrorMsg(option,word,'SATURATION_FUNCTION')
           case(G_MODE)
             iphase = 0
             string = input%buf
-            call InputReadDouble(input,option,tempreal)
-!            call InputErrorMsg(input,option,'residual saturation','SATURATION_FUNCTION')
+            call input%ReadDouble(option,tempreal)
+!            call input%ErrorMsg(option,'residual saturation','SATURATION_FUNCTION')
             if (input%ierr /= 0) then
               input%ierr = 0
               input%buf = string
-              call InputReadWord(input,option,keyword,PETSC_TRUE)
-              call InputErrorMsg(input,option,'phase', &
+              call input%ReadWord(option,keyword,PETSC_TRUE)
+              call input%ErrorMsg(option,'phase', &
                                  'SATURATION_FUNCTION,RESIDUAL_SATURATION')
               call StringToUpper(keyword)   
               select case(trim(keyword))
@@ -309,9 +309,9 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
                   call InputKeywordUnrecognized(keyword, &
                     'SATURATION_FUNCTION,RESIDUAL_SATURATION',option)
               end select
-              call InputReadDouble(input,option,tempreal)
+              call input%ReadDouble(option,tempreal)
               word = trim(keyword) // ' residual saturation'
-              call InputErrorMsg(input,option,word,'SATURATION_FUNCTION')
+              call input%ErrorMsg(option,word,'SATURATION_FUNCTION')
             else
               ! if missing phase keyword, assume for all phases and set
               ! buffer to value
@@ -322,34 +322,34 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
               saturation_function%Sr(:) = tempreal
             endif
           case(RICHARDS_MODE,RICHARDS_TS_MODE,TH_MODE,TH_TS_MODE)
-            call InputReadDouble(input,option,saturation_function%Sr(1))
-            call InputErrorMsg(input,option,'residual saturation','SATURATION_FUNCTION')
+            call input%ReadDouble(option,saturation_function%Sr(1))
+            call input%ErrorMsg(option,'residual saturation','SATURATION_FUNCTION')
         end select
       case('LAMBDA') 
-        call InputReadDouble(input,option,saturation_function%lambda)
-        call InputErrorMsg(input,option,'lambda','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%lambda)
+        call input%ErrorMsg(option,'lambda','SATURATION_FUNCTION')
         saturation_function%m = saturation_function%lambda
       case('ALPHA') 
-        call InputReadDouble(input,option,saturation_function%alpha)
-        call InputErrorMsg(input,option,'alpha','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%alpha)
+        call input%ErrorMsg(option,'alpha','SATURATION_FUNCTION')
       case('MAX_CAPILLARY_PRESSURE') 
-        call InputReadDouble(input,option,saturation_function%pcwmax)
-        call InputErrorMsg(input,option,'maximum capillary pressure','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%pcwmax)
+        call input%ErrorMsg(option,'maximum capillary pressure','SATURATION_FUNCTION')
       case('BETAC') 
-        call InputReadDouble(input,option,saturation_function%betac)
-        call InputErrorMsg(input,option,'betac','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%betac)
+        call input%ErrorMsg(option,'betac','SATURATION_FUNCTION')
       case('POWER') 
-        call InputReadDouble(input,option,saturation_function%power)
-        call InputErrorMsg(input,option,'power','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%power)
+        call input%ErrorMsg(option,'power','SATURATION_FUNCTION')
       case('ANI_A') 
-        call InputReadDouble(input,option,saturation_function%ani_A)
-        call InputErrorMsg(input,option,'ani_A','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%ani_A)
+        call input%ErrorMsg(option,'ani_A','SATURATION_FUNCTION')
       case('ANI_B') 
-        call InputReadDouble(input,option,saturation_function%ani_B)
-        call InputErrorMsg(input,option,'ani_B','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%ani_B)
+        call input%ErrorMsg(option,'ani_B','SATURATION_FUNCTION')
       case('ANI_C') 
-        call InputReadDouble(input,option,saturation_function%ani_C)
-        call InputErrorMsg(input,option,'ani_C','SATURATION_FUNCTION')
+        call input%ReadDouble(option,saturation_function%ani_C)
+        call input%ErrorMsg(option,'ani_C','SATURATION_FUNCTION')
       case('VERIFY') 
         saturation_function%print_me = PETSC_TRUE
       case default
@@ -366,7 +366,7 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
     option%io_buffer = 'Saturation function parameter "m" not set ' // &
                        'properly in saturation function "' // &
                        trim(saturation_function%name) // '".'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   call SaturationFunctionSetTypes(saturation_function,option)
@@ -389,7 +389,7 @@ subroutine SaturationFunctionSetTypes(saturation_function,option)
   implicit none
 
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
 
   ! set permeability function integer type
   call StringToUpper(saturation_function%permeability_function_ctype)
@@ -414,7 +414,7 @@ subroutine SaturationFunctionSetTypes(saturation_function,option)
                           '" not recognized ' // &
                           ' in saturation function ' // &
                           trim(saturation_function%name)
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
     
   ! set saturation function integer type
@@ -444,7 +444,7 @@ subroutine SaturationFunctionSetTypes(saturation_function,option)
                           '" not recognized ' // &
                           ' in saturation function ' // &
                           trim(saturation_function%name)
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select  
 
 end subroutine SaturationFunctionSetTypes
@@ -467,7 +467,7 @@ subroutine SatFunctionComputePolynomial(option,saturation_function)
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(saturation_function_type) :: saturation_function
   
   PetscReal :: b(4)
@@ -585,7 +585,7 @@ subroutine PermFunctionComputePolynomial(option,saturation_function)
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(saturation_function_type) :: saturation_function
   
   PetscReal :: b(4)
@@ -674,7 +674,7 @@ subroutine SaturatFuncConvertListToArray(list,array,option)
   
   type(saturation_function_type), pointer :: list
   type(saturation_function_ptr_type), pointer :: array(:)
-  type(option_type) :: option
+  class(option_type) :: option
     
   type(saturation_function_type), pointer :: cur_saturation_function
   PetscInt :: count
@@ -730,7 +730,7 @@ subroutine SaturationFunctionCompute1(capillary_pressure,saturation, &
   PetscReal :: dsat_dpres, dkr_dpres
   type(saturation_function_type) :: saturation_function
   PetscReal :: auxvar1,auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscBool :: switch_to_saturated
   
@@ -776,7 +776,7 @@ subroutine SaturationFunctionCompute2(capillary_pressure,saturation, &
   type(saturation_function_type) :: saturation_function
   PetscReal :: auxvar1,auxvar2
   PetscBool :: switch_to_saturated
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: iphase
   PetscReal :: alpha, lambda, m, n, Sr, one_over_alpha, pcmax
@@ -877,7 +877,7 @@ subroutine SaturationFunctionCompute2(capillary_pressure,saturation, &
           dkr_dpc = dkr_dSe*dSe_dpc
         case default
           option%io_buffer = 'Unknown relative permeabilty function' 
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(BROOKS_COREY)
       ! reference #1
@@ -928,7 +928,7 @@ subroutine SaturationFunctionCompute2(capillary_pressure,saturation, &
           dkr_dpc = dkr_dSe*dSe_dpc
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(LINEAR_MODEL)
       ! Added by Bwalya Malama 01/30/2014
@@ -967,7 +967,7 @@ subroutine SaturationFunctionCompute2(capillary_pressure,saturation, &
           relative_perm = (Se**power)*(pc_log_ratio**2.d0)
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(THOMEER_COREY)
       pc = capillary_pressure
@@ -997,7 +997,7 @@ subroutine SaturationFunctionCompute2(capillary_pressure,saturation, &
       endif
     case default
       option%io_buffer = 'Unknown saturation function'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   dsat_dpres = -dsat_dpc 
@@ -1025,7 +1025,7 @@ subroutine SaturationFunctionCompute3(capillary_pressure,saturation, &
   PetscReal :: relative_perm_dummy, dsat_dpres_dummy, dkr_dpres_dummy
   type(saturation_function_type) :: saturation_function
   PetscReal :: auxvar1_dummy, auxvar2_dummy
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscBool :: switch_to_saturated_dummy
   
@@ -1072,7 +1072,7 @@ implicit none
   PetscReal :: dsi_pl, dsi_temp
   PetscReal :: dkr_pl
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: alpha, lambda, m, n
   PetscReal :: pc, Se, one_over_m, Se_one_over_m, dSe_dpc, dkr_dpc
@@ -1148,7 +1148,7 @@ implicit none
       endif           
     case default
       option%io_buffer = 'Ice module only supports Van Genuchten'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   
   liquid_saturation = 1.d0/(function_A + function_B - 1.d0)
@@ -1202,7 +1202,7 @@ implicit none
       dkr_temp = dkr_ds_liq*dsl_temp
     case default
       option%io_buffer = 'Ice module only supports Mualem' 
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
    
 end subroutine SatFuncComputeIcePExplicit
@@ -1586,7 +1586,7 @@ implicit none
   PetscReal :: pth
   
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
 
 
   select case(saturation_function%saturation_function_itype)
@@ -1599,7 +1599,7 @@ implicit none
                                       dsl_dT)
     case default  
       option%io_buffer = 'Only van Genuchten supported with ice'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
  
   ! Check for bounds on saturations         
@@ -1641,7 +1641,7 @@ implicit none
       dkr_dT = dkr_dsl*dsl_dT
     case default
       option%io_buffer = 'Ice module only supports Mualem' 
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select 
 
 #if 0  
@@ -1695,7 +1695,7 @@ implicit none
 
   
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
 
 
   select case(saturation_function%saturation_function_itype)
@@ -1730,7 +1730,7 @@ implicit none
       T = T - T_0 ! change back to C 
     case default  
       option%io_buffer = 'Only van Genuchten supported with ice'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
  
   ! Check for bounds on saturations         
@@ -1772,7 +1772,7 @@ implicit none
       dkr_dT = dkr_dsl*dsl_dT
     case default
       option%io_buffer = 'Ice module only supports Mualem' 
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select 
 
 #if 0
@@ -1829,7 +1829,7 @@ implicit none
 
   
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
 
 
   select case(saturation_function%saturation_function_itype)
@@ -1864,7 +1864,7 @@ implicit none
       T = T - T_0 ! change back to C 
     case default  
       option%io_buffer = 'Only van Genuchten supported with ice'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
  
   ! Check for bounds on saturations         
@@ -1906,7 +1906,7 @@ implicit none
       dkr_dT = dkr_dsl*dsl_dT
     case default
       option%io_buffer = 'Ice module only supports Mualem' 
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select 
 
 #if 0
@@ -1957,7 +1957,7 @@ subroutine SatFuncComputeIceDallAmico(pl, T, &
   PetscReal :: dsg_dpl, dsg_dT
   PetscReal :: dkr_dpl, dkr_dT
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: Se,Sr
   PetscReal :: dkr_dsl, dkr_dSe
@@ -2065,7 +2065,7 @@ subroutine SatFuncComputeIceDallAmico(pl, T, &
 
     case default
       option%io_buffer = 'Only van Genuchten supported with ice'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   ! Calculate relative permeability
@@ -2091,7 +2091,7 @@ subroutine SatFuncComputeIceDallAmico(pl, T, &
       dkr_dT = dkr_dsl*dsl_dT
     case default
       option%io_buffer = 'Ice module only supports Mualem'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine SatFuncComputeIceDallAmico
@@ -2124,7 +2124,7 @@ subroutine SatFuncGetLiqRelPermFromSat(saturation,relative_perm,dkr_dSe, &
   PetscInt :: iphase
   type(saturation_function_type) :: saturation_function
   PetscBool :: derivative
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: m, Sr
   PetscReal :: Se, one_over_m, Se_one_over_m
@@ -2171,7 +2171,7 @@ subroutine SatFuncGetLiqRelPermFromSat(saturation,relative_perm,dkr_dSe, &
           endif
         case default
           option%io_buffer = 'Unknown relative permeabilty function' 
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(BROOKS_COREY)
       select case(saturation_function%permeability_function_itype)
@@ -2189,7 +2189,7 @@ subroutine SatFuncGetLiqRelPermFromSat(saturation,relative_perm,dkr_dSe, &
           dkr_dSe = power*relative_perm/Se
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(LINEAR_MODEL)
       select case(saturation_function%permeability_function_itype)
@@ -2210,7 +2210,7 @@ subroutine SatFuncGetLiqRelPermFromSat(saturation,relative_perm,dkr_dSe, &
           relative_perm = (Se**power)*(pc_log_ratio**2.d0)
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(LEVERETT)
       select case(saturation_function%permeability_function_itype)
@@ -2221,7 +2221,7 @@ subroutine SatFuncGetLiqRelPermFromSat(saturation,relative_perm,dkr_dSe, &
           endif
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
   end select
   
@@ -2254,7 +2254,7 @@ subroutine SatFuncGetGasRelPermFromSat(liquid_saturation, &
   PetscReal :: pcmax, one_over_alpha, alpha, liq_relative_perm
   type(saturation_function_type) :: saturation_function
   PetscBool :: derivative
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: Srl, Srg
   PetscReal :: S_star, S_hat
@@ -2291,7 +2291,7 @@ subroutine SatFuncGetGasRelPermFromSat(liquid_saturation, &
           gas_relative_perm = sqrt(Sg)*(1.d0-S_hat**(1.d0/m))**(2.d0*m)
         case default
           option%io_buffer = 'Unknown relative permeabilty function' 
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(BROOKS_COREY)
       lambda = saturation_function%lambda
@@ -2306,12 +2306,12 @@ subroutine SatFuncGetGasRelPermFromSat(liquid_saturation, &
                               (1.d0-S_hat**(1.d0+1.d0/lambda))**2.d0
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(LINEAR_MODEL)
       option%io_buffer = &
         'Linear model not yet supported in SatFuncGetGasRelPermFromSat.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
       select case(saturation_function%permeability_function_itype)
         case(BURDINE)
           gas_relative_perm = Sg  
@@ -2329,7 +2329,7 @@ subroutine SatFuncGetGasRelPermFromSat(liquid_saturation, &
           gas_relative_perm = Sg**power * liq_relative_perm * S_hat**(-power)
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     case(LEVERETT)
       select case(saturation_function%permeability_function_itype)
@@ -2337,7 +2337,7 @@ subroutine SatFuncGetGasRelPermFromSat(liquid_saturation, &
           gas_relative_perm = Sg**3
         case default
           option%io_buffer = 'Unknown relative permeabilty function'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
   end select
 
@@ -2363,7 +2363,7 @@ subroutine CapillaryPressureThreshold(saturation_function,cap_threshold,option)
   implicit none
   
   PetscReal :: alpha, lambda, cap_threshold
-  type(option_type) :: option
+  class(option_type) :: option
   type(saturation_function_type) :: saturation_function
 
   
@@ -2454,7 +2454,7 @@ subroutine SatFuncGetCapillaryPressure(capillary_pressure,saturation, &
 
   PetscReal :: capillary_pressure, saturation, temp
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: iphase
   PetscReal :: alpha, lambda, m, n, Sr, one_over_alpha
@@ -2542,7 +2542,7 @@ subroutine SatFuncGetCapillaryPressure(capillary_pressure,saturation, &
 #endif
     case default
       option%io_buffer = 'Unknown saturation function'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   capillary_pressure = min(capillary_pressure,saturation_function%pcwmax)
@@ -2570,7 +2570,7 @@ function SaturationFunctionGetID(saturation_function_list, &
   type(saturation_function_type), pointer :: saturation_function_list
   character(len=MAXWORDLENGTH) :: saturation_function_name
   character(len=MAXWORDLENGTH) :: material_property_name
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: SaturationFunctionGetID
   PetscBool :: found
@@ -2594,7 +2594,7 @@ function SaturationFunctionGetID(saturation_function_list, &
              '" in material property "' // &
              trim(material_property_name) // &
              '" not found among available saturation functions.'
-    call printErrMsg(option)    
+    call option%PrintErrMsg()
   endif
 
 end function SaturationFunctionGetID
@@ -2616,7 +2616,7 @@ subroutine SaturationFunctionVerify(saturation_function,option)
   implicit none
 
   type(saturation_function_type) :: saturation_function
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscReal :: pc, pc_increment, pc_max

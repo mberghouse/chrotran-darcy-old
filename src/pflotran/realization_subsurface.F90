@@ -112,7 +112,7 @@ function RealizationCreate1()
   class(realization_subsurface_type), pointer :: RealizationCreate1
   
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   nullify(option)
   RealizationCreate1 => RealizationCreate2(option)
@@ -131,7 +131,7 @@ function RealizationCreate2(option)
 
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   class(realization_subsurface_type), pointer :: RealizationCreate2
   
@@ -198,7 +198,7 @@ subroutine RealizationCreateDiscretization(realization)
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(coupler_type), pointer :: boundary_condition
   PetscErrorCode :: ierr
   PetscInt :: ivar
@@ -485,7 +485,7 @@ subroutine RealizationLocalizeRegions(realization)
   class(realization_subsurface_type) :: realization
   
   type (region_type), pointer :: cur_region, cur_region2
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(region_type), pointer :: region
 
   option => realization%option
@@ -499,7 +499,7 @@ subroutine RealizationLocalizeRegions(realization)
       if (.not.associated(cur_region2)) exit
       if (StringCompare(cur_region%name,cur_region2%name,MAXWORDLENGTH)) then
         option%io_buffer = 'Duplicate region names: ' // trim(cur_region%name)
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       cur_region2 => cur_region2%next
     enddo
@@ -521,7 +521,7 @@ subroutine RealizationLocalizeRegions(realization)
              &Regions() --> Could not find a required region named "' // &
              trim(option%inline_surface_region_name) // &
              '" from the list of regions.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
      endif
      call GridRestrictRegionalConnect(realization%patch%grid,region)
    endif
@@ -743,7 +743,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
   
   PetscBool :: found
   PetscInt :: i
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(material_property_type), pointer :: cur_material_property
   type(patch_type), pointer :: patch
   character(len=MAXSTRINGLENGTH) :: string
@@ -797,7 +797,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
         option%io_buffer = 'Characteristic curve "' // &
           trim(cur_material_property%saturation_function_name) // &
           '" not found.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       else
         if (associated(patch%characteristic_curves_array)) then
           call CharCurvesProcessTables(patch%characteristic_curves_array(  &
@@ -820,7 +820,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
           cur_material_property%porosity_dataset => dataset
         class default
           option%io_buffer = 'Incorrect dataset type for porosity.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     endif
     if (associated(cur_material_property%tortuosity_dataset)) then
@@ -836,7 +836,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
           cur_material_property%tortuosity_dataset => dataset
         class default
           option%io_buffer = 'Incorrect dataset type for tortuosity.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     endif
     if (associated(cur_material_property%permeability_dataset)) then
@@ -853,7 +853,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
         class default
           option%io_buffer = 'Incorrect dataset type for permeability or &
                              &permeability X.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select      
     endif
     if (associated(cur_material_property%permeability_dataset_y)) then
@@ -869,7 +869,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
           cur_material_property%permeability_dataset_y => dataset
         class default
           option%io_buffer = 'Incorrect dataset type for permeability Y.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select      
     endif
     if (associated(cur_material_property%permeability_dataset_z)) then
@@ -885,7 +885,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
           cur_material_property%permeability_dataset_z => dataset
         class default
           option%io_buffer = 'Incorrect dataset type for permeability Z.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select      
     endif
     if (associated(cur_material_property%soil_reference_pressure_dataset)) then
@@ -902,7 +902,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
         class default
           option%io_buffer = 'Incorrect dataset type for soil reference &
                               &pressure.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     endif
     if (associated(cur_material_property%compressibility_dataset)) then
@@ -918,7 +918,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
           cur_material_property%compressibility_dataset => dataset
         class default
           option%io_buffer = 'Incorrect dataset type for soil_compressibility.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select      
     endif
     
@@ -945,7 +945,7 @@ subroutine RealProcessFluidProperties(realization)
   class(realization_subsurface_type) :: realization
 
   PetscBool :: found
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(fluid_property_type), pointer :: cur_fluid_property
   PetscInt :: icc, ncc, maxsatn
   PetscBool :: satnum_set, ccset
@@ -984,7 +984,7 @@ subroutine RealProcessFluidProperties(realization)
       if( maxsatn > ncc ) then
         option%io_buffer = &
          'SATNUM data does not match CHARACTERISTIC CURVES count'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       do icc = 1, ncc
         call CharCurvesProcessTables( &
@@ -992,7 +992,7 @@ subroutine RealProcessFluidProperties(realization)
       end do
     else
       option%io_buffer = 'SATNUM data but no CHARACTERISTIC CURVES'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if
   endif
 
@@ -1017,7 +1017,7 @@ subroutine RealProcessFlowConditions(realization)
   
   type(flow_condition_type), pointer :: cur_flow_condition
   type(flow_sub_condition_type), pointer :: cur_flow_sub_condition
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i
   
@@ -1073,7 +1073,7 @@ subroutine RealProcessTranConditions(realization)
   
   
   PetscBool :: found, coupling_needed
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(tran_condition_type), pointer :: cur_condition
   type(tran_constraint_coupler_type), pointer :: cur_constraint_coupler
   type(tran_constraint_type), pointer :: cur_constraint, another_constraint
@@ -1099,7 +1099,7 @@ subroutine RealProcessTranConditions(realization)
       if (found) then
         option%io_buffer = 'Duplicate transport constraints named "' // &
                  trim(cur_constraint%name) // '"'
-        call printErrMsg(realization%option)
+        call realization%option%PrintErrMsg()
       endif
     cur_constraint => cur_constraint%next
   enddo
@@ -1187,7 +1187,7 @@ subroutine RealProcessTranConditions(realization)
           option%io_buffer = 'Transport constraint "' // &
                    trim(cur_constraint_coupler%constraint_name) // &
                    '" not found in input file constraints.'
-          call printErrMsg(realization%option)
+          call realization%option%PrintErrMsg()
         endif
       endif
       cur_constraint_coupler => cur_constraint_coupler%next
@@ -1262,7 +1262,7 @@ subroutine RealizationPrintCouplers(realization)
   
   type(patch_type), pointer :: cur_patch
   type(coupler_type), pointer :: cur_coupler
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
  
   option => realization%option
@@ -1316,7 +1316,7 @@ subroutine RealizationPrintCoupler(coupler,reaction,option)
   implicit none
   
   type(coupler_type) :: coupler
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type), pointer :: reaction
   
   character(len=MAXSTRINGLENGTH) :: string
@@ -1449,7 +1449,7 @@ subroutine RealizationRevertFlowParameters(realization)
   class(realization_subsurface_type) :: realization
   
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(discretization_type), pointer :: discretization
   type(material_type), pointer :: Material
   
@@ -1507,7 +1507,7 @@ subroutine RealizStoreRestartFlowParams(realization)
   class(realization_subsurface_type) :: realization
   
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(discretization_type), pointer :: discretization
   type(material_type), pointer :: Material
   
@@ -1598,7 +1598,7 @@ subroutine RealizationAddWaypointsToList(realization,waypoint_list)
   type(tran_constraint_coupler_type), pointer :: cur_constraint_coupler
   class(data_mediator_base_type), pointer :: cur_data_mediator
   type(waypoint_type), pointer :: waypoint, cur_waypoint
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(strata_type), pointer :: cur_strata
   type(time_storage_type), pointer :: time_storage_ptr
   PetscInt :: itime, isub_condition
@@ -1624,7 +1624,7 @@ subroutine RealizationAddWaypointsToList(realization,waypoint_list)
     final_time = cur_waypoint%time
   else
     option%io_buffer = 'Final time not found in RealizationAddWaypointsToList'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! add update of flow conditions
@@ -1645,7 +1645,7 @@ subroutine RealizationAddWaypointsToList(realization,waypoint_list)
               '" dataset "' // trim(sub_condition%name) // &
               '", the number of times is excessive for synchronization ' // &
               'with waypoints.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           do itime = 1, size(times)
             waypoint => WaypointCreate()
@@ -1782,7 +1782,7 @@ subroutine RealizationUpdatePropertiesTS(realization)
   
   class(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(reaction_type), pointer :: reaction
@@ -2031,7 +2031,7 @@ subroutine RealizationUpdatePropertiesTS(realization)
   if (min_value < 0.d0) then
     write(option%io_buffer,*) 'Sum of mineral volume fractions has ' // &
       'exceeded 1.d0 at cell (note PETSc numbering): ', ivalue
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
    
 end subroutine RealizationUpdatePropertiesTS
@@ -2057,7 +2057,7 @@ subroutine RealizationUpdatePropertiesNI(realization)
   class(realization_subsurface_type) :: realization
 
 #if 0
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(reaction_type), pointer :: reaction
@@ -2113,7 +2113,7 @@ subroutine RealizationCalcMineralPorosity(realization)
   
   class(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(reaction_type), pointer :: reaction
@@ -2275,7 +2275,7 @@ subroutine RealizationPrintGridStatistics(realization)
 
   class(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
 
   PetscInt :: i1, i2, i3
@@ -2574,7 +2574,7 @@ subroutine RealizUnInitializedVar1(realization,ivar,var_name)
   PetscInt :: ivar
   character(len=*) :: var_name
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
@@ -2604,7 +2604,7 @@ subroutine RealizUnInitializedVar1(realization,ivar,var_name)
     write(word,*) imin+1 ! zero to one based indexing
     option%io_buffer = 'Incorrect assignment of variable (' &
       // trim(var_name) // ',cell=' // trim(adjustl(word)) // ').'
-    call PrintErrMsgToDev(option,'send your input deck.')
+    call option%PrintErrMsgToDev('send your input deck.')
   endif
 
 end subroutine RealizUnInitializedVar1

@@ -105,13 +105,13 @@ subroutine PMCGeomechanicsSetupSolvers(this)
   class(geomech_discretization_type), pointer :: geomech_discretization
   class(timestepper_steady_type), pointer :: ts_steady
   type(solver_type), pointer :: solver
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   SNESLineSearch :: linesearch
   character(len=MAXSTRINGLENGTH) :: string
   PetscErrorCode :: ierr
 
 #ifdef DEBUG
-  call printMsg(this%option,'PMCGeomechanicsSetupSolvers')
+  call this%option%PrintMsg('PMCGeomechanicsSetupSolvers')
 #endif
 
   option => this%option
@@ -123,11 +123,11 @@ subroutine PMCGeomechanicsSetupSolvers(this)
       solver => ts%solver
   end select 
 
-  call printMsg(option,"  Beginning setup of GEOMECH SNES ")
+  call option%PrintMsg("  Beginning setup of GEOMECH SNES ")
 
   if (solver%J_mat_type == MATAIJ) then
     option%io_buffer = 'AIJ matrix not supported for geomechanics.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call SolverCreateSNES(solver,option%mycomm)
@@ -173,9 +173,9 @@ subroutine PMCGeomechanicsSetupSolvers(this)
   endif
 
   option%io_buffer = 'Solver: ' // trim(solver%ksp_type)
-  call printMsg(option)
+  call option%PrintMsg()
   option%io_buffer = 'Preconditioner: ' // trim(solver%pc_type)
-  call printMsg(option)
+  call option%PrintMsg()
 
   call SNESSetConvergenceTest(solver%snes, &
 #if defined(USE_PM_AS_PETSC_CONTEXT)
@@ -210,7 +210,7 @@ subroutine PMCGeomechanicsSetupSolvers(this)
 
   call SolverSetSNESOptions(solver,option)
 
-  call printMsg(option,"  Finished setting up GEOMECH SNES ")
+  call option%PrintMsg("  Finished setting up GEOMECH SNES ")
 
 
 end subroutine PMCGeomechanicsSetupSolvers
@@ -246,7 +246,7 @@ recursive subroutine PMCGeomechanicsRunToTime(this,sync_time,stop_flag)
   if (stop_flag == TS_STOP_FAILURE) return
 
   this%option%io_buffer = trim(this%name) // ':' // trim(this%pm_list%name)
-  call printVerboseMsg(this%option)
+  call this%option%PrintVerboseMsg()
   
   ! Get data of other process-model
   call this%GetAuxData()
@@ -622,7 +622,7 @@ recursive subroutine PMCGeomechanicsDestroy(this)
   class(pmc_geomechanics_type) :: this
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMCGeomechanics%Destroy()')
+  call this%option%PrintMsg('PMCGeomechanics%Destroy()')
 #endif
 
   if (associated(this%child)) then

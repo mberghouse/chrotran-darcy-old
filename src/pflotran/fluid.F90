@@ -82,8 +82,8 @@ subroutine FluidPropertyRead(fluid_property,input,option)
   implicit none
   
   type(fluid_property_type) :: fluid_property
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word
   character(len=MAXWORDLENGTH) :: internal_units
@@ -95,34 +95,34 @@ subroutine FluidPropertyRead(fluid_property,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','FLUID_PROPERTY')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','FLUID_PROPERTY')
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
     
       case('PHASE') 
-        call InputReadWord(input,option,fluid_property%phase_name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'phase','FLUID_PROPERTY')
+        call input%ReadWord(option,fluid_property%phase_name,PETSC_TRUE)
+        call input%ErrorMsg(option,'phase','FLUID_PROPERTY')
       case('DIFFUSION_COEFFICIENT','LIQUID_DIFFUSION_COEFFICIENT') 
-        call InputReadDouble(input,option,fluid_property%diffusion_coefficient)
-        call InputErrorMsg(input,option,'diffusion coefficient', &
+        call input%ReadDouble(option,fluid_property%diffusion_coefficient)
+        call input%ErrorMsg(option,'diffusion coefficient', &
                            'FLUID_PROPERTY')
-        call InputReadAndConvertUnits(input, &
+        call input%ReadAndConvertUnits(&
                                       fluid_property%diffusion_coefficient, &
                          'm^2/sec','FLUID_PROPERTY,diffusion_coeffient',option)
       case('DIFFUSION_ACTIVATION_ENERGY') 
-        call InputReadDouble(input,option, &
+        call input%ReadDouble(option, &
                              fluid_property%diffusion_activation_energy)
-        call InputErrorMsg(input,option,'diffusion activation energy', &
+        call input%ErrorMsg(option,'diffusion activation energy', &
                            'FLUID_PROPERTY')
-        call InputReadAndConvertUnits(input, &
+        call input%ReadAndConvertUnits(&
                 fluid_property%diffusion_activation_energy, &
                 'J/mol','FLUID_PROPERTY,diffusion activation energy',option)
       case('GAS_DIFFUSION_COEFFICIENT') 
-        call InputReadDouble(input,option, &
+        call input%ReadDouble(option, &
                              fluid_property%gas_diffusion_coefficient)
-        call InputErrorMsg(input,option,'gas diffusion coefficient', &
+        call input%ErrorMsg(option,'gas diffusion coefficient', &
                            'FLUID_PROPERTY')
       case default
         call InputKeywordUnrecognized(keyword,'FLUID_PROPERTY',option)
@@ -133,7 +133,7 @@ subroutine FluidPropertyRead(fluid_property,input,option)
   if (.not.(StringCompareIgnoreCase(fluid_property%phase_name,'LIQUID') .or. &
             StringCompareIgnoreCase(fluid_property%phase_name,'GAS'))) then
     option%io_buffer = 'PHASE in FLUID_PROPERTY should be LIQUID or GAS.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 

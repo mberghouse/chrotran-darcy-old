@@ -59,7 +59,7 @@ subroutine OutputInit(option,num_steps)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: num_steps
   
   call OutputCommonInit()
@@ -94,13 +94,13 @@ subroutine OutputFileRead(input,realization,output_option, &
 
   implicit none
 
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   class(realization_subsurface_type), pointer :: realization
   type(output_option_type), pointer :: output_option
   type(waypoint_list_type), pointer :: waypoint_list
   character(len=*) :: block_name
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(waypoint_type), pointer :: waypoint
@@ -146,12 +146,12 @@ subroutine OutputFileRead(input,realization,output_option, &
 
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
+    call input%ReadWord(option,word,PETSC_TRUE)
     string = 'OUTPUT,' // trim(block_name)
-    call InputErrorMsg(input,option,'keyword',string)
+    call input%ErrorMsg(option,'keyword',string)
     call StringToUpper(word)
     
     select case(trim(word))
@@ -194,22 +194,22 @@ subroutine OutputFileRead(input,realization,output_option, &
           case('OBSERVATION_FILE')
             option%io_buffer = 'TOTAL_MASS_REGIONS cannot be specified for &
                                &OUTPUT,OBSERVATION_FILE block.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           case('SNAPSHOT_FILE')
             option%io_buffer = 'TOTAL_MASS_REGIONS cannot be specified for &
                                &OUTPUT,SNAPSHOT_FILE block.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           case('MASS_BALANCE_FILE')
             string = 'OUTPUT,' // trim(block_name) // ',TOTAL_MASS_REGIONS'
             output_option%mass_balance_region_flag = PETSC_TRUE
             do
               ! Read region name:
               call InputReadPflotranString(input,option)
-              call InputReadStringErrorMsg(input,option,string)
+              call input%ReadStringErrorMsg(option,string)
               if (InputCheckExit(input,option)) exit
               ! Region name found; read the region name
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'keyword',string) 
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'keyword',string)
               ! Create a new mass balance region
               new_massbal_region => OutputMassBalRegionCreate()
               new_massbal_region%region_name = trim(word)
@@ -236,8 +236,8 @@ subroutine OutputFileRead(input,realization,output_option, &
 !..................
       case('TIMES')
         string = 'OUTPUT,' // trim(block_name) // ',TIMES'
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'units',string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'units',string)
         internal_units = 'sec'
         units_conversion = &
              UnitsConvertToInternal(word,internal_units,option)
@@ -261,17 +261,17 @@ subroutine OutputFileRead(input,realization,output_option, &
 !.....................
       case('PERIODIC')
         string = 'OUTPUT,' // trim(block_name) // ',PERIODIC'
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'periodic time increment type',string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'periodic time increment type',string)
         call StringToUpper(word)
         select case(trim(word))
         !.............
           case('TIME')
             string = 'OUTPUT,' // trim(block_name) // ',PERIODIC,TIME'
-            call InputReadDouble(input,option,temp_real)
-            call InputErrorMsg(input,option,'time increment',string)
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'time increment units',string)
+            call input%ReadDouble(option,temp_real)
+            call input%ErrorMsg(option,'time increment',string)
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'time increment units',string)
             internal_units = 'sec'
             units_conversion = UnitsConvertToInternal(word, &
                  internal_units,option) 
@@ -286,25 +286,25 @@ subroutine OutputFileRead(input,realization,output_option, &
                 output_option%periodic_msbl_output_time_incr = temp_real* &
                      units_conversion
             end select
-            call InputReadWord(input,option,word,PETSC_TRUE)
+            call input%ReadWord(option,word,PETSC_TRUE)
             if (input%ierr == 0) then
               if (StringCompareIgnoreCase(word,'between')) then
-                call InputReadDouble(input,option,temp_real)
-                call InputErrorMsg(input,option,'start time',string)
-                call InputReadWord(input,option,word,PETSC_TRUE)
-                call InputErrorMsg(input,option,'start time units',string)
+                call input%ReadDouble(option,temp_real)
+                call input%ErrorMsg(option,'start time',string)
+                call input%ReadWord(option,word,PETSC_TRUE)
+                call input%ErrorMsg(option,'start time units',string)
                 units_conversion = UnitsConvertToInternal(word, &
                      internal_units,option) 
                 temp_real = temp_real * units_conversion
-                call InputReadWord(input,option,word,PETSC_TRUE)
+                call input%ReadWord(option,word,PETSC_TRUE)
                 if (.not.StringCompareIgnoreCase(word,'and')) then
                   input%ierr = 1
                 endif
-                call InputErrorMsg(input,option,'and',string)
-                call InputReadDouble(input,option,temp_real2)
-                call InputErrorMsg(input,option,'end time',string)
-                call InputReadWord(input,option,word,PETSC_TRUE)
-                call InputErrorMsg(input,option,'end time units',string)
+                call input%ErrorMsg(option,'and',string)
+                call input%ReadDouble(option,temp_real2)
+                call input%ErrorMsg(option,'end time',string)
+                call input%ReadWord(option,word,PETSC_TRUE)
+                call input%ErrorMsg(option,'end time units',string)
                 units_conversion = UnitsConvertToInternal(word, &
                      internal_units,option) 
                 temp_real2 = temp_real2 * units_conversion
@@ -345,7 +345,7 @@ subroutine OutputFileRead(input,realization,output_option, &
                 end select
               else
                 input%ierr = 1
-                call InputErrorMsg(input,option,'between',string)
+                call input%ErrorMsg(option,'between',string)
               endif
             endif
         !.................
@@ -353,16 +353,16 @@ subroutine OutputFileRead(input,realization,output_option, &
             string = 'OUTPUT,' // trim(block_name) // ',TIMESTEP'
             select case(trim(block_name))
               case('SNAPSHOT_FILE')
-                call InputReadInt(input,option, &
+                call input%ReadInt(option, &
                      output_option%periodic_snap_output_ts_imod)
               case('OBSERVATION_FILE')
-                call InputReadInt(input,option, &
+                call input%ReadInt(option, &
                      output_option%periodic_obs_output_ts_imod)
               case('MASS_BALANCE_FILE')
-                call InputReadInt(input,option, &
+                call input%ReadInt(option, &
                      output_option%periodic_msbl_output_ts_imod)
             end select
-            call InputErrorMsg(input,option,'timestep increment',string)
+            call input%ErrorMsg(option,'timestep increment',string)
         !.............
           case default
             call InputKeywordUnrecognized(word,'OUTPUT,PERIODIC',option)
@@ -372,17 +372,17 @@ subroutine OutputFileRead(input,realization,output_option, &
         is_sum=StringCompareIgnoreCase(word,'PERIOD_SUM')
         is_rst=StringCompareIgnoreCase(word,'PERIOD_RST')
         string = 'OUTPUT,' // trim(block_name) // ',' //trim(word)
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'periodic time increment type',string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'periodic time increment type',string)
         call StringToUpper(word)
         select case(trim(word))
           case('TIME')
             deltat = -1.0
             string = 'OUTPUT,' // trim(block_name) // ',' //trim(word)// ',TIME'
-            call InputReadDouble(input,option,temp_real)
-            call InputErrorMsg(input,option,'time increment',string)
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'time increment units',string)
+            call input%ReadDouble(option,temp_real)
+            call input%ErrorMsg(option,'time increment',string)
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'time increment units',string)
             internal_units = 'sec'
             units_conversion = UnitsConvertToInternal(word, &
                  internal_units,option)
@@ -398,7 +398,7 @@ subroutine OutputFileRead(input,realization,output_option, &
           case('TIMESTEP')
             deltas = -1
             string = 'OUTPUT,' // trim(block_name) // ',' //trim(word)// ',TIMESTEP'
-              call InputReadInt(input,option,deltas)
+              call input%ReadInt(option,deltas)
             if( is_sum ) then
               output_option%eclipse_options%write_ecl_sum_deltas = deltas
               output_option%eclipse_options%write_ecl_sum_deltat = -1.0
@@ -411,16 +411,16 @@ subroutine OutputFileRead(input,realization,output_option, &
 !...................
       case('SCREEN')
         string = 'OUTPUT,' // trim(block_name) // ',SCREEN'
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'time increment',string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'time increment',string)
         call StringToUpper(word)
         select case(trim(word))
           case('OFF')
             option%print_to_screen = PETSC_FALSE
           case('PERIODIC')
             string = trim(string) // ',PERIODIC'
-            call InputReadInt(input,option,output_option%screen_imod)
-            call InputErrorMsg(input,option,'timestep increment',string)
+            call input%ReadInt(option,output_option%screen_imod)
+            call input%ErrorMsg(option,'timestep increment',string)
           case default
             call InputKeywordUnrecognized(word,string,option)
         end select
@@ -433,24 +433,24 @@ subroutine OutputFileRead(input,realization,output_option, &
             option%io_buffer = 'FORMAT cannot be specified within &
                  &the OUTPUT,OBSERVATION_FILE block. Observation output is &
                  &written in TECPLOT format only.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           case('MASS_BALANCE_FILE')
             option%io_buffer = 'FORMAT cannot be specified within &
                  &the OUTPUT,MASS_BALANCE_FILE block. Mass balance output is &
                  &written in TECPLOT format only.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword',string) 
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword',string)
         call StringToUpper(word)
         select case(trim(word))
         !..............
           case ('HDF5')
             string = trim(string) // ',HDF5'
             output_option%print_hdf5 = PETSC_TRUE
-            call InputReadWord(input,option,word,PETSC_TRUE)
+            call input%ReadWord(option,word,PETSC_TRUE)
             if (input%ierr /= 0) then
-              call InputDefaultMsg(input,option,string)
+              call input%DefaultMsg(option,string)
               output_option%print_single_h5_file = PETSC_TRUE
             else
               call StringToUpper(word)
@@ -463,14 +463,14 @@ subroutine OutputFileRead(input,realization,output_option, &
                   string = trim(string) // ',MULTIPLE_FILES'
                   output_option%print_single_h5_file = PETSC_FALSE
                   output_option%times_per_h5_file = 1
-                  call InputReadWord(input,option,word,PETSC_TRUE)
+                  call input%ReadWord(option,word,PETSC_TRUE)
                   if (input%ierr == 0) then
                     select case(trim(word))
                       case('TIMES_PER_FILE')
                         string = trim(string) // ',TIMES_PER_FILE'
-                        call InputReadInt(input,option, &
+                        call input%ReadInt(option, &
                              output_option%times_per_h5_file)
-                        call InputErrorMsg(input,option,'timestep increment', &
+                        call input%ErrorMsg(option,'timestep increment', &
                                            string)
                       case default
                         call InputKeywordUnrecognized(word,string,option)
@@ -488,8 +488,8 @@ subroutine OutputFileRead(input,realization,output_option, &
           case ('TECPLOT')
             string = trim(string) // ',TECPLOT'
             output_option%print_tecplot = PETSC_TRUE
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'TECPLOT format',string) 
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'TECPLOT format',string)
             call StringToUpper(word)
             select case(trim(word))
               case('POINT')
@@ -519,8 +519,8 @@ subroutine OutputFileRead(input,realization,output_option, &
 !...................................
       case ('HDF5_WRITE_GROUP_SIZE')
         string = 'OUTPUT,' // trim(block_name) // ',HDF5_WRITE_GROUP_SIZE'
-        call InputReadInt(input,option,option%hdf5_write_group_size)
-        call InputErrorMsg(input,option,'group size',string)
+        call input%ReadInt(option,option%hdf5_write_group_size)
+        call input%ErrorMsg(option,'group size',string)
 
 !......................
       case('VARIABLES')
@@ -535,7 +535,7 @@ subroutine OutputFileRead(input,realization,output_option, &
             option%io_buffer = 'A variable list cannot be specified within &
                  &the MASS_BALANCE_FILE block. Mass balance variables are &
                  &determined internally.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
         
 !.............................
@@ -605,12 +605,12 @@ subroutine OutputFileRead(input,realization,output_option, &
     if(Equal(output_option%periodic_snap_output_time_incr,0.d0)) then
       option%io_buffer = 'Keyword: AVERAGE_VARIABLES defined without &
                          &PERIODIC TIME being set.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if(.not.output_option%print_hdf5) then
       option%io_buffer = 'Keyword: AVERAGE_VARIABLES only defined for &
                          &FORMAT HDF5'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
 
@@ -626,7 +626,7 @@ subroutine OutputFileRead(input,realization,output_option, &
           option%io_buffer = 'Keyword: AVEGRAGE_FLOWRATES/&
                              &AVEGRAGE_MASS_FLOWRATE/ENERGY_FLOWRATE &
                              &defined without PERIODIC TIME being set.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       endif
     endif
@@ -656,8 +656,8 @@ subroutine OutputVariableRead(input,option,output_variable_list)
 
   implicit none
 
-  type(option_type), pointer :: option
-  type(input_type), pointer :: input
+  class(option_type), pointer :: option
+  class(input_type), pointer :: input
   type(output_variable_list_type), pointer :: output_variable_list
   
   character(len=MAXWORDLENGTH) :: word
@@ -667,11 +667,11 @@ subroutine OutputVariableRead(input,option,output_variable_list)
 
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','VARIABLES')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','VARIABLES')
     call StringToUpper(word)
     
     select case(trim(word))
@@ -702,13 +702,13 @@ subroutine OutputVariableRead(input,option,output_variable_list)
         
       case ('LIQUID_DENSITY')
         name = 'Liquid Density'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'MOLAR')) then
             units = 'kmol/m^3'
             temp_int = LIQUID_DENSITY_MOL
           else
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,LIQUID_DENSITY')
           endif
         else
@@ -732,13 +732,13 @@ subroutine OutputVariableRead(input,option,output_variable_list)
                                      LIQUID_VISCOSITY)
       case ('LIQUID_ENERGY')
         name = 'Liquid Energy'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'PER_VOLUME')) then
             units = 'MJ/m^3'
             temp_int = ONE_INTEGER
           else
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,LIQUID_ENERGY')
           endif
         else
@@ -763,13 +763,13 @@ subroutine OutputVariableRead(input,option,output_variable_list)
                                      GAS_SATURATION)
       case ('GAS_DENSITY')
         name = 'Gas Density'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'MOLAR')) then
             units = 'kmol/m^3'
             temp_int = GAS_DENSITY_MOL
           else
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,GAS_DENSITY')
           endif
         else
@@ -787,14 +787,14 @@ subroutine OutputVariableRead(input,option,output_variable_list)
                                      GAS_MOBILITY)
       case ('GAS_ENERGY')
         name = 'Gas Energy'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'PER_VOLUME')) then
             units = 'MJ/m^3'
             temp_int = ONE_INTEGER
           else
             input%ierr = 1
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,GAS_ENERGY')
           endif
         else
@@ -818,13 +818,13 @@ subroutine OutputVariableRead(input,option,output_variable_list)
                                      OIL_SATURATION)
       case ('OIL_DENSITY')
         name = 'Oil Density'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'MOLAR')) then
             units = 'kmol/m^3'
             temp_int = OIL_DENSITY_MOL
           else
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,OIL_DENSITY')
           endif
         else
@@ -848,14 +848,14 @@ subroutine OutputVariableRead(input,option,output_variable_list)
                                      OIL_VISCOSITY)
       case ('OIL_ENERGY')
         name = 'Oil Energy'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'PER_VOLUME')) then
             units = 'MJ/m^3'
             temp_int = ONE_INTEGER
           else
             input%ierr = 1
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,OIL_ENERGY')
           endif
         else
@@ -880,13 +880,13 @@ subroutine OutputVariableRead(input,option,output_variable_list)
                                      SOLVENT_SATURATION)
       case ('SOLVENT_DENSITY')
         name = 'Solvent Density'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'MOLAR')) then
             units = 'kmol/m^3'
             temp_int = SOLVENT_DENSITY_MOL
           else
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,SOLVENT_DENSITY')
           endif
         else
@@ -904,14 +904,14 @@ subroutine OutputVariableRead(input,option,output_variable_list)
                                      SOLVENT_MOBILITY)
       case ('SOLVENT_ENERGY')
         name = 'Solvent Energy'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           if (StringCompareIgnoreCase(word,'PER_VOLUME')) then
             units = 'MJ/m^3'
             temp_int = ONE_INTEGER
           else
             input%ierr = 1
-            call InputErrorMsg(input,option,'optional keyword', &
+            call input%ErrorMsg(option,'optional keyword', &
                                'VARIABLES,SOLVENT_ENERGY')
           endif
         else
@@ -1184,7 +1184,7 @@ subroutine OutputVariableRead(input,option,output_variable_list)
         if (.not.option%flow%density_depends_on_salinity) then
           option%io_buffer = 'SALINITY output only supported when the &
             &SALINITY auxiliary process model is used.'
-          call PrintErrMsg(option)
+          call option%PrintErrMsg()
         endif
         units = ''
         name = 'Salinity (mass fraction)'
@@ -1224,7 +1224,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
   character(len=MAXSTRINGLENGTH) :: string
   PetscErrorCode :: ierr
   PetscLogDouble :: tstart, tend
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   option => realization_base%option
   
@@ -1257,7 +1257,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
           case (IMPLICIT_UNSTRUCTURED_GRID)
             call OutputHDF5UGridXDMF(realization_base,INSTANTANEOUS_VARS)
           case (POLYHEDRA_UNSTRUCTURED_GRID)
-            call printErrMsg(option,'Add code for HDF5 output for &
+            call option%PrintErrMsg('Add code for HDF5 output for &
                                     &Polyhedra mesh')
         end select
       else
@@ -1267,7 +1267,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
       call PetscTime(tend,ierr);CHKERRQ(ierr)
       write(option%io_buffer,'(f10.2," Seconds to write HDF5 file.")') &
             tend-tstart
-      call printMsg(option)
+      call option%PrintMsg()
     endif
    
     if (realization_base%output_option%print_tecplot) then
@@ -1283,7 +1283,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
       call PetscTime(tend,ierr);CHKERRQ(ierr)
       write(option%io_buffer,'(f10.2," Seconds to write to Tecplot file(s)")') &
             tend-tstart
-      call printMsg(option)        
+      call option%PrintMsg()
     endif
     
     if (realization_base%output_option%print_explicit_flowrate) then
@@ -1294,7 +1294,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
       call PetscTime(tend,ierr);CHKERRQ(ierr)
       write(option%io_buffer,'(f10.2," Seconds to write to Rates file.")') &
             tend-tstart
-      call printMsg(option)        
+      call option%PrintMsg()
     endif
 
     if (realization_base%output_option%print_vtk) then
@@ -1306,7 +1306,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
       call PetscTime(tend,ierr);CHKERRQ(ierr)
       write(option%io_buffer,'(f10.2," Seconds to write to VTK file(s)")') &
             tend-tstart
-      call printMsg(option) 
+      call option%PrintMsg()
     endif
       
     if (realization_base%output_option%print_mad) then
@@ -1318,7 +1318,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
       call PetscTime(tend,ierr);CHKERRQ(ierr)
       write(option%io_buffer,'(f10.2," Seconds to write to MAD HDF5 &
                              &file(s)")') tend-tstart
-      call printMsg(option) 
+      call option%PrintMsg()
     endif
     
     ! Print secondary continuum variables vs sec. continuum dist.
@@ -1334,7 +1334,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
         write(option%io_buffer,'(f10.2," Seconds to write to secondary' // &
               ' continuum Tecplot file(s)")') &
               tend-tstart
-        call printMsg(option) 
+        call option%PrintMsg()
       endif
     endif
       
@@ -1739,7 +1739,7 @@ subroutine OutputMAD(realization_base)
   
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   type(reaction_type), pointer :: reaction
@@ -1850,7 +1850,7 @@ subroutine ComputeFlowCellVelocityStats(realization_base)
   class(realization_base_type) :: realization_base
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   type(discretization_type), pointer :: discretization
@@ -2011,7 +2011,7 @@ subroutine ComputeFlowFluxVelocityStats(realization_base)
   class(realization_base_type) :: realization_base
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(discretization_type), pointer :: discretization  
@@ -2146,7 +2146,7 @@ subroutine OutputPrintCouplers(realization_base,istep)
   class(realization_base_type) :: realization_base
   PetscInt :: istep
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: cur_patch
   type(field_type), pointer :: field
   type(coupler_type), pointer :: coupler
@@ -2169,7 +2169,7 @@ subroutine OutputPrintCouplers(realization_base,istep)
   if (len_trim(flow_debug%coupler_string) == 0) then
     option%io_buffer = &
       'Coupler debugging requested, but no string of coupler names was included.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   select case(option%iflowmode)
@@ -2192,7 +2192,7 @@ subroutine OutputPrintCouplers(realization_base,istep)
     case default
       option%io_buffer = &
         'OutputPrintCouplers() not yet supported for this flow mode'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   
   coupler_string = flow_debug%coupler_string
@@ -2262,7 +2262,7 @@ subroutine OutputPrintRegions(realization_base)
 
   class(realization_base_type) :: realization_base
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(debug_type), pointer :: flow_debug
   type(region_type), pointer :: cur_region
@@ -2314,7 +2314,7 @@ subroutine OutputAvegVars(realization_base)
   
   class(realization_base_type) :: realization_base
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   type(output_variable_type), pointer :: cur_variable
   type(field_type), pointer :: field  
@@ -2402,7 +2402,7 @@ subroutine OutputAvegVars(realization_base)
       call PetscLogEventEnd(logging%event_output_hdf5,ierr);CHKERRQ(ierr)
       call PetscTime(tend,ierr);CHKERRQ(ierr)
       write(option%io_buffer,'(f10.2," Seconds to write HDF5 file.")') tend-tstart
-      call printMsg(option)
+      call option%PrintMsg()
     endif
 
     ! Reset the vectors to zero
@@ -2430,7 +2430,7 @@ subroutine OutputEnsureVariablesExist(output_option,option)
   implicit none
 
   type(output_option_type) :: output_option
-  type(option_type) :: option
+  class(option_type) :: option
 
   call OutputListEnsureVariablesExist(output_option%output_variable_list, &
                                       option)
@@ -2460,7 +2460,7 @@ subroutine OutputListEnsureVariablesExist(output_variable_list,option)
   implicit none
 
   type(output_variable_list_type), pointer :: output_variable_list
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(output_variable_type), pointer :: cur_variable
   PetscBool :: error_flag
@@ -2496,7 +2496,7 @@ subroutine OutputListEnsureVariablesExist(output_variable_list,option)
   if (error_count > 0) then
     option%io_buffer = 'Simulation was stopped due to undefined output &
                        &variables.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine OutputListEnsureVariablesExist
@@ -2519,7 +2519,7 @@ subroutine OutputFindNaNOrInfInVec(vec,grid,option)
 
   Vec :: vec
   type(grid_type), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal, pointer :: vec_p(:)
   PetscInt :: i, idof, icell, block_size, local_size, local_count, exscan_count
@@ -2562,7 +2562,7 @@ subroutine OutputFindNaNOrInfInVec(vec,grid,option)
     write(word,*) iabs(idof)
     option%io_buffer = trim(option%io_buffer) // ' ' // &
       trim(adjustl(word)) //  '.'
-    call printMsgByRank(option)
+    call option%PrintMsgByRank()
   enddo
 
 end subroutine OutputFindNaNOrInfInVec

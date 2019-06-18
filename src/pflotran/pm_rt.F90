@@ -137,11 +137,11 @@ subroutine PMRTRead(this,input)
   implicit none
   
   class(pm_rt_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscBool :: found
 
   option => this%option
@@ -152,11 +152,11 @@ subroutine PMRTRead(this,input)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
     
     found = PETSC_FALSE
@@ -166,28 +166,28 @@ subroutine PMRTRead(this,input)
     select case(trim(keyword))
       case('GLOBAL_IMPLICIT','OPERATOR_SPLIT','OPERATOR_SPLITTING')
       case('MAX_VOLUME_FRACTION_CHANGE')
-        call InputReadDouble(input,option,this%volfrac_change_governor)
-        call InputDefaultMsg(input,option,'maximum volume fraction change')
+        call input%ReadDouble(option,this%volfrac_change_governor)
+        call input%DefaultMsg(option,'maximum volume fraction change')
       case('ITOL_RELATIVE_UPDATE')
-        call InputReadDouble(input,option,rt_itol_rel_update)
-        call InputErrorMsg(input,option,'rt_itol_rel_update', &
+        call input%ReadDouble(option,rt_itol_rel_update)
+        call input%ErrorMsg(option,'rt_itol_rel_update', &
                            'SUBSURFACE_TRANSPORT OPTIONS')
         this%check_post_convergence = PETSC_TRUE
       case('MINIMUM_SATURATION')
-        call InputReadDouble(input,option,rt_min_saturation)
-        call InputErrorMsg(input,option,'min_saturation', &
+        call input%ReadDouble(option,rt_min_saturation)
+        call input%ErrorMsg(option,'min_saturation', &
                            'SUBSURFACE_TRANSPORT OPTIONS')
       case('NUMERICAL_JACOBIAN')
         option%transport%numerical_derivatives = PETSC_TRUE
       case('INCLUDE_GAS_PHASE')
         option%io_buffer = 'INCLUDE_GAS_PHASE under SUBSURFACE_TRANSPORT &
                            &has been deprecated.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       case('TEMPERATURE_DEPENDENT_DIFFUSION')
         this%temperature_dependent_diffusion = PETSC_TRUE
       case('MAX_CFL')
-        call InputReadDouble(input,option,this%cfl_governor)
-        call InputErrorMsg(input,option,'MAX_CFL', &
+        call input%ReadDouble(option,this%cfl_governor)
+        call input%ErrorMsg(option,'MAX_CFL', &
                            'SUBSURFACE_TRANSPORT OPTIONS')
       case('MULTIPLE_CONTINUUM')
         option%use_mc = PETSC_TRUE
@@ -223,7 +223,7 @@ subroutine PMRTSetup(this)
   type(reactive_transport_param_type), pointer :: rt_parameter
 
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%Setup()')
+  call this%option%PrintMsg('PMRT%Setup()')
 #endif
 
   rt_parameter => this%realization%patch%aux%RT%rt_parameter
@@ -281,7 +281,7 @@ subroutine PMRTSetRealization(this,realization)
   class(realization_subsurface_type), pointer :: realization
 
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%SetRealization()')
+  call this%option%PrintMsg('PMRT%SetRealization()')
 #endif
   
   this%realization => realization
@@ -322,7 +322,7 @@ recursive subroutine PMRTInitializeRun(this)
   PetscErrorCode :: ierr
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%InitializeRun()')
+  call this%option%PrintMsg('PMRT%InitializeRun()')
 #endif
 
   ! check for uninitialized flow variables
@@ -365,7 +365,7 @@ recursive subroutine PMRTInitializeRun(this)
         'restarted simulation.  ReactionEquilibrateConstraint() will ' // &
         'appropriately set sorbed initial concentrations for a normal ' // &
         '(non-restarted) simulation.'
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
     endif
     call RTJumpStartKineticSorption(this%realization)
   endif
@@ -394,7 +394,7 @@ subroutine PMRTInitializeTimestep(this)
   class(pm_rt_type) :: this
  
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%InitializeTimestep()')
+  call this%option%PrintMsg('PMRT%InitializeTimestep()')
 #endif
 
   this%option%tran_dt = this%option%dt
@@ -450,7 +450,7 @@ subroutine PMRTPreSolve(this)
   PetscErrorCode :: ierr
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%UpdatePreSolve()')
+  call this%option%PrintMsg('PMRT%UpdatePreSolve()')
 #endif
   
   ! set densities and saturations to t+dt
@@ -508,7 +508,7 @@ subroutine PMRTPostSolve(this)
   class(pm_rt_type) :: this
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%PostSolve()')
+  call this%option%PrintMsg('PMRT%PostSolve()')
 #endif
   
 end subroutine PMRTPostSolve
@@ -591,7 +591,7 @@ function PMRTAcceptSolution(this)
   PetscBool :: PMRTAcceptSolution
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%AcceptSolution()')
+  call this%option%PrintMsg('PMRT%AcceptSolution()')
 #endif
   ! do nothing
   PMRTAcceptSolution = PETSC_TRUE
@@ -623,7 +623,7 @@ subroutine PMRTUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   PetscReal, parameter :: pert = 1.d-20
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%UpdateTimestep()')  
+  call this%option%PrintMsg('PMRT%UpdateTimestep()')
 #endif
   
   if (this%volfrac_change_governor < 1.d0) then
@@ -687,7 +687,7 @@ recursive subroutine PMRTFinalizeRun(this)
   class(pm_rt_type) :: this
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%PMRTFinalizeRun()')
+  call this%option%PrintMsg('PMRT%PMRTFinalizeRun()')
 #endif
   
   ! do something here
@@ -717,7 +717,7 @@ subroutine PMRTResidual(this,snes,xx,r,ierr)
   PetscErrorCode :: ierr
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%Residual()')  
+  call this%option%PrintMsg('PMRT%Residual()')
 #endif
   
   call RTResidual(snes,xx,r,this%realization,ierr)
@@ -743,7 +743,7 @@ subroutine PMRTJacobian(this,snes,xx,A,B,ierr)
   PetscErrorCode :: ierr
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%Jacobian()')  
+  call this%option%PrintMsg('PMRT%Jacobian()')
 #endif
 
   call RTJacobian(snes,xx,A,B,this%realization,ierr)
@@ -844,7 +844,7 @@ subroutine PMRTCheckUpdatePre(this,line_search,X,dX,changed,ierr)
             'LOG_FORMULATION for chemistry or truncate concentrations ' // &
             '(TRUNCATE_CONCENTRATION <float> in CHEMISTRY block).'
           this%realization%option%io_buffer = string
-          call PrintErrMsgToDev(this%realization%option, &
+          call this%realization%option%PrintErrMsgToDev(&
                                 'send your input deck if that does not work')
         endif
         ! scale by 0.99 to make the update slightly smaller than the min_ratio
@@ -890,7 +890,7 @@ subroutine PMRTCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   PetscErrorCode :: ierr
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   PetscReal, pointer :: C0_p(:)
@@ -1038,7 +1038,7 @@ subroutine PMRTTimeCut(this)
   class(pm_rt_type) :: this
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%TimeCut()')
+  call this%option%PrintMsg('PMRT%TimeCut()')
 #endif
   
   this%option%tran_dt = this%option%dt
@@ -1086,7 +1086,7 @@ subroutine PMRTUpdateSolution2(this, update_kinetics)
   PetscBool :: update_kinetics
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%UpdateSolution()')
+  call this%option%PrintMsg('PMRT%UpdateSolution()')
 #endif
   
   ! begin from RealizationUpdate()
@@ -1151,7 +1151,7 @@ subroutine PMRTMaxChange(this)
   class(pm_rt_type) :: this
   
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%MaxChange()')
+  call this%option%PrintMsg('PMRT%MaxChange()')
 #endif
 
   print *, 'PMRTMaxChange not implemented'
@@ -1176,7 +1176,7 @@ subroutine PMRTComputeMassBalance(this,mass_balance_array)
   PetscReal :: mass_balance_array(:)
 
 #ifdef PM_RT_DEBUG  
-  call printMsg(this%option,'PMRT%MassBalance()')
+  call this%option%PrintMsg('PMRT%MassBalance()')
 #endif
 
 #ifndef SIMPLIFY 
@@ -1262,7 +1262,7 @@ subroutine PMRTCheckpointBinary(this,viewer)
   PetscErrorCode :: ierr
 
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
@@ -1407,7 +1407,7 @@ subroutine PMRTRestartBinary(this,viewer)
   PetscErrorCode :: ierr
 
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
@@ -1561,7 +1561,7 @@ subroutine PMRTCheckpointHDF5(this, pm_grp_id)
   integer, pointer :: int_array(:)
 
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
@@ -1745,7 +1745,7 @@ subroutine PMRTRestartHDF5(this, pm_grp_id)
   integer, pointer :: int_array(:)
 
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid

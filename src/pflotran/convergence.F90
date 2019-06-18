@@ -14,7 +14,7 @@ module Convergence_module
 
   type, public :: convergence_context_type
     type(solver_type), pointer :: solver
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(grid_type), pointer :: grid
   end type convergence_context_type
 
@@ -39,7 +39,7 @@ function ConvergenceContextCreate(solver,option,grid)
   
   type(convergence_context_type), pointer :: ConvergenceContextCreate
   type(solver_type), pointer :: solver
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   
   type(convergence_context_type), pointer :: context
@@ -75,7 +75,7 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   SNESConvergedReason :: reason
   PetscErrorCode :: ierr
   type(solver_type) :: solver
-  type(option_type) :: option
+  class(option_type) :: option
   !TODO(geh): remove calculations based on grid to something for pm specific
   type(grid_type), pointer :: grid
   
@@ -394,7 +394,7 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
       if (solver%print_linear_iterations) then
         call KSPGetIterationNumber(solver%ksp,i,ierr);CHKERRQ(ierr)
         write(option%io_buffer,'("   Linear Solver Iterations: ",i6)') i
-        call printMsg(option)
+        call option%PrintMsg()
       endif
     endif
   endif    

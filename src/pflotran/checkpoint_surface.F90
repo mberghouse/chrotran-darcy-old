@@ -107,7 +107,7 @@ subroutine SurfaceCheckpointBinary(surf_realization, &
   PetscInt :: int_flag
   
   type(surface_field_type), pointer :: surf_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
   type(output_option_type), pointer :: output_option
@@ -119,7 +119,7 @@ subroutine SurfaceCheckpointBinary(surf_realization, &
   grid => discretization%grid 
 
   option%io_buffer = 'Checkpointing of surface flow must be updated.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
   ! Open the checkpoint file.
   call PetscTime(tstart,ierr);CHKERRQ(ierr)
@@ -185,12 +185,12 @@ subroutine SurfaceCheckpointBinary(surf_realization, &
   call PetscViewerDestroy(viewer, ierr);CHKERRQ(ierr)
 
   write(option%io_buffer,'(" --> Dump checkpoint file: ", a32)') trim(filename)
-  call printMsg(option)
+  call option%PrintMsg()
 
   call PetscTime(tend,ierr);CHKERRQ(ierr)
   write(option%io_buffer, &
         '("      Seconds to write to checkpoint file: ", f10.2)') tend-tstart
-  call printMsg(option)
+  call option%PrintMsg()
 
 end subroutine SurfaceCheckpointBinary
 
@@ -220,7 +220,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
   PetscBool :: surf_flow_read
   
   type(surface_field_type), pointer :: surf_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
 
@@ -241,7 +241,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
   call PetscTime(tstart,ierr);CHKERRQ(ierr)
   option%io_buffer = '--> Open checkpoint file: ' // &
                      trim(option%surf_restart_filename)
-  call printMsg(option)
+  call option%PrintMsg()
   call PetscViewerBinaryOpen(option%mycomm,option%surf_restart_filename, &
                              FILE_MODE_READ,viewer,ierr);CHKERRQ(ierr)
   ! skip reading info file when loading, but not working
@@ -262,7 +262,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
                        ' of PFLOTRAN checkpoint files ('
     write(string,*) CHECKPOINT_REVISION_NUMBER
     option%io_buffer = trim(option%io_buffer) // trim(adjustl(string)) // ').'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
    if (surf_header%grid_discretization_type /= grid%itype) then
@@ -274,7 +274,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
                        ' grid_type= ('
     write(string,*) grid%itype
     option%io_buffer = trim(option%io_buffer) // trim(adjustl(string)) // ').'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! Check DOFs in surface-flow
@@ -285,7 +285,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
            ') does not match the number of surface-flow dofs in the input file ('
     write(string,*) option%nsurfflowdof
     option%io_buffer = trim(option%io_buffer) // string // ')'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! Check surface-flow formulation
@@ -293,7 +293,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
     option%io_buffer = 'Surface flow formulation in restart file ' // &
       ' does not match the surface flow formulation the input file '
     option%io_buffer = trim(option%io_buffer)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! Save values from header
@@ -337,7 +337,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
 
   write(option%io_buffer, &
         '("      Seconds to read to checkpoint file: ", f6.2)') tend-tstart
-  call printMsg(option)
+  call option%PrintMsg()
 
 
 end subroutine SurfaceRestartBinary
@@ -436,7 +436,7 @@ subroutine SurfaceCheckpointProcessModelBinary(viewer, surf_realization)
   PetscViewer :: viewer
 
   type(surface_field_type), pointer :: surf_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
   PetscErrorCode :: ierr
@@ -495,7 +495,7 @@ subroutine SurfaceRestartProcessModelBinary(viewer,surf_realization)
   PetscViewer :: viewer
 
   type(surface_field_type), pointer :: surf_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
   PetscErrorCode :: ierr

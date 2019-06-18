@@ -251,7 +251,7 @@ subroutine PMUFDDecayRead(this,input)
 ! input (input/output): pointer to input object
 ! ----------------------------------
   class(pm_ufd_decay_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 ! ----------------------------------
   
 ! LOCAL VARIABLES:
@@ -272,7 +272,7 @@ subroutine PMUFDDecayRead(this,input)
 ! tempreal: [-] temporary double precision number
 ! found: flag indicating keyword has been found
 ! -------------------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
   type(isotope_type), pointer :: isotope, prev_isotope
@@ -289,7 +289,7 @@ subroutine PMUFDDecayRead(this,input)
   option => this%option
   
   option%io_buffer = 'pflotran card:: UFD_Decay'
-  call printMsg(option)
+  call option%PrintMsg()
   
   input%ierr = 0
   nullify(prev_isotope)
@@ -297,11 +297,11 @@ subroutine PMUFDDecayRead(this,input)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)
 
     found = PETSC_FALSE
@@ -312,46 +312,46 @@ subroutine PMUFDDecayRead(this,input)
       case('ELEMENT')
         error_string = 'UFD Decay, Element'
         element => ElementCreate()
-        call InputReadWord(input,option,element%name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name',error_string)
+        call input%ReadWord(option,element%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'name',error_string)
         error_string = 'UFD Decay, Element, ' // trim(element%name)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword',error_string)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword',error_string)
           call StringToUpper(word)
           select case(trim(word))
             case('SOLUBILITY')
-              call InputReadDouble(input,option,element%solubility)
-              call InputErrorMsg(input,option,'solubility',error_string)
+              call input%ReadDouble(option,element%solubility)
+              call input%ErrorMsg(option,'solubility',error_string)
             case('KD')
               i = 0
               Kd(:) = UNINITIALIZED_DOUBLE
               Kd_material_name(:) = ''
               do
                 call InputReadPflotranString(input,option)
-                if (InputError(input)) exit
+                if (input%Error()) exit
                 if (InputCheckExit(input,option)) exit
                 i = i + 1
                 if (i > MAX_KD_SIZE) then
                   write(word,*) i-1
                   option%io_buffer = 'Kd array in PMUFDDecayRead() must be &
                     &allocated larger than ' // trim(adjustl(word)) // '.'
-                  call printErrMsg(option)
+                  call option%PrintErrMsg()
                 endif
-                call InputReadWord(input,option,word,PETSC_TRUE)
-                call InputErrorMsg(input,option,'Kd material name', &
+                call input%ReadWord(option,word,PETSC_TRUE)
+                call input%ErrorMsg(option,'Kd material name', &
                                    error_string)
                 Kd_material_name(i) = word
-                call InputReadDouble(input,option,Kd(i))
-                call InputErrorMsg(input,option,'Kd',error_string)
+                call input%ReadDouble(option,Kd(i))
+                call input%ErrorMsg(option,'Kd',error_string)
               enddo
               if (i == 0) then
                 option%io_buffer = 'No KD/material combinations specified &
                   &under ' // trim(error_string) // '.'
-                call printErrMsg(option)
+                call option%PrintErrMsg()
               endif
               allocate(element%Kd(i))
               element%Kd = Kd(1:i)
@@ -372,40 +372,40 @@ subroutine PMUFDDecayRead(this,input)
         nullify(prev_daughter)
         error_string = 'UFD Decay, Isotope'
         isotope => IsotopeCreate()
-        call InputReadWord(input,option,isotope%name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name',error_string)
+        call input%ReadWord(option,isotope%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'name',error_string)
         error_string = 'UFD Decay, Isotope, ' // trim(isotope%name)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword',error_string)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword',error_string)
           call StringToUpper(word)
           select case(trim(word))
             case('ELEMENT')
-              call InputReadWord(input,option,isotope%element,PETSC_TRUE)
-              call InputErrorMsg(input,option,'element name',error_string)
+              call input%ReadWord(option,isotope%element,PETSC_TRUE)
+              call input%ErrorMsg(option,'element name',error_string)
             case('DECAY_RATE')
-              call InputReadDouble(input,option,isotope%decay_rate)
-              call InputErrorMsg(input,option,'decay rate',error_string)
-              call InputReadAndConvertUnits(input,isotope%decay_rate,'1/sec', &
+              call input%ReadDouble(option,isotope%decay_rate)
+              call input%ErrorMsg(option,'decay rate',error_string)
+              call input%ReadAndConvertUnits(isotope%decay_rate,'1/sec', &
                                             trim(error_string)//',decay rate', &
                                             option)
             case('HALF_LIFE')
-              call InputReadDouble(input,option,tempreal)
-              call InputErrorMsg(input,option,'half life',error_string)
-              call InputReadAndConvertUnits(input,tempreal,'sec', &
+              call input%ReadDouble(option,tempreal)
+              call input%ErrorMsg(option,'half life',error_string)
+              call input%ReadAndConvertUnits(tempreal,'sec', &
                                             trim(error_string)//',half life', &
                                             option)
               ! convert half life to rate constant
               isotope%decay_rate = -1.d0*log(0.5d0)/tempreal
             case('DAUGHTER')
               daughter => IsotopeDaughterCreate()
-              call InputReadWord(input,option,daughter%name,PETSC_TRUE)
-              call InputErrorMsg(input,option,'daughter name',error_string)
-              call InputReadDouble(input,option,daughter%stoichiometry)
-              call InputErrorMsg(input,option,'daughter stoichiometry', &
+              call input%ReadWord(option,daughter%name,PETSC_TRUE)
+              call input%ErrorMsg(option,'daughter name',error_string)
+              call input%ReadDouble(option,daughter%stoichiometry)
+              call input%ErrorMsg(option,'daughter stoichiometry', &
                                  error_string)
               if (associated(prev_daughter)) then
                 prev_daughter%next => daughter
@@ -571,7 +571,7 @@ subroutine PMUFDDecayInit(this)
 ! ielement: [-] element integer number
 ! g, ig, p, ip, d, id: [-] looping index integers
 ! -----------------------------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
   type(grid_type), pointer :: grid
@@ -632,7 +632,7 @@ subroutine PMUFDDecayInit(this)
     else
       option%io_buffer = 'Element "' // trim(element%name) // '" in &
         &UFD_DECAY block must have a solubility greater than zero.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     this%element_name(element%ielement) = element%name
     if (.not.associated(element%Kd)) then
@@ -640,7 +640,7 @@ subroutine PMUFDDecayInit(this)
       option%io_buffer = trim(adjustl(word)) // ' Kds must be defined for &
         &element "' // trim(element%name) // '", one for each &
         &MATERIAL_PROPERTY in the format "<string> <double>".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (size(element%Kd) /= size(material_property_array)) then
       write(word,*) size(element%Kd)
@@ -650,7 +650,7 @@ subroutine PMUFDDecayInit(this)
       option%io_buffer = trim(option%io_buffer) // &
         trim(adjustl(word)) // ') for UFD Decay element "' // &
         trim(element%name) // '".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     do icount = 1, size(element%Kd_material_name)
       material_property => &
@@ -664,7 +664,7 @@ subroutine PMUFDDecayInit(this)
         option%io_buffer = 'Uninitialized KD in UFD Decay element "' // &
           trim(element%name) // '" for material "' // &
           trim(material_property_array(icount)%ptr%name) // '".'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     enddo
     element => element%next
@@ -693,7 +693,7 @@ subroutine PMUFDDecayInit(this)
       option%io_buffer = 'Element "' // trim(isotope%element) // &
         '" of isotope "' // trim(isotope%name) // &
         '" not found among list of elements.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     daughter => isotope%daughter_list
     icount = 0
@@ -766,7 +766,7 @@ subroutine PMUFDDecayInit(this)
       if (.not.found) then
         option%io_buffer = 'Daughter "' // trim(daughter%name) // &
                            '" not found among isotope list.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       daughter => daughter%next
     enddo
@@ -803,7 +803,7 @@ subroutine PMUFDDecayInit(this)
     if (Uninitialized(this%isotope_decay_rate(iisotope))) then
       option%io_buffer = 'A decay rate must be defined for isotope "' // &
         trim(this%isotope_name(iisotope)) // '".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     ! ensure that a stoichiometry is defined for all daughters
     do d = 1, this%isotope_daughters(0,iisotope)
@@ -812,7 +812,7 @@ subroutine PMUFDDecayInit(this)
         option%io_buffer = 'A stoichiomtry must be defined for isotope ' // &
           trim(this%isotope_name(iisotope)) // "'s daughter " // '"' // &
           trim(this%isotope_name(id)) // '".'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     enddo
     ! ensure that a daughter is not the same as a parent or grandparent. this 
@@ -823,7 +823,7 @@ subroutine PMUFDDecayInit(this)
         option%io_buffer = 'PM UFD_DECAY isotope "' // &
           trim(this%isotope_name(iisotope)) // &
           '" is the same as its parent.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       do g = 1, this%isotope_parents(0,ip)
         ig = this%isotope_parents(g,ip)
@@ -831,7 +831,7 @@ subroutine PMUFDDecayInit(this)
           option%io_buffer = 'PM UFD_DECAY isotope "' // &
             trim(this%isotope_name(iisotope)) // &
             '" is the same as its grandparent.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       enddo
     enddo
@@ -957,7 +957,7 @@ recursive subroutine PMUFDDecayInitializeRun(this)
   if (maxval(this%isotope_daughter_stoich) > 1.d0) then
     this%option%io_buffer = 'Daughter stoichiometries have not been set up &
       &in pm_ufd_decay.F90.'
-    call printErrMsg(this%option)
+    call this%option%PrintErrMsg()
   endif
   
   if (this%print_output) then
@@ -1123,7 +1123,7 @@ subroutine PMUFDDecaySolve(this,time,ierr)
 ! idaughter: [-] daughter integer number
 ! it: [-] iteration number for implicit calculation
 ! -----------------------------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
@@ -1552,7 +1552,7 @@ subroutine PMUFDDecayUpdateAuxVars(this)
 ! --------------------------------
 
   this%option%io_buffer = 'PMUFDDecayUpdateAuxVars() must be extended.'
-  call printErrMsg(this%option)
+  call this%option%PrintErrMsg()
 
 end subroutine PMUFDDecayUpdateAuxVars   
 
@@ -1619,7 +1619,7 @@ subroutine PMUFDDecayOutput(this)
 
   class(pm_ufd_decay_type) :: this
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   character(len=MAXSTRINGLENGTH) :: filename
   PetscInt :: fid
@@ -1714,7 +1714,7 @@ function PMUFDDecayOutputFilename(option)
 
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   character(len=MAXSTRINGLENGTH) :: PMUFDDecayOutputFilename
   character(len=MAXWORDLENGTH) :: word

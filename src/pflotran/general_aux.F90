@@ -238,7 +238,7 @@ function GeneralAuxCreate(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
     
   type(general_type), pointer :: GeneralAuxCreate
   
@@ -296,7 +296,7 @@ subroutine GeneralAuxVarInit(auxvar,allocate_derivative,option)
   
   type(general_auxvar_type) :: auxvar
   PetscBool :: allocate_derivative
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar%istate_store = NULL_STATE
   auxvar%hstate_store = NULL_STATE
@@ -408,7 +408,7 @@ subroutine GeneralAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(general_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%istate_store = auxvar%istate_store
   auxvar2%hstate_store = auxvar%hstate_store
@@ -443,7 +443,7 @@ subroutine GeneralAuxSetEnergyDOF(energy_keyword,option)
   implicit none
   
   character(len=MAXWORDLENGTH) :: energy_keyword
-  type(option_type) :: option
+  class(option_type) :: option
 
   call StringToUpper(energy_keyword)
   select case(energy_keyword)
@@ -454,7 +454,7 @@ subroutine GeneralAuxSetEnergyDOF(energy_keyword,option)
     case default
       option%io_buffer = 'Energy Keyword: ' // trim(energy_keyword) // &
                           ' not recognized in General Mode'    
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine GeneralAuxSetEnergyDOF
@@ -482,7 +482,7 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   class(characteristic_curves_type) :: characteristic_curves
   PetscReal :: x(option%nflowdof)
   type(general_auxvar_type) :: gen_auxvar
@@ -653,8 +653,8 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
         write(option%io_buffer,'(''Negative gas pressure at cell '', &
           & i8,'' in GeneralAuxVarCompute(LIQUID_STATE).  Attempting bailout.'')') &
           natural_id
-!        call printErrMsgByRank(option)
-        call printMsgByRank(option)
+!        call option%PrintErrMsgByRank()
+        call option%PrintMsgByRank()
         ! set vapor pressure to just under saturation pressure
         gen_auxvar%pres(vpid) = 0.5d0*gen_auxvar%pres(spid)
         ! set gas pressure to vapor pressure + air pressure
@@ -730,7 +730,7 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
         option%io_buffer = 'Analytical derivatives for gas state cells in &
           &GENERAL mode have a bug. Please use numerical derivatives until &
           &the bug is resolved.'
-        call PrintErrMsg(option)
+        call option%PrintErrMsg()
         dpair_dT = 0.d0
         dpair_dpgas = 0.d0
         gen_auxvar%d%pv_p = 1.d0
@@ -863,7 +863,7 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
       write(option%io_buffer,*) global_auxvar%istate
       option%io_buffer = 'State (' // trim(adjustl(option%io_buffer)) // &
         ') not recognized in GeneralAuxVarCompute.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
 
   end select
 
@@ -1276,16 +1276,16 @@ subroutine GeneralEOSGasError(natural_id,ierr,gen_auxvar,option)
   PetscInt :: natural_id
   PetscInt :: ierr
   type(general_auxvar_type) :: gen_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   
   
-  call printMsgByCell(option,natural_id, &
+  call option%PrintMsgByCell(natural_id, &
                       'Error in GeneralAuxVarCompute->EOSGasHenry')
   if (ierr == EOS_GAS_TEMP_BOUND_EXCEEDED) then
     option%io_buffer = 'Temperature at cell ID ' // trim(StringWrite(natural_id)) // &
                                ' exceeds the equation of state temperature bound with ' // &
                                trim(StringWrite(gen_auxvar%temp)) // ' [C].'
-    call printErrMsgByRank(option)         
+    call option%PrintErrMsgByRank()
   endif
 
   
@@ -1314,7 +1314,7 @@ subroutine GeneralAuxVarUpdateState(x,gen_auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   class(characteristic_curves_type) :: characteristic_curves
   type(general_auxvar_type) :: gen_auxvar
@@ -1516,7 +1516,7 @@ subroutine GeneralAuxVarUpdateState(x,gen_auxvar,global_auxvar, &
             write(state_change_string,*) natural_id
             option%io_buffer = 'Negative air pressure during state change ' // &
               'at ' // trim(adjustl(state_change_string))
-            call printMsgByRank(option)
+            call option%PrintMsgByRank()
             x(GENERAL_2PH_STATE_AIR_PRESSURE_DOF) = &
               0.01d0*x(GENERAL_GAS_PRESSURE_DOF)
           endif
@@ -1528,7 +1528,7 @@ subroutine GeneralAuxVarUpdateState(x,gen_auxvar,global_auxvar, &
           characteristic_curves,natural_id,option)
     state_change_string = 'State Transition: ' // trim(state_change_string)
     if (general_print_state_transition) then
-      call printMsgByRank(option,state_change_string)
+      call option%PrintMsgByRank(state_change_string)
     endif
 #ifdef DEBUG_GENERAL_INFO
     call GeneralPrintAuxVars(gen_auxvar,global_auxvar,material_auxvar, &
@@ -1561,7 +1561,7 @@ subroutine GeneralAuxVarPerturb(gen_auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   type(general_auxvar_type) :: gen_auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
@@ -1761,11 +1761,11 @@ subroutine GeneralAuxVarPerturb(gen_auxvar,global_auxvar, &
             &'(''Change in state due to perturbation: '',i3,'' -> '',i3, &
             &'' at cell '',i3,'' for dof '',i3)') &
         global_auxvar%istate, global_auxvar_debug%istate, natural_id, idof
-      call printMsg(option)
+      call option%PrintMsg()
       write(option%io_buffer,'(''orig: '',6es17.8)') x(1:3)
-      call printMsg(option)
+      call option%PrintMsg()
       write(option%io_buffer,'(''pert: '',6es17.8)') x_pert_save(1:3)
-      call printMsg(option)
+      call option%PrintMsg()
     endif
 #endif
 
@@ -1820,7 +1820,7 @@ subroutine GeneralPrintAuxVars(general_auxvar,global_auxvar,material_auxvar, &
   class(material_auxvar_type) :: material_auxvar
   PetscInt :: natural_id
   character(len=*) :: string
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: apid, cpid, vpid, spid
   PetscInt :: gid, lid, acid, wid, eid
@@ -1935,7 +1935,7 @@ subroutine GeneralOutputAuxVars1(general_auxvar,global_auxvar,material_auxvar, &
   PetscInt :: natural_id
   character(len=*) :: string
   PetscBool :: append
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string2
   PetscInt :: apid, cpid, vpid, spid
@@ -2085,7 +2085,7 @@ subroutine GeneralOutputAuxVars2(general_auxvars,global_auxvars,option)
 
   type(general_auxvar_type) :: general_auxvars(0:,:)
   type(global_auxvar_type) :: global_auxvars(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: apid, cpid, vpid

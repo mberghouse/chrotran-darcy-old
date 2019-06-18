@@ -96,7 +96,7 @@ function RealizSurfCreate(option)
   use petscsys
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   class(realization_surface_type),pointer :: RealizSurfCreate
   class(realization_surface_type),pointer :: surf_realization
   
@@ -224,7 +224,7 @@ subroutine RealizSurfProcessMatProp(surf_realization)
   
   PetscBool :: found
   PetscInt :: i
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
 
   type(patch_type), pointer :: cur_patch
@@ -277,7 +277,7 @@ subroutine RealizSurfLocalizeRegions(surf_realization)
   
   type(patch_type), pointer :: cur_patch
   type (region_type), pointer :: cur_region
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(region_type), pointer :: patch_region
 
   option => surf_realization%option
@@ -351,7 +351,7 @@ subroutine RealizSurfCreateDiscretization(surf_realization)
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
   type(surface_field_type), pointer :: surf_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(dm_ptr_type), pointer :: dm_ptr
 
   PetscErrorCode :: ierr
@@ -565,7 +565,7 @@ subroutine RealizSurfProcessFlowConditions(surf_realization)
   
   type(flow_condition_type), pointer :: cur_surf_flow_condition
   type(flow_sub_condition_type), pointer :: cur_surf_flow_sub_condition
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: dataset_name
   class(dataset_base_type), pointer :: dataset
@@ -599,7 +599,7 @@ subroutine RealizSurfProcessFlowConditions(surf_realization)
         enddo
       case default
         option%io_buffer='RealizSurfProcessFlowConditions not implemented in this mode'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
     cur_surf_flow_condition => cur_surf_flow_condition%next
   enddo
@@ -693,7 +693,7 @@ subroutine RealizSurfMapSurfSubsurfGrids(realization,surf_realization)
   class(realization_subsurface_type), pointer :: realization
   class(realization_surface_type), pointer :: surf_realization
 
-  type(option_type), pointer           :: option
+  class(option_type), pointer           :: option
   type(grid_unstructured_type),pointer :: subsurf_grid
   type(grid_unstructured_type),pointer :: surf_grid
   type(patch_type), pointer            :: cur_patch 
@@ -758,7 +758,7 @@ subroutine RealizSurfMapSurfSubsurfGrids(realization,surf_realization)
   if (found.eqv.PETSC_FALSE) then
     option%io_buffer = 'When running with -DSURFACE_FLOW need to specify ' // &
       ' in the inputfile explicitly region: top '
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call MatCreateAIJ(option%mycomm, &
@@ -1084,7 +1084,7 @@ subroutine RealizSurfMapSurfSubsurfGrid( &
 
   PetscViewer :: viewer
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(surface_field_type), pointer :: surf_field
 
@@ -1148,7 +1148,7 @@ subroutine RealizSurfMapSurfSubsurfGrid( &
     enddo
     if (max_value<3) then
       option%io_buffer = 'Atleast three vertices need to form a face'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   enddo
 
@@ -1440,7 +1440,7 @@ subroutine RealizSurfAddWaypointsToList(surf_realization,waypoint_list)
   type(flow_condition_type), pointer :: cur_flow_condition
   type(flow_sub_condition_type), pointer :: sub_condition
   type(waypoint_type), pointer :: waypoint, cur_waypoint
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: itime, isub_condition
   PetscReal :: temp_real, final_time
   PetscReal, pointer :: times(:)
@@ -1464,7 +1464,7 @@ subroutine RealizSurfAddWaypointsToList(surf_realization,waypoint_list)
     final_time = cur_waypoint%time
   else
     option%io_buffer = 'Final time not found in RealizSurfAddWaypointsToList'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! add update of flow conditions
@@ -1485,7 +1485,7 @@ subroutine RealizSurfAddWaypointsToList(surf_realization,waypoint_list)
               '" dataset "' // trim(sub_condition%name) // &
               '", the number of times is excessive for synchronization ' // &
               'with waypoints.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           do itime = 1, size(times)
             waypoint => WaypointCreate()

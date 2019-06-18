@@ -80,11 +80,11 @@ subroutine PMMphaseRead(this,input)
   implicit none
   
   class(pm_mphase_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscBool :: found
 
   option => this%option
@@ -95,11 +95,11 @@ subroutine PMMphaseRead(this,input)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)
 
     found = PETSC_FALSE
@@ -159,7 +159,7 @@ subroutine PMMphasePreSolve(this)
 
   type(reaction_type), pointer :: reaction
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)

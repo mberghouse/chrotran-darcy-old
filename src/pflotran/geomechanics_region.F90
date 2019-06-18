@@ -209,9 +209,9 @@ subroutine GeomechRegionRead(region,input,option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(gm_region_type) :: region
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: keyword, word
  
@@ -219,38 +219,38 @@ subroutine GeomechRegionRead(region,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS_REGION')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS_REGION')
     call StringToUpper(keyword)   
 
     select case(trim(keyword))
       case('COORDINATE')
         allocate(region%coordinates(1))
-        call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%x) 
-        if (InputError(input)) then
+        call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%x)
+        if (input%Error()) then
           input%ierr = 0
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,'GEOMECHANICS_REGION')
-          call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%x)
+          call input%ReadStringErrorMsg(option,'GEOMECHANICS_REGION')
+          call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%x)
         endif
-        call InputErrorMsg(input,option,'x-coordinate','GEOMECHANICS_REGION')
-        call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%y)
-        call InputErrorMsg(input,option,'y-coordinate','GEOMECHANICS_REGION')
-        call InputReadDouble(input,option,region%coordinates(ONE_INTEGER)%z)
-        call InputErrorMsg(input,option,'z-coordinate','GEOMECHANICS_REGION')
+        call input%ErrorMsg(option,'x-coordinate','GEOMECHANICS_REGION')
+        call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%y)
+        call input%ErrorMsg(option,'y-coordinate','GEOMECHANICS_REGION')
+        call input%ReadDouble(option,region%coordinates(ONE_INTEGER)%z)
+        call input%ErrorMsg(option,'z-coordinate','GEOMECHANICS_REGION')
       case('COORDINATES')
         call GeometryReadCoordinates(input,option,region%name, &
                                      region%coordinates)
       case('FILE')
-        call InputReadFilename(input,option,region%filename)
-        call InputErrorMsg(input,option,'filename','GEOMECHANICS_REGION')
+        call input%ReadFilename(option,region%filename)
+        call input%ErrorMsg(option,'filename','GEOMECHANICS_REGION')
         call GeomechRegionReadFromFilename(region,option,region%filename)
       case('LIST')
         option%io_buffer = 'GEOMECHANICS_REGION LIST currently not implemented'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       case default
         call InputKeywordUnrecognized(keyword,'GEOMECHANICS_REGION',option)
     end select
@@ -276,8 +276,8 @@ subroutine GeomechRegionReadFromFilename(region,option,filename)
   implicit none
   
   type(gm_region_type) :: region
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: filename
   
   input => InputCreate(IUNIT_TEMP,filename,option)
@@ -305,8 +305,8 @@ subroutine GeomechRegionReadFromFileId(region,input,option)
   implicit none
   
   type(gm_region_type) :: region
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
   character(len=1) :: backslash
@@ -335,10 +335,10 @@ subroutine GeomechRegionReadFromFileId(region,input,option)
   vertex_ids = 0
   
   count = 0
-  call InputReadPflotranString(input, option)
+  call InputReadPflotranString(input,option)
   do 
-    call InputReadInt(input, option, temp_int)
-    if (InputError(input)) exit
+    call input%ReadInt(option, temp_int)
+    if (input%Error()) exit
     count = count + 1
     temp_int_array(count) = temp_int
   enddo
@@ -352,10 +352,10 @@ subroutine GeomechRegionReadFromFileId(region,input,option)
 
     ! Read the data
     do
-      call InputReadPflotranString(input, option)
-      if (InputError(input)) exit
-      call InputReadInt(input, option, temp_int)
-      if (.not.InputError(input)) then
+      call InputReadPflotranString(input,option)
+      if (input%Error()) exit
+      call input%ReadInt(option, temp_int)
+      if (.not.input%Error()) then
         count = count + 1
         vertex_ids(count) = temp_int
       endif
@@ -382,7 +382,7 @@ subroutine GeomechRegionReadFromFileId(region,input,option)
     deallocate(vertex_ids)
   else
    option%io_buffer = 'Provide one vertex_id per line, GEOMECHANICS_REGION.'
-   call printErrMsg(option) 
+   call option%PrintErrMsg()
   endif
   
   deallocate(temp_int_array)

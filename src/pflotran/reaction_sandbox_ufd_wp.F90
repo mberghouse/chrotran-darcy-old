@@ -79,19 +79,19 @@ subroutine WastePackageRead(this,input,option)
   implicit none
   
   class(reaction_sandbox_ufd_wp_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXWORDLENGTH) :: word, internal_units
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'CHEMISTRY,REACTION_SANDBOX,UFD-WP')
     call StringToUpper(word)   
 
@@ -114,24 +114,24 @@ subroutine WastePackageRead(this,input,option)
       ! END
 
       case('AQUEOUS_SPECIES_NAME')
-        call InputReadWord(input,option,this%aqueous_species_name,PETSC_TRUE)  
-        call InputErrorMsg(input,option,'aqueous species_name', &
+        call input%ReadWord(option,this%aqueous_species_name,PETSC_TRUE)
+        call input%ErrorMsg(option,'aqueous species_name', &
                            'CHEMISTRY,REACTION_SANDBOX,UFD_WP')    
       case('IMMOBILE_SPECIES_NAME')
-        call InputReadWord(input,option,this%immobile_species_name,PETSC_TRUE)  
-        call InputErrorMsg(input,option,'immobile species_name', &
+        call input%ReadWord(option,this%immobile_species_name,PETSC_TRUE)
+        call input%ErrorMsg(option,'immobile species_name', &
                            'CHEMISTRY,REACTION_SANDBOX,UFD-WP')    
       case('RATE_CONSTANT')
-        call InputReadDouble(input,option,this%rate_constant)
-        call InputErrorMsg(input,option,'rate_constant', &
+        call input%ReadDouble(option,this%rate_constant)
+        call input%ErrorMsg(option,'rate_constant', &
                            'CHEMISTRY,REACTION_SANDBOX,UFD-WP')
         ! Read the units
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        if (InputError(input)) then
+        call input%ReadWord(option,word,PETSC_TRUE)
+        if (input%Error()) then
           ! If units do not exist, assume default units of 1/s which are the
           ! standard internal PFLOTRAN units for this rate constant.
           input%err_buf = 'REACTION_SANDBOX,UFD-WP,RATE CONSTANT UNITS'
-          call InputDefaultMsg(input,option)
+          call input%DefaultMsg(option)
         else              
           ! If units exist, convert to internal units of 1/s
           internal_units = 'unitless/sec'
@@ -164,7 +164,7 @@ subroutine WastePackageSetup(this,reaction,option)
   
   class(reaction_sandbox_ufd_wp_type) :: this
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
 
   this%aqueous_species_id = &
     GetPrimarySpeciesIDFromName(this%aqueous_species_name, &
@@ -194,7 +194,7 @@ subroutine WastePackageReact(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(reaction_sandbox_ufd_wp_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   ! the following arrays must be declared after reaction

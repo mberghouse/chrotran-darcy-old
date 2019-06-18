@@ -54,7 +54,7 @@ subroutine SecondaryContinuumType(sec_continuum,nmat,aream, &
   
   type(sec_continuum_type) :: sec_continuum
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -305,7 +305,7 @@ subroutine SecondaryContinuumType(sec_continuum,nmat,aream, &
   if (abs(sum - 1.d0) > 1.d-6) then
     option%io_buffer = 'Error: Sum of the volume fractions of the' // &
                        ' secondary cells is not equal to 1.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine SecondaryContinuumType
@@ -334,7 +334,7 @@ subroutine SecondaryContinuumSetProperties(sec_continuum, &
   implicit none
   
   type(sec_continuum_type) :: sec_continuum
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sec_continuum_matrix_block_size
   PetscReal :: sec_continuum_fracture_spacing
   PetscReal :: sec_continuum_length
@@ -351,7 +351,7 @@ subroutine SecondaryContinuumSetProperties(sec_continuum, &
       if (Equal(sec_continuum_area,0.d0)) then
         option%io_buffer = 'Keyword "AREA" not specified for SLAB type ' // &
                            'under SECONDARY_CONTINUUM'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       sec_continuum%slab%area = sec_continuum_area
     case("NESTED_CUBES")
@@ -364,7 +364,7 @@ subroutine SecondaryContinuumSetProperties(sec_continuum, &
     case default
       option%io_buffer = 'Keyword "' // trim(sec_continuum_name) // '" not ' // &
                          'recognized in SecondaryContinuumSetProperties()'
-      call printErrMsg(option)  
+      call option%PrintErrMsg()
   end select
       
 end subroutine SecondaryContinuumSetProperties  
@@ -396,7 +396,7 @@ subroutine SecondaryContinuumCalcLogSpacing(matrix_size,outer_grid_size, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: matrix_size, outer_grid_size
   PetscInt :: sec_num_cells
   PetscReal :: grid_spacing(sec_num_cells)
@@ -410,7 +410,7 @@ subroutine SecondaryContinuumCalcLogSpacing(matrix_size,outer_grid_size, &
   if (mod(sec_num_cells,2) /= 0) then
      option%io_buffer = 'NUM_CELLS under SECONDARY_CONTINUUM has to be' // &
                         ' even for logarithmic grid spacing'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   endif
   
   delta = 0.99d0
@@ -430,7 +430,7 @@ subroutine SecondaryContinuumCalcLogSpacing(matrix_size,outer_grid_size, &
   if (i == maxit) then
      option%io_buffer = 'Log Grid spacing solution has not converged' // &
                         ' with given fracture values.'
-     call printErrMsg(option)    
+     call option%PrintErrMsg()
   endif
 
   inner_grid_size = outer_grid_size/delta**(sec_num_cells - 1)
@@ -519,7 +519,7 @@ subroutine SecondaryRTAuxVarInit(ptr,rt_sec_transport_vars,reaction, &
   type(material_property_type), pointer :: ptr
   type(reaction_type), pointer :: reaction
   type(coupler_type), pointer :: initial_condition
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reactive_transport_auxvar_type), pointer :: rt_auxvar
   type(global_auxvar_type), pointer :: global_auxvar
   class(material_auxvar_type), allocatable :: material_auxvar
@@ -708,7 +708,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
   type(reaction_type), pointer :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(reaction%naqcomp,reaction%naqcomp, &
                           sec_transport_vars%ncells)
   PetscReal :: coeff_diag(reaction%naqcomp,reaction%naqcomp, &
@@ -1051,7 +1051,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
       if (ncomp /= 1) then
         option%io_buffer = 'THOMAS algorithm can be used only with single '// &
                            'component chemistry'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       do i = 2, ngcells
         m = coeff_left_dm(ncomp,ncomp,i)/coeff_diag_dm(ncomp,ncomp,i-1)
@@ -1062,7 +1062,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
       option%io_buffer = 'SECONDARY_CONTINUUM_SOLVER can be only ' // &
                          'HINDMARSH or KEARST. For single component'// &
                          'chemistry THOMAS can be used.'
-      call printErrMsg(option)  
+      call option%PrintErrMsg()
   end select
   
   ! Set the values of D_M matrix and create identity matrix of size ncomp x ncomp  
@@ -1115,7 +1115,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
       if (ncomp /= 1) then
         option%io_buffer = 'THOMAS algorithm can be used only with single '// &
                            'component chemistry'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       do i = 2, ngcells
         m = coeff_left(ncomp,ncomp,i)/coeff_diag(ncomp,ncomp,i-1)
@@ -1128,7 +1128,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
       option%io_buffer = 'SECONDARY_CONTINUUM_SOLVER can be only ' // &
                          'HINDMARSH or KEARST. For single component'// &
                          'chemistry THOMAS can be used.'
-      call printErrMsg(option)  
+      call option%PrintErrMsg()
   end select
     
   ! Update the secondary concentrations
@@ -1330,7 +1330,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
         if (ncomp /= 1) then
           option%io_buffer = 'THOMAS algorithm can be used only with '// &
                              'single component chemistry'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         do i = 2, ngcells
           m = coeff_left_pert(ncomp,ncomp,i)/coeff_diag_pert(ncomp,ncomp,i-1)
@@ -1343,7 +1343,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
         option%io_buffer = 'SECONDARY_CONTINUUM_SOLVER can be only ' // &
                            'HINDMARSH or KEARST. For single component'// &
                            'chemistry THOMAS can be used.'
-        call printErrMsg(option)  
+        call option%PrintErrMsg()
       end select      
     
       ! Update the secondary concentrations
@@ -1419,7 +1419,7 @@ subroutine SecondaryRTUpdateIterate(line_search,P0,dP,P1,dX_changed, &
   PetscBool :: dX_changed
   PetscBool :: X1_changed
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
   type(sec_transport_type), pointer :: rt_sec_transport_vars(:)
@@ -1500,7 +1500,7 @@ subroutine SecondaryRTUpdateEquilState(sec_transport_vars,global_auxvars, &
   implicit none
   
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(sec_transport_type) :: sec_transport_vars
   type(global_auxvar_type) :: global_auxvars
   type(reaction_type), pointer :: reaction
@@ -1547,7 +1547,7 @@ subroutine SecondaryRTUpdateKineticState(sec_transport_vars,global_auxvars, &
   implicit none
   
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(sec_transport_type) :: sec_transport_vars
   type(global_auxvar_type) :: global_auxvars
   type(reaction_type), pointer :: reaction
@@ -1624,7 +1624,7 @@ subroutine SecondaryRTCheckResidual(sec_transport_vars,auxvar, &
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
   type(reaction_type), pointer :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal :: res(sec_transport_vars%ncells*reaction%naqcomp)
   PetscReal :: conc_upd(reaction%naqcomp,sec_transport_vars%ncells) 
@@ -1795,7 +1795,7 @@ subroutine SecondaryRTAuxVarComputeMulti(sec_transport_vars,reaction, &
   
   type(sec_transport_type) :: sec_transport_vars
   type(reaction_type), pointer :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(reaction%naqcomp,reaction%naqcomp, &
                  sec_transport_vars%ncells)
   PetscReal :: coeff_diag(reaction%naqcomp,reaction%naqcomp, &
@@ -1846,7 +1846,7 @@ subroutine SecondaryRTAuxVarComputeMulti(sec_transport_vars,reaction, &
       option%io_buffer = 'SECONDARY_CONTINUUM_SOLVER can be only ' // &
                          'HINDMARSH or KEARST. For single component'// &
                          'chemistry THOMAS can be used.'
-      call printErrMsg(option)  
+      call option%PrintErrMsg()
   end select  
   
   do j = 1, ncomp
@@ -1887,7 +1887,7 @@ subroutine THCSecHeatAuxVarCompute(sec_heat_vars,global_auxvar, &
   
   type(sec_heat_type) :: sec_heat_vars
   type(global_auxvar_type) :: global_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(sec_heat_vars%ncells)
   PetscReal :: coeff_diag(sec_heat_vars%ncells)
   PetscReal :: coeff_right(sec_heat_vars%ncells)
@@ -1983,7 +1983,7 @@ subroutine THSecHeatAuxVarCompute(sec_heat_vars,global_auxvar, &
   
   type(sec_heat_type) :: sec_heat_vars
   type(global_auxvar_type) :: global_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(sec_heat_vars%ncells)
   PetscReal :: coeff_diag(sec_heat_vars%ncells)
   PetscReal :: coeff_right(sec_heat_vars%ncells)
@@ -2081,7 +2081,7 @@ subroutine MphaseSecHeatAuxVarCompute(sec_heat_vars,auxvar,global_auxvar, &
   type(sec_heat_type) :: sec_heat_vars
   type(mphase_auxvar_elem_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(sec_heat_vars%ncells)
   PetscReal :: coeff_diag(sec_heat_vars%ncells)
   PetscReal :: coeff_right(sec_heat_vars%ncells)
@@ -2186,7 +2186,7 @@ subroutine SecondaryRTotalSorb(rt_auxvar,global_auxvar,material_auxvar,reaction,
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   call RZeroSorb(rt_auxvar)
   
@@ -2223,7 +2223,7 @@ subroutine SecondaryRTotalSorbKD(rt_auxvar,global_auxvar,material_auxvar,reactio
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: irxn
   PetscInt :: icomp

@@ -78,7 +78,7 @@ function CheckpointFilename(append_name, option)
   use String_module, only : StringNull
 
   character(len=MAXSTRINGLENGTH) :: append_name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: CheckpointFilename
 
@@ -108,7 +108,7 @@ function CheckpointAppendNameAtTime(checkpoint_option,time,option)
 
   type(checkpoint_option_type) :: checkpoint_option
   PetscReal :: time
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: CheckpointAppendNameAtTime
   character(len=MAXWORDLENGTH) :: word
@@ -141,7 +141,7 @@ function CheckpointAppendNameAtTimestep(checkpoint_option,timestep,option)
 
   type(checkpoint_option_type) :: checkpoint_option
   PetscInt :: timestep
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: CheckpointAppendNameAtTimestep
   character(len=MAXWORDLENGTH) :: word
@@ -169,7 +169,7 @@ subroutine CheckpointOpenFileForWriteBinary(viewer,append_name,option)
 
   PetscViewer :: viewer
   character(len=MAXSTRINGLENGTH) :: append_name
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscErrorCode :: ierr
   character(len=MAXSTRINGLENGTH) :: filename
@@ -190,7 +190,7 @@ subroutine CheckpointOpenFileForWriteBinary(viewer,append_name,option)
   call PetscViewerFileSetName(viewer,filename,ierr);CHKERRQ(ierr)
   
   option%io_buffer = ' --> Dump checkpoint file: ' // trim(adjustl(filename))
-  call printMsg(option)
+  call option%PrintMsg()
 
 end subroutine CheckpointOpenFileForWriteBinary
 
@@ -224,7 +224,7 @@ subroutine CheckPointWriteCompatibilityBinary(viewer,option)
   implicit none
 
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(checkpoint_header_type), pointer :: header
   type(checkpoint_header_type) :: dummy_header
@@ -279,7 +279,7 @@ subroutine CheckPointReadCompatibilityBinary(viewer,option)
   implicit none
 
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(checkpoint_header_type), pointer :: header
   type(checkpoint_header_type) :: dummy_header
@@ -310,7 +310,7 @@ subroutine CheckPointReadCompatibilityBinary(viewer,option)
     option%io_buffer = 'Incorrect checkpoint file format (' // &
       trim(adjustl(word)) // ' vs ' // &
       trim(adjustl(word2)) // ').'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   temp_int = size(transfer(test_header,dummy_char))
@@ -320,7 +320,7 @@ subroutine CheckPointReadCompatibilityBinary(viewer,option)
     option%io_buffer = 'Inconsistent PetscBagSize (' // &
       trim(adjustl(word)) // ' vs ' // &
       trim(adjustl(word2)) // ').'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call PetscBagDestroy(bag,ierr);CHKERRQ(ierr)
@@ -355,7 +355,7 @@ subroutine CheckpointFlowProcessModelBinary(viewer,realization)
   class(realization_subsurface_type) :: realization
   PetscErrorCode :: ierr
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
@@ -455,7 +455,7 @@ subroutine RestartFlowProcessModelBinary(viewer,realization)
   class(realization_subsurface_type) :: realization
   PetscErrorCode :: ierr
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
@@ -551,7 +551,7 @@ subroutine CheckpointOpenFileForWriteHDF5(file_id,grp_id,append_name,option, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXWORDLENGTH), optional, intent(in) :: id_stamp
   character(len=MAXSTRINGLENGTH) :: append_name
   character(len=MAXSTRINGLENGTH) :: string
@@ -581,7 +581,7 @@ subroutine CheckpointOpenFileForWriteHDF5(file_id,grp_id,append_name,option, &
   call h5gcreate_f(file_id, string, grp_id, hdf5_err, OBJECT_NAMELEN_DEFAULT_F)
 
   option%io_buffer = ' --> Dump checkpoint file: ' // trim(adjustl(filename))
-  call printMsg(option)
+  call option%PrintMsg()
 
 end subroutine CheckpointOpenFileForWriteHDF5
 
@@ -601,7 +601,7 @@ subroutine CheckpointOpenFileForReadHDF5(filename, file_id, grp_id, option)
   implicit none
 
   character(len=MAXSTRINGLENGTH),intent(in) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscErrorCode :: ierr
@@ -622,7 +622,7 @@ subroutine CheckpointOpenFileForReadHDF5(filename, file_id, grp_id, option)
   if (hdf5_err < 0) then
     option%io_buffer = 'HDF5 restart file "' // trim(filename) // &
                        '" not found.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   call h5pclose_f(prop_id, hdf5_err)
 
@@ -655,7 +655,7 @@ subroutine CheckPointWriteIntDatasetHDF5(chk_grp_id, dataset_name, dataset_rank,
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HID_T) :: data_set_id
   integer(HID_T) :: grp_space_id
@@ -739,7 +739,7 @@ subroutine CheckPointWriteRealDatasetHDF5(chk_grp_id, dataset_name, dataset_rank
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HID_T) :: data_set_id
   integer(HID_T) :: grp_space_id
@@ -819,7 +819,7 @@ subroutine CheckPointReadIntDatasetHDF5(chk_grp_id, dataset_name, dataset_rank, 
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HID_T) :: data_set_id
   integer(HID_T) :: grp_space_id
@@ -892,7 +892,7 @@ subroutine CheckPointReadRealDatasetHDF5(chk_grp_id, dataset_name, dataset_rank,
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HID_T) :: data_set_id
   integer(HID_T) :: grp_space_id
@@ -960,7 +960,7 @@ subroutine CheckPointWriteCompatibilityHDF5(chk_grp_id, option)
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscMPIInt :: dataset_rank
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -1015,7 +1015,7 @@ subroutine CheckPointReadCompatibilityHDF5(chk_grp_id, option)
   integer(HSIZE_T), pointer :: start(:)
   integer(HSIZE_T), pointer :: stride(:)
   integer(HSIZE_T), pointer :: length(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscMPIInt :: dataset_rank
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -1047,7 +1047,7 @@ subroutine CheckPointReadCompatibilityHDF5(chk_grp_id, option)
     option%io_buffer = 'Incorrect checkpoint file format (' // &
       trim(adjustl(word)) // ' vs ' // &
       trim(adjustl(word2)) // ').'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   deallocate(start)
@@ -1088,7 +1088,7 @@ subroutine CheckpointFlowProcessModelHDF5(pm_grp_id, realization)
   class(realization_subsurface_type) :: realization
   PetscErrorCode :: ierr
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
@@ -1226,7 +1226,7 @@ subroutine RestartFlowProcessModelHDF5(pm_grp_id, realization)
   class(realization_subsurface_type) :: realization
   PetscErrorCode :: ierr
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
@@ -1367,8 +1367,8 @@ subroutine CheckpointRead(input,option,checkpoint_option,waypoint_list)
 
   implicit none
 
-  type(input_type),pointer :: input
-  type(option_type) :: option
+  class(input_type),pointer :: input
+  class(option_type) :: option
   type(checkpoint_option_type), pointer :: checkpoint_option
   type(waypoint_list_type) :: waypoint_list
   
@@ -1394,24 +1394,24 @@ subroutine CheckpointRead(input,option,checkpoint_option,waypoint_list)
   default_time_units = ''
   do
     call InputReadPflotranString(input,option)
-    call InputReadStringErrorMsg(input,option,'CHECKPOINT')
+    call input%ReadStringErrorMsg(option,'CHECKPOINT')
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'checkpoint option or value', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'checkpoint option or value', &
                         'CHECKPOINT')
     call StringToUpper(word)
     select case(trim(word))
       case ('PERIODIC')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'time increment', &
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'time increment', &
                             'CHECKPOINT,PERIODIC')
         select case(trim(word))
           case('TIME')
-            call InputReadDouble(input,option,temp_real)
-            call InputErrorMsg(input,option,'time increment', &
+            call input%ReadDouble(option,temp_real)
+            call input%ErrorMsg(option,'time increment', &
                                 'CHECKPOINT,PERIODIC,TIME')
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'time increment units', &
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'time increment units', &
                                 'CHECKPOINT,PERIODIC,TIME')
             internal_units = 'sec'
             units_conversion = UnitsConvertToInternal(word, &
@@ -1420,16 +1420,16 @@ subroutine CheckpointRead(input,option,checkpoint_option,waypoint_list)
             checkpoint_option%tunit = trim(word)
             checkpoint_option%periodic_time_incr = temp_real*units_conversion
           case('TIMESTEP')
-            call InputReadInt(input,option,checkpoint_option%periodic_ts_incr)
-            call InputErrorMsg(input,option,'timestep increment', &
+            call input%ReadInt(option,checkpoint_option%periodic_ts_incr)
+            call input%ErrorMsg(option,'timestep increment', &
                                 'CHECKPOINT,PERIODIC,TIMESTEP')
           case default
             call InputKeywordUnrecognized(word,'CHECKPOINT,PERIODIC', &
                                           option)
         end select
       case ('TIMES')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'time units', &
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'time units', &
                             'CHECKPOINT,TIMES')
         internal_units = 'sec'
         units_conversion = UnitsConvertToInternal(word,internal_units, &
@@ -1454,9 +1454,9 @@ subroutine CheckpointRead(input,option,checkpoint_option,waypoint_list)
         call DeallocateArray(temp_real_array)
 #else
         do
-          call InputReadDouble(input,option,temp_real)
+          call input%ReadDouble(option,temp_real)
           if (input%ierr /= 0) exit
-          call InputErrorMsg(input,option,'checkpoint time', &
+          call input%ErrorMsg(option,'checkpoint time', &
                               'CHECKPOINT,TIMES') 
           waypoint => WaypointCreate()
           waypoint%time = temp_real * units_conversion
@@ -1465,8 +1465,8 @@ subroutine CheckpointRead(input,option,checkpoint_option,waypoint_list)
         enddo
 #endif
       case ('FORMAT')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'format type', &
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'format type', &
                             'CHECKPOINT,FORMAT')
         call StringToUpper(word)
         select case(trim(word))
@@ -1479,8 +1479,8 @@ subroutine CheckpointRead(input,option,checkpoint_option,waypoint_list)
                                           option)
         end select
       case ('TIME_UNITS')
-        call InputReadWord(input,option,default_time_units,PETSC_TRUE)
-        call InputErrorMsg(input,option,'time units','CHECKPOINT')
+        call input%ReadWord(option,default_time_units,PETSC_TRUE)
+        call input%ErrorMsg(option,'time units','CHECKPOINT')
       case default
         temp_string = 'Must specify PERIODIC TIME, PERIODIC TIMESTEP, &
                       &TIMES, or FORMAT'
@@ -1522,7 +1522,7 @@ subroutine CheckpointPeriodicTimeWaypoints(checkpoint_option,waypoint_list, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(checkpoint_option_type), pointer :: checkpoint_option
   type(waypoint_list_type) :: waypoint_list
   type(waypoint_type), pointer :: waypoint
@@ -1538,7 +1538,7 @@ subroutine CheckpointPeriodicTimeWaypoints(checkpoint_option,waypoint_list, &
   if (final_time < 1.d-40) then
     option%io_buffer = 'No final time specified in waypoint list. &
       &Send your input deck to pflotran-dev.'
-    call printMsg(option)
+    call option%PrintMsg()
   endif
   
   ! add waypoints for periodic checkpoint

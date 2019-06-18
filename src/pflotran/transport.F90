@@ -72,7 +72,7 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
   PetscReal :: dispersivity_up(3), dispersivity_dn(3)
@@ -277,7 +277,7 @@ subroutine TDispersionBC(ibndtype, &
   implicit none
   
   PetscInt :: ibndtype
-  type(option_type) :: option
+  class(option_type) :: option
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   class(material_auxvar_type) :: material_auxvar_dn
   PetscReal :: dispersivity_dn(3)
@@ -425,7 +425,7 @@ subroutine TFlux(rt_parameter, &
   type(reactive_transport_param_type) :: rt_parameter
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coef_up(rt_parameter%naqcomp,rt_parameter%nphase) 
   PetscReal :: coef_dn(rt_parameter%naqcomp,rt_parameter%nphase) 
   PetscReal :: Res(rt_parameter%ncomp)
@@ -500,7 +500,7 @@ subroutine TFlux_CD(rt_parameter, &
   type(reactive_transport_param_type) :: rt_parameter
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coef_11(rt_parameter%naqcomp,rt_parameter%nphase) 
   PetscReal :: coef_12(rt_parameter%naqcomp,rt_parameter%nphase) 
   PetscReal :: coef_21(rt_parameter%naqcomp,rt_parameter%nphase) 
@@ -584,7 +584,7 @@ subroutine TFluxDerivative(rt_parameter, &
   implicit none
   
   type(reactive_transport_param_type) :: rt_parameter
-  type(option_type) :: option
+  class(option_type) :: option
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   PetscReal :: coef_up(rt_parameter%naqcomp,rt_parameter%nphase) 
@@ -681,7 +681,7 @@ subroutine TFluxDerivative_CD(rt_parameter, &
   implicit none
   
   type(reactive_transport_param_type) :: rt_parameter
-  type(option_type) :: option
+  class(option_type) :: option
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   PetscReal :: coef_11(rt_parameter%naqcomp,rt_parameter%nphase) 
@@ -811,7 +811,7 @@ subroutine TFluxCoef(rt_parameter, &
   
   type(reactive_transport_param_type) :: rt_parameter  
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: area
   PetscReal :: velocity(*)
   ! this is the harmonic mean of saturation * porosity * (mechanical 
@@ -887,7 +887,7 @@ subroutine TFluxCoef_CD(rt_parameter, &
   
   type(reactive_transport_param_type) :: rt_parameter  
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: area
   PetscReal :: velocity(*)
   ! this is the harmonic mean of saturation * porosity * (mechanical 
@@ -1040,7 +1040,7 @@ subroutine TFluxTVD(rt_parameter,velocity,area,dist, &
   PetscReal :: velocity(:), area
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   PetscReal, pointer :: total_up2(:,:), total_dn2(:,:)
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: flux(rt_parameter%ncomp)
   procedure (TFluxLimiterDummy), pointer :: TFluxLimitPtr
   PetscReal :: dist(-1:3)    ! list of distance vectors, size(-1:3,num_connections) where

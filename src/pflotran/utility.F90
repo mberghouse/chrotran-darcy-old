@@ -1179,14 +1179,14 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
   
   implicit none
   
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: comment
   PetscInt :: array_size
   PetscInt, pointer :: array(:)
   
   PetscInt :: i, num_values, icount
-  type(input_type), pointer :: input2
+  class(input_type), pointer :: input2
   character(len=MAXSTRINGLENGTH) :: string2
   character(len=MAXWORDLENGTH) :: word, word2, word3
   character(len=1) :: backslash
@@ -1210,14 +1210,14 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
   input%ierr = 0
   if (len_trim(input%buf) > 0) then
     string2 = trim(input%buf)
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'file or value','UtilityReadIntArray')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'file or value','UtilityReadIntArray')
     call StringToLower(word)
     if (StringCompare(word,'file',FOUR_INTEGER)) then
-      call InputReadFilename(input,option,string2)
+      call input%ReadFilename(option,string2)
       input%err_buf = 'filename'
       input%err_buf2 = comment
-      call InputErrorMsg(input,option)
+      call input%ErrorMsg(option)
       input2 => InputCreate(input,string2,option)
     else
       input2 => input
@@ -1229,7 +1229,7 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
   
   if (.not. len_trim(input2%buf) > 1) then
     call InputReadPflotranString(input2,option)
-    call InputReadStringErrorMsg(input2,option,comment)
+    call input2%ReadStringErrorMsg(option,comment)
   endif
   
   icount = 0
@@ -1240,8 +1240,8 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
       continuation_flag = PETSC_TRUE
 
     do 
-      call InputReadWord(input2,option,word,PETSC_TRUE)
-      if (InputError(input2) .or. &
+      call input2%ReadWord(option,word,PETSC_TRUE)
+      if (input2%Error() .or. &
           StringCompare(word,backslash,ONE_INTEGER)) exit
       i = index(word,'*')
       if (i == 0) i = index(word,'@')
@@ -1250,10 +1250,10 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
         word3 = word(i+1:len_trim(word))
         string2 = word2
         call InputReadInt(string2,option,num_values,input2%ierr)
-        call InputErrorMsg(input2,option,'# values',err_string)
+        call input2%ErrorMsg(option,'# values',err_string)
         string2 = word3
         call InputReadInt(string2,option,value,input2%ierr)
-        call InputErrorMsg(input2,option,'value',err_string)
+        call input2%ErrorMsg(option,'value',err_string)
         do while (icount+num_values > temp_array_size)
           ! careful.  ReallocateArray double temp_array_size every time.
           call ReallocateArray(temp_array,temp_array_size) 
@@ -1265,7 +1265,7 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
       else
         string2 = word
         call InputReadInt(string2,option,value,input2%ierr)
-        call InputErrorMsg(input2,option,'value',err_string)
+        call input2%ErrorMsg(option,'value',err_string)
         icount = icount + 1
         if (icount > temp_array_size) then
           ! careful.  ReallocateArray double temp_array_size every time.
@@ -1277,7 +1277,7 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
 
     if (continuation_flag) then
       call InputReadPflotranString(input2,option)
-      call InputReadStringErrorMsg(input2,option,comment)
+      call input2%ReadStringErrorMsg(option,comment)
     else
       if (array_size > 0) then
         if (icount == 1) then
@@ -1295,7 +1295,7 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
           option%io_buffer = trim(option%io_buffer) // &
             '  Expected ' // trim(adjustl(word2)) // &
             ' but read ' // trim(adjustl(word)) // '.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         exit
       else if (icount == 0) then
@@ -1305,7 +1305,7 @@ subroutine UtilityReadIntArray(array,array_size,comment,input,option)
         else
           option%io_buffer = 'No values read in UtilityReadIntArray().'
         endif
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       else
         exit
       endif
@@ -1342,14 +1342,14 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
   
   implicit none
   
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: comment
   PetscInt :: array_size
   PetscReal, pointer :: array(:)
   
   PetscInt :: i, num_values, icount
-  type(input_type), pointer :: input2
+  class(input_type), pointer :: input2
   character(len=MAXSTRINGLENGTH) :: string2
   character(len=MAXWORDLENGTH) :: word, word2, word3
   character(len=1) :: backslash
@@ -1373,14 +1373,14 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
   input%ierr = 0
   if (len_trim(input%buf) > 0) then
     string2 = trim(input%buf)
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'file or value','UtilityReadRealArray')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'file or value','UtilityReadRealArray')
     call StringToLower(word)
     if (StringCompare(word,'file',FOUR_INTEGER)) then
-      call InputReadFilename(input,option,string2)
+      call input%ReadFilename(option,string2)
       input%err_buf = 'filename'
       input%err_buf2 = comment
-      call InputErrorMsg(input,option)
+      call input%ErrorMsg(option)
       input2 => InputCreate(input,string2,option)
     else
       input2 => input
@@ -1392,7 +1392,7 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
   
   if (.not. len_trim(input2%buf) > 1) then
     call InputReadPflotranString(input2,option)
-    call InputReadStringErrorMsg(input2,option,comment)
+    call input2%ReadStringErrorMsg(option,comment)
   endif
 
   icount = 0
@@ -1403,8 +1403,8 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
       continuation_flag = PETSC_TRUE
 
     do 
-      call InputReadWord(input2,option,word,PETSC_TRUE)
-      if (InputError(input2) .or. &
+      call input2%ReadWord(option,word,PETSC_TRUE)
+      if (input2%Error() .or. &
           StringCompare(word,backslash,ONE_INTEGER)) exit
       i = index(word,'*')
       if (i == 0) i = index(word,'@')
@@ -1413,10 +1413,10 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
         word3 = word(i+1:len_trim(word))
         string2 = word2
         call InputReadInt(string2,option,num_values,input2%ierr)
-        call InputErrorMsg(input2,option,'# values',err_string)
+        call input2%ErrorMsg(option,'# values',err_string)
         string2 = word3
         call InputReadDouble(string2,option,value,input2%ierr)
-        call InputErrorMsg(input2,option,'value',err_string)
+        call input2%ErrorMsg(option,'value',err_string)
         do while (icount+num_values > temp_array_size)
           ! careful.  ReallocateArray double temp_array_size every time.
           call ReallocateArray(temp_array,temp_array_size) 
@@ -1428,7 +1428,7 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
       else
         string2 = word
         call InputReadDouble(string2,option,value,input2%ierr)
-        call InputErrorMsg(input2,option,'value',err_string)
+        call input2%ErrorMsg(option,'value',err_string)
         icount = icount + 1
         if (icount > temp_array_size) then
           ! careful.  ReallocateArray double temp_array_size every time.
@@ -1440,7 +1440,7 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
 
     if (continuation_flag) then
       call InputReadPflotranString(input2,option)
-      call InputReadStringErrorMsg(input2,option,comment)
+      call input2%ReadStringErrorMsg(option,comment)
     else
       if (array_size > 0) then
         if (icount == 1) then
@@ -1458,7 +1458,7 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
           option%io_buffer = trim(option%io_buffer) // &
             '  Expected ' // trim(adjustl(word2)) // &
             ' but read ' // trim(adjustl(word)) // '.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         exit
       else if (icount == 0) then
@@ -1468,7 +1468,7 @@ subroutine UtilityReadRealArray(array,array_size,comment,input,option)
         else
           option%io_buffer = 'No values read in UtilityReadRealArray().'
         endif
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       else
         exit
       endif
@@ -2359,7 +2359,7 @@ subroutine CalcParallelSUM1(option,rank_list,local_val,global_sum)
   
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: rank_list(:)
   PetscReal :: local_val
   PetscReal :: global_sum
@@ -2393,7 +2393,7 @@ subroutine CalcParallelSUM2(option,rank_list,local_val,global_sum)
   
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: rank_list(:)
   PetscReal :: local_val(:)
   PetscReal :: global_sum(:)

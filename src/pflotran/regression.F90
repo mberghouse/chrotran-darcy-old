@@ -107,8 +107,8 @@ subroutine RegressionRead(regression,input,option)
   implicit none
   
   type(regression_type), pointer :: regression
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word
   type(regression_variable_type), pointer :: cur_variable, new_variable
@@ -125,8 +125,8 @@ subroutine RegressionRead(regression,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','REGRESSION')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','REGRESSION')
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
@@ -137,8 +137,8 @@ subroutine RegressionRead(regression,input,option)
           call InputReadPflotranString(input,option)
           if (InputCheckExit(input,option)) exit  
 
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'variable','REGRESSION,VARIABLES')
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'variable','REGRESSION,VARIABLES')
           call StringToUpper(word)
           new_variable => RegressionVariableCreate()
           new_variable%name = word
@@ -160,8 +160,8 @@ subroutine RegressionRead(regression,input,option)
           if (count > max_cells) then
             call ReallocateArray(int_array,max_cells)
           endif
-          call InputReadInt(input,option,int_array(count))
-          call InputErrorMsg(input,option,'natural cell id','REGRESSION,CELLS')
+          call input%ReadInt(option,int_array(count))
+          call input%ErrorMsg(option,'natural cell id','REGRESSION,CELLS')
         enddo
         allocate(regression%natural_cell_ids(count))
         regression%natural_cell_ids = int_array(1:count)
@@ -169,8 +169,8 @@ subroutine RegressionRead(regression,input,option)
                           ierr);CHKERRQ(ierr)
         deallocate(int_array)
       case('CELLS_PER_PROCESS')
-        call InputReadInt(input,option,regression%num_cells_per_process)
-        call InputErrorMsg(input,option,'num cells per process','REGRESSION')
+        call input%ReadInt(option,regression%num_cells_per_process)
+        call input%ErrorMsg(option,'num cells per process','REGRESSION')
       case('ALL_CELLS')
          regression%all_cells = PETSC_TRUE
       case default
@@ -217,7 +217,7 @@ subroutine RegressionCreateMapping(regression,realization)
   PetscErrorCode :: ierr
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   if (.not.associated(regression)) return
   
@@ -230,7 +230,7 @@ subroutine RegressionCreateMapping(regression,realization)
     if (grid%nmax > 100) then
       option%io_buffer = 'Printing regression info for ALL_CELLS not &
         &supported for problem sizes greater than 100 cells.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     call DeallocateArray(regression%natural_cell_ids)
     allocate(regression%natural_cell_ids(grid%nmax))
@@ -245,7 +245,7 @@ subroutine RegressionCreateMapping(regression,realization)
     if (maxval(regression%natural_cell_ids) > grid%nmax) then
       option%io_buffer = 'Natural IDs outside problem domain requested ' // &
         'for regression output.  Removing non-existent IDs.'
-      call printWrnMsg(option)
+      call option%PrintWrnMsg()
       count = 0
       allocate(int_array(size(regression%natural_cell_ids)))
       int_array = 0
@@ -331,7 +331,7 @@ subroutine RegressionCreateMapping(regression,realization)
       option%io_buffer = 'Number of cells per process for regression file&
         &exceeds minimum number of cells per process.  Truncating to ' // &
         trim(adjustl(word)) // '.'
-      call printMsg(option)
+      call option%PrintMsg()
       regression%num_cells_per_process = count
     endif
   
@@ -506,7 +506,7 @@ subroutine RegressionOutput(regression,realization,flow_timestepper, &
   Vec :: global_vec_vx,global_vec_vy,global_vec_vz
   Vec :: x_vel_natural, y_vel_natural, z_vel_natural
   Vec :: x_vel_process, y_vel_process, z_vel_process
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_variable_type), pointer :: cur_variable
   PetscReal, pointer :: vec_ptr(:), y_ptr(:), z_ptr(:)
   PetscInt :: i
@@ -524,7 +524,7 @@ subroutine RegressionOutput(regression,realization,flow_timestepper, &
              trim(option%group_prefix) // &  
              '.regression'
     option%io_buffer = '--> write regression output file: ' // trim(string)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=string,action="write")
   endif
   

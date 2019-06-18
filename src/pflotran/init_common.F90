@@ -30,13 +30,13 @@ subroutine InitReadInputFilenames(option,filenames)
   use Option_module
   use Input_Aux_module
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH), pointer :: filenames(:)
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXSTRINGLENGTH) :: filename
   PetscInt :: filename_count
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscBool :: card_found
 
   input => InputCreate(IN_UNIT,option%input_filename,option)
@@ -45,7 +45,7 @@ subroutine InitReadInputFilenames(option,filenames)
   call InputFindStringInFile(input,option,string) 
 
   card_found = PETSC_FALSE
-  if (InputError(input)) then
+  if (input%Error()) then
     ! if the FILENAMES card is not included, we will assume that only
     ! filenames exist in the file.
     call InputRewind(input)
@@ -56,9 +56,9 @@ subroutine InitReadInputFilenames(option,filenames)
   filename_count = 0     
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit  
-    call InputReadFilename(input,option,filename)
+    call input%ReadFilename(option,filename)
     filename_count = filename_count + 1
   enddo
   
@@ -74,9 +74,9 @@ subroutine InitReadInputFilenames(option,filenames)
   filename_count = 0     
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit  
-    call InputReadFilename(input,option,filename)
+    call input%ReadFilename(option,filename)
     filename_count = filename_count + 1
     filenames(filename_count) = filename
   enddo
@@ -100,7 +100,7 @@ subroutine setSurfaceFlowMode(option)
 
   implicit none 
 
-  type(option_type) :: option
+  class(option_type) :: option
   
   select case(option%iflowmode)
     case(RICHARDS_MODE,RICHARDS_TS_MODE)
@@ -111,7 +111,7 @@ subroutine setSurfaceFlowMode(option)
       write(option%io_buffer,*) option%iflowmode
       option%io_buffer = 'Flow Mode ' // &
         trim(option%io_buffer) // ' not recognized in setSurfaceFlowMode().'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   
 end subroutine setSurfaceFlowMode
@@ -177,7 +177,7 @@ subroutine InitCommonVerifyCoupler(realization,patch,coupler_list)
   class(realization_subsurface_type) :: realization
   type(coupler_list_type), pointer :: coupler_list
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch  
   type(coupler_type), pointer :: coupler
@@ -261,7 +261,7 @@ subroutine InitCommonReadRegionFiles(realization)
 
   class(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(region_type), pointer :: region
   PetscBool :: cell_ids_exists
   PetscBool :: face_ids_exists
@@ -281,7 +281,7 @@ subroutine InitCommonReadRegionFiles(realization)
             (.not. vert_ids_exists)) then
           option%io_buffer = '"Regions/' // trim(region%name) // &
                 ' is not defined by "Cell Ids" or "Face Ids" or "Vertex Ids".'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         end if
         if (cell_ids_exists .or. face_ids_exists) then
           call HDF5ReadRegionFromFile(realization%patch%grid,region, &
@@ -340,7 +340,7 @@ subroutine readVectorFromFile(realization,vector,filename,vector_type)
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch   
   PetscInt :: ghosted_id, natural_id, material_id
   PetscInt :: fid = 86
@@ -365,7 +365,7 @@ subroutine readVectorFromFile(realization,vector,filename,vector_type)
     open(unit=fid,file=filename,status="old",iostat=status)
     if (status /= 0) then
       option%io_buffer = 'File: ' // trim(filename) // ' not found.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     allocate(values(block_size))
     allocate(indices(block_size))
@@ -386,7 +386,7 @@ subroutine readVectorFromFile(realization,vector,filename,vector_type)
                      option%mycomm,ierr)      
       if (flag /= 0) then
         option%io_buffer = 'Insufficent data in file: ' // filename
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (option%myrank == option%io_rank) then
         call VecSetValues(natural_vec,read_count,indices,values,INSERT_VALUES, &
@@ -399,7 +399,7 @@ subroutine readVectorFromFile(realization,vector,filename,vector_type)
     if (count /= grid%nmax) then
       write(option%io_buffer,'("Number of data in file (",i8, &
       & ") does not match size of vector (",i8,")")') count, grid%nlmax
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     close(fid)
     deallocate(values)
@@ -442,7 +442,7 @@ subroutine InitCommonPrintPFLOTRANHeader(option,fid)
   
   PetscInt :: fid
   
-  type(option_type) :: option
+  class(option_type) :: option
   
   write(fid,'(" PFLOTRAN Header")') 
   
@@ -478,7 +478,7 @@ subroutine InitCommonReadVelocityField(realization)
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: group_name
   character(len=MAXSTRINGLENGTH) :: dataset_name
   PetscInt :: idir, iconn, sum_connection
@@ -513,7 +513,7 @@ subroutine InitCommonReadVelocityField(realization)
       option%io_buffer = 'Dataset "' // trim(group_name) // '/' // &
         trim(dataset_name) // &
         '" not found in HDF5 file "' // trim(filename) // '".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     call HDF5ReadCellIndexedRealArray(realization,field%work,filename, &
                                       group_name,dataset_name,PETSC_FALSE)
@@ -546,7 +546,7 @@ subroutine InitCommonReadVelocityField(realization)
       option%io_buffer = 'Dataset "' // trim(group_name) // '/' // &
         trim(dataset_name) // &
         '" not found in HDF5 file "' // trim(filename) // '".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     call HDF5ReadCellIndexedRealArray(realization,field%work,filename, &
                                       group_name,dataset_name,PETSC_FALSE)
@@ -579,7 +579,7 @@ subroutine InitCommonAddOutputWaypoints(option,output_option,waypoint_list)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
   type(waypoint_list_type) :: waypoint_list
   

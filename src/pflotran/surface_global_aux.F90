@@ -84,7 +84,7 @@ subroutine SurfaceGlobalAuxVarInit(auxvar,option)
   implicit none
   
   type(surface_global_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   
   auxvar%istate = 0
   auxvar%is_dry = PETSC_FALSE
@@ -111,7 +111,7 @@ subroutine SurfaceGlobalAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(surface_global_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%istate = auxvar%istate
   auxvar2%is_dry = auxvar%is_dry

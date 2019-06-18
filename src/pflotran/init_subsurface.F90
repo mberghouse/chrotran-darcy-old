@@ -66,7 +66,7 @@ subroutine SubsurfAllocMatPropDataStructs(realization)
   PetscInt :: istart, iend
   PetscInt :: i
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: cur_patch
   class(material_auxvar_type), pointer :: material_auxvars(:)
@@ -144,7 +144,7 @@ subroutine InitSubsurfAssignMatIDsToRegns(realization)
   PetscInt :: local_min, global_min
   PetscErrorCode :: ierr
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(strata_type), pointer :: strata
@@ -281,7 +281,7 @@ subroutine InitSubsurfAssignMatProperties(realization)
   character(len=MAXSTRINGLENGTH) :: string, string2
   type(material_property_type), pointer :: material_property
   type(material_property_type), pointer :: null_material_property
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -378,23 +378,23 @@ subroutine InitSubsurfAssignMatProperties(realization)
           option%io_buffer = 'No material property for material id ' // &
                               trim(adjustl(string)) &
                               //  ' defined in input file.'
-          call printErrMsgByRank(option)
+          call option%PrintErrMsgByRank()
         endif
       endif
     else if (Uninitialized(material_id)) then 
       write(string,*) grid%nG2A(ghosted_id)
       option%io_buffer = 'Uninitialized material id in patch at cell ' // &
                           trim(adjustl(string))
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     else if (material_id > size(patch%material_property_array)) then
       write(option%io_buffer,*) patch%imat_internal_to_external(material_id)
       option%io_buffer = 'Unmatched material id in patch: ' // &
         adjustl(trim(option%io_buffer))
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     else
       option%io_buffer = 'Something messed up with material ids. Possibly &
         &material ids not assigned to all grid cells. Contact Glenn!'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
     if (option%nflowdof > 0) then
       patch%sat_func_id(ghosted_id) = &
@@ -621,9 +621,9 @@ subroutine SubsurfReadMaterialIDsFromFile(realization,realization_dependent, &
   
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   type(discretization_type), pointer :: discretization
   character(len=MAXSTRINGLENGTH) :: group_name
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -662,14 +662,14 @@ subroutine SubsurfReadMaterialIDsFromFile(realization,realization_dependent, &
     input => InputCreate(IUNIT_TEMP,filename,option)
     do
       call InputReadPflotranString(input,option)
-      if (InputError(input)) exit
-      call InputReadInt(input,option,natural_id)
-      call InputErrorMsg(input,option,'natural id','STRATA')
+      if (input%Error()) exit
+      call input%ReadInt(option,natural_id)
+      call input%ErrorMsg(option,'natural id','STRATA')
       ! natural ids in hash are zero-based
       ghosted_id = GridGetLocalGhostedIdFromHash(grid,natural_id)
       if (ghosted_id > 0) then
-        call InputReadInt(input,option,material_id)
-        call InputErrorMsg(input,option,'material id','STRATA')
+        call input%ReadInt(option,material_id)
+        call input%ErrorMsg(option,'material id','STRATA')
         patch%imat(ghosted_id) = material_id
       endif
     enddo
@@ -718,8 +718,8 @@ subroutine SubsurfReadPermsFromFile(realization,material_property)
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
-  type(input_type), pointer :: input
+  class(option_type), pointer :: option
+  class(input_type), pointer :: input
   type(discretization_type), pointer :: discretization
   character(len=MAXWORDLENGTH) :: word
   class(dataset_common_hdf5_type), pointer :: dataset_common_hdf5_ptr
@@ -873,8 +873,8 @@ subroutine SubsurfReadDatasetToVecWithMask(realization,dataset, &
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
-  type(input_type), pointer :: input
+  class(option_type), pointer :: option
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: group_name
   character(len=MAXSTRINGLENGTH) :: dataset_name
   character(len=MAXSTRINGLENGTH) :: filename
@@ -935,7 +935,7 @@ subroutine SubsurfReadDatasetToVecWithMask(realization,dataset, &
       class default
         option%io_buffer = 'Dataset "' // trim(dataset%name) // '" is of the &
           &wrong type for SubsurfReadDatasetToVecWithMask()'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
   else
     call PetscLogEventBegin(logging%event_hash_map,ierr);CHKERRQ(ierr)
@@ -943,9 +943,9 @@ subroutine SubsurfReadDatasetToVecWithMask(realization,dataset, &
     input => InputCreate(IUNIT_TEMP,dataset%filename,option)
     do
       call InputReadPflotranString(input,option)
-      if (InputError(input)) exit
-      call InputReadInt(input,option,natural_id)
-      call InputErrorMsg(input,option,'ASCII natural id', &
+      if (input%Error()) exit
+      call input%ReadInt(option,natural_id)
+      call input%ErrorMsg(option,'ASCII natural id', &
                          'SubsurfReadDatasetToVecWithMask')
       ghosted_id = GridGetLocalGhostedIdFromHash(grid,natural_id)
       if (ghosted_id > 0) then
@@ -953,8 +953,8 @@ subroutine SubsurfReadDatasetToVecWithMask(realization,dataset, &
             patch%imat(ghosted_id) == material_id) then
           local_id = grid%nG2L(ghosted_id)
           if (local_id > 0) then
-            call InputReadDouble(input,option,tempreal)
-            call InputErrorMsg(input,option,'dataset value', &
+            call input%ReadDouble(option,tempreal)
+            call input%ErrorMsg(option,'dataset value', &
                                'SubsurfReadDatasetToVecWithMask')
             vec_p(local_id) = tempreal
           endif
@@ -992,7 +992,7 @@ subroutine SubsurfAssignVolsToMatAuxVars(realization)
   
   class(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
 
   option => realization%option
@@ -1038,7 +1038,7 @@ subroutine InitSubsurfaceSetupZeroArrays(realization)
 
   class(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscBool, allocatable :: dof_is_active(:)
   PetscInt :: ndof
   
@@ -1201,7 +1201,7 @@ subroutine InitSubsurfaceCreateZeroArray(patch,dof_is_active, &
   PetscInt, pointer :: inactive_rows_local_ghosted(:)
   PetscInt :: n_inactive_rows
   PetscBool :: inactive_cells_exist
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: ncount, idof
   PetscInt :: local_id, ghosted_id

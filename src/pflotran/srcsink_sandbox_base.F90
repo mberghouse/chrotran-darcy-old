@@ -64,7 +64,7 @@ subroutine SSSandboxBaseSetup(this,grid,option)
   
   class(srcsink_sandbox_base_type) :: this
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: local_id, ghosted_id
   PetscInt :: i, iflag
@@ -83,7 +83,7 @@ subroutine SSSandboxBaseSetup(this,grid,option)
   else
     option%io_buffer = 'Source/sink in SSSandbox not associate with the &
       &domain through either a CELL_ID or COORDINATE.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
 
   ! check to ensure that only one grid cell is mapped
@@ -96,10 +96,10 @@ subroutine SSSandboxBaseSetup(this,grid,option)
                      MPI_SUM,option%mycomm,ierr)
   if (iflag > 1) then
     option%io_buffer = 'More than one grid cell mapped in SSSandboxBaseSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else if (iflag == 0) then
     option%io_buffer = 'No grid cells mapped in SSSandboxBaseSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine SSSandboxBaseSetup 
@@ -114,8 +114,8 @@ subroutine SSSandboxBaseRead(this,input,option)
   implicit none
   
   class(srcsink_sandbox_base_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
 end subroutine SSSandboxBaseRead  
 
@@ -132,8 +132,8 @@ subroutine SSSandboxBaseSelectCase(this,input,option,keyword,found)
   implicit none
   
   class(srcsink_sandbox_base_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: keyword
   PetscBool :: found
   
@@ -147,12 +147,12 @@ subroutine SSSandboxBaseSelectCase(this,input,option,keyword,found)
       option%io_buffer = 'The REGION card has been deprecated in &
         &Source/Sink Sandbox.  Please switch to using a COORDINATE and &
         &defining one Src/Sink block for each coordinate.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     case('COORDINATE')
       call GeometryReadCoordinate(input,option,this%coordinate,error_string)
     case('CELL_ID')
-      call InputReadInt(input,option,this%natural_cell_id)
-      call InputErrorMsg(input,option,'cell id',error_string)
+      call input%ReadInt(option,this%natural_cell_id)
+      call input%ErrorMsg(option,'cell id',error_string)
     case default
       found = PETSC_FALSE
   end select   
@@ -168,7 +168,7 @@ subroutine SSSandboxBaseUpdate(this,option)
   implicit none
   
   class(srcsink_sandbox_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   if (associated(this%cumulative_mass)) then
     this%cumulative_mass(:) = this%cumulative_mass(:) + &
@@ -188,7 +188,7 @@ subroutine SSSandboxBaseEvaluate(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(srcsink_sandbox_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: compute_derivative
   PetscReal :: Residual(option%nflowdof)
   PetscReal :: Jacobian(option%nflowdof,option%nflowdof)

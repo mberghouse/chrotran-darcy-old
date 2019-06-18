@@ -98,7 +98,7 @@ subroutine PMCSubsurfaceSetupSolvers(this)
 
   class(pmc_subsurface_type) :: this
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   option => this%option
 
@@ -111,7 +111,7 @@ subroutine PMCSubsurfaceSetupSolvers(this)
       class default
         option%io_buffer = &
           'Unknown timestepper found in PMCSubsurfaceSetupSolvers '
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
   endif
 
@@ -154,7 +154,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   class(pmc_subsurface_type) :: this
 
   type(solver_type), pointer :: solver
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(discretization_type), pointer :: discretization
   class(realization_subsurface_type), pointer :: realization
   SNESLineSearch :: linesearch  
@@ -165,7 +165,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   PetscErrorCode :: ierr
 
 #ifdef DEBUG
-  call printMsg(this%option,'PMCSubsurface%SetupSolvers()')
+  call this%option%PrintMsg('PMCSubsurface%SetupSolvers()')
 #endif
 
   option => this%option
@@ -185,13 +185,13 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   select type(pm => this%pm_ptr%pm)
   ! ----- subsurface flow
     class is(pm_subsurface_flow_type)
-      call printMsg(option,"  Beginning setup of FLOW SNES ")
+      call option%PrintMsg("  Beginning setup of FLOW SNES ")
       if (solver%J_mat_type == MATAIJ .and. &
           option%iflowmode /= RICHARDS_MODE) then
 
         option%io_buffer = 'AIJ matrix not supported for current &
           &mode: '// option%flowmode
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (OptionPrintToScreen(option)) then
         write(*,'(" number of dofs = ",i3,", number of &
@@ -370,7 +370,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
 #endif
         endif
 
-      call printMsg(option,"  Finished setting up FLOW SNES ")
+      call option%PrintMsg("  Finished setting up FLOW SNES ")
   ! ----- subsurface reactive transport
     class is(pm_rt_type)
       itransport = RT
@@ -396,7 +396,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   end select
   
   if ( (itransport == RT) .or. (itransport == NWT) ) then
-    call printMsg(option,"  Beginning setup of TRAN SNES ")
+    call option%PrintMsg("  Beginning setup of TRAN SNES ")
     call SNESSetOptionsPrefix(solver%snes, "tran_",ierr);CHKERRQ(ierr)
     call SolverCheckCommandLine(solver)
     
@@ -521,7 +521,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
 #endif
                                      ierr);CHKERRQ(ierr)
     endif
-    call printMsg(option,"  Finished setting up TRAN SNES ")
+    call option%PrintMsg("  Finished setting up TRAN SNES ")
       
   endif ! RT or NWT
       
@@ -579,7 +579,7 @@ subroutine PMCSubsurfaceSetupSolvers_TS(this)
   class(pmc_subsurface_type) :: this
 
   type(solver_type), pointer :: solver
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   SNESLineSearch :: linesearch  
   character(len=MAXSTRINGLENGTH) :: string
   PetscBool :: add_pre_check
@@ -592,7 +592,7 @@ subroutine PMCSubsurfaceSetupSolvers_TS(this)
     class is(timestepper_TS_type)
       solver => ts%solver
     class default
-      call printErrMsg(option,"Attempting to set up PETSc TS when" // &
+      call option%PrintErrMsg("Attempting to set up PETSc TS when" // &
        " timestepper is not of TS type")
   end select
 
@@ -609,13 +609,13 @@ subroutine PMCSubsurfaceSetupSolvers_TS(this)
   select type(pm => this%pm_ptr%pm)
 
     class is (pm_subsurface_flow_type)
-      call printMsg(option,"  Beginning setup of FLOW SNES ")
+      call option%PrintMsg("  Beginning setup of FLOW SNES ")
 
       select case(option%iflowmode)
         case(RICHARDS_TS_MODE,TH_TS_MODE)
         case default
           option%io_buffer = 'Timestepper TS unsupported for mode: '// option%flowmode
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         end select
 
         if (OptionPrintToScreen(option)) then
@@ -668,7 +668,7 @@ subroutine PMCSubsurfaceSetupSolvers_TS(this)
                                   this%pm_ptr, &
                                   PETSC_NULL_FUNCTION,ierr);CHKERRQ(ierr)
 
-      call printMsg(option,"  Finished setting up FLOW SNES ")
+      call option%PrintMsg("  Finished setting up FLOW SNES ")
   end select
 
 end subroutine PMCSubsurfaceSetupSolvers_TS
@@ -739,7 +739,7 @@ subroutine PMCSubsurfaceGetAuxDataFromSurf(this)
   type (grid_type),pointer :: grid
   type (coupler_list_type), pointer :: coupler_list
   type (coupler_type), pointer :: coupler
-  type (option_type), pointer :: option
+  class(option_type), pointer :: option
   type (field_type),pointer :: field
   type (connection_set_type), pointer :: cur_connection_set
   PetscBool :: coupler_found
@@ -948,13 +948,13 @@ subroutine PMCSubsurfaceGetAuxDataFromSurf(this)
 
           case default
             this%option%io_buffer='PMCSubsurfaceGetAuxData() not supported for this mode.'
-            call printErrMsg(this%option)
+            call this%option%PrintErrMsg()
 
         end select
 
         if ( .not. coupler_found) then
           option%io_buffer = 'Coupler not found in PMCSubsurfaceGetAuxData()'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       endif
 
@@ -996,7 +996,7 @@ subroutine PMCSubsurfaceSetAuxDataForSurf(this)
   type (grid_type),pointer :: grid
   type (coupler_list_type), pointer :: coupler_list
   type (coupler_type), pointer :: coupler
-  type (option_type), pointer :: option
+  class(option_type), pointer :: option
   type (field_type),pointer :: field
   type (connection_set_type), pointer :: cur_connection_set
   PetscInt :: local_id
@@ -1072,7 +1072,7 @@ subroutine PMCSubsurfaceSetAuxDataForSurf(this)
                     case default
                       option%io_buffer = 'PMCSubsurfaceGetAuxData() not ' // &
                         'supported in this FLOW_MODE'
-                      call printErrMsg(option)
+                      call option%PrintErrMsg()
                 end select
               endif
             endif
@@ -1113,7 +1113,7 @@ subroutine PMCSubsurfaceGetAuxDataFromGeomech(this)
   class (pmc_subsurface_type) :: this
 
   type(grid_type), pointer :: subsurf_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: subsurf_field
 
   PetscScalar, pointer :: sim_por_p(:)
@@ -1197,7 +1197,7 @@ subroutine PMCSubsurfaceSetAuxDataForGeomech(this)
   class (pmc_subsurface_type) :: this
 
   type(grid_type), pointer :: subsurf_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: subsurf_field
 
   PetscScalar, pointer :: xx_loc_p(:)
@@ -1233,7 +1233,7 @@ subroutine PMCSubsurfaceSetAuxDataForGeomech(this)
     case default
       this%option%io_buffer = 'PMCSubsurfaceSetAuxDataForGeomech() not ' // &
         'supported for ' // trim(this%option%flowmode)
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
   end select
 
   if (associated(this%sim_aux)) then
@@ -1320,7 +1320,7 @@ recursive subroutine PMCSubsurfaceFinalizeRun(this)
   class(pmc_subsurface_type) :: this
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMCSubsurface%FinalizeRun()')
+  call this%option%PrintMsg('PMCSubsurface%FinalizeRun()')
 #endif
   
   nullify(this%realization)
@@ -1416,7 +1416,7 @@ recursive subroutine PMCSubsurfaceDestroy(this)
   class(pmc_subsurface_type) :: this
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMCSubsurface%Destroy()')
+  call this%option%PrintMsg('PMCSubsurface%Destroy()')
 #endif
 
   if (associated(this%child)) then

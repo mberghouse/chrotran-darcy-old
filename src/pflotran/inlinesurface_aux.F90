@@ -48,7 +48,7 @@ contains
     use Utility_module, only : InitToNan
     implicit none
     type(inlinesurface_auxvar_type) :: auxvar
-    type(option_type)               :: option
+    class(option_type)               :: option
     PetscReal      :: NaN
 
     NaN = InitToNan()
@@ -92,7 +92,7 @@ contains
     implicit none
     type(inlinesurface_auxvar_type) :: auxvar
     type(global_auxvar_type)        :: global_auxvar
-    type(option_type)               :: option
+    class(option_type)               :: option
     PetscReal :: Pref,Pl,g,rho
 
     ! We need to ensure that surface density stays consistent with the subsurface

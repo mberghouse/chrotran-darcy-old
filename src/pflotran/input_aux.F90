@@ -21,7 +21,67 @@ module Input_Aux_module
     character(len=MAXSTRINGLENGTH) :: err_buf2
     PetscBool :: broadcast_read
     PetscBool :: force_units ! force user to declare units on datasets
-    type(input_type), pointer :: parent
+    class(input_type), pointer :: parent
+  contains
+    procedure :: ReadWord1 => InputReadWord1
+    procedure, nopass :: ReadWord2 => InputReadWord2
+    generic, public :: ReadWord => ReadWord1,ReadWord2
+    
+    
+    
+    procedure :: ReadNChars1 => InputReadNChars1
+    procedure, nopass :: ReadNChars2 => InputReadNChars2
+    generic, public :: ReadNChars => ReadNChars1,ReadNChars2
+
+    procedure, public :: ReadWordDbaseCompatible => &
+                           InputReadWordDbaseCompatible
+    procedure, public :: ReadQuotedWord => InputReadQuotedWord
+    
+    procedure :: ReadInt1 => InputReadInt1
+    procedure, nopass :: ReadInt2 => InputReadInt2
+#if defined(PETSC_USE_64BIT_INDICES) && (PETSC_SIZEOF_MPI_FINT * PETSC_BITS_PER_BYTE != 64)
+    procedure :: ReadInt3 => InputReadInt3
+    procedure, nopass :: ReadInt4 => InputReadInt4
+    generic, public :: ReadInt => ReadInt1,ReadInt2,ReadInt3,ReadInt4
+#else
+    generic, public :: ReadInt => ReadInt1,ReadInt2
+#endif
+    
+    procedure :: ReadDouble1 => InputReadDouble1
+    procedure, nopass :: ReadDouble2 => InputReadDouble2
+    generic, public :: ReadDouble => ReadDouble1,ReadDouble2
+    
+    procedure :: ReadNDoubles1 => InputReadNDoubles1
+    procedure, nopass :: ReadNDoubles2 => InputReadNDoubles2
+    generic, public :: ReadNDoubles => ReadNDoubles1,ReadNDoubles2
+    
+    procedure, public :: ErrorMsg1 => InputErrorMsg1
+    procedure, public :: ErrorMsg2 => InputErrorMsg2
+    generic, public :: ErrorMsg => ErrorMsg1,ErrorMsg2
+    
+    procedure, public :: ReadStringErrorMsg1 => InputReadStringErrorMsg1
+    procedure, public :: ReadStringErrorMsg2 => InputReadStringErrorMsg2
+    generic, public :: ReadStringErrorMsg => ReadStringErrorMsg1, &
+                                             ReadStringErrorMsg2
+    
+    procedure, public :: DefaultMsg1 => InputDefaultMsg1
+    procedure, public :: DefaultMsg2 => InputDefaultMsg2
+    generic, public :: DefaultMsg => DefaultMsg1,DefaultMsg2
+    
+    procedure :: Error1 => InputError1
+    procedure, nopass :: Error2 => InputError2
+    generic, public :: Error => Error1,Error2
+    
+    procedure, public :: FindStringErrorMsg => InputFindStringErrorMsg
+    
+    procedure, public :: ReadFilename => InputReadFilename   
+    
+    procedure, public :: CheckExit => InputCheckExit
+    
+    procedure, public :: ReadAndConvertUnits => InputReadAndConvertUnits
+    procedure, public :: CheckMandatoryUnits => InputCheckMandatoryUnits
+    
+
   end type input_type
 
   type :: input_dbase_type
@@ -158,14 +218,14 @@ function InputCreate1(fid,path,filename,option)
   PetscInt :: fid
   character(len=*) :: path
   character(len=*) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: InputCreate1
+  class(input_type), pointer :: InputCreate1
   PetscInt :: istatus  
   PetscInt :: islash  
   character(len=MAXSTRINGLENGTH) :: local_path
   character(len=MAXSTRINGLENGTH) :: full_path
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscBool, parameter :: back = PETSC_TRUE
   
   allocate(input)
@@ -195,7 +255,7 @@ function InputCreate1(fid,path,filename,option)
   if (fid == MAX_IN_UNIT) then
     option%io_buffer = 'MAX_IN_UNIT in pflotran_constants.h must be &
       &increased to accommodate a larger number of embedded files.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   full_path = trim(input%path) // trim(input%filename)
@@ -204,7 +264,7 @@ function InputCreate1(fid,path,filename,option)
   if (istatus /= 0) then
     if (len_trim(full_path) == 0) full_path = '<blank>'
     option%io_buffer = 'File: "' // trim(full_path) // '" not found.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   InputCreate1 => input
@@ -227,9 +287,9 @@ function InputCreate2(fid,filename,option)
   
   PetscInt :: fid
   character(len=*) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: InputCreate2
+  class(input_type), pointer :: InputCreate2
   character(len=MAXWORDLENGTH) :: word
 
   word = ''
@@ -251,11 +311,11 @@ function InputCreate3(input,filename,option)
 
   implicit none
   
-  type(input_type), pointer :: input ! note that this is the old input object
+  class(input_type), pointer :: input ! note that this is the old input object
   character(len=MAXSTRINGLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: InputCreate3
+  class(input_type), pointer :: InputCreate3
 
   InputCreate3 => InputCreate1(input%fid + 1,input%path,filename,option)
   
@@ -273,13 +333,13 @@ subroutine InputDefaultMsg1(input,option,buffer)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=*) :: buffer
 
-  if (InputError(input)) then
+  if (input%Error()) then
     input%err_buf = buffer
-    call InputDefaultMsg(input,option)
+    call input%DefaultMsg(option)
   endif
 
 end subroutine InputDefaultMsg1
@@ -296,13 +356,13 @@ subroutine InputDefaultMsg2(input,option)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
 
-  if (InputError(input)) then
+  if (input%Error()) then
     option%io_buffer =  '"' // trim(input%err_buf) // &
                         '" set to default value.'
-    call printMsg(option)
+    call option%PrintMsg()
     input%ierr = 0
   endif
 
@@ -320,14 +380,14 @@ subroutine InputErrorMsg1(input,option,buffer1,buffer2)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=*) :: buffer1, buffer2
 
-  if (InputError(input)) then
+  if (input%Error()) then
     input%err_buf = buffer1
     input%err_buf2 = buffer2
-    call InputErrorMsg(input,option)
+    call input%ErrorMsg(option)
   endif
 
 end subroutine InputErrorMsg1
@@ -344,13 +404,13 @@ subroutine InputErrorMsg2(input,option)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
 
-  if (InputError(input)) then
+  if (input%Error()) then
     option%io_buffer = 'While reading "' // trim(input%err_buf) // &
                        '" under keyword: ' // trim(input%err_buf2) // '.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine InputErrorMsg2
@@ -367,13 +427,13 @@ subroutine InputReadStringErrorMsg1(input, option, buffer)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=*) :: buffer
 
-  if (InputError(input)) then
+  if (input%Error()) then
     input%err_buf = buffer
-    call InputReadStringErrorMsg(input, option)
+    call input%ReadStringErrorMsg(option)
   endif
 
 end subroutine InputReadStringErrorMsg1
@@ -390,13 +450,13 @@ subroutine InputReadStringErrorMsg2(input, option)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
 
-  if (InputError(input)) then
+  if (input%Error()) then
     option%io_buffer = 'While reading in string in "' // &
                        trim(input%err_buf) // '".'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine InputReadStringErrorMsg2
@@ -413,14 +473,14 @@ subroutine InputFindStringErrorMsg(input, option, string)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=*) :: string
 
-  if (InputError(input)) then
+  if (input%Error()) then
     option%io_buffer = 'Card (' // trim(string) // ') not &
                        &found in file.'
-    call printErrMsg(option)    
+    call option%PrintErrMsg()
   endif
 
 end subroutine InputFindStringErrorMsg
@@ -437,8 +497,8 @@ subroutine InputReadInt1(input, option, int)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   PetscInt :: int
 
   character(len=MAXWORDLENGTH) :: word
@@ -450,9 +510,9 @@ subroutine InputReadInt1(input, option, int)
   endif
   
   if (.not.found) then
-    call InputReadWord(input%buf,word,PETSC_TRUE,input%ierr)
+    call input%ReadWord(input%buf,word,PETSC_TRUE,input%ierr)
   
-    if (.not.InputError(input)) then
+    if (.not.input%Error()) then
       read(word,*,iostat=input%ierr) int
     endif
   endif
@@ -472,7 +532,7 @@ subroutine InputReadInt2(string, option, int, ierr)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: int
   PetscErrorCode :: ierr
 
@@ -513,15 +573,15 @@ subroutine InputReadInt3(input, option, int)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   PetscMPIInt :: int
 
   character(len=MAXWORDLENGTH) :: word
 
-  call InputReadWord(input%buf,word,PETSC_TRUE,input%ierr)
+  call input%ReadWord(input%buf,word,PETSC_TRUE,input%ierr)
   
-  if (.not.InputError(input)) then
+  if (.not.input%Error()) then
     read(word,*,iostat=input%ierr) int
   endif
 
@@ -540,7 +600,7 @@ subroutine InputReadInt4(string, option, int, ierr)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscMPIInt :: int
   PetscErrorCode :: ierr
 
@@ -571,8 +631,8 @@ subroutine InputReadDouble1(input, option, double)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   PetscReal :: double
 
   character(len=MAXWORDLENGTH) :: word
@@ -584,9 +644,9 @@ subroutine InputReadDouble1(input, option, double)
   endif
   
   if (.not.found) then
-    call InputReadWord(input%buf,word,PETSC_TRUE,input%ierr)
+    call input%ReadWord(input%buf,word,PETSC_TRUE,input%ierr)
   
-    if (.not.InputError(input)) then
+    if (.not.input%Error()) then
       read(word,*,iostat=input%ierr) double
     endif
   endif
@@ -606,7 +666,7 @@ subroutine InputReadDouble2(string, option, double, ierr)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: double
   PetscErrorCode :: ierr
 
@@ -642,16 +702,16 @@ subroutine InputReadNDoubles1(input, option, double, n)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   PetscInt :: n
   PetscReal :: double(n)
 
   PetscInt :: i
 
   do i = 1, n
-    call InputReadDouble(input,option,double(i))
-    if (InputError(input)) return
+    call input%ReadDouble(option,double(i))
+    if (input%Error()) return
   enddo
 
 end subroutine InputReadNDoubles1
@@ -669,7 +729,7 @@ subroutine InputReadNDoubles2(string, option, double, n, ierr)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: n
   PetscReal :: double(n)
   PetscErrorCode :: ierr
@@ -696,26 +756,26 @@ subroutine InputReadPflotranString(input, option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   PetscErrorCode :: ierr
   PetscInt :: flag
 
   if (input%broadcast_read) then
     if (option%myrank == option%io_rank) then
-      call InputReadPflotranStringSlave(input, option)
+      call InputReadPflotranStringSlave(input,option)
     endif
     flag = input%ierr
     call MPI_Bcast(flag,ONE_INTEGER_MPI,MPIU_INTEGER,option%io_rank, &
                    option%mycomm,ierr)
     input%ierr = flag
-    if (.not.InputError(input)) then  
+    if (.not.input%Error()) then  
       call MPI_Bcast(input%buf,MAXSTRINGLENGTH,MPI_CHARACTER, &
                      option%io_rank,option%mycomm,ierr)      
     endif
   else
-    call InputReadPflotranStringSlave(input, option)
+    call InputReadPflotranStringSlave(input,option)
   endif
 
 end subroutine InputReadPflotranString
@@ -735,8 +795,8 @@ subroutine InputReadPflotranStringSlave(input, option)
   
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) ::  tempstring
   character(len=MAXWORDLENGTH) :: word
   PetscInt :: i
@@ -754,7 +814,7 @@ subroutine InputReadPflotranStringSlave(input, option)
     read(input%fid,'(a)',iostat=input%ierr) input%buf
     call StringAdjustl(input%buf)
 
-    if (InputError(input)) then
+    if (input%Error()) then
       ! check to see if another file is on the stack
       if (InputPopExternalFile(input)) then
         cycle
@@ -771,7 +831,7 @@ subroutine InputReadPflotranStringSlave(input, option)
     
     if (word(1:13) == 'EXTERNAL_FILE') then
       ! have to strip the card 'EXTERNAL_FILE' from the buffer
-      call InputReadWord(input,option,word,PETSC_TRUE)
+      call input%ReadWord(option,word,PETSC_TRUE)
       ! push a new input file to stack
       call InputPushExternalFile(input,option)
       cycle
@@ -783,11 +843,11 @@ subroutine InputReadPflotranStringSlave(input, option)
       skip_count = 1
       do 
         read(input%fid,'(a)',iostat=input%ierr) tempstring
-        if (InputError(input)) then
+        if (input%Error()) then
           option%io_buffer = 'End of file reached in ' // &
               'InputReadPflotranStringSlave.  SKIP encountered ' // &
               'without a matching NOSKIP.'
-          call printErrMsg(option)              
+          call option%PrintErrMsg()
         endif
         call InputReadWord(tempstring,word,PETSC_FALSE,input%ierr)
         call StringToUpper(word)
@@ -797,14 +857,14 @@ subroutine InputReadPflotranStringSlave(input, option)
           if (skip_count == 0) exit
         endif
       enddo
-      if (InputError(input)) exit
+      if (input%Error()) exit
     else if (word(1:1) /= ' ' .and. word(1:4) /= 'NOSK') then
       exit
     endif
   enddo
   
   ! Check for comment midway along a string
-  if (.not.InputError(input)) then
+  if (.not.input%Error()) then
     tempstring = input%buf
     input%buf = repeat(' ',MAXSTRINGLENGTH)
     do i=1,len_trim(tempstring)
@@ -830,14 +890,14 @@ subroutine InputReadWord1(input, option, word, return_blank_error)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: word
   PetscBool :: return_blank_error
   
-  if (InputError(input)) return
+  if (input%Error()) return
   
-  call InputReadWord2(input%buf, word, return_blank_error, input%ierr)
+  call input%ReadWord2(input%buf,word, return_blank_error, input%ierr)
 
 end subroutine InputReadWord1
 
@@ -939,14 +999,14 @@ subroutine InputReadWordDbaseCompatible(input, option, word, &
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: word
   PetscBool :: return_blank_error
   
   PetscBool :: found
 
-  if (InputError(input)) return
+  if (input%Error()) return
 
   found = PETSC_FALSE
   if (associated(dbase)) then
@@ -954,7 +1014,7 @@ subroutine InputReadWordDbaseCompatible(input, option, word, &
   endif
   
   if (.not.found) then
-    call InputReadWord(input%buf,word,PETSC_TRUE,input%ierr)
+    call input%ReadWord(input%buf,word,PETSC_TRUE,input%ierr)
   endif
 
 end subroutine InputReadWordDbaseCompatible
@@ -972,17 +1032,17 @@ subroutine InputReadNChars1(input, option, chars, n, return_blank_error)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   PetscBool :: return_blank_error ! Return an error for a blank line
                                    ! Therefore, a blank line is not acceptable.
   
   PetscInt :: n, begins, ends
   character(len=n) :: chars
 
-  if (InputError(input)) return
+  if (input%Error()) return
 
-  call InputReadNChars2(input%buf, chars, n, return_blank_error, input%ierr)
+  call input%ReadNChars2(input%buf,chars, n, return_blank_error, input%ierr)
   
 end subroutine InputReadNChars1
 
@@ -1066,13 +1126,13 @@ subroutine InputReadFilename(input, option, filename)
   ! 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: filename
 
   PetscBool, parameter :: return_blank_error = PETSC_TRUE
 
-  call InputReadNChars(input,option,filename, &
+  call input%ReadNChars(option,filename, &
                        MAXSTRINGLENGTH,return_blank_error)
 
   ! only prepend a path if a path exist and the filename is not absolue (i.e.
@@ -1096,8 +1156,8 @@ subroutine InputReadQuotedWord(input, option, word, return_blank_error)
 
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   PetscInt :: i, begins, ends, realends, len_trim_word
   PetscBool :: return_blank_error ! Return an error for a blank line
                                 ! Therefore, a blank line is not acceptable.
@@ -1105,7 +1165,7 @@ subroutine InputReadQuotedWord(input, option, word, return_blank_error)
   PetscBool :: openquotefound
   character(len=1), parameter :: tab = achar(9), backslash = achar(92)
 
-  if (InputError(input)) return
+  if (input%Error()) return
 
   openquotefound = PETSC_FALSE
   ! Initialize character string to blank.
@@ -1287,11 +1347,11 @@ subroutine InputFindStringInFile1(input, option, string)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: string
   
-  call InputFindStringInFile2(input, option, string, PETSC_TRUE)
+  call InputFindStringInFile2(input,option, string, PETSC_TRUE)
   
 end subroutine InputFindStringInFile1
 
@@ -1312,15 +1372,15 @@ subroutine InputFindStringInFile2(input, option, string, print_warning)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: string
   PetscBool :: print_warning
   PetscBool :: found
 
   found = PETSC_FALSE
   
-  call InputFindStringInFile3(input, option, string, print_warning,found)
+  call InputFindStringInFile3(input,option, string, print_warning,found)
   
 end subroutine InputFindStringInFile2
 
@@ -1342,8 +1402,8 @@ subroutine InputFindStringInFile3(input, option, string, print_warning,found)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: string
   PetscBool :: print_warning
   PetscBool :: found
@@ -1358,9 +1418,9 @@ subroutine InputFindStringInFile3(input, option, string, print_warning,found)
 
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    if (InputError(input)) exit
+    if (input%Error()) exit
+    call input%ReadWord(option,word,PETSC_TRUE)
+    if (input%Error()) exit
     length2 = len_trim(word)
     if (length1 == length2 .and. StringCompare(string,word,length1)) then
       found = PETSC_TRUE
@@ -1371,14 +1431,14 @@ subroutine InputFindStringInFile3(input, option, string, print_warning,found)
   ! if not found, rewind once and try again.  this approach avoids excessive
   ! reading if successive searches for strings are in descending order in
   ! the file.
-  if (InputError(input)) then
+  if (input%Error()) then
     input%ierr = 0
     call InputRewind(input)
     do
       call InputReadPflotranString(input,option)
-      if (InputError(input)) exit
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      if (InputError(input)) exit
+      if (input%Error()) exit
+      call input%ReadWord(option,word,PETSC_TRUE)
+      if (input%Error()) exit
       length2 = len_trim(word)
       if (length1 == length2 .and. StringCompare(string,word,length1)) then
         found = PETSC_TRUE
@@ -1389,7 +1449,7 @@ subroutine InputFindStringInFile3(input, option, string, print_warning,found)
 
   if (.not.found .and. print_warning) then
     option%io_buffer = 'Card (' // trim(string) // ') not found in input file.'
-    call printWrnMsg(option)
+    call option%PrintWrnMsg()
     input%ierr = 1
   endif
 
@@ -1407,14 +1467,14 @@ subroutine InputSkipToEND(input,option,string)
 
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=*) :: string
 
   do
     call InputReadPflotranString(input,option)
     input%err_buf = 'End of file found before end of card ' // trim(string)
-    call InputReadStringErrorMsg(input,option)
+    call input%ReadStringErrorMsg(option)
     if (InputCheckExit(input,option)) exit
   enddo
 
@@ -1434,8 +1494,8 @@ function InputCheckExit(input,option)
   
   implicit none
 
-  type(input_type) :: input
-  type(option_type) :: option  
+  class(input_type) :: input
+  class(option_type) :: option  
   PetscInt :: i
   character(len=1) :: tab
   
@@ -1473,7 +1533,7 @@ function InputError1(input)
 
   implicit none
 
-  type(input_type) :: input
+  class(input_type) :: input
   
   PetscBool :: InputError1
 
@@ -1526,7 +1586,7 @@ subroutine InputGetCommandLineInt(string,int_value,found,option)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: found
   PetscInt :: int_value
 
@@ -1552,7 +1612,7 @@ subroutine InputGetCommandLineInt(string,int_value,found,option)
       if (InputError(ierr)) then
         option%io_buffer = 'Integer argument for command line argument "' // &
                            trim(adjustl(string)) // '" not found.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       exit
     endif
@@ -1577,7 +1637,7 @@ subroutine InputGetCommandLineReal(string,double_value,found,option)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: found
   PetscReal :: double_value
 
@@ -1603,7 +1663,7 @@ subroutine InputGetCommandLineReal(string,double_value,found,option)
       if (InputError(ierr)) then
         option%io_buffer = 'Real argument for command line argument "' // &
                            trim(adjustl(string)) // '" not found.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       exit
     endif
@@ -1628,7 +1688,7 @@ subroutine InputGetCommandLineString(string,string_value,found,option)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: found
   character(len=MAXSTRINGLENGTH) :: string_value
 
@@ -1655,7 +1715,7 @@ subroutine InputGetCommandLineString(string,string_value,found,option)
                              trim(adjustl(string_value)) // & 
                              ') for command line argument "' // &
                              trim(adjustl(string)) // '" not recognized.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       else
         ierr = 1
@@ -1663,7 +1723,7 @@ subroutine InputGetCommandLineString(string,string_value,found,option)
       if (InputError(ierr)) then
         option%io_buffer = 'String argument for command line argument "' // &
                            trim(adjustl(string)) // '" not found.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       exit
     endif
@@ -1688,7 +1748,7 @@ subroutine InputGetCommandLineTruth(string,truth_value,found,option)
   implicit none
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: found
   PetscBool :: truth_value
 
@@ -1728,7 +1788,7 @@ subroutine InputGetCommandLineTruth(string,truth_value,found,option)
         case default
           option%io_buffer = 'Truth argument for command line argument "' // &
                              trim(adjustl(string)) // '" not recognized.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     endif
   enddo
@@ -1800,13 +1860,13 @@ subroutine InputReadFilenames(option,filenames)
 
   use Option_module
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH), pointer :: filenames(:)
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXSTRINGLENGTH) :: filename
   PetscInt :: filename_count
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscBool :: card_found
 
   input => InputCreate(IN_UNIT,option%input_filename,option)
@@ -1815,7 +1875,7 @@ subroutine InputReadFilenames(option,filenames)
   call InputFindStringInFile(input,option,string) 
 
   card_found = PETSC_FALSE
-  if (InputError(input)) then
+  if (input%Error()) then
     ! if the FILENAMES card is not included, we will assume that only
     ! filenames exist in the file.
     call InputRewind(input)
@@ -1826,9 +1886,9 @@ subroutine InputReadFilenames(option,filenames)
   filename_count = 0     
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit  
-    call InputReadFilename(input,option,filename)
+    call input%ReadFilename(option,filename)
     filename_count = filename_count + 1
   enddo
   
@@ -1844,9 +1904,9 @@ subroutine InputReadFilenames(option,filenames)
   filename_count = 0     
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit  
-    call InputReadFilename(input,option,filename)
+    call input%ReadFilename(option,filename)
     filename_count = filename_count + 1
     filenames(filename_count) = filename
   enddo
@@ -1863,8 +1923,8 @@ function InputGetLineCount(input,option)
 
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscInt :: line_count
   PetscInt :: InputGetLineCount
@@ -1880,7 +1940,7 @@ function InputGetLineCount(input,option)
     read(input%fid,'(a)',iostat=input%ierr) input%buf
     call StringAdjustl(input%buf)
 
-    if (InputError(input)) then
+    if (input%Error()) then
       ! check to see if another file is on the stack
       if (InputPopExternalFile(input)) then
         cycle
@@ -1895,13 +1955,13 @@ function InputGetLineCount(input,option)
 
     if (word(1:13) == 'EXTERNAL_FILE') then
       ! have to strip the card 'EXTERNAL_FILE' from the buffer
-      call InputReadWord(input,option,word,PETSC_TRUE)
+      call input%ReadWord(option,word,PETSC_TRUE)
       ! push a new input file to stack
       call InputPushExternalFile(input,option)
     endif 
 #else
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
 #endif
     line_count = line_count + 1
   enddo
@@ -1918,9 +1978,9 @@ subroutine InputReadToBuffer(input, buffer, option)
 
   implicit none
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: buffer(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: tempstring
   character(len=MAXWORDLENGTH) :: word
@@ -1934,7 +1994,7 @@ subroutine InputReadToBuffer(input, buffer, option)
     read(input%fid,'(a)',iostat=input%ierr) input%buf
     call StringAdjustl(input%buf)
 
-    if (InputError(input)) then
+    if (input%Error()) then
       ! check to see if another file is on the stack
       if (InputPopExternalFile(input)) then
         cycle
@@ -1949,13 +2009,13 @@ subroutine InputReadToBuffer(input, buffer, option)
 
     if (word(1:13) == 'EXTERNAL_FILE') then
       ! have to strip the card 'EXTERNAL_FILE' from the buffer
-      call InputReadWord(input,option,word,PETSC_TRUE)
+      call input%ReadWord(option,word,PETSC_TRUE)
       ! push a new input file to stack
       call InputPushExternalFile(input,option)
     endif 
 #else
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
 #endif
     line_count = line_count + 1
     buffer(line_count) = input%buf
@@ -1978,13 +2038,13 @@ subroutine InputReadASCIIDbase(filename,option)
   implicit none
   
   character(len=*) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXWORDLENGTH), allocatable :: words(:)
   character(len=MAXWORDLENGTH) :: object_name
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscInt :: icount
   PetscInt :: value_count
   PetscInt :: value_index
@@ -2001,12 +2061,12 @@ subroutine InputReadASCIIDbase(filename,option)
   num_words = 0
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
-    call InputReadNChars(input,option,string,MAXSTRINGLENGTH,PETSC_FALSE)
+    if (input%Error()) exit
+    call input%ReadNChars(option,string,MAXSTRINGLENGTH,PETSC_FALSE)
     if (len_trim(string) > MAXWORDLENGTH) then
       option%io_buffer = 'ASCII DBASE object names must be shorter than &
         &32 characters: ' // trim(string)
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     word = trim(string)
     if (StringStartsWithAlpha(word)) then
@@ -2014,15 +2074,15 @@ subroutine InputReadASCIIDbase(filename,option)
       if (icount == 1) then
         string = input%buf
         do
-          call InputReadWord(input,option,word,PETSC_TRUE)
+          call input%ReadWord(option,word,PETSC_TRUE)
           if (input%ierr /= 0) exit
           num_values_in_dataset = num_values_in_dataset + 1
         enddo
         input%buf = string
       endif
       input%ierr = 0
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      call InputErrorMsg(input,option,'value','ASCII Dbase')
+      call input%ReadWord(option,word,PETSC_TRUE)
+      call input%ErrorMsg(option,'value','ASCII Dbase')
       select case(StringIntegerDoubleOrWord(word))
         case(STRING_IS_AN_INTEGER)
           num_ints = num_ints + 1
@@ -2042,7 +2102,7 @@ subroutine InputReadASCIIDbase(filename,option)
         trim(filename) // &
         '" is too small (' // trim(adjustl(word)) // &
         ') for number of realizations.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     value_index = option%id
   endif
@@ -2080,14 +2140,14 @@ subroutine InputReadASCIIDbase(filename,option)
   num_words = 0
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
-    call InputReadWord(input,option,word,PETSC_FALSE)
+    if (input%Error()) exit
+    call input%ReadWord(option,word,PETSC_FALSE)
     if (StringStartsWithAlpha(word)) then
       object_name = word
       words = ''
       value_count = 0
       do
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr /= 0) exit
         value_count = value_count + 1
         if (value_count <= num_values_in_dataset) &
@@ -2103,7 +2163,7 @@ subroutine InputReadASCIIDbase(filename,option)
         write(word,*) num_values_in_dataset
         option%io_buffer = trim(option%io_buffer) // &
           trim(adjustl(word)) // ').'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       call StringToUpper(object_name)
       string = words(value_index)
@@ -2114,12 +2174,12 @@ subroutine InputReadASCIIDbase(filename,option)
           num_ints = num_ints + 1
           dbase%icard(num_ints) = adjustl(object_name)
           call InputReadInt(string,option,dbase%ivalue(num_ints),input%ierr)
-          call InputErrorMsg(input,option,'ivalue','ASCII Dbase '//object_name)
+          call input%ErrorMsg(option,'ivalue','ASCII Dbase '//object_name)
         case(STRING_IS_A_DOUBLE)
           num_reals = num_reals + 1
           dbase%rcard(num_reals) = adjustl(object_name)
           call InputReadDouble(string,option,dbase%rvalue(num_reals),input%ierr)
-          call InputErrorMsg(input,option,'rvalue','ASCII Dbase '//object_name)
+          call input%ErrorMsg(option,'rvalue','ASCII Dbase '//object_name)
         case(STRING_IS_A_WORD)
           num_words = num_words + 1
           dbase%ccard(num_words) = adjustl(object_name)
@@ -2382,7 +2442,7 @@ subroutine InputKeywordUnrecognized1(keyword,string,option)
   
   character(len=*) :: keyword
   character(len=*) :: string
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=1) :: null_string
 
@@ -2407,7 +2467,7 @@ subroutine InputKeywordUnrecognized2(keyword,string,string2,option)
   character(len=*) :: keyword
   character(len=*) :: string
   character(len=*) :: string2
-  type(option_type) :: option
+  class(option_type) :: option
   
   option%io_buffer = 'Keyword "' // &
                      trim(keyword) // &
@@ -2417,7 +2477,7 @@ subroutine InputKeywordUnrecognized2(keyword,string,string2,option)
     option%io_buffer = trim(option%io_buffer) // ' ' // &
                      trim(string2) // '.'
   endif
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine InputKeywordUnrecognized2
 
@@ -2434,8 +2494,8 @@ subroutine InputCheckMandatoryUnits(input,option)
   
   implicit none
   
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   
   if (input%force_units) then
     option%io_buffer = 'Missing units'
@@ -2444,7 +2504,7 @@ subroutine InputCheckMandatoryUnits(input,option)
                          trim(input%err_buf) // ',' // &
                          trim(input%err_buf2) // '.'
     endif
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine InputCheckMandatoryUnits
@@ -2464,29 +2524,29 @@ subroutine InputReadAndConvertUnits(input,double_value,internal_units, &
   
   implicit none
   
-  type(input_type) :: input
+  class(input_type) :: input
   PetscReal :: double_value
   character(len=*) :: internal_units
   character(len=*) :: keyword_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: units
   character(len=MAXWORDLENGTH) :: internal_units_word
   character(len=MAXSTRINGLENGTH) :: string
 
-  call InputReadWord(input,option,units,PETSC_TRUE)
+  call input%ReadWord(option,units,PETSC_TRUE)
   if (input%ierr == 0) then
     if (len_trim(internal_units) < 1) then
       option%io_buffer = 'No internal units provided in &
                          &InputReadAndConvertUnits()'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     internal_units_word = trim(internal_units)
     double_value = double_value * &
                    UnitsConvertToInternal(units,internal_units_word,option)
   else
     string = trim(keyword_string) // ' units'
-    call InputDefaultMsg(input,option,string)
+    call input%DefaultMsg(option,string)
   endif
   
 end subroutine InputReadAndConvertUnits
@@ -2507,10 +2567,10 @@ function UnitReadAndConversionFactor(input,internal_units, &
   
   implicit none
  
-  type(input_type) :: input
+  class(input_type) :: input
   character(len=*) :: internal_units
   character(len=*) :: keyword_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: UnitReadAndConversionFactor
 
@@ -2518,21 +2578,21 @@ function UnitReadAndConversionFactor(input,internal_units, &
   character(len=MAXWORDLENGTH) :: internal_units_word
   character(len=MAXSTRINGLENGTH) :: string
 
-  call InputReadWord(input,option,units,PETSC_TRUE)
+  call input%ReadWord(option,units,PETSC_TRUE)
   if (input%ierr == 0) then
     if (len_trim(internal_units) < 1) then
       option%io_buffer = 'No internal units provided in &
                          & UnitReadAndConversionFactor()'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     internal_units_word = trim(internal_units)
     UnitReadAndConversionFactor =  &
                    UnitsConvertToInternal(units,internal_units_word,option)
   else
     input%err_buf = keyword_string
-    call InputCheckMandatoryUnits(input,option)
+    call input%CheckMandatoryUnits(option)
     string = trim(keyword_string) // ' units'
-    call InputDefaultMsg(input,option,string)
+    call input%DefaultMsg(option,string)
     UnitReadAndConversionFactor = 1.0d0
   endif
   
@@ -2551,14 +2611,14 @@ subroutine InputPushExternalFile(input,option)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
-  type(input_type), pointer :: input_child
+  class(input_type), pointer :: input_child
   
-  call InputReadFilename(input,option,string)
-  call InputErrorMsg(input,option,'filename','EXTERNAL_FILE')
+  call input%ReadFilename(option,string)
+  call input%ErrorMsg(option,'filename','EXTERNAL_FILE')
   input_child => InputCreate(input,string,option) 
   input_child%parent => input
   input => input_child
@@ -2577,10 +2637,10 @@ function InputPopExternalFile(input)
   
   implicit none
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 
   PetscBool :: InputPopExternalFile
-  type(input_type), pointer :: input_parent
+  class(input_type), pointer :: input_parent
   
   InputPopExternalFile = PETSC_FALSE
   if (associated(input%parent)) then
@@ -2604,7 +2664,7 @@ subroutine InputCloseNestedFiles(input)
   ! 
   implicit none
 
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 
   ! With the EXTERNAL_FILE card, files may be nested.  The following loop
   ! un-nests the input deck back to the main input file.
@@ -2631,7 +2691,7 @@ subroutine InputRewind(input)
   ! 
   implicit none
 
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 
   call InputCloseNestedFiles(input)
   rewind(input%fid)
@@ -2683,7 +2743,7 @@ subroutine InputDestroySingleLevel(input)
 
   implicit none
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   if (input%fid /= 0) close(input%fid)
   input%fid = 0
@@ -2705,7 +2765,7 @@ recursive subroutine InputDestroy(input)
 
   implicit none
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 
   ! destroy any parents first
   if (associated(input%parent)) then

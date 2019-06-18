@@ -194,7 +194,7 @@ subroutine NWTAuxVarInit(auxvar,nw_trans,option)
   
   type(nw_transport_auxvar_type) :: auxvar
   type(nw_trans_realization_type) :: nw_trans
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: nspecies, nauxiliary, nphase
   
@@ -294,8 +294,8 @@ subroutine NWTRead(nw_trans,input,option)
   implicit none
   
   type(nw_trans_realization_type), pointer :: nw_trans
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word, parent_name_hold
   character(len=MAXSTRINGLENGTH) :: error_string_base, error_string
@@ -318,11 +318,11 @@ subroutine NWTRead(nw_trans,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
     
     select case(trim(keyword))
@@ -331,7 +331,7 @@ subroutine NWTRead(nw_trans,input,option)
         error_string = trim(error_string_base) // ',SPECIES'
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
           
           nw_trans%params%nspecies = nw_trans%params%nspecies + 1
@@ -340,12 +340,12 @@ subroutine NWTRead(nw_trans,input,option)
           if (k > 50) then
             option%io_buffer = 'More than 50 species are provided in the ' &
                                // trim(error_string) // ', SPECIES block.'
-            call PrintErrMsgToDev(option, 'if reducing to less than 50 is not &
+            call option%PrintErrMsgToDev('if reducing to less than 50 is not &
                                   &an option.')
           endif
           new_species => NWTSpeciesCreate()
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'species name',error_string)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'species name',error_string)
           call StringToUpper(word)
           temp_species_names(k) = trim(word)
           new_species%name = trim(word)
@@ -364,7 +364,7 @@ subroutine NWTRead(nw_trans,input,option)
           option%io_buffer = 'ERROR: At least one species &
                               &must be provided in the ' // &
                               trim(error_string) // ' block.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         allocate(nw_trans%species_names(k))
         nw_trans%species_names(1:k) = temp_species_names(1:k)
@@ -373,22 +373,22 @@ subroutine NWTRead(nw_trans,input,option)
         error_string = trim(error_string_base) // ',RADIOACTIVE_DECAY'
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
           new_rad_rxn => NWTRadDecayRxnCreate()
-          call InputReadDouble(input,option,new_rad_rxn%rate_constant)
-          call InputErrorMsg(input,option,'radioactive species decay rate &
+          call input%ReadDouble(option,new_rad_rxn%rate_constant)
+          call input%ErrorMsg(option,'radioactive species decay rate &
                              &constant',error_string)
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'radioactive species name', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'radioactive species name', &
                              error_string)
           call StringToUpper(word)
           new_rad_rxn%name = trim(word)
           parent_name_hold = trim(word)
-          call InputReadWord(input,option,word,PETSC_TRUE)
+          call input%ReadWord(option,word,PETSC_TRUE)
           if (input%ierr == 0) then ! '->' was read (or anything)
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'radioactive species daughter &
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'radioactive species daughter &
                                &name',error_string)
             call StringToUpper(word)
             new_rad_rxn%daughter_name = trim(word)
@@ -416,9 +416,9 @@ subroutine NWTRead(nw_trans,input,option)
       case('LOG_FORMULATION')
         nw_trans%use_log_formulation = PETSC_TRUE
       case('TRUNCATE_CONCENTRATION')
-        call InputReadDouble(input,option, &
+        call input%ReadDouble(option, &
                              nw_trans%params%truncated_concentration)
-        call InputErrorMsg(input,option,'TRUNCATE_CONCENTRATION',error_string)
+        call input%ErrorMsg(option,'TRUNCATE_CONCENTRATION',error_string)
       case default
         call InputKeywordUnrecognized(keyword,error_string,option)
     end select
@@ -452,8 +452,8 @@ subroutine NWTReadPass2(nw_trans,input,option)
   implicit none
   
   type(nw_trans_realization_type), pointer :: nw_trans
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -464,24 +464,24 @@ subroutine NWTReadPass2(nw_trans,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
     
     select case(trim(keyword))
       case('SPECIES')
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
         enddo
       case('RADIOACTIVE_DECAY')
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
         enddo
       case('LOG_FORMULATION')
@@ -535,7 +535,7 @@ function NWTSpeciesConstraintCreate(nw_trans,option)
   implicit none
   
   type(nw_trans_realization_type) :: nw_trans
-  type(option_type) :: option
+  class(option_type) :: option
   type(nwt_species_constraint_type), pointer :: NWTSpeciesConstraintCreate
 
   type(nwt_species_constraint_type), pointer :: constraint
@@ -605,7 +605,7 @@ subroutine NWTVerifySpecies(species_list,rad_decay_rxn_list,species_names, &
   type(radioactive_decay_rxn_type), pointer :: rad_decay_rxn_list
   character(len=MAXWORDLENGTH), pointer :: species_names(:)
   character(len=MAXWORDLENGTH), pointer :: parent_names(:) 
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(species_type), pointer :: species
   type(radioactive_decay_rxn_type), pointer :: rad_rxn, cur_rad_rxn
@@ -640,13 +640,13 @@ subroutine NWTVerifySpecies(species_list,rad_decay_rxn_list,species_names, &
     if (.not.parent_found) then
       option%io_buffer = 'ERROR: Radioactive species ' // trim(rad_rxn%name) &
                          // ' must also be included in the SPECIES block.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (.not.daughter_found) then
       option%io_buffer = 'ERROR: Radioactive species ' // &
                          trim(rad_rxn%daughter_name) &
                          // ' must also be included in the SPECIES block.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     
     ! assign the parent information
@@ -718,7 +718,7 @@ subroutine NWTProcessConstraint(nw_trans,constraint_name, &
   type(nw_trans_realization_type), pointer :: nw_trans
   character(len=MAXWORDLENGTH) :: constraint_name
   type(nwt_species_constraint_type), pointer :: nwt_species_constraint
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: found
   PetscInt :: ispecies, jspecies
@@ -745,7 +745,7 @@ subroutine NWTProcessConstraint(nw_trans,constraint_name, &
                'Species ' // trim(nwt_species_constraint%names(ispecies)) // &
                ' from CONSTRAINT ' // trim(constraint_name) // &
                ' not found among species.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       constraint_conc(jspecies) = &
                                nwt_species_constraint%constraint_conc(ispecies)
@@ -778,7 +778,7 @@ subroutine NWTAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(nw_transport_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
   
 end subroutine NWTAuxVarCopy
 
@@ -798,7 +798,7 @@ subroutine NWTAuxVarCopyInitialGuess(auxvar,auxvar2,option)
   implicit none
   
   type(nw_transport_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   auxvar%total_bulk_conc = auxvar2%total_bulk_conc
   
@@ -949,7 +949,7 @@ subroutine NWTransDestroy(nw_trans,option)
   implicit none
   
   type(nw_trans_realization_type), pointer :: nw_trans
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(radioactive_decay_rxn_type), pointer :: rad_decay_rxn,prev_rad_decay_rxn
   type(species_type), pointer :: species, prev_species

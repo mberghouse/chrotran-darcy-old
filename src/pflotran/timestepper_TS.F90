@@ -141,8 +141,8 @@ subroutine TimestepperTSRead(this,input,option)
   implicit none
 
   class(timestepper_TS_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: string
@@ -154,15 +154,15 @@ subroutine TimestepperTSRead(this,input,option)
 
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','TIMESTEPPER_BE')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','TIMESTEPPER_BE')
     call StringToUpper(keyword)
 
     select case(trim(keyword))
   
       case('TS_ACCELERATION')
-        call InputReadInt(input,option,this%iaccel)
-        call InputDefaultMsg(input,option,'iaccel')
+        call input%ReadInt(option,this%iaccel)
+        call input%DefaultMsg(option,'iaccel')
 
       case('DT_FACTOR')
         string='time_step_factor'
@@ -208,7 +208,7 @@ subroutine TimestepperTSStepDT(this,process_model,stop_flag)
   PetscReal :: dtime
   PetscReal :: tmp
   type(solver_type), pointer :: solver
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   Vec :: residual_vec
   PetscReal :: fnorm, inorm, scaled_fnorm
   PetscInt :: ts_reason
@@ -318,7 +318,7 @@ subroutine TimestepperTSCheckpointBinary(this,viewer,option)
 
   class(timestepper_TS_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(timestepper_surface_header_type), pointer :: header
   PetscBag :: bag
@@ -352,7 +352,7 @@ subroutine TimestepperTSRestartBinary(this,viewer,option)
 
   class(timestepper_TS_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(timestepper_surface_header_type), pointer :: header
   PetscBag :: bag
@@ -483,7 +483,7 @@ subroutine TimestepperTSPrintInfo(this,option)
 #include "petsc/finclude/petscts.h"  
 
   class(timestepper_TS_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscErrorCode :: ierr
   
@@ -633,12 +633,12 @@ recursive subroutine TimestepperTSFinalizeRun(this,option)
   implicit none
   
   class(timestepper_TS_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
 #ifdef DEBUG
-  call printMsg(option,'TimestepperBEFinalizeRun()')
+  call option%PrintMsg('TimestepperBEFinalizeRun()')
 #endif
   
   if (OptionPrintToScreen(option)) then

@@ -157,8 +157,8 @@ subroutine GeomechStrataRead(strata,input,option)
   implicit none
   
   type(geomech_strata_type) :: strata
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: string
@@ -170,23 +170,23 @@ subroutine GeomechStrataRead(strata,input,option)
     
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS STRATA')   
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS STRATA')
       
     select case(trim(keyword))
     
       case('GEOMECHANICS_REGION')
-        call InputReadWord(input,option,strata%region_name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'geomechanics region name', &
+        call input%ReadWord(option,strata%region_name,PETSC_TRUE)
+        call input%ErrorMsg(option,'geomechanics region name', &
                            'GEOMECHANICS STRATA')
       case('GEOMECHANICS_MATERIAL')
-        call InputReadNChars(input,option,string,MAXSTRINGLENGTH,PETSC_TRUE)
-        call InputErrorMsg(input,option, &
+        call input%ReadNChars(option,string,MAXSTRINGLENGTH,PETSC_TRUE)
+        call input%ErrorMsg(option, &
                    'geomechancis material property name','GEOMECHANICS STRATA')
         if (StringCompareIgnoreCase(string,'realization_dependent')) then
           strata%realization_dependent = PETSC_TRUE
-          call InputReadNChars(input,option,string,MAXSTRINGLENGTH,PETSC_TRUE)
-          call InputErrorMsg(input,option, &
+          call input%ReadNChars(option,string,MAXSTRINGLENGTH,PETSC_TRUE)
+          call input%ErrorMsg(option, &
                    'geomechancis material property name','GEOMECHANICS STRATA')
         endif
         strata%material_property_name = trim(string)

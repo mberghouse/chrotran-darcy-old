@@ -100,8 +100,8 @@ subroutine IntegralFluxRead(integral_flux,input,option)
   implicit none
   
   type(integral_flux_type) :: integral_flux
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -117,13 +117,13 @@ subroutine IntegralFluxRead(integral_flux,input,option)
     
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','integral_flux')   
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','integral_flux')
       
     select case(trim(keyword))
       case('NAME')
-        call InputReadWord(input,option,integral_flux%name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name','INTEGRAL_FLUX')    
+        call input%ReadWord(option,integral_flux%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'name','INTEGRAL_FLUX')
       case('INVERT_DIRECTION')
         integral_flux%invert_direction = PETSC_TRUE
       case('POLYGON')
@@ -138,12 +138,12 @@ subroutine IntegralFluxRead(integral_flux,input,option)
           icount = icount + 1
           ! only use first three points
           if (icount < 4) then
-            call InputReadDouble(input,option,x(icount))
-            call InputErrorMsg(input,option,'x-coordinate',error_string)
-            call InputReadDouble(input,option,y(icount))
-            call InputErrorMsg(input,option,'y-coordinate',error_string)
-            call InputReadDouble(input,option,z(icount))
-            call InputErrorMsg(input,option,'z-coordinate',error_string)
+            call input%ReadDouble(option,x(icount))
+            call input%ErrorMsg(option,'x-coordinate',error_string)
+            call input%ReadDouble(option,y(icount))
+            call input%ErrorMsg(option,'y-coordinate',error_string)
+            call input%ReadDouble(option,z(icount))
+            call input%ErrorMsg(option,'z-coordinate',error_string)
           endif
         enddo
         allocate(integral_flux%plane)
@@ -155,7 +155,7 @@ subroutine IntegralFluxRead(integral_flux,input,option)
         option%io_buffer = "COORDINATES has been deprecated within the & 
           INTEGRAL_FLUX block in favor of COORDINATES_AND_DIRECTIONS. &
           Please see the user guide for instructions on the new card's use."
-        call PrintErrMsg(option)
+        call option%PrintErrMsg()
       case('COORDINATES_AND_DIRECTIONS')
         allocate(real_array(6,100))
         real_array = UNINITIALIZED_DOUBLE
@@ -168,18 +168,18 @@ subroutine IntegralFluxRead(integral_flux,input,option)
           if (icount > size(real_array,2)) then
             call ReallocateArray(real_array)
           endif
-          call InputReadDouble(input,option,real_array(1,icount))
-          call InputErrorMsg(input,option,'x-coordinate',error_string)
-          call InputReadDouble(input,option,real_array(2,icount))
-          call InputErrorMsg(input,option,'y-coordinate',error_string)
-          call InputReadDouble(input,option,real_array(3,icount))
-          call InputErrorMsg(input,option,'z-coordinate',error_string)
-          call InputReadDouble(input,option,real_array(4,icount))
-          call InputErrorMsg(input,option,'x-direction',error_string)
-          call InputReadDouble(input,option,real_array(5,icount))
-          call InputErrorMsg(input,option,'y-direction',error_string)
-          call InputReadDouble(input,option,real_array(6,icount))
-          call InputErrorMsg(input,option,'z-direction',error_string)
+          call input%ReadDouble(option,real_array(1,icount))
+          call input%ErrorMsg(option,'x-coordinate',error_string)
+          call input%ReadDouble(option,real_array(2,icount))
+          call input%ErrorMsg(option,'y-coordinate',error_string)
+          call input%ReadDouble(option,real_array(3,icount))
+          call input%ErrorMsg(option,'z-coordinate',error_string)
+          call input%ReadDouble(option,real_array(4,icount))
+          call input%ErrorMsg(option,'x-direction',error_string)
+          call input%ReadDouble(option,real_array(5,icount))
+          call input%ErrorMsg(option,'y-direction',error_string)
+          call input%ReadDouble(option,real_array(6,icount))
+          call input%ErrorMsg(option,'z-direction',error_string)
         enddo
         allocate(integral_flux%coordinates_and_directions(6,icount))
         integral_flux%coordinates_and_directions = real_array(:,1:icount)
@@ -196,13 +196,13 @@ subroutine IntegralFluxRead(integral_flux,input,option)
           if (icount > size(int_array,2)) then
             call ReallocateArray(int_array)
           endif
-          call InputReadInt(input,option,int_array(1,icount))
-          call InputErrorMsg(input,option,'vertex 1',error_string)
-          call InputReadInt(input,option,int_array(2,icount))
-          call InputErrorMsg(input,option,'vertex 2',error_string)
-          call InputReadInt(input,option,int_array(3,icount))
-          call InputErrorMsg(input,option,'vertex 3',error_string)
-          call InputReadInt(input,option,int_array(4,icount))
+          call input%ReadInt(option,int_array(1,icount))
+          call input%ErrorMsg(option,'vertex 1',error_string)
+          call input%ReadInt(option,int_array(2,icount))
+          call input%ErrorMsg(option,'vertex 2',error_string)
+          call input%ReadInt(option,int_array(3,icount))
+          call input%ErrorMsg(option,'vertex 3',error_string)
+          call input%ReadInt(option,int_array(4,icount))
           ! fourth value is optional, no error message
         enddo
         allocate(integral_flux%vertices(4,icount))
@@ -216,7 +216,7 @@ subroutine IntegralFluxRead(integral_flux,input,option)
 
   if (len_trim(integral_flux%name) < 1) then
     option%io_buffer = 'All INTEGRAL_FLUXes must have a name.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine IntegralFluxRead
@@ -236,7 +236,7 @@ subroutine IntegralFluxSizeStorage(integral_flux,option)
   implicit none
   
   type(integral_flux_type) :: integral_flux
-  type(option_type) :: option
+  class(option_type) :: option
   
   allocate(integral_flux%integral_value(option%nflowdof+option%ntrandof))
   integral_flux%integral_value = 0.d0
@@ -262,7 +262,7 @@ subroutine IntegralFluxUpdate(integral_flux_list,internal_fluxes, &
   PetscReal :: internal_fluxes(:,:)
   PetscReal :: boundary_fluxes(:,:)
   PetscInt :: iflag
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(integral_flux_type), pointer :: integral_flux
   PetscReal, allocatable :: sum_array(:)
@@ -324,7 +324,7 @@ subroutine IntegralFluxGetInstantaneous(integral_flux, internal_fluxes, &
   PetscReal :: boundary_fluxes(:,:)
   PetscInt :: num_values
   PetscReal :: sum_array(:)
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: i
   PetscInt :: iconn

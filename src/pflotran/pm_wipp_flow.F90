@@ -199,11 +199,11 @@ subroutine PMWIPPFloRead(this,input)
 
   implicit none
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: keyword, word
   class(pm_wippflo_type) :: this
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: tempreal
   character(len=MAXSTRINGLENGTH) :: error_string
   character(len=MAXSTRINGLENGTH), pointer :: strings(:)
@@ -224,8 +224,8 @@ subroutine PMWIPPFloRead(this,input)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
     
     found = PETSC_FALSE
@@ -235,21 +235,21 @@ subroutine PMWIPPFloRead(this,input)
     
     select case(trim(keyword))
       case('LIQUID_RESIDUAL_INFINITY_TOL')
-        call InputReadDouble(input,option,this%liquid_residual_infinity_tol)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%liquid_residual_infinity_tol)
+        call input%ErrorMsg(option,keyword,error_string)
       case('GAS_RESIDUAL_INFINITY_TOL')
-        call InputReadDouble(input,option,this%gas_equation_infinity_tol)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%gas_equation_infinity_tol)
+        call input%ErrorMsg(option,keyword,error_string)
       case('MAX_ALLOW_REL_LIQ_PRES_CHANG_NI')
-        call InputReadDouble(input,option,this%max_allow_rel_liq_pres_chang_ni)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%max_allow_rel_liq_pres_chang_ni)
+        call input%ErrorMsg(option,keyword,error_string)
         ! no units conversion since it is relative
       case('MAX_ALLOW_REL_GAS_SAT_CHANGE_NI')
-        call InputReadDouble(input,option,this%max_allow_rel_gas_sat_change_ni)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%max_allow_rel_gas_sat_change_ni)
+        call input%ErrorMsg(option,keyword,error_string)
       case('GAS_COMPONENT_FORMULA_WEIGHT')
-        call InputReadDouble(input,option,fmw_comp(2))
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,fmw_comp(2))
+        call input%ErrorMsg(option,keyword,error_string)
       case('NO_FRACTURE')
         wippflo_use_fracture = PETSC_FALSE
       case('NO_CREEP_CLOSURE')
@@ -276,60 +276,60 @@ subroutine PMWIPPFloRead(this,input)
       case('USE_BRAGFLO_CC')
         wippflo_use_bragflo_cc = PETSC_TRUE
       case('REL_LIQ_PRESSURE_PERTURBATION')
-        call InputReadDouble(input,option,wippflo_pres_rel_pert)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,wippflo_pres_rel_pert)
+        call input%ErrorMsg(option,keyword,error_string)
         ! no units conversion since it is relative
       case('MIN_LIQ_PRESSURE_PERTURBATION')
-        call InputReadDouble(input,option,wippflo_pres_min_pert)
-        call InputErrorMsg(input,option,keyword,error_string)
-        call InputReadAndConvertUnits(input,wippflo_pres_min_pert, &
+        call input%ReadDouble(option,wippflo_pres_min_pert)
+        call input%ErrorMsg(option,keyword,error_string)
+        call input%ReadAndConvertUnits(wippflo_pres_min_pert, &
                                       'Pa',keyword,option)
       case('REL_GAS_SATURATION_PERTURBATION')
-        call InputReadDouble(input,option,wippflo_sat_rel_pert)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,wippflo_sat_rel_pert)
+        call input%ErrorMsg(option,keyword,error_string)
       case('MIN_GAS_SATURATION_PERTURBATION')
-        call InputReadDouble(input,option,wippflo_sat_min_pert)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,wippflo_sat_min_pert)
+        call input%ErrorMsg(option,keyword,error_string)
       case('GAS_SAT_THRESH_FORCE_TS_CUT')
-        call InputReadDouble(input,option,this%gas_sat_thresh_force_ts_cut)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%gas_sat_thresh_force_ts_cut)
+        call input%ErrorMsg(option,keyword,error_string)
       case('GAS_SAT_THRESH_FORCE_EXTRA_NI')
-        call InputReadDouble(input,option,this%gas_sat_thresh_force_extra_ni)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%gas_sat_thresh_force_extra_ni)
+        call input%ErrorMsg(option,keyword,error_string)
       case('MIN_LIQ_PRES_FORCE_TS_CUT')
-        call InputReadDouble(input,option,this%min_liq_pres_force_ts_cut)
-        call InputErrorMsg(input,option,keyword,error_string)
-        call InputReadAndConvertUnits(input,this%min_liq_pres_force_ts_cut, &
+        call input%ReadDouble(option,this%min_liq_pres_force_ts_cut)
+        call input%ErrorMsg(option,keyword,error_string)
+        call input%ReadAndConvertUnits(this%min_liq_pres_force_ts_cut, &
                                       'Pa',keyword,option)
       case('MAX_ALLOW_GAS_SAT_CHANGE_TS')
-        call InputReadDouble(input,option,this%max_allow_gas_sat_change_ts)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%max_allow_gas_sat_change_ts)
+        call input%ErrorMsg(option,keyword,error_string)
       case('MAX_ALLOW_LIQ_PRES_CHANGE_TS')
-        call InputReadDouble(input,option,this%max_allow_liq_pres_change_ts)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%max_allow_liq_pres_change_ts)
+        call input%ErrorMsg(option,keyword,error_string)
         ! units conversion since it is absolute
-        call InputReadAndConvertUnits(input,this%max_allow_liq_pres_change_ts, &
+        call input%ReadAndConvertUnits(this%max_allow_liq_pres_change_ts, &
                                       'Pa',keyword,option)
       case('GAS_SAT_CHANGE_TS_GOVERNOR')
-        call InputReadDouble(input,option,this%gas_sat_change_ts_governor)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%gas_sat_change_ts_governor)
+        call input%ErrorMsg(option,keyword,error_string)
       case('LIQ_PRES_CHANGE_TS_GOVERNOR')
-        call InputReadDouble(input,option,this%liq_pres_change_ts_governor)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%liq_pres_change_ts_governor)
+        call input%ErrorMsg(option,keyword,error_string)
         ! units conversion since it is absolute
-        call InputReadAndConvertUnits(input,this%liq_pres_change_ts_governor, &
+        call input%ReadAndConvertUnits(this%liq_pres_change_ts_governor, &
                                       'Pa',keyword,option)
       case('GAS_SAT_GOV_SWITCH_ABS_TO_REL')
-        call InputReadDouble(input,option,this%gas_sat_gov_switch_abs_to_rel)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%gas_sat_gov_switch_abs_to_rel)
+        call input%ErrorMsg(option,keyword,error_string)
       case('MINIMUM_TIMESTEP_SIZE')
-        call InputReadDouble(input,option,this%minimum_timestep_size)
-        call InputErrorMsg(input,option,keyword,error_string)
-        call InputReadAndConvertUnits(input,this%minimum_timestep_size, &
+        call input%ReadDouble(option,this%minimum_timestep_size)
+        call input%ErrorMsg(option,keyword,error_string)
+        call input%ReadAndConvertUnits(this%minimum_timestep_size, &
                                       'sec',keyword,option)
       case('CONVERGENCE_TEST')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,keyword,error_string)
         call StringToUpper(word)
         select case(word)
           case('BOTH')
@@ -343,16 +343,16 @@ subroutine PMWIPPFloRead(this,input)
       case('RESIDUAL_TEST')
         wippflo_residual_test = PETSC_TRUE
       case('RESIDUAL_TEST_CELL')
-        call InputReadInt(input,option,wippflo_residual_test_cell)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadInt(option,wippflo_residual_test_cell)
+        call input%ErrorMsg(option,keyword,error_string)
       case('JACOBIAN_TEST')
         wippflo_jacobian_test = PETSC_TRUE
       case('JACOBIAN_TEST_RDOF')
-        call InputReadInt(input,option,wippflo_jacobian_test_rdof)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadInt(option,wippflo_jacobian_test_rdof)
+        call input%ErrorMsg(option,keyword,error_string)
       case('JACOBIAN_TEST_XDOF')
-        call InputReadInt(input,option,wippflo_jacobian_test_xdof)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadInt(option,wippflo_jacobian_test_xdof)
+        call input%ErrorMsg(option,keyword,error_string)
       case('NO_ACCUMULATION')
         wippflo_calc_accum = PETSC_FALSE
       case('NO_FLUX')
@@ -374,28 +374,28 @@ subroutine PMWIPPFloRead(this,input)
       case('DEFAULT_ALPHA')
         wippflo_default_alpha = PETSC_TRUE
       case('ALPHA_DATASET')
-        call InputReadNChars(input,option,this%alpha_dataset_name,&
+        call input%ReadNChars(option,this%alpha_dataset_name,&
                              MAXWORDLENGTH,PETSC_TRUE)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ErrorMsg(option,keyword,error_string)
       case('ELEVATION_DATASET')
-        call InputReadNChars(input,option,this%elevation_dataset_name,&
+        call input%ReadNChars(option,this%elevation_dataset_name,&
                              MAXWORDLENGTH,PETSC_TRUE)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ErrorMsg(option,keyword,error_string)
       case('DIP_ROTATION_ANGLE')
-        call InputReadDouble(input,option,this%rotation_angle)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%rotation_angle)
+        call input%ErrorMsg(option,keyword,error_string)
         ! convert to radians
         ! acos(-1) = pi
         this%rotation_angle = this%rotation_angle * acos(-1.d0) / 180.d0
       case('DIP_ROTATION_ORIGIN')
-        call InputReadNDoubles(input,option,this%rotation_origin,THREE_INTEGER)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadNDoubles(option,this%rotation_origin,THREE_INTEGER)
+        call input%ErrorMsg(option,keyword,error_string)
       case('DIP_ROTATION_CEILING')
-        call InputReadDouble(input,option,this%rotation_ceiling)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%rotation_ceiling)
+        call input%ErrorMsg(option,keyword,error_string)
       case('DIP_ROTATION_BASEMENT')
-        call InputReadDouble(input,option,this%rotation_basement)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%rotation_basement)
+        call input%ErrorMsg(option,keyword,error_string)
       case('DIP_ROTATION_REGIONS')
         strings => StringSplit(adjustl(input%buf),' ')
         allocate(this%rotation_region_names(size(strings)))
@@ -403,8 +403,8 @@ subroutine PMWIPPFloRead(this,input)
         deallocate(strings)
         nullify(strings)
       case('JACOBIAN_PRESSURE_DERIV_SCALE')
-        call InputReadDouble(input,option,this%linear_system_scaling_factor)
-        call InputErrorMsg(input,option,keyword,error_string)
+        call input%ReadDouble(option,this%linear_system_scaling_factor)
+        call input%ErrorMsg(option,keyword,error_string)
       case('SCALE_JACOBIAN')
         this%scale_linear_system = PETSC_TRUE
       case('DO_NOT_SCALE_JACOBIAN')
@@ -414,23 +414,23 @@ subroutine PMWIPPFloRead(this,input)
         int_array = 0.d0
         do
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,keyword)
+          call input%ReadStringErrorMsg(option,keyword)
           if (InputCheckExit(input,option)) exit
           if (icount+1 > max_dirichlet_bc) then
             option%io_buffer = 'Must increase size of "max_dirichlet_bc" & 
               &in PMWIPPFloRead'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
-          call InputReadInt(input,option,temp_int)
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'pressure', &
+          call input%ReadInt(option,temp_int)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'pressure', &
                              '2D_FLARED_DIRICHLET_BCS')
           if (StringYesNoOther(word) == STRING_YES) then
             icount = icount + 1
             int_array(icount) = (temp_int-1)*2+1
           endif
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'saturation', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'saturation', &
                              '2D_FLARED_DIRICHLET_BCS')
           if (StringYesNoOther(word) == STRING_YES) then
             icount = icount + 1
@@ -452,23 +452,23 @@ subroutine PMWIPPFloRead(this,input)
       this%gas_sat_thresh_force_ts_cut) then
     option%io_buffer = 'The value of GAS_SAT_THRESH_FORCE_TS_CUT must &
                        &be larger than GAS_SAT_THRESH_FORCE_EXTRA_NI.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   ! Check the sign of given variables
   if (this%gas_sat_thresh_force_ts_cut < 0.d0) then
     option%io_buffer = 'The value of GAS_SAT_THRESH_FORCE_TS_CUT &
                        &must be positive.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (this%min_liq_pres_force_ts_cut > 0.d0) then
     option%io_buffer = 'The value of MIN_LIQ_PRES_FORCE_TS_CUT &
                        &must be negative.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (this%gas_sat_thresh_force_extra_ni < 0.d0) then
     option%io_buffer = 'The value of GAS_SAT_THRESH_FORCE_EXTRA_NI &
                        &must be positive.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   ! always calculate neg_log10_rel_gas_sat_change_ni automatically
   this%neg_log10_rel_gas_sat_change_ni = &
@@ -504,7 +504,7 @@ recursive subroutine PMWIPPFloInitializeRun(this)
   
   PetscInt :: i
   PetscErrorCode :: ierr
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: block_string
   class(dataset_base_type), pointer :: dataset
   type(field_type), pointer :: field
@@ -581,12 +581,12 @@ recursive subroutine PMWIPPFloInitializeRun(this)
                                     work_loc_p,ierr);CHKERRQ(ierr)
       class default
         this%option%io_buffer = 'Unsupported dataset type for BRAGFLO ALPHA.'
-        call printErrMsg(this%option)
+        call this%option%PrintErrMsg()
     end select
   else
     if (.not.wippflo_default_alpha .and. wippflo_use_lumped_harm_flux) then
       this%option%io_buffer = 'ALPHA should have been read from a dataset.'
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
     endif
   endif
 
@@ -624,12 +624,12 @@ recursive subroutine PMWIPPFloInitializeRun(this)
       class default
         this%option%io_buffer = 'Unsupported dataset type for WIPP FLOW &
           &Elevation.'
-        call printErrMsg(this%option)
+        call this%option%PrintErrMsg()
     end select
   else if (Initialized(this%rotation_angle)) then
     if (.not.Initialized(this%rotation_origin(3))) then
       this%option%io_buffer = 'An origin must be defined for dip rotation.'
-      call PrintErrMsg(this%option)
+      call this%option%PrintErrMsg()
     endif
     call VecGetArrayF90(this%realization%field%work,work_p,ierr);CHKERRQ(ierr)
     do local_id = 1, grid%nlmax
@@ -656,7 +656,7 @@ recursive subroutine PMWIPPFloInitializeRun(this)
           this%option%io_buffer = 'Region "' // &
                trim(this%rotation_region_names(iregion)) // &
                '" in WIPP FLOW Elevation definition not found in region list'
-          call PrintErrMsg(this%option)
+          call this%option%PrintErrMsg()
         endif
         do icell = 1, region%num_cells
           local_id = region%cell_ids(icell)
@@ -1034,7 +1034,7 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
 !    if (this%option%mycommsize > 1) then
 !      this%option%io_buffer = 'WIPP FLOW matrix scaling not allowed in &
 !        &parallel.'
-!      call printErrMsg(this%option)
+!      call this%option%PrintErrMsg()
 !    endif
     call VecGetLocalSize(this%scaling_vec,matsize,ierr);CHKERRQ(ierr)
     call VecSet(this%scaling_vec,1.d0,ierr);CHKERRQ(ierr)
@@ -1075,13 +1075,13 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   if (this%realization%debug%norm_Jacobian) then
     call MatNorm(A,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(this%option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call MatNorm(A,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(this%option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call MatNorm(A,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(this%option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(this%option)
+    call this%option%PrintMsg()
   endif
 
 end subroutine PMWIPPFloJacobian
@@ -1153,7 +1153,7 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   PetscErrorCode :: ierr
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
 
@@ -1480,7 +1480,7 @@ subroutine PMWIPPFloCheckConvergence(this,snes,it,xnorm,unorm, &
   character(len=10) :: reason_string
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
@@ -1981,7 +1981,7 @@ subroutine PMWIPPFloMaxChange(this)
   class(pm_wippflo_type) :: this
   
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   PetscReal, pointer :: vec_old_ptr(:), vec_new_ptr(:)

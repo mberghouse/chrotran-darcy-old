@@ -459,8 +459,8 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
   implicit none
 
   class(sat_func_owg_base_type) :: sat_func_owg
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -484,16 +484,16 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
 
     ! read sat_func_owg_base
     found = PETSC_TRUE
     select case(keyword)
       case('MAX_CAPILLARY_PRESSURE')
-        call InputReadDouble(input,option,sat_func_owg%pcmax)
-        call InputErrorMsg(input,option,'MAX_CAPILLARY_PRESSURE', &
+        call input%ReadDouble(option,sat_func_owg%pcmax)
+        call input%ErrorMsg(option,'MAX_CAPILLARY_PRESSURE', &
                             error_string)
         if ( associated(sat_func_owg%sat_func_sl) ) then
           sat_func_owg%sat_func_sl%pcmax = sat_func_owg%pcmax
@@ -514,8 +514,8 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
       class is(sat_func_xw_base_type)
         select case(keyword)
           case('WATER_CONNATE_SATURATION')
-            call InputReadDouble(input,option,sf_owg%Swco)
-            call InputErrorMsg(input,option,'CONNATE_WATER_SATURATION', &
+            call input%ReadDouble(option,sf_owg%Swco)
+            call input%ErrorMsg(option,'CONNATE_WATER_SATURATION', &
                                error_string)
           case default
             found = PETSC_FALSE
@@ -523,8 +523,8 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
       class is(sat_func_og_base_type)  
         select case(keyword)
           case('GAS_CONNATE_SATURATION')
-            call InputReadDouble(input,option,sf_owg%Sgco)
-            call InputErrorMsg(input,option,'CONNATE_WATER_SATURATION', &
+            call input%ReadDouble(option,sf_owg%Sgco)
+            call input%ErrorMsg(option,'CONNATE_WATER_SATURATION', &
                                error_string)
           case default
             found = PETSC_FALSE
@@ -539,16 +539,16 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
           class is(sat_func_VG_type)
             select case(keyword)              
               case('M')
-                call InputReadDouble(input,option,sf_owg%m)
-                call InputErrorMsg(input,option,'M',error_string)
+                call input%ReadDouble(option,sf_owg%m)
+                call input%ErrorMsg(option,'M',error_string)
                 sf_sl%m = sf_owg%m
               case('ALPHA')
-                call InputReadDouble(input,option,sf_owg%alpha)
-                call InputErrorMsg(input,option,'ALPHA',error_string)
+                call input%ReadDouble(option,sf_owg%alpha)
+                call input%ErrorMsg(option,'ALPHA',error_string)
                 sf_sl%alpha = sf_owg%alpha
               case('WATER_RESIDUAL_SATURATION')
-                call InputReadDouble(input,option,sf_owg%Swcr)
-                call InputErrorMsg(input,option,'WATER_RESIDUAL_SATURATION', &
+                call input%ReadDouble(option,sf_owg%Swcr)
+                call input%ErrorMsg(option,'WATER_RESIDUAL_SATURATION', &
                                    error_string)
                 sf_sl%Sr = sf_owg%Swcr
               case default
@@ -561,16 +561,16 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
         class is(sat_func_BC_type)
             select case(keyword)              
             case('LAMBDA')
-                call InputReadDouble(input,option,sf_owg%lambda)
-                call InputErrorMsg(input,option,'LAMBDA',error_string)
+                call input%ReadDouble(option,sf_owg%lambda)
+                call input%ErrorMsg(option,'LAMBDA',error_string)
                 sf_sl%lambda = sf_owg%lambda
               case('ALPHA')
-                call InputReadDouble(input,option,sf_owg%alpha)
-                call InputErrorMsg(input,option,'ALPHA',error_string)
+                call input%ReadDouble(option,sf_owg%alpha)
+                call input%ErrorMsg(option,'ALPHA',error_string)
                 sf_sl%alpha = sf_owg%alpha
               case('WATER_RESIDUAL_SATURATION')
-                call InputReadDouble(input,option,sf_owg%Swcr)
-                call InputErrorMsg(input,option,'WATER_RESIDUAL_SATURATION', &
+                call input%ReadDouble(option,sf_owg%Swcr)
+                call input%ErrorMsg(option,'WATER_RESIDUAL_SATURATION', &
                                    error_string)
                 sf_sl%Sr = sf_owg%Swcr
               case default
@@ -581,9 +581,9 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
       class is(sat_func_xw_constant_type)
         select case(keyword)                
           case('CONSTANT_PRESSURE')
-            call InputReadDouble(input,option, &
+            call input%ReadDouble(option, &
                                   sf_owg%constant_capillary_pressure)
-            call InputErrorMsg(input,option,'CONSTANT_CAPILLARY_PRESSURE', &
+            call input%ErrorMsg(option,'CONSTANT_CAPILLARY_PRESSURE', &
                                 error_string)
             sf_owg%pcmax = sf_owg%constant_capillary_pressure
         end select        
@@ -592,16 +592,16 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
           class is(sat_func_VG_type)
             select case(keyword)
               case('M')
-                call InputReadDouble(input,option,sf_owg%m)
-                call InputErrorMsg(input,option,'M',error_string)
+                call input%ReadDouble(option,sf_owg%m)
+                call input%ErrorMsg(option,'M',error_string)
                 sf_sl%m = sf_owg%m
               case('ALPHA')
-                call InputReadDouble(input,option,sf_owg%alpha)
-                call InputErrorMsg(input,option,'ALPHA',error_string)
+                call input%ReadDouble(option,sf_owg%alpha)
+                call input%ErrorMsg(option,'ALPHA',error_string)
                 sf_sl%alpha = sf_owg%alpha
               case('LIQUID_RESIDUAL_SATURATION')
-                call InputReadDouble(input,option,sf_owg%Slcr)
-                call InputErrorMsg(input,option,'LIQUID_RESIDUAL_SATURATION', &
+                call input%ReadDouble(option,sf_owg%Slcr)
+                call input%ErrorMsg(option,'LIQUID_RESIDUAL_SATURATION', &
                                    error_string)
                 sf_sl%Sr = sf_owg%Slcr
               case default
@@ -612,9 +612,9 @@ subroutine SaturationFunctionOWGRead(sat_func_owg,input,option)
       class is(sat_func_og_constant_type)
         select case(keyword)
           case('CONSTANT_PRESSURE')
-            call InputReadDouble(input,option, &
+            call input%ReadDouble(option, &
                                   sf_owg%constant_capillary_pressure)
-            call InputErrorMsg(input,option,'CONSTANT_CAPILLARY_PRESSURE', &
+            call input%ErrorMsg(option,'CONSTANT_CAPILLARY_PRESSURE', &
                                 error_string)
             sf_owg%pcmax = sf_owg%constant_capillary_pressure
         end select  
@@ -642,8 +642,8 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
   implicit none
   
   class(rel_perm_owg_base_type) :: permeability_function
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
     
   character(len=MAXWORDLENGTH) :: keyword
   
@@ -708,19 +708,19 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
 
     !rel perm owg base
     found = PETSC_TRUE
     select case(keyword)
       case('M')
-        call InputReadDouble(input,option,permeability_function%m)
-        call InputErrorMsg(input,option,'M',error_string)    
+        call input%ReadDouble(option,permeability_function%m)
+        call input%ErrorMsg(option,'M',error_string)
       case('MAX_RELATIVE_PERMEABILITY','MAX_REL_PERM')
-        call InputReadDouble(input,option,permeability_function%kr_max)
-        call InputErrorMsg(input,option,'MAX_RELATIVE_PERMEABILITY', &
+        call input%ReadDouble(option,permeability_function%kr_max)
+        call input%ErrorMsg(option,'MAX_RELATIVE_PERMEABILITY', &
                            error_string)
       case('TABLE_NAME')
         !read table name
@@ -737,13 +737,13 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
       class is(rel_perm_wat_owg_base_type)
         select case(keyword)
         case('WATER_CONNATE_SATURATION')
-          call InputReadDouble(input,option,rpf%Swco)
-          call InputErrorMsg(input,option,'WATER_CONNATE_SATURATION', &
+          call input%ReadDouble(option,rpf%Swco)
+          call input%ErrorMsg(option,'WATER_CONNATE_SATURATION', &
                              error_string)
           found = PETSC_TRUE          
           case('WATER_RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Swcr)
-            call InputErrorMsg(input,option,'WATER_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Swcr)
+            call input%ErrorMsg(option,'WATER_RESIDUAL_SATURATION', &
                                error_string)
             found = PETSC_TRUE
           !case default
@@ -759,8 +759,8 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
       class is(RPF_wat_owg_Burdine_BC_type)
         select case(keyword)
           case('LAMBDA')
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
             found = PETSC_TRUE
         end select    
     end select
@@ -772,13 +772,13 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
       class is(rel_perm_gas_owg_base_type)
         select case(keyword)
         case('GAS_CONNATE_SATURATION')
-            call InputReadDouble(input,option,rpf%Sgco)
-            call InputErrorMsg(input,option,'GAS_CONNATE_SATURATION', &
+            call input%ReadDouble(option,rpf%Sgco)
+            call input%ErrorMsg(option,'GAS_CONNATE_SATURATION', &
                              error_string)
             found = PETSC_TRUE          
           case('GAS_RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Sgcr)
-            call InputErrorMsg(input,option,'GAS_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Sgcr)
+            call input%ErrorMsg(option,'GAS_RESIDUAL_SATURATION', &
                                error_string)
             found = PETSC_TRUE
         end select  
@@ -792,8 +792,8 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
       class is(RPF_gas_owg_func_sl_type)
         select case(keyword)
           case('LIQUID_RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Slcr)
-            call InputErrorMsg(input,option,'LIQUID_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Slcr)
+            call input%ErrorMsg(option,'LIQUID_RESIDUAL_SATURATION', &
                                error_string)
             found = PETSC_TRUE
         end select    
@@ -806,8 +806,8 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
       class is(RPF_gas_owg_Burdine_BC_type)
         select case(keyword)
           case('LAMBDA')
-            call InputReadDouble(input,option,rpf%lambda)
-            call InputErrorMsg(input,option,'LAMBDA',error_string)
+            call input%ReadDouble(option,rpf%lambda)
+            call input%ErrorMsg(option,'LAMBDA',error_string)
             found = PETSC_TRUE
         end select    
     end select
@@ -824,15 +824,15 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
                              &requires an hydrocarbon residual sarturation, &
                              &instead of an oil residual saturation: &
                              & Shcr = Socr + Sgcr + Sscr must be entered' 
-              call printErrMsg(option)              
+              call option%PrintErrMsg()
             end if  
-            call InputReadDouble(input,option,rpf%Sowcr)
-            call InputErrorMsg(input,option,'OIL_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Sowcr)
+            call input%ErrorMsg(option,'OIL_RESIDUAL_SATURATION', &
                                error_string)
             found = PETSC_TRUE
           case('HYDROCARBON_RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Sowcr)
-            call InputErrorMsg(input,option,'HYDROCARBON_RESIDUAL_SATURATION',&
+            call input%ReadDouble(option,rpf%Sowcr)
+            call input%ErrorMsg(option,'HYDROCARBON_RESIDUAL_SATURATION',&
                                error_string)
             found = PETSC_TRUE            
         end select    
@@ -845,8 +845,8 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
       class is(rel_perm_og_owg_base_type)
         select case(keyword)
           case('OIL_RESIDUAL_SATURATION')
-            call InputReadDouble(input,option,rpf%Sogcr)
-            call InputErrorMsg(input,option,'OIL_RESIDUAL_SATURATION', &
+            call input%ReadDouble(option,rpf%Sogcr)
+            call input%ErrorMsg(option,'OIL_RESIDUAL_SATURATION', &
                                error_string)
             found = PETSC_TRUE
           !case default
@@ -859,8 +859,8 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
       class is(rel_perm_oil_owg_ecl_type)
         select case(keyword)
           case('PERMEABILITY_FUNCTION_OW','KROW')
-            call InputReadWord(input,option,perm_func_ch_type,PETSC_TRUE)
-            call InputErrorMsg(input,option,'perm_func_ch_type',error_string)
+            call input%ReadWord(option,perm_func_ch_type,PETSC_TRUE)
+            call input%ErrorMsg(option,'perm_func_ch_type',error_string)
             perm_func_ch_type = trim(perm_func_ch_type)
             call StringToUpper(perm_func_ch_type)
             select case(perm_func_ch_type)
@@ -873,12 +873,12 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
             call PermeabilityFunctionOWGRead(rpf%rel_perm_ow,input,option)
           case('KROW_TABLE')
             rpf%rel_perm_ow => RPF_ow_owg_table_Create()
-            call InputReadWord(input,option, &
+            call input%ReadWord(option, &
                                rpf%rel_perm_ow%table_name,PETSC_TRUE)
-            call InputErrorMsg(input,option,'KROW_TABLE',error_string)
+            call input%ErrorMsg(option,'KROW_TABLE',error_string)
           case('PERMEABILITY_FUNCTION_OG','KROG')
-            call InputReadWord(input,option,perm_func_ch_type,PETSC_TRUE)
-            call InputErrorMsg(input,option,'perm_func_ch_type',error_string)
+            call input%ReadWord(option,perm_func_ch_type,PETSC_TRUE)
+            call input%ErrorMsg(option,'perm_func_ch_type',error_string)
             perm_func_ch_type = trim(perm_func_ch_type)
             call StringToUpper(perm_func_ch_type)
             select case(perm_func_ch_type)
@@ -891,15 +891,15 @@ recursive subroutine PermeabilityFunctionOWGRead(permeability_function, &
             call PermeabilityFunctionOWGRead(rpf%rel_perm_og,input,option)
           case('KROG_TABLE')
             rpf%rel_perm_og => RPF_og_owg_table_Create()
-            call InputReadWord(input,option, &
+            call input%ReadWord(option, &
                                rpf%rel_perm_og%table_name,PETSC_TRUE)
-            call InputErrorMsg(input,option,'KROG_TABLE',error_string)
+            call input%ErrorMsg(option,'KROG_TABLE',error_string)
           case('KRO_TABLE')
             rpf%rel_perm_ow => RPF_ow_owg_table_Create()
             rpf%rel_perm_og => RPF_og_owg_table_Create()
-            call InputReadWord(input,option, &
+            call input%ReadWord(option, &
                                rpf%rel_perm_ow%table_name,PETSC_TRUE)
-            call InputErrorMsg(input,option,'KRO_TABLE',error_string)
+            call input%ErrorMsg(option,'KRO_TABLE',error_string)
             rpf%rel_perm_og%table_name = rpf%rel_perm_ow%table_name
           case default
             call InputKeywordUnrecognized(keyword, &
@@ -992,14 +992,14 @@ subroutine SFOWGBaseVerify(this,name,option)
   
   class(sat_func_owg_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   if ((.not.this%analytical_derivative_available) .and. &
       (.not.option%flow%numerical_derivatives)) then
     option%io_buffer = 'Analytical derivatives are not available for the &
       &capillary pressure - saturation function chosen: ' // &
       trim(name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SFOWGBaseVerify
@@ -1014,10 +1014,10 @@ subroutine SFOWGBaseTest(this,cc_name,option)
 
   class(sat_func_owg_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   option%io_buffer = 'SFOWGBaseTest must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SFOWGBaseTest
 
@@ -1029,11 +1029,11 @@ subroutine SFOWGBaseSetupPolynomials(this,option,error_string)
   implicit none
 
   class(sat_func_owg_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   option%io_buffer = 'SF OWG Smoothing not supported for ' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SFOWGBaseSetupPolynomials
 
@@ -1047,7 +1047,7 @@ subroutine SFOWGBaseProcessTable(this,char_curves_tables,error_string,option)
   class(sat_func_owg_base_type) :: this
   class(char_curves_table_type), pointer :: char_curves_tables
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: error_string_lc
   PetscInt :: sat_i_max
@@ -1133,18 +1133,18 @@ subroutine SFXWBaseVerify(this,name,option)
   
   class(sat_func_xw_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option  
+  class(option_type) :: option  
 
   call SFOWGBaseVerify(this,name,option)
 
   if (Uninitialized(this%Swco)) then
     option%io_buffer = UninitializedMessage('WATER_CONNATE_SATURATION',name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%Swcr)) then
     option%io_buffer = UninitializedMessage('WATER_RESIDUAL_SATURATION',name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SFXWBaseVerify
@@ -1161,7 +1161,7 @@ subroutine SFXWBaseTest(this,cc_name,option)
   !class(sat_func_owg_base_type) :: this
   class(sat_func_xw_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt, parameter :: num_values = 101
@@ -1213,11 +1213,11 @@ subroutine SFXWBaseCapillaryPressure(this,wat_saturation,capillary_pressure,&
   PetscReal, intent(in) :: wat_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatw
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   option%io_buffer = 'SFXWBaseCapillaryPressure must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SFXWBaseCapillaryPressure
 
@@ -1232,11 +1232,11 @@ subroutine SFXWBaseSaturation(this,capillary_pressure,wat_saturation, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: wat_saturation
   PetscReal, intent(out) :: dsatw_dpc
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   option%io_buffer = 'SFXWBaseSaturation must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SFXWBaseSaturation
 
@@ -1249,7 +1249,7 @@ implicit none
 
 class(sat_func_xw_base_type) :: this
 PetscReal, intent(in) :: swco
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 this%Swco = swco
 
@@ -1264,7 +1264,7 @@ implicit none
 
 PetscReal :: SFXWGetConnateSatBase
 class(sat_func_xw_base_type) :: this
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 SFXWGetConnateSatBase = this%Swco
 
@@ -1279,7 +1279,7 @@ implicit none
 
 class(sat_func_xw_base_type) :: this
 PetscReal, intent(in) :: swcr
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 this%Swcr = swcr
 
@@ -1294,7 +1294,7 @@ implicit none
 
 PetscReal :: SFXWGetCriticalSatBase
 class(sat_func_xw_base_type) :: this
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 SFXWGetCriticalSatBase = this%Swcr
 
@@ -1308,7 +1308,7 @@ subroutine SFXWComputePcMin(this,option)
   implicit none
 
   class(sat_func_xw_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: sw_max, dpc_dsatw
 
@@ -1368,7 +1368,7 @@ subroutine SF_XW_VG_Verify(this,name,option)
 
   class(sat_func_xw_VG_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -1382,19 +1382,19 @@ subroutine SF_XW_VG_Verify(this,name,option)
 
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA = 1/Pcc',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if ( .not.associated(this%sat_func_sl) ) then
     option%io_buffer = 'Not analytical function associated with the capillary &
       & pressure between X and water - saturation function chosen: ' // &
       trim(string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   call this%sat_func_sl%verify(name,option)
@@ -1413,7 +1413,7 @@ subroutine SF_XW_VG_CapillaryPressure(this,wat_saturation,capillary_pressure, &
   PetscReal, intent(in) :: wat_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatw
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscReal, parameter :: eps_wat=1.0d-5
@@ -1442,7 +1442,7 @@ subroutine SF_XW_VG_Saturation(this,capillary_pressure,wat_saturation, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: wat_saturation
   PetscReal, intent(out) :: dsatw_dpc
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   call this%sat_func_sl%Saturation(capillary_pressure, &
@@ -1494,7 +1494,7 @@ subroutine SF_XW_BC_Verify(this,name,option)
 
   class(sat_func_xw_BC_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -1508,19 +1508,19 @@ subroutine SF_XW_BC_Verify(this,name,option)
 
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA = 1/Pcc',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if ( .not.associated(this%sat_func_sl) ) then
     option%io_buffer = 'Not analytical function associated with the capillary &
       & pressure between X and water - saturation function chosen: ' // &
       trim(string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   call this%sat_func_sl%verify(name,option)
@@ -1538,7 +1538,7 @@ subroutine SF_XW_BC_CapillaryPressure(this,wat_saturation,capillary_pressure, &
   PetscReal, intent(in) :: wat_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatw
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscReal, parameter :: eps_wat=1.0d-5
@@ -1566,7 +1566,7 @@ subroutine SF_XW_BC_Saturation(this,capillary_pressure,wat_saturation, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: wat_saturation
   PetscReal, intent(out) :: dsatw_dpc
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   call this%sat_func_sl%Saturation(capillary_pressure, &
@@ -1612,7 +1612,7 @@ subroutine SF_XW_table_CapillaryPressure(this,wat_saturation, &
   PetscReal, intent(in) :: wat_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatw
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscErrorCode :: ierr
@@ -1633,7 +1633,7 @@ subroutine SF_XW_table_Saturation(this,capillary_pressure,wat_saturation, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: wat_saturation
   PetscReal, intent(out) :: dsatw_dpc
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscErrorCode :: ierr
@@ -1683,7 +1683,7 @@ subroutine SF_XW_constant_Verify(this,name,option)
 
   class(sat_func_xw_constant_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -1699,7 +1699,7 @@ subroutine SF_XW_constant_Verify(this,name,option)
   if (Uninitialized(this%constant_capillary_pressure)) then
     option%io_buffer = 'CONSTANT_CAPILLARY_PRESSURE must be specified &
       &for ' // trim(string) // '.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SF_XW_constant_Verify
@@ -1716,7 +1716,7 @@ subroutine SF_XW_const_CapillaryPressure(this,wat_saturation, &
   PetscReal, intent(in) :: wat_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatw
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   capillary_pressure = this%constant_capillary_pressure
@@ -1735,11 +1735,11 @@ subroutine SF_XW_const_Saturation(this,capillary_pressure,wat_saturation, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: wat_saturation
   PetscReal, intent(out) :: dsatw_dpc
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   option%io_buffer = 'SF_XW_const_Saturation not supported.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SF_XW_const_Saturation
 
@@ -1769,7 +1769,7 @@ subroutine SFOGBaseVerify(this,name,option)
   
   class(sat_func_og_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -1783,12 +1783,12 @@ subroutine SFOGBaseVerify(this,name,option)
   
   if (Uninitialized(this%Sgcr)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%Sgco)) then
     option%io_buffer = UninitializedMessage('GAS_CONNATE_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SFOGBaseVerify
@@ -1803,7 +1803,7 @@ subroutine SFOGBaseTest(this,cc_name,option)
 
   class(sat_func_og_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt, parameter :: num_values = 101
@@ -1850,11 +1850,11 @@ subroutine SFOGBaseSetupPolynomials(this,option,error_string)
   implicit none
 
   class(sat_func_og_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   option%io_buffer = 'SF OG Smoothing not supported for ' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SFOGBaseSetupPolynomials
 
@@ -1869,11 +1869,11 @@ subroutine SFOGBaseCapillaryPressure(this,gas_saturation,capillary_pressure, &
   PetscReal, intent(in) :: gas_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatg
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   option%io_buffer = 'SFOGBaseCapillaryPressure must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SFOGBaseCapillaryPressure
 
@@ -1888,13 +1888,13 @@ subroutine SFOGBaseSaturation(this,capillary_pressure,gas_saturation, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: gas_saturation
   PetscReal, intent(out) :: dsatg_dpc
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscErrorCode :: ierr
 
   option%io_buffer = 'SFOGBaseSaturation must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine SFOGBaseSaturation
 
@@ -1907,7 +1907,7 @@ implicit none
 
 class(sat_func_og_base_type) :: this
 PetscReal :: sgco
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 this%Sgco = sgco
 
@@ -1922,7 +1922,7 @@ implicit none
 
 PetscReal :: SFOGGetConnateSatBase
 class(sat_func_og_base_type) :: this
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 SFOGGetConnateSatBase = this%Sgco
 
@@ -1937,7 +1937,7 @@ implicit none
 
 class(sat_func_og_base_type) :: this
 PetscReal :: sgcr
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 this%Sgcr = sgcr
 
@@ -1952,7 +1952,7 @@ implicit none
 
 PetscReal :: SFOGGetCriticalSatBase
 class(sat_func_og_base_type) :: this
-type(option_type), intent(inout) :: option
+class(option_type), intent(inout) :: option
 
 SFOGGetCriticalSatBase = this%Sgcr
 
@@ -1966,7 +1966,7 @@ subroutine SFOGComputePcMin(this,option)
   implicit none
   
   class(sat_func_og_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: sg_min, dpc_dsatg
   sg_min = 0.0d0
@@ -2019,7 +2019,7 @@ subroutine SF_OG_constant_Verify(this,name,option)
 
   class(sat_func_og_constant_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -2033,7 +2033,7 @@ subroutine SF_OG_constant_Verify(this,name,option)
 
   if (Uninitialized(this%constant_capillary_pressure)) then
     option%io_buffer = UninitializedMessage('Pcog_const',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SF_OG_constant_Verify
@@ -2051,7 +2051,7 @@ subroutine SF_OG_Const_CapillaryPressure(this, gas_saturation, &
   PetscReal, intent(in) :: gas_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatg
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   capillary_pressure = this%constant_capillary_pressure
@@ -2109,7 +2109,7 @@ subroutine SF_OG_VG_SL_Verify(this,name,option)
 
   class(sat_func_og_VG_SL_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -2123,7 +2123,7 @@ subroutine SF_OG_VG_SL_Verify(this,name,option)
     option%io_buffer = 'Not analytical function associated with the capillary &
       & pressure between oil and gas - saturation function chosen: ' // &
       trim(string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   !call SFOWGBaseVerify(this,string,option)
@@ -2131,17 +2131,17 @@ subroutine SF_OG_VG_SL_Verify(this,name,option)
 
   if (Uninitialized(this%Slcr)) then
     option%io_buffer = UninitializedMessage('LIQUID_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('alpha = 1/Pcc',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call this%sat_func_sl%verify(name,option)
@@ -2161,7 +2161,7 @@ subroutine SF_OG_VG_SL_CapillaryPressure(this, gas_saturation, &
   PetscReal, intent(in) :: gas_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatg
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscReal, parameter :: eps_liq = 1.0d-5
@@ -2219,7 +2219,7 @@ subroutine SF_OG_table_CapillaryPressure(this,gas_saturation, &
   PetscReal, intent(in) :: gas_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatg
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscErrorCode :: ierr
@@ -2240,7 +2240,7 @@ subroutine SF_OG_table_Saturation(this,capillary_pressure,gas_saturation, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: gas_saturation
   PetscReal, intent(out) :: dsatg_dpc
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscErrorCode :: ierr
@@ -2287,20 +2287,20 @@ subroutine RPFOWGBaseVerify(this,name,option)
 
   class(rel_perm_owg_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   ! by default kr_max = 1.0 - if entered the value must be bound beween 0 and 1
   if ( this%kr_max < 0.0 .or. this%kr_max > 1.0 ) then
     option%io_buffer = adjustl(trim(name)) // ' MAX_REL_PERM entered &
                                    &not valid, must be 0 <= Kr_max <= 1'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   if ((.not.this%analytical_derivative_available) .and. &
       (.not.option%flow%numerical_derivatives)) then
     option%io_buffer = 'Analytical derivatives are not available for the &
       &relative permeability function chosen: ' // trim(name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPFOWGBaseVerify
@@ -2316,11 +2316,11 @@ subroutine RPFOWGBaseSetupPolynomials(this,option,error_string)
   implicit none
 
   class(rel_perm_owg_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   option%io_buffer = 'RPF Smoothing not supported for ' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine RPFOWGBaseSetupPolynomials
 
@@ -2356,7 +2356,7 @@ subroutine RPFOWGBaseProcessTable(this,char_curves_tables,error_string,option)
   class(rel_perm_owg_base_type) :: this
   class(char_curves_table_type), pointer :: char_curves_tables
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: error_string_lc
 
@@ -2408,7 +2408,7 @@ subroutine MBC_SetupPolynomials(poly,m,kr_max,option,error_string)
   type(polynomial_type), pointer :: poly
   PetscReal, intent(in) :: m
   PetscReal, intent(in) :: kr_max
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   PetscReal :: b(4)
@@ -2454,7 +2454,7 @@ subroutine MBC_RelPerm_dkr_dSe(poly,m,kr_max,effective_sat,rel_perm,&
   PetscReal, intent(in) :: effective_sat
   PetscReal, intent(out) :: rel_perm
   PetscReal, intent(out) :: dkr_Se
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: Se
 
@@ -2513,25 +2513,25 @@ subroutine RPFWatOWGBaseVerify(this,name,option)
 
   class(rel_perm_wat_owg_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
 
   call RPFOWGBaseVerify(this,name,option)
 
   if (Uninitialized(this%Swco)) then
     option%io_buffer = UninitializedMessage('WATER_CONNATE_SATURATION',name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%Swcr)) then
     option%io_buffer = UninitializedMessage('WATER_RESIDUAL_SATURATION',name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (this%Swco > this%Swcr ) then
     option%io_buffer = adjustl(trim(name)) // &
                                ',water connate sat > water critical sat'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if  
 
 end subroutine RPFWatOWGBaseVerify
@@ -2545,7 +2545,7 @@ subroutine RPFWatOWGBaseTest(this,cc_name,option)
 
   class(rel_perm_wat_owg_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i
@@ -2587,11 +2587,11 @@ subroutine RPFWatOWGBaseSetupPolynomials(this,option,error_string)
   implicit none
 
   class(rel_perm_wat_owg_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   option%io_buffer = 'RPF Smoothing not supported for ' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine RPFWatOWGBaseSetupPolynomials
 
@@ -2606,11 +2606,11 @@ subroutine RPFWatOWGBaseRelPerm(this,wat_sat,rel_perm, &
   PetscReal, intent(in) :: wat_sat
   PetscReal, intent(out) :: rel_perm
   PetscReal, intent(out) :: dkrw_satw
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   option%io_buffer = 'RPFWatOWGBaseRelPerm must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine RPFWatOWGBaseRelPerm
 
@@ -2624,7 +2624,7 @@ function RPFWatGetConnateSatOWGBase(this,option)
   PetscReal :: RPFWatGetConnateSatOWGBase
   class(rel_perm_wat_owg_base_type) :: this
   
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   RPFWatGetConnateSatOWGBase = this%Swco
   
@@ -2640,7 +2640,7 @@ function RPFWatGetCriticalSatOWGBase(this,option)
   PetscReal :: RPFWatGetCriticalSatOWGBase
   class(rel_perm_wat_owg_base_type) :: this
   
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   RPFWatGetCriticalSatOWGBase = this%Swcr
   
@@ -2685,7 +2685,7 @@ subroutine RPF_wat_owg_MBC_Verify(this,name,option)
 
   class(RPF_wat_owg_MBC_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -2699,12 +2699,12 @@ subroutine RPF_wat_owg_MBC_Verify(this,name,option)
 
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%Sowcr)) then
     option%io_buffer = UninitializedMessage('OIL_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_wat_owg_MBC_Verify
@@ -2720,7 +2720,7 @@ subroutine RPF_wat_owg_MBC_SetupPoly(this,option,error_string)
   implicit none
 
   class(RPF_wat_owg_MBC_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   !call RPF_OWG_MBC_SetupPolynomials(this,option,error_string)
@@ -2739,7 +2739,7 @@ subroutine RPF_wat_owg_MBC_SetSowcr(this,sowcr,option)
 
   class(RPF_wat_owg_MBC_type) :: this
   PetscReal, intent(in) :: sowcr  
-  type(option_type) :: option
+  class(option_type) :: option
 
   this%Sowcr = sowcr
 
@@ -2756,7 +2756,7 @@ subroutine RPF_wat_owg_MBC_RelPerm(this,wat_sat,rel_perm, &
   PetscReal, intent(in) :: wat_sat
   PetscReal, intent(out) :: rel_perm
   PetscReal, intent(out) :: dkrw_satw
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscReal :: Se, dSe_dSw, dkr_dSe
@@ -2804,7 +2804,7 @@ subroutine RPF_wat_owg_func_sl_Verify(this,name,option)
 
   class(RPF_wat_owg_func_sl_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -2819,7 +2819,7 @@ subroutine RPF_wat_owg_func_sl_Verify(this,name,option)
 
   if (.not.associated(this%rel_perm_func_sl) ) then
     option%io_buffer = trim(string) // ' Sub SL analytical model not defined'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else
     call this%rel_perm_func_sl%verify(string,option)
   end if
@@ -2828,12 +2828,12 @@ subroutine RPF_wat_owg_func_sl_Verify(this,name,option)
     class is(RPF_wat_owg_Burdine_BC_type)
       if (Uninitialized(rpf%lambda)) then
         option%io_buffer = UninitializedMessage('LAMBDA',string)
-        call printErrMsg(option)      
+        call option%PrintErrMsg()
       end if
     class default
       if (Uninitialized(this%m)) then
         option%io_buffer = UninitializedMessage('M',string)
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
   end select  
 
@@ -2855,7 +2855,7 @@ subroutine RPF_wat_owg_func_sl_RelPerm(this,wat_sat,rel_perm, &
  PetscReal, intent(in) :: wat_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkrw_satw
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  call this%rel_perm_func_sl%RelativePermeability(wat_sat,rel_perm, &
@@ -2961,7 +2961,7 @@ subroutine RPF_wat_owg_table_RelPerm(this,wat_sat,rel_perm, &
  PetscReal, intent(in) :: wat_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkrw_satw
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscErrorCode:: ierr
@@ -2997,24 +2997,24 @@ subroutine RPFGasOWGBaseVerify(this,name,option)
 
   class(rel_perm_gas_owg_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
 
   call RPFOWGBaseVerify(this,name,option)
 
   if (Uninitialized(this%Sgco)) then
     option%io_buffer = UninitializedMessage('GAS_CONNATE_SATURATION',name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%Sgcr)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (this%Sgco > 0.0 ) then
     option%io_buffer = trim(name) // ', WARNING Sgco > 0 has been set'
-    call printMsg(option)
+    call option%PrintMsg()
 end if
 
 end subroutine RPFGasOWGBaseVerify
@@ -3028,7 +3028,7 @@ subroutine RPFGasOWGBaseTest(this,cc_name,option)
 
   class(rel_perm_gas_owg_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i
@@ -3070,11 +3070,11 @@ subroutine RPFGasOWGBaseSetupPolynomials(this,option,error_string)
   implicit none
 
   class(rel_perm_gas_owg_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   option%io_buffer = 'RPF Smoothing not supported for ' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine RPFGasOWGBaseSetupPolynomials
 
@@ -3089,11 +3089,11 @@ subroutine RPFGasOWGBaseRelPerm(this,gas_sat,rel_perm, &
   PetscReal, intent(in) :: gas_sat
   PetscReal, intent(out) :: rel_perm
   PetscReal, intent(out) :: dkrg_satg
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   option%io_buffer = 'RPFGasOWGBaseRelPerm must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine RPFGasOWGBaseRelPerm
 
@@ -3106,7 +3106,7 @@ function RPFGasGetConnateSatOWGBase(this,option)
 
   PetscReal :: RPFGasGetConnateSatOWGBase
   class(rel_perm_gas_owg_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   RPFGasGetConnateSatOWGBase = this%Sgco
   
@@ -3121,7 +3121,7 @@ function RPFGasGetCriticalSatOWGBase(this,option)
 
   PetscReal :: RPFGasGetCriticalSatOWGBase
   class(rel_perm_gas_owg_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   RPFGasGetCriticalSatOWGBase = this%Sgcr
   
@@ -3169,7 +3169,7 @@ subroutine RPF_gas_owg_MBC_Verify(this,name,option)
 
   class(RPF_gas_owg_MBC_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -3183,16 +3183,16 @@ subroutine RPF_gas_owg_MBC_Verify(this,name,option)
 
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (Uninitialized(this%Sogcr)) then
     option%io_buffer = UninitializedMessage('OIL_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%Swco)) then
     option%io_buffer = UninitializedMessage('WAT_CONNATE_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_gas_owg_MBC_Verify
@@ -3208,7 +3208,7 @@ subroutine RPF_gas_owg_MBC_SetupPoly(this,option,error_string)
   implicit none
 
   class(RPF_gas_owg_MBC_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   call MBC_SetupPolynomials(this%poly,this%m,this%kr_max,option,error_string)
@@ -3226,7 +3226,7 @@ subroutine RPF_gas_owg_MBC_SetSwcoSogcr(this,swco,sogcr,option)
 
   class(RPF_gas_owg_MBC_type) :: this
   PetscReal, intent(in) :: swco,sogcr  
-  type(option_type) :: option
+  class(option_type) :: option
   
   this%Swco = swco
   this%Sogcr = sogcr
@@ -3244,7 +3244,7 @@ subroutine RPF_gas_owg_MBC_RelPerm(this,gas_sat,rel_perm, &
   PetscReal, intent(in) :: gas_sat
   PetscReal, intent(out) :: rel_perm
   PetscReal, intent(out) :: dkrg_satg
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
   PetscReal :: Se, dkr_dSe, dSe_dSg
@@ -3294,7 +3294,7 @@ subroutine RPF_gas_owg_func_sl_Verify(this,name,option)
 
   class(RPF_gas_owg_func_sl_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -3309,7 +3309,7 @@ subroutine RPF_gas_owg_func_sl_Verify(this,name,option)
 
   if (.not.associated(this%rel_perm_func_sl) ) then
     option%io_buffer = trim(string) // ' Sub SL analytical model not defined'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else
     call this%rel_perm_func_sl%verify(string,option)
   end if
@@ -3317,19 +3317,19 @@ subroutine RPF_gas_owg_func_sl_Verify(this,name,option)
   if (Uninitialized(this%Slcr)) then
     option%io_buffer = UninitializedMessage('LIQUID_CRITICAL_SATURATION', &
                                                                        string)
-    call printErrMsg(option)          
+    call option%PrintErrMsg()
   end if
 
   select type(rpf => this)
     class is(RPF_gas_owg_Burdine_BC_type)
       if (Uninitialized(rpf%lambda)) then
         option%io_buffer = UninitializedMessage('LAMBDA',string)
-        call printErrMsg(option)      
+        call option%PrintErrMsg()
       end if  
     class default
       if (Uninitialized(this%m)) then
         option%io_buffer = UninitializedMessage('M',string)
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       end if
   end select  
 
@@ -3348,7 +3348,7 @@ subroutine RPF_gas_owg_func_sl_RelPerm(this,gas_sat,rel_perm, &
  PetscReal, intent(in) :: gas_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkrg_satg
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscReal :: liq_sat, dkrg_satl
@@ -3489,7 +3489,7 @@ subroutine RPF_gas_owg_table_RelPerm(this,gas_sat,rel_perm, &
  PetscReal, intent(in) :: gas_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkrg_satg
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscErrorCode:: ierr
@@ -3526,26 +3526,26 @@ subroutine RPFOWOWGBaseVerify(this,name,option)
 
   class(rel_perm_ow_owg_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   call RPFOWGBaseVerify(this,name,option)
 
 
    if (this%Soco > 0.0) then
      option%io_buffer = 'Oil Connate Sat /=0; Oil-wet system not supported'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
    end if
 
    if (this%So_is_Sh) then
      if (Uninitialized(this%Sowcr)) then
        option%io_buffer = &
              UninitializedMessage('HYDROCARBON_RESIDUAL_SATURATION',name)
-       call printErrMsg(option)
+       call option%PrintErrMsg()
      endif
    else
      if (Uninitialized(this%Sowcr)) then
        option%io_buffer = UninitializedMessage('OW_RESIDUAL_SATURATION',name)
-       call printErrMsg(option)
+       call option%PrintErrMsg()
      endif
    end if
 
@@ -3560,7 +3560,7 @@ subroutine RPFOWOWGBaseTest(this,cc_name,option)
 
   class(rel_perm_ow_owg_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i
@@ -3612,11 +3612,11 @@ subroutine RPFOWOWGBaseSetupPoly(this,option,error_string)
   implicit none
 
   class(rel_perm_ow_owg_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   option%io_buffer ='RPF OW Smoothing not supported for' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine RPFOWOWGBaseSetupPoly
 
@@ -3633,11 +3633,11 @@ subroutine RPFOWOWGBaseRelPerm(this,oil_sat,rel_perm, &
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  option%io_buffer ='RPFOWOWGBaseRelPerm must be extended.'
- call printErrMsg(option)
+ call option%PrintErrMsg()
 
 end subroutine RPFOWOWGBaseRelPerm
 
@@ -3650,7 +3650,7 @@ function RPFOWGetCriticalSatOWGBase(this,option)
 
   PetscReal :: RPFOWGetCriticalSatOWGBase
   class(rel_perm_ow_owg_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   RPFOWGetCriticalSatOWGBase = this%Sowcr
   
@@ -3705,7 +3705,7 @@ subroutine RPF_ow_owg_linear_Verify(this,name,option)
 
   class(rel_perm_ow_owg_linear_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -3732,7 +3732,7 @@ subroutine RPF_ow_owg_linear_RelPerm(this,oil_sat,rel_perm, &
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscReal :: Seo, swa, soa
@@ -3801,7 +3801,7 @@ subroutine RPF_ow_owg_MBC_Verify(this,name,option)
 
   class(rel_perm_ow_owg_MBC_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -3815,12 +3815,12 @@ subroutine RPF_ow_owg_MBC_Verify(this,name,option)
 
   if (Uninitialized(this%Swcr)) then
     option%io_buffer = UninitializedMessage('WATER_CRITICAL_SATURATION',string)
-    call printErrMsg(option)          
+    call option%PrintErrMsg()
   end if
 
   if (Uninitialized(this%m)) then
    option%io_buffer = UninitializedMessage('M',string)
-   call printErrMsg(option)          
+   call option%PrintErrMsg()
   end if
 
 end subroutine RPF_ow_owg_MBC_Verify
@@ -3833,7 +3833,7 @@ subroutine RPF_ow_owg_MBC_SetupPoly(this,option,error_string)
   implicit none
 
   class(rel_perm_ow_owg_MBC_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   call MBC_SetupPolynomials(this%poly,this%m,this%kr_max,option,error_string)
@@ -3853,7 +3853,7 @@ subroutine RPF_ow_owg_MBC_RelPerm(this,oil_sat,rel_perm, &
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscReal :: Se, dSe_dSo, dkr_dSe
@@ -3879,7 +3879,7 @@ subroutine RPF_ow_owg_MBC_SetSwcr(this,swcr,option)
 
   class(rel_perm_ow_owg_MBC_type) :: this
   PetscReal :: swcr
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   this%Swcr = swcr
   
@@ -3927,7 +3927,7 @@ subroutine RPF_ow_owg_table_RelPerm(this,oil_sat,rel_perm, &
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscErrorCode:: ierr
@@ -3964,18 +3964,18 @@ subroutine RPFOGOWGBaseVerify(this,name,option)
 
   class(rel_perm_og_owg_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   call RPFOWGBaseVerify(this,name,option)
 
    if ( this%Soco > 0.0d0 ) then
      option%io_buffer = 'Oil Connate Sat /=0; Oil-wet system not supported'
-     call printErrMsg(option)    
+     call option%PrintErrMsg()
    end if
 
    if (Uninitialized(this%Sogcr)) then
      option%io_buffer = UninitializedMessage('OG_CRITICAL_SATURATION',name)
-     call printErrMsg(option)          
+     call option%PrintErrMsg()
    end if
 
 end subroutine RPFOGOWGBaseVerify
@@ -3989,7 +3989,7 @@ subroutine RPFOGOWGBaseTest(this,cc_name,option)
 
   class(rel_perm_og_owg_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i
@@ -4030,11 +4030,11 @@ subroutine RPFOGOWGBaseSetupPoly(this,option,error_string)
   implicit none
 
   class(rel_perm_og_owg_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   option%io_buffer ='RPF OG Smoothing not supported for' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine RPFOGOWGBaseSetupPoly
 
@@ -4051,11 +4051,11 @@ subroutine RPFOGOWGBaseRelPerm(this,oil_sat,rel_perm, &
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  option%io_buffer ='RPFOWOWGBaseRelPerm must be extended.'
- call printErrMsg(option)
+ call option%PrintErrMsg()
 
 end subroutine RPFOGOWGBaseRelPerm
 
@@ -4068,7 +4068,7 @@ function GetCriticalSatOGOWGBase(this,option)
 
   PetscReal :: GetCriticalSatOGOWGBase
   class(rel_perm_og_owg_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   GetCriticalSatOGOWGBase = this%Sogcr
   
@@ -4114,7 +4114,7 @@ subroutine RPF_og_owg_MBC_Verify(this,name,option)
 
   class(rel_perm_og_owg_MBC_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -4128,17 +4128,17 @@ subroutine RPF_og_owg_MBC_Verify(this,name,option)
 
   if (Uninitialized(this%Sgcr)) then
     option%io_buffer = UninitializedMessage('GAS_CRITICAL_SATURATION',string)
-    call printErrMsg(option)          
+    call option%PrintErrMsg()
   end if
 
   if (Uninitialized(this%Swco)) then
     option%io_buffer = UninitializedMessage('WAT_CONNATE_SATURATION',string)
-    call printErrMsg(option)          
+    call option%PrintErrMsg()
   end if
 
   if (Uninitialized(this%m)) then
    option%io_buffer = UninitializedMessage('M',string)
-   call printErrMsg(option)          
+   call option%PrintErrMsg()
   end if
 
 end subroutine RPF_og_owg_MBC_Verify
@@ -4151,7 +4151,7 @@ subroutine RPF_og_owg_MBC_SetupPoly(this,option,error_string)
   implicit none
 
   class(rel_perm_og_owg_MBC_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
 
   call MBC_SetupPolynomials(this%poly,this%m,this%kr_max,option,error_string)
@@ -4171,7 +4171,7 @@ subroutine RPF_og_owg_MBC_RelPerm(this,oil_sat,rel_perm, &
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscReal :: Se, dSe_dSo, dkr_dSe
@@ -4198,7 +4198,7 @@ subroutine RPF_og_owg_MBC_SetSwcoSgcr(this,swco,sgcr,option)
 
   class(rel_perm_og_owg_MBC_type) :: this
   PetscReal :: swco,sgcr
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   this%Swco = swco
   this%Sgcr = sgcr
@@ -4247,7 +4247,7 @@ subroutine RPF_og_owg_table_RelPerm(this,oil_sat,rel_perm, &
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscErrorCode:: ierr
@@ -4286,13 +4286,13 @@ subroutine RPFOilOWGBaseVerify(this,name,option)
 
   class(rel_perm_oil_owg_base_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   call RPFOWGBaseVerify(this,name,option)
 
    if (Uninitialized(this%Socr)) then
      option%io_buffer = UninitializedMessage('OIL_CRITICAL_SATURATION',name)
-     call printErrMsg(option)          
+     call option%PrintErrMsg()
    end if
 
 end subroutine RPFOilOWGBaseVerify
@@ -4306,7 +4306,7 @@ subroutine RPFOilOWGBaseTest(this,cc_name,option)
 
   class(rel_perm_oil_owg_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i, i_oil, i_gas
@@ -4377,11 +4377,11 @@ subroutine RPFOilOWGBaseRelPerm(this,oil_sat,gas_sat,rel_perm, &
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkro_sato
  PetscReal, intent(out) :: dkro_satg
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  option%io_buffer ='RPFOilOWGBaseRelPerm must be extended.'
- call printErrMsg(option)
+ call option%PrintErrMsg()
 
 end subroutine RPFOilOWGBaseRelPerm
 
@@ -4394,7 +4394,7 @@ function GetCriticalSatOilOWGBase(this,option)
 
   PetscReal :: GetCriticalSatOilOWGBase
   class(rel_perm_oil_owg_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   GetCriticalSatOilOWGBase = this%Socr
   
@@ -4467,7 +4467,7 @@ subroutine RPF_oil_ecl_Verify(this,name,option)
 
   class(rel_perm_oil_owg_ecl_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscReal :: Soil_max, krow_max,krog_max, dkr_dummy
@@ -4480,19 +4480,19 @@ subroutine RPF_oil_ecl_Verify(this,name,option)
 
    if (Uninitialized(this%Swco)) then
      option%io_buffer = UninitializedMessage('WAT_CONNATE_SATURATION',string)
-     call printErrMsg(option)          
+     call option%PrintErrMsg()
    end if
 
    if ( .not.associated(this%rel_perm_ow) ) then
      option%io_buffer = trim(string) // ' ,RPF_OIL_WATER not defined'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
    else
      call this%rel_perm_ow%Verify(string,option)
    end if
 
    if ( .not.associated(this%rel_perm_og) ) then
      option%io_buffer = trim(string) // ' ,RPF_OIL_GAS not defined'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
    else
      call this%rel_perm_og%Verify(string,option)
    end if   
@@ -4507,7 +4507,7 @@ subroutine RPF_oil_ecl_Verify(this,name,option)
                                                
    if ( krow_max /= krog_max ) then
      option%io_buffer = trim(string) // ' krow_max /= krog_max '
-     call printErrMsg(option)
+     call option%PrintErrMsg()
    end if 
 
    if ( this%rel_perm_ow%analytical_derivative_available .and. &
@@ -4543,7 +4543,7 @@ subroutine RPF_oil_ecl_RelPerm(this,oil_sat,gas_sat,rel_perm, &
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkro_sato
  PetscReal, intent(out) :: dkro_satg
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  PetscReal :: wat_sat, krow, dkrow_sato, krog, dkrog_sato
@@ -4589,7 +4589,7 @@ subroutine RelPermOW(this,oil_sat,rel_perm,dkr_sato,option,table_idxs)
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  call this%rel_perm_ow%RelativePermeability(oil_sat,rel_perm,dkr_sato,option)
@@ -4608,7 +4608,7 @@ subroutine RelPermOG(this,oil_sat,rel_perm,dkr_sato,option,table_idxs)
  PetscReal, intent(in) :: oil_sat
  PetscReal, intent(out) :: rel_perm
  PetscReal, intent(out) :: dkr_sato
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
  PetscInt, pointer, optional, intent(inout) :: table_idxs(:)
 
  call this%rel_perm_og%RelativePermeability(oil_sat,rel_perm,dkr_sato,option)
@@ -4624,7 +4624,7 @@ function RPFOilOWGBaseGetSowcr(this,option)
 
  PetscReal :: RPFOilOWGBaseGetSowcr
  class(rel_perm_oil_owg_base_type) :: this
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
 
  RPFOilOWGBaseGetSowcr = this%rel_perm_ow%GetCriticalSaturation(option)
 
@@ -4640,7 +4640,7 @@ function RPFOilOWGBaseGetSogcr(this,option)
 
  PetscReal :: RPFOilOWGBaseGetSogcr
  class(rel_perm_oil_owg_base_type) :: this
- type(option_type), intent(inout) :: option
+ class(option_type), intent(inout) :: option
 
  RPFOilOWGBaseGetSogcr = this%rel_perm_og%GetCriticalSaturation(option)
 
@@ -4655,7 +4655,7 @@ subroutine RPF_oil_ecl_SetSwco(this,swco,option)
 
   class(rel_perm_oil_owg_ecl_type) :: this
   PetscReal :: swco
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   this%Swco = swco
   
@@ -4827,7 +4827,7 @@ subroutine SetCCOWGPhaseFlags(option,oil_gas_interface_present, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool, intent(out) :: oil_gas_interface_present
   PetscBool, intent(out) :: wat_gas_interface_present
   PetscBool, intent(out) :: gas_present

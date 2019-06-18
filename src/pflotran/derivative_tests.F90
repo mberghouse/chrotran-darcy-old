@@ -47,7 +47,7 @@ subroutine NumCompare_toil(nphase,ndof,auxvars,option)
   ! Daniel Stone, July 2018
   implicit none
   PetscInt :: nphase,ndof
-  type(option_type) :: option
+  class(option_type) :: option
   type(auxvar_toil_ims_type) :: auxvars(0:)
 
   PetscInt :: iphase,idof
@@ -350,7 +350,7 @@ subroutine NumCompare_towg_bo(nphase,ndof,auxvars,option,&
   implicit none
   PetscInt :: nphase,ndof
   type(auxvar_towg_type) :: auxvars(0:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: iphase,idof
   PetscReal :: pert,p_unpert,p_pert,nderiv,aderiv,diff,rdiff
@@ -738,7 +738,7 @@ subroutine NumCompare_tl3p(nphase,ndof,auxvars,option,&
   implicit none
   PetscInt :: nphase,ndof
   type(auxvar_towg_type),intent(INOUT) :: auxvars(0:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: iphase,idof
   PetscReal :: pert,p_unpert,p_pert,nderiv,aderiv,diff,rdiff
@@ -1379,7 +1379,7 @@ subroutine Num_as_alyt_tl4p(nphase,ndof,auxvars,option,&
   implicit none
   PetscInt :: nphase,ndof
   type(auxvar_towg_type) :: auxvars(0:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: iphase,idof
   PetscReal :: pert,p_unpert,p_pert,nderiv,aderiv,diff,rdiff
@@ -1589,7 +1589,7 @@ subroutine NumCompare_tl4p(nphase,ndof,auxvars,option,&
   implicit none
   PetscInt :: nphase,ndof
   type(auxvar_towg_type) :: auxvars(0:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: iphase,idof
   PetscReal :: pert,p_unpert,p_pert,nderiv,aderiv,diff,rdiff

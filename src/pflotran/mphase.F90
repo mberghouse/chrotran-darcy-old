@@ -50,7 +50,7 @@ subroutine MphaseTimeCut(realization)
   implicit none
   
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   
   PetscReal, pointer :: xx_p(:),yy_p(:)
@@ -119,7 +119,7 @@ subroutine MphaseSetupPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(mphase_type),pointer :: mphase
   type(grid_type), pointer :: grid
@@ -147,7 +147,7 @@ subroutine MphaseSetupPatch(realization)
 !  option%io_buffer = 'Before Mphase can be run, the thc_parameter object ' // &
 !                     'must be initialized with the proper variables ' // &
 !                     'MphaseAuxCreate() is called anywhere.'
-!  call printErrMsg(option)  
+!  call option%PrintErrMsg()
 
 ! mphase_parameters create *********************************************
 ! Sir
@@ -367,7 +367,7 @@ subroutine MphaseComputeMassBalancePatch(realization,mass_balance,mass_trapped)
   PetscReal :: mass_balance(realization%option%nflowspec,realization%option%nphase)
   PetscReal :: mass_trapped(realization%option%nphase)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -458,7 +458,7 @@ subroutine MphaseZeroMassBalDeltaPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -512,7 +512,7 @@ subroutine MphaseUpdateMassBalancePatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -570,7 +570,7 @@ function MphaseInitGuessCheck(realization)
   
   PetscInt ::  MphaseInitGuessCheck
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: cur_patch
   PetscInt :: ipass, ipass0
   PetscErrorCode :: ierr    
@@ -616,7 +616,7 @@ subroutine MPhaseUpdateReasonPatch(reason,realization)
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   PetscReal, pointer :: xx_p(:),iphase_loc_p(:), yy_p(:) 
   PetscInt :: n,n0,re
   PetscInt :: re0, iipha
@@ -647,7 +647,7 @@ subroutine MPhaseUpdateReasonPatch(reason,realization)
 !     error message and let someone sort the use of option%dpmxe later
         option%io_buffer = 'option%dpmxe and option%dtmpmxe needs to be ' // &
           'refactored in MPhaseUpdateReasonPatch'
-        call printErrMsg(option)      
+        call option%PrintErrMsg()
 !geh      if (dabs(xx_p(n0 + 1) - yy_p(n0 + 1)) > (1000.0D0 * option%dpmxe)) then
         re = 0; print *,'large change in p', xx_p(n0 + 1), yy_p(n0 + 1)
         exit
@@ -778,7 +778,7 @@ end subroutine MPhaseUpdateReason
     type(realization_subsurface_type) :: realization
     type(grid_type), pointer :: grid
     type(patch_type), pointer :: patch
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(field_type), pointer :: field
       
     PetscInt :: local_id, ghosted_id, ipass
@@ -874,7 +874,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1159,7 +1159,7 @@ subroutine MphaseUpdateSolutionPatch(realization)
   type(realization_subsurface_type) :: realization
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(mphase_type), pointer :: mphase
   type(mphase_parameter_type), pointer :: mphase_parameter
@@ -1273,7 +1273,7 @@ subroutine MphaseUpdateFixedAccumPatch(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1376,7 +1376,7 @@ subroutine MphaseAccumulation(auxvar,global_auxvar,por,vol,rock_dencpr, &
   implicit none
 
   type(mphase_auxvar_elem_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal Res(1:option%nflowdof) 
   PetscReal vol,por,rock_dencpr
   type(global_auxvar_type) :: global_auxvar
@@ -1449,7 +1449,7 @@ subroutine MphaseSourceSink(mmsrc,nsrcpara,psrc,tsrc,hsrc,csrc,auxvar,isrctype,R
   implicit none
 
   type(mphase_auxvar_elem_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(1:option%nflowdof) 
   PetscReal, pointer :: mmsrc(:)
   PetscReal :: psrc(option%nphase),tsrc,hsrc,csrc 
@@ -1521,7 +1521,7 @@ subroutine MphaseSourceSink(mmsrc,nsrcpara,psrc,tsrc,hsrc,csrc,auxvar,isrctype,R
       endif  
     
       if (msrc(2) > 0.d0) then ! CO2 injection
-!       call printErrMsg(option,"concentration source not yet implemented in Mphase")
+!       call option%PrintErrMsg("concentration source not yet implemented in Mphase")
         if (option%co2eos == EOS_SPAN_WAGNER) then
          !  span-wagner
           rho = auxvar%den(jco2)*FMWCO2  
@@ -1557,7 +1557,7 @@ subroutine MphaseSourceSink(mmsrc,nsrcpara,psrc,tsrc,hsrc,csrc,auxvar,isrctype,R
           !qsrc_phase(2) = msrc(2)*rho/FMWCO2
           enth_src_co2 = enth_src_co2*FMWCO2*option%scale
         else
-          call printErrMsg(option,'pflow mphase ERROR: Need specify CO2 EOS')
+          call option%PrintErrMsg('pflow mphase ERROR: Need specify CO2 EOS')
         endif
               
         Res(jco2) = Res(jco2) + msrc(2)*option%flow_dt
@@ -1680,7 +1680,7 @@ subroutine MphaseFlux(auxvar_up,por_up,tor_up,sir_up,dd_up,perm_up,Dk_up, &
   implicit none
   
   type(mphase_auxvar_elem_type) :: auxvar_up, auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up(:), sir_dn(:)
   PetscReal :: por_up, por_dn
   PetscReal :: tor_up, tor_dn
@@ -1859,7 +1859,7 @@ subroutine MphaseBCFlux(ibndtype,auxvars,auxvar_up,auxvar_dn, &
   
   PetscInt :: ibndtype(:)
   type(mphase_auxvar_elem_type) :: auxvar_up, auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: dd_up, sir_dn(:)
   PetscReal :: auxvars(:) ! from aux_real_var array
   PetscReal :: por_dn,perm_dn,Dk_dn,tor_dn
@@ -2073,7 +2073,7 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
   PetscErrorCode :: ierr
   
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
@@ -2193,7 +2193,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
   PetscReal :: min_value
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -2216,7 +2216,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
   if (min_value < 0.d0) then
     write(option%io_buffer,*) 'Warning: saturation or mole fraction negative at cell ', &
       idum, min_value 
-    call printMsg(option)
+    call option%PrintMsg()
     option%force_newton_iteration = PETSC_TRUE
   endif
 #endif
@@ -2528,7 +2528,7 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(mphase_type), pointer :: mphase
   type(mphase_parameter_type), pointer :: mphase_parameter
@@ -3153,7 +3153,7 @@ subroutine MphaseJacobian(snes,xx,A,B,realization,ierr)
   PetscViewer :: viewer
   type(patch_type), pointer :: cur_patch
   type(grid_type),  pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: norm
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -3186,13 +3186,13 @@ subroutine MphaseJacobian(snes,xx,A,B,realization,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option)    
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option)    
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
   endif
 
 end subroutine MphaseJacobian
@@ -3268,7 +3268,7 @@ subroutine MphaseJacobianPatch(snes,xx,A,B,realization,ierr)
   PetscReal :: dummy_real(realization%option%nphase)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(mphase_type), pointer :: mphase
   type(mphase_parameter_type), pointer :: mphase_parameter
@@ -3812,7 +3812,7 @@ subroutine MphaseMaxChange(realization,dpmax,dtmpmax,dsmax,dcmax)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   PetscReal :: dpmax, dtmpmax, dsmax, dcmax
   PetscErrorCode :: ierr 
@@ -3859,7 +3859,7 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   PetscErrorCode :: ierr
   PetscReal, pointer :: xx_p(:), yy_p(:),  iphase_loc_p(:),  iphase_old_loc_p(:) 
   PetscInt :: local_id, ghosted_id, n0 
@@ -3930,7 +3930,7 @@ function MphaseGetTecplotHeader(realization,icolumn)
   PetscInt :: icolumn
   
   character(len=MAXSTRINGLENGTH) :: string, string2
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field  
   PetscInt :: i
   
@@ -4214,7 +4214,7 @@ subroutine MphaseSecondaryHeat(sec_heat_vars,auxvar,global_auxvar, &
   type(sec_heat_type) :: sec_heat_vars
   type(mphase_auxvar_elem_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(sec_heat_vars%ncells)
   PetscReal :: coeff_diag(sec_heat_vars%ncells)
   PetscReal :: coeff_right(sec_heat_vars%ncells)
@@ -4311,7 +4311,7 @@ subroutine MphaseSecondaryHeatJacobian(sec_heat_vars, &
   implicit none
   
   type(sec_heat_type) :: sec_heat_vars
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(sec_heat_vars%ncells)
   PetscReal :: coeff_diag(sec_heat_vars%ncells)
   PetscReal :: coeff_right(sec_heat_vars%ncells)

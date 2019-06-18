@@ -64,8 +64,8 @@ subroutine DataMediatorDatasetRead(data_mediator,input,option)
   implicit none
   
   class(data_mediator_dataset_type) :: data_mediator
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word
 
@@ -76,20 +76,20 @@ subroutine DataMediatorDatasetRead(data_mediator,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','MASS_TRANSFER')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','MASS_TRANSFER')
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
       case('IDOF') 
-        call InputReadInt(input,option,data_mediator%idof)
-        call InputErrorMsg(input,option,'idof','MASS_TRANSFER')
+        call input%ReadInt(option,data_mediator%idof)
+        call input%ErrorMsg(option,'idof','MASS_TRANSFER')
       case('DATASET')
         data_mediator%dataset => DatasetGlobalHDF5Create()
-        call InputReadNChars(input,option, &
+        call input%ReadNChars(option, &
                              data_mediator%dataset%name,&
                              MAXWORDLENGTH,PETSC_TRUE)
-        call InputErrorMsg(input,option,'DATASET,NAME','MASS_TRANSFER')
+        call input%ErrorMsg(option,'DATASET,NAME','MASS_TRANSFER')
       case default
         call InputKeywordUnrecognized(keyword,'MASS_TRANSFER',option)
     end select
@@ -121,7 +121,7 @@ subroutine DataMediatorDatasetInit(data_mediator, discretization, &
   class(data_mediator_dataset_type) :: data_mediator
   type(discretization_type) :: discretization
   class(dataset_base_type), pointer :: available_datasets
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(dataset_base_type), pointer :: dataset_base_ptr
   character(len=MAXSTRINGLENGTH) :: string
@@ -130,7 +130,7 @@ subroutine DataMediatorDatasetInit(data_mediator, discretization, &
   if (.not.associated(data_mediator%dataset)) then
     option%io_buffer = 'A "global" DATASET does not exist for ' // &
       'MASS_TRANSFER object "' // trim(data_mediator%name) // '".'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   string = 'Data Mediator ' // trim(data_mediator%name)
@@ -144,7 +144,7 @@ subroutine DataMediatorDatasetInit(data_mediator, discretization, &
     class default
       option%io_buffer = 'DATASET ' // trim(dataset%name) // 'is not of ' // &
         'GLOBAL type, which is necessary for all MASS_TRANSFER objects.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   ! dm_wrapper is solely a pointer; it should not be allocated
   data_mediator%dataset%dm_wrapper => discretization%dm_1dof
@@ -183,7 +183,7 @@ recursive subroutine DataMediatorDatasetUpdate(this,data_mediator_vec,option)
   
   class(data_mediator_dataset_type) :: this
   Vec :: data_mediator_vec
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   PetscReal, pointer :: vec_ptr(:)
   PetscInt :: ndof_per_cell
@@ -198,7 +198,7 @@ recursive subroutine DataMediatorDatasetUpdate(this,data_mediator_vec,option)
   ndof_per_cell = mdof_local_size / this%dataset%local_size
   if (mod(mdof_local_size,this%dataset%local_size) > 0) then
     option%io_buffer = 'Mismatched vector size in MassTransferUpdate.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   call VecGetArrayF90(data_mediator_vec,vec_ptr,ierr);CHKERRQ(ierr)
   offset = this%idof

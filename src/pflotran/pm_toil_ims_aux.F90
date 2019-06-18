@@ -125,7 +125,7 @@ function TOilImsAuxCreate(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(pm_toil_ims_aux_type), pointer :: TOilImsAuxCreate
 
@@ -178,7 +178,7 @@ subroutine InitTOilImsAuxVars(this,grid,num_bc_connection, &
   PetscInt :: num_bc_connection
   PetscInt :: num_ss_connection
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: ghosted_id, iconn, local_id
   PetscInt :: idof
@@ -242,7 +242,7 @@ subroutine TOilImsAuxVarCompute(x,toil_auxvar,global_auxvar,material_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: x(option%nflowdof)
   !type(toil_ims_auxvar_type) :: toil_auxvar
   class(auxvar_toil_ims_type) :: toil_auxvar
@@ -294,7 +294,7 @@ subroutine TOilImsAuxVarCompute(x,toil_auxvar,global_auxvar,material_auxvar, &
       option%io_buffer = 'Toil ims auxvars: toil_analytical_derivatives is true, &
                           but toil_auxvar%has_derivs is false, should both be true. &
                           How did this happen?'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     getDerivs = PETSC_TRUE
 
@@ -575,14 +575,14 @@ subroutine CheckDerivNotNAN(d, option, nm)
   implicit none
 
   PetscReal :: d
-  type(option_type) :: option
+  class(option_type) :: option
   character (len=*) :: nm
 
   if (isnan(d)) then
     option%io_buffer = ''
     option%io_buffer = 'A derivative is not initialized "' // &
                        trim(nm) // '".'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 
@@ -645,7 +645,7 @@ subroutine PerturbTOilIms(this,ghosted_id,global_auxvar,material_auxvar, &
   class(pm_toil_ims_aux_type) :: this
   !type(grid_type) :: grid
   PetscInt :: ghosted_id
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id !only for debugging/print out - currently not used
   !type(toil_ims_auxvar_type) :: toil_auxvar(0:)
   !class(auxvar_toil_ims_type) :: toil_auxvar(0:)
@@ -753,7 +753,7 @@ subroutine TOilImsAuxVarPerturb(toil_auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id !only for debugging/print out - currently not used
   !type(toil_ims_auxvar_type) :: toil_auxvar(0:)
   !class(auxvar_toil_ims_type) :: toil_auxvar(0:)
@@ -1033,7 +1033,7 @@ subroutine TOilImsAuxFieldVolRefAve(this,grid,material,imat,option)
   type(grid_type) :: grid
   type(material_type), pointer :: material
   PetscInt, intent(in) :: imat(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(material_auxvar_type), pointer :: material_auxvars(:)
   PetscInt :: local_id, ghosted_id
@@ -1123,7 +1123,7 @@ subroutine TOilImsGetLocalSol(this,grid,material,imat,option,vsoll,isol,zsol)
   type(grid_type) :: grid
   type(material_type), pointer :: material
   PetscInt, intent(in) :: imat(:)
-type(option_type) :: option
+class(option_type) :: option
   PetscReal :: vsoll(:,:)
   PetscInt,intent(in)::isol
   character(len=8)::zsol

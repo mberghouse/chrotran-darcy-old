@@ -92,7 +92,7 @@ subroutine PMRichardsTSUpdateAuxVarsPatch(realization)
   
   class(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
@@ -202,7 +202,7 @@ subroutine IFunctionAccumulation(F,realization,ierr)
   Vec :: F
   PetscErrorCode :: ierr
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(grid_type), pointer :: grid
@@ -331,7 +331,7 @@ subroutine IJacobianAccumulation(J,shift,realization,ierr)
   Mat :: J
   PetscErrorCode :: ierr
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(grid_type), pointer :: grid

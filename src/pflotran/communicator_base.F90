@@ -84,7 +84,7 @@ subroutine CommCreateProcessorGroups(option,num_groups)
   implicit none
   
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: num_groups
 
   PetscInt :: local_commsize

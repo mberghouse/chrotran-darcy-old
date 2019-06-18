@@ -30,7 +30,7 @@ subroutine PFLOTRANInitializePrePetsc(multisimulation,option)
   implicit none
   
   type(multi_simulation_type), pointer :: multisimulation
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscBool :: bool_flag
@@ -77,7 +77,7 @@ subroutine PFLOTRANInitializePostPetsc(simulation,multisimulation,option)
   
   class(simulation_base_type), pointer :: simulation
   type(multi_simulation_type), pointer :: multisimulation
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   character(len=MAXSTRINGLENGTH) :: filename
   PetscBool :: flag
@@ -130,12 +130,12 @@ subroutine PFLOTRANInitializePostPetsc(simulation,multisimulation,option)
       class default
         option%io_buffer = 'Unknown simulation class in &
           &PFLOTRANInitializePostPetsc'
-        call PrintErrMsg(option)
+        call option%PrintErrMsg()
     end select
     if (flag) then
         option%io_buffer = 'Binary Checkpoint/Restart (.chk format) is not &
           &supported for unstructured grids.  Please use HDF5 (.h5 format).'
-        call PrintErrMsg(option)
+        call option%PrintErrMsg()
     endif
   endif
 
@@ -175,9 +175,9 @@ subroutine PFLOTRANReadSimulation(simulation,option)
   implicit none
   
   class(simulation_base_type), pointer :: simulation
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
@@ -211,31 +211,31 @@ subroutine PFLOTRANReadSimulation(simulation,option)
   simulation_type = ''
   string = 'SIMULATION'
   call InputFindStringInFile(input,option,string)
-  call InputFindStringErrorMsg(input,option,string)
+  call input%FindStringErrorMsg(option,string)
   word = ''
   do
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'PROCESS_MODEL','SIMULATION')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'PROCESS_MODEL','SIMULATION')
     
     call StringToUpper(word)
     select case(trim(word))
       case('SIMULATION_TYPE')
-          call InputReadWord(input,option,simulation_type,PETSC_TRUE)
-          call InputErrorMsg(input,option,'simulation_type', &
+          call input%ReadWord(option,simulation_type,PETSC_TRUE)
+          call input%ErrorMsg(option,'simulation_type', &
                              'SIMULATION')
       case('PROCESS_MODELS')
         do
           call InputReadPflotranString(input,option)
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'process_model', &
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'process_model', &
                              'SIMULATION,PROCESS_MODELS')
-          call InputReadWord(input,option,pm_name,PETSC_TRUE)
-          if (InputError(input)) then
+          call input%ReadWord(option,pm_name,PETSC_TRUE)
+          if (input%Error()) then
             input%err_buf = 'Process Model Name'
-            call InputDefaultMsg(input,option)
+            call input%DefaultMsg(option)
             pm_name = ''
           endif
           call StringToUpper(word)
@@ -256,7 +256,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
               option%io_buffer = 'Do not include the WIPP_SOURCE_SINK block &
                 &unless you are running in WIPP_FLOW mode and intend to &
                 &include gas generation.'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
             case('SURFACE_SUBSURFACE')
               call SurfSubsurfaceReadFlowPM(input,option,new_pm)
             case('GEOMECHANICS_SUBSURFACE')
@@ -265,7 +265,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
             case('AUXILIARY')
               if (len_trim(pm_name) < 1) then
                 option%io_buffer = 'AUXILIARY process models must have a name.'
-                call printErrMsg(option)
+                call option%PrintErrMsg()
               endif
               new_pm => PMAuxiliaryCreate()
               input%buf = pm_name
@@ -302,9 +302,9 @@ subroutine PFLOTRANReadSimulation(simulation,option)
         option%restart_flag = PETSC_TRUE
         realization_dependent_restart = PETSC_FALSE
         ! this section preserves the legacy implementation
-        call InputReadFilename(input,option,option%restart_filename)
+        call input%ReadFilename(option,option%restart_filename)
         if (input%ierr == 0) then
-          call InputReadWord(input,option,word,PETSC_TRUE)
+          call input%ReadWord(option,word,PETSC_TRUE)
           if (input%ierr == 0) then
             option%restart_time = 0.d0
           endif 
@@ -315,12 +315,12 @@ subroutine PFLOTRANReadSimulation(simulation,option)
         do
           call InputReadPflotranString(input,option)
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
+          call input%ReadWord(option,word,PETSC_TRUE)
           call StringToUpper(word)
           select case(word)
             case('FILENAME')
-              call InputReadFilename(input,option,option%restart_filename)
-              call InputErrorMsg(input,option,'RESTART','filename') 
+              call input%ReadFilename(option,option%restart_filename)
+              call input%ErrorMsg(option,'RESTART','filename')
             case('RESET_TO_TIME_ZERO')
               ! any value but UNINITIALIZED_DOUBLE will set back to zero.
               option%restart_time = 0.d0 
@@ -342,7 +342,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
               &"-restart" be present in the restart file name so that the &
               &realization id can be inserted prior to -restart.  E.g. &
               &pflotran-restart.h5 -> pflotranR1-restart.h5'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           option%restart_filename = trim(string)
         endif
@@ -357,7 +357,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
 
   if (.not.associated(pm_master)) then
     option%io_buffer = 'No process models defined in SIMULATION block.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   if (option%print_ekg) then
@@ -381,7 +381,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
       if (len_trim(simulation_type) == 0) then
         option%io_buffer = 'A SIMULATION_TYPE (e.g. "SIMULATION_TYPE &
           &SUBSURFACE") must be specified within the SIMULATION block.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       call InputKeywordUnrecognized(simulation_type, &
                      'SIMULATION,SIMULATION_TYPE',option)            
@@ -416,14 +416,14 @@ recursive subroutine PFLOTRANSetupPMCHierarchy(input,option,pmc)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   class(pmc_base_type), pointer :: pmc
   
   character(len=MAXWORDLENGTH) :: word
   
-  call InputReadWord(input,option,word,PETSC_TRUE)
-  call InputErrorMsg(input,option,'PMC name','SIMULATION')
+  call input%ReadWord(option,word,PETSC_TRUE)
+  call input%ErrorMsg(option,'PMC name','SIMULATION')
     ! at this point, we are creating a 
   pmc => PMCBaseCreate()
   pmc%name = word
@@ -431,8 +431,8 @@ recursive subroutine PFLOTRANSetupPMCHierarchy(input,option,pmc)
   do
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'CHILD or PEER','SIMULATION')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'CHILD or PEER','SIMULATION')
     call StringToUpper(word)
     select case(trim(word))
       case('PEER')
@@ -462,8 +462,8 @@ recursive subroutine PFLOTRANLinkPMToPMC(input,option,pmc,pm)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   class(pmc_base_type), pointer :: pmc
   class(pm_base_type), pointer :: pm
 
@@ -494,7 +494,7 @@ subroutine PFLOTRANFinalize(option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   PetscErrorCode :: ierr
   
   ! pushed in FinalizeRun()
@@ -523,7 +523,7 @@ subroutine PFLOTRANInitCommandLineSettings(option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string, string2
   PetscBool :: option_found
@@ -539,16 +539,16 @@ subroutine PFLOTRANInitCommandLineSettings(option)
   ! check for non-default input filename
   option%input_filename = 'pflotran.in'
   string = '-pflotranin'
-  call InputGetCommandLineString(string,option%input_filename, &
+  call InputGetCommandLineString(string,option%input_filename,&
                                  pflotranin_option_found,option)
   string = '-input_prefix'
-  call InputGetCommandLineString(string,option%input_prefix, &
+  call InputGetCommandLineString(string,option%input_prefix,&
                                  input_prefix_option_found,option)
   
   if (pflotranin_option_found .and. input_prefix_option_found) then
     option%io_buffer = 'Cannot specify both "-pflotranin" and ' // &
       '"-input_prefix" on the command lines.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else if (pflotranin_option_found) then
     strings => StringSplit(option%input_filename,'.')
     option%input_prefix = strings(1)
@@ -590,7 +590,7 @@ subroutine PFLOTRANInitCommandLineSettings(option)
   if (option_found) then
     if (i < 1) then
       option%io_buffer = 'realization_id must be greater than zero.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     option%id = i
   endif

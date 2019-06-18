@@ -298,7 +298,7 @@ function InverseLookupTableCreateGen(lookup_table,new_axis_var_iname,option)
   class(lookup_table_general_type), pointer :: InverseLookupTableCreateGen
   class(lookup_table_general_type), intent(in) :: lookup_table
   PetscInt, intent(in) ::  new_axis_var_iname
-  type (option_type) :: option
+  class(option_type) :: option
   
   class(lookup_table_general_type), pointer :: inv_lookup_table
   type(lookup_table_var_type), pointer :: NewInvLookupVar
@@ -314,7 +314,7 @@ function InverseLookupTableCreateGen(lookup_table,new_axis_var_iname,option)
   call LookupTableAxisInit(inv_lookup_table%axis1)
   if (Inv_lookup_table%dim > 1) then
     option%io_buffer = "only 1D inverse lookup are supported"
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   nullify(inv_lookup_table%data)
@@ -335,7 +335,7 @@ function InverseLookupTableCreateGen(lookup_table,new_axis_var_iname,option)
   else
     option%io_buffer = "InverseLookupTableCreateGen: cannot create " // &
       "inverse gradient lookup as the new axis var selected is not monotonic "
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
     
   !assumes that any unit conversion on lookup_table%var_data is already done
@@ -2079,21 +2079,21 @@ subroutine CreateAddLookupTableVar(this,var_iname,internal_units,user_units, &
   character(len=MAXWORDLENGTH), intent(in) :: internal_units
   character(len=MAXWORDLENGTH), intent(in) :: user_units
   PetscInt, intent(in) :: data_idx
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: lookup_var => null()
 
   if ( .not.associated(this%var_array) ) then
     option%io_buffer = 'CreateAddLookupTableVar: Cannot add a lookup variable &
                         &without intialising the lookup variable list'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   if ( var_iname > size (this%var_array(:)) .or. &
        var_iname <= 0 ) then
     option%io_buffer = 'var_iname must be larger than zero and not larger &
                         &than the maximum number of lookup variables'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   lookup_var => CreateLookupTableVar(var_iname,internal_units, &
@@ -2119,7 +2119,7 @@ subroutine LookupTableVarInitGradients(this,option)
   implicit none
   
   class(lookup_table_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: prop_idx
 
@@ -2133,7 +2133,7 @@ subroutine LookupTableVarInitGradients(this,option)
   else
     option%io_buffer = "LookupTableVarInitGradients: cannot initialise " // &
                         "var gradient before defining table dims"
-    call printErrMsg(option)    
+    call option%PrintErrMsg()
   end if  
 
 end subroutine LookupTableVarInitGradients
@@ -2156,11 +2156,11 @@ subroutine VarDataRead(this,input,num_fields,min_entries,error_string,option)
   implicit none
 
   class(lookup_table_base_type) :: this
-  type(input_type), pointer, intent(inout) :: input
+  class(input_type), pointer, intent(inout) :: input
   PetscInt, intent(in) :: num_fields
   PetscInt, intent(in) :: min_entries
   character(len=MAXSTRINGLENGTH), intent(in) :: error_string
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscInt :: tmp_array_size 
   PetscReal, pointer :: tmp_data_array(:,:)
@@ -2185,9 +2185,9 @@ subroutine VarDataRead(this,input,num_fields,min_entries,error_string,option)
   do
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit
-    if (InputError(input)) then
+    if (input%Error()) then
       option%io_buffer = 'Lookup table var_data reading'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if
     num_entries = num_entries + 1
     !press_idx = press_idx + 1
@@ -2197,8 +2197,8 @@ subroutine VarDataRead(this,input,num_fields,min_entries,error_string,option)
       call ReallocateArray(tmp_data_array,tmp_array_size)
     end if
     do i_data = 1, num_fields
-      call InputReadDouble(input,option,tmp_data_array(i_data,num_entries))
-      call InputErrorMsg(input,option,'VALUE',error_string)
+      call input%ReadDouble(option,tmp_data_array(i_data,num_entries))
+      call input%ErrorMsg(option,'VALUE',error_string)
     end do
   end do
 
@@ -2206,7 +2206,7 @@ subroutine VarDataRead(this,input,num_fields,min_entries,error_string,option)
     write(word1,*) min_entries
     option%io_buffer = trim(error_string) // &
                        ', number of entries less than = ' // trim(word1)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
   allocate(this%var_data(num_fields,num_entries))
@@ -2229,13 +2229,13 @@ subroutine VarDataReverse(this,option)
   implicit none
 
   class(lookup_table_base_type) :: this
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscInt :: num_entries
 
   if ( .not. associated(this%var_data) ) then
     option%io_buffer = 'Cannot reverse VarData as not allocated'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
   num_entries = size(this%var_data,2)
 
@@ -2259,7 +2259,7 @@ subroutine LookupTableVarConvFactors(this,option)
   implicit none
 
   class(lookup_table_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: var
 
@@ -2292,7 +2292,7 @@ subroutine VarPointAndUnitConv(this,option)
   implicit none
 
   class(lookup_table_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: prop_idx, data_idx
 
@@ -2322,7 +2322,7 @@ subroutine SetupConstGradExtrap(this,option)
   implicit none
 
   class(lookup_table_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: prop_idx
   
@@ -2348,7 +2348,7 @@ subroutine SetupConstValExtrap(this,option)
   implicit none
 
   class(lookup_table_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: prop_idx
   
@@ -2374,7 +2374,7 @@ subroutine SetupVarLinLogInterp(this,var_iname,option)
   
   class(lookup_table_base_type) :: this
   PetscInt, intent(in) :: var_iname
-  type(option_type) :: option
+  class(option_type) :: option
   
   if ( associated(this%var_array) ) then
     if ( associated(this%var_array(var_iname)%ptr) ) then
@@ -2382,7 +2382,7 @@ subroutine SetupVarLinLogInterp(this,var_iname,option)
     else
       option%io_buffer = "SetupVarLinLogInterp: cannot setup " // &
             "LinLog inteprolation method for a var not defined as lookupvar"
-      call printErrMsg(option)      
+      call option%PrintErrMsg()
     end if  
   end if
 
@@ -2403,7 +2403,7 @@ subroutine SetupVarUserUnits(this,var_iname,var_user_units,option)
   class(lookup_table_base_type) :: this
   PetscInt, intent(in) :: var_iname
   character(len=MAXWORDLENGTH), intent(in) :: var_user_units
-  type(option_type) :: option
+  class(option_type) :: option
 
   if ( associated(this%var_array) ) then
     if ( associated(this%var_array(var_iname)%ptr) ) then
@@ -2411,7 +2411,7 @@ subroutine SetupVarUserUnits(this,var_iname,var_user_units,option)
     else
       option%io_buffer = "SetupVarUserUnits: cannot setup " // &
             "User Units for a var not defined as lookupvar"
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end if
   end if
 

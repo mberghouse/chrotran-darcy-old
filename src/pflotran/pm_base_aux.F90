@@ -82,7 +82,7 @@ subroutine PMBaseAuxSetup(this,grid,option)
 
   class(pm_base_aux_type) :: this
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   allocate(this%row_zeroing_array(grid%nlmax))
   this%row_zeroing_array = 0

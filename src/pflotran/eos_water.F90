@@ -587,8 +587,8 @@ subroutine EOSWaterSetWaterTab(input,option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: db_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -723,7 +723,7 @@ subroutine EOSWaterTableProcess(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (.not.associated(pvt_table)) return
 

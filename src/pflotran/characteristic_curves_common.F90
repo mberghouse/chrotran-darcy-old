@@ -304,11 +304,11 @@ subroutine SFDefaultVerify(this,name,option)
   
   class(sat_func_default_type) :: this  
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option  
+  class(option_type) :: option  
 
   option%io_buffer = 'A default Saturation Function has been chosen in ' // &
     trim(name) // '.'
-  call printWrnMsg(option)
+  call option%PrintWrnMsg()
   
 end subroutine SFDefaultVerify
 
@@ -324,13 +324,13 @@ subroutine SFDefaultCapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   if (liquid_saturation < 1.d0) then
     option%io_buffer = 'SFDefaultCapillaryPressure is a dummy routine used &
       &for saturated flow only.  The user must specify a valid &
       &SATURATION_FUNCTION.'
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
 
 end subroutine SFDefaultCapillaryPressure
@@ -347,12 +347,12 @@ subroutine SFDefaultSaturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'SFDefaultSaturation is a dummy routine used &
     &for saturated flow only.  The user must specify a valid &
     &SATURATION_FUNCTION.'
-  call printErrMsgByRank(option)
+  call option%PrintErrMsgByRank()
 
 end subroutine SFDefaultSaturation
 
@@ -367,12 +367,12 @@ subroutine SFDefaultD2SatDP2(this,pc, &
   class(sat_func_default_type) :: this
   PetscReal, intent(in) :: pc
   PetscReal, intent(out) :: d2s_dp2
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'SFDefaultD2SatDP2 is a dummy routine used &
     &for saturated flow only.  The user must specify a valid &
     &SATURATION_FUNCTION.'
-  call printErrMsgByRank(option)
+  call option%PrintErrMsgByRank()
 
 end subroutine SFDefaultD2SatDP2
 
@@ -402,11 +402,11 @@ subroutine RPFDefaultVerify(this,name,option)
   
   class(rel_perm_func_default_type) :: this  
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option  
+  class(option_type) :: option  
 
   option%io_buffer = 'A default Relative Permeability Function has been ' // &
     'chosen in ' // trim(name) // '.'
-  call printWrnMsg(option)
+  call option%PrintWrnMsg()
 
 end subroutine RPFDefaultVerify
 
@@ -422,13 +422,13 @@ subroutine RPF_DefaultRelPerm(this,liquid_saturation,relative_permeability, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   if (liquid_saturation < 1.d0) then
     option%io_buffer = 'RPF_Default_RelPerm is a dummy routine used &
       &for saturated flow only.  The user must specify a valid &
       &PERMEABILITY_FUNCTION.'
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
   relative_permeability = 1.d0
   
@@ -466,7 +466,7 @@ subroutine SFConstantVerify(this,name,option)
   
   class(sat_func_constant_type) :: this  
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option  
+  class(option_type) :: option  
 
   character(len=MAXSTRINGLENGTH) :: string  
 
@@ -482,12 +482,12 @@ subroutine SFConstantVerify(this,name,option)
         option%io_buffer = 'CONSTANT_CAPILLARY_PRESSURE is not supported for &
           &Richards or TH flow modes as CONSTANT_SATURATION must be applied. &
           &See ' // trim(string) // '.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (Uninitialized(this%constant_saturation)) then
         option%io_buffer = 'CONSTANT_SATURATION must be specified for ' // &
           trim(string) // '.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     case(WF_MODE,G_MODE,TOIL_IMS_MODE,IMS_MODE,MIS_MODE,MPH_MODE,FLASH2_MODE)
       if (Initialized(this%constant_saturation)) then
@@ -495,12 +495,12 @@ subroutine SFConstantVerify(this,name,option)
           &multiphase flow modes as CONSTANT_CAPILLARY_PRESSURE must be &
           &applied. Saturation is a primary dependent variables. &
           &See ' // trim(string) // '.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (Uninitialized(this%constant_capillary_pressure)) then
         option%io_buffer = 'CONSTANT_CAPILLARY_PRESSURE must be specified &
           &for ' // trim(string) // '.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     case default
   end select
@@ -519,7 +519,7 @@ subroutine SFConstantCapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   dpc_dsatl = 0.d0
   capillary_pressure = this%constant_capillary_pressure
@@ -538,7 +538,7 @@ subroutine SFConstantSaturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   liquid_saturation = this%constant_saturation
   dsat_dpres = 0.d0
@@ -555,7 +555,7 @@ subroutine SFConstantD2SatDP2(this,pc,d2s_dp2,option)
   class(sat_func_constant_type) :: this
   PetscReal, intent(in) :: pc
   PetscReal, intent(out) :: d2s_dp2
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   d2s_dp2 = 0.d0
 
@@ -589,7 +589,7 @@ subroutine RPFConstantVerify(this,name,option)
   
   class(rel_perm_func_constant_type) :: this  
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option  
+  class(option_type) :: option  
 
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -601,7 +601,7 @@ subroutine RPFConstantVerify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%kr)) then
     option%io_buffer = UninitializedMessage('RELATIVE_PERMEABILITY',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
 
 end subroutine RPFConstantVerify
@@ -618,7 +618,7 @@ subroutine RPF_ConstantRelPerm(this,liquid_saturation,relative_permeability, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   relative_permeability = this%kr
   dkr_sat = 0.d0
@@ -669,7 +669,7 @@ subroutine SF_VG_Verify(this,name,option)
   
   class(sat_func_VG_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -681,11 +681,11 @@ subroutine SF_VG_Verify(this,name,option)
   call SFBaseVerify(this,string,option)
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
 
 end subroutine SF_VG_Verify
@@ -713,7 +713,7 @@ subroutine SF_VG_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: n
   PetscReal :: Se
@@ -786,7 +786,7 @@ subroutine SF_VG_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal, parameter :: pc_alpha_n_epsilon = 1.d-15
   PetscReal :: n
@@ -849,7 +849,7 @@ subroutine SF_VG_D2SatDP2(this,pc,d2s_dp2,option)
   class(sat_func_VG_type) :: this
   PetscReal, intent(in) :: pc
   PetscReal, intent(out) :: d2s_dp2
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal, parameter :: pc_alpha_n_epsilon = 1.d-15
   PetscReal :: n
@@ -927,7 +927,7 @@ subroutine SF_IGHCC2_Comp_Verify(this,name,option)
 
   class(sat_func_IGHCC2_Comp_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -939,11 +939,11 @@ subroutine SF_IGHCC2_Comp_Verify(this,name,option)
   call SFBaseVerify(this,string,option)
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SF_IGHCC2_Comp_Verify
@@ -967,7 +967,7 @@ subroutine SF_IGHCC2_Comp_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: n
   PetscReal :: Se
@@ -1053,7 +1053,7 @@ subroutine SF_BC_Verify(this,name,option)
   
   class(sat_func_BC_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
   
@@ -1065,11 +1065,11 @@ subroutine SF_BC_Verify(this,name,option)
   call SFBaseVerify(this,string,option)
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif 
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif 
   
 end subroutine SF_BC_Verify
@@ -1086,7 +1086,7 @@ subroutine SF_BC_SetupPolynomials(this,option,error_string)
   implicit none
   
   class(sat_func_BC_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
   
   PetscReal :: b(4)
@@ -1170,7 +1170,7 @@ subroutine SF_BC_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: dSe_dsatl
@@ -1242,7 +1242,7 @@ subroutine SF_BC_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: pc_alpha_neg_lambda
   PetscReal :: Se
@@ -1291,7 +1291,7 @@ subroutine SF_BC_D2SatDP2(this,pc,d2s_dp2,option)
   class(sat_func_BC_type) :: this
   PetscReal, intent(in) :: pc
   PetscReal, intent(out) :: d2s_dp2
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: pc_alpha_neg_lambda
   PetscReal :: d2Se_dpc2
@@ -1363,7 +1363,7 @@ subroutine SF_Linear_Verify(this,name,option)
   
   class(sat_func_Linear_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -1375,7 +1375,7 @@ subroutine SF_Linear_Verify(this,name,option)
   call SFBaseVerify(this,string,option)
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
 
 end subroutine SF_Linear_Verify
@@ -1399,7 +1399,7 @@ subroutine SF_Linear_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: dSe_dsatl
@@ -1456,7 +1456,7 @@ subroutine SF_Linear_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: dSe_dpc
@@ -1488,7 +1488,7 @@ subroutine SF_Linear_D2SatDP2(this,pc,d2s_dp2,option)
   class(sat_func_Linear_type) :: this
   PetscReal, intent(in) :: pc
   PetscReal, intent(out) :: d2s_dp2
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: dSe_dpc
@@ -1544,7 +1544,7 @@ subroutine SF_mK_Verify(this,name,option)
 
   class(sat_func_mK_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -1556,38 +1556,38 @@ subroutine SF_mK_Verify(this,name,option)
   call SFBaseVerify(this,string,option)
   if (Uninitialized(this%sigmaz)) then
     option%io_buffer = UninitializedMessage('SIGMAZ',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%muz)) then
     option%io_buffer = UninitializedMessage('MUZ',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%nparam)) then
     option%io_buffer = UninitializedMessage('NPARAM',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%rmax)) then
     ! rmax is used for both nparam 3 and 4
     option%io_buffer = UninitializedMessage('RMAX',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   select case(this%nparam)
     case(4)
       ! r0 is only used for nparam 4
       if (Uninitialized(this%r0)) then
         option%io_buffer = UninitializedMessage('R0',string)
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (this%r0 >= this%rmax) then
         option%io_buffer = trim(string) // ' requires RMAX > R0'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       end if
     case(3)
       continue ! rmax handled above
     case default
       option%io_buffer = 'invalid NPARAM value in' // &
         trim(string) // '. Only NPARAM=(3,4) supported.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine SF_mK_Verify
@@ -1620,7 +1620,7 @@ subroutine SF_mK_CapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: Se
   PetscReal :: inverse, exparg
@@ -1703,7 +1703,7 @@ subroutine SF_mK_Saturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: hc, hmax, cap_press_scaled
   PetscReal :: rt2sz
@@ -1780,7 +1780,7 @@ subroutine RPF_Mualem_VG_Liq_Verify(this,name,option)
   
   class(rpf_Mualem_VG_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -1792,7 +1792,7 @@ subroutine RPF_Mualem_VG_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   
 end subroutine RPF_Mualem_VG_Liq_Verify
@@ -1809,7 +1809,7 @@ subroutine RPF_Mualem_SetupPolynomials(this,option,error_string)
   implicit none
   
   class(rpf_Mualem_VG_liq_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
   
   PetscReal :: b(4)
@@ -1862,7 +1862,7 @@ subroutine RPF_Mualem_VG_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: one_over_m
@@ -1946,7 +1946,7 @@ subroutine RPF_Mualem_VG_Gas_Verify(this,name,option)
   
   class(rpf_Mualem_VG_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -1958,7 +1958,7 @@ subroutine RPF_Mualem_VG_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif 
   
 end subroutine RPF_Mualem_VG_Gas_Verify
@@ -1987,7 +1987,7 @@ subroutine RPF_Mualem_VG_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: Seg
@@ -2063,7 +2063,7 @@ subroutine RPF_Burdine_BC_Liq_Verify(this,name,option)
   
   class(rpf_Burdine_BC_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -2075,7 +2075,7 @@ subroutine RPF_Burdine_BC_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,name,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine RPF_Burdine_BC_Liq_Verify
@@ -2104,7 +2104,7 @@ subroutine RPF_Burdine_BC_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: power
@@ -2178,7 +2178,7 @@ subroutine RPF_IGHCC2_Comp_Liq_Verify(this,name,option)
 
   class(rpf_IGHCC2_Comp_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -2190,7 +2190,7 @@ subroutine RPF_IGHCC2_Comp_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,name,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_IGHCC2_Comp_Liq_Verify
@@ -2214,7 +2214,7 @@ subroutine RPF_IGHCC2_Comp_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: Se
   PetscReal :: power
@@ -2286,7 +2286,7 @@ subroutine RPF_Burdine_BC_Gas_Verify(this,name,option)
   
   class(rpf_Burdine_BC_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -2298,11 +2298,11 @@ subroutine RPF_Burdine_BC_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   
 end subroutine RPF_Burdine_BC_Gas_Verify
@@ -2331,7 +2331,7 @@ subroutine RPF_Burdine_BC_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: Seg
@@ -2408,7 +2408,7 @@ subroutine RPF_IGHCC2_Comp_Gas_Verify(this,name,option)
 
   class(rpf_IGHCC2_Comp_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -2420,11 +2420,11 @@ subroutine RPF_IGHCC2_Comp_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_IGHCC2_Comp_Gas_Verify
@@ -2447,7 +2447,7 @@ subroutine RPF_IGHCC2_Comp_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: Se
   PetscReal :: power
@@ -2520,7 +2520,7 @@ subroutine RPF_Mualem_BC_Liq_Verify(this,name,option)
   
   class(rpf_Mualem_BC_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -2532,7 +2532,7 @@ subroutine RPF_Mualem_BC_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,name,option)
   if (Uninitialized(this%lambda)) then
     option%io_buffer = UninitializedMessage('LAMBDA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine RPF_Mualem_BC_Liq_Verify
@@ -2561,7 +2561,7 @@ subroutine RPF_Mualem_BC_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: power
@@ -2633,7 +2633,7 @@ subroutine RPF_Mualem_BC_Gas_Verify(this,name,option)
   
   class(rpf_Mualem_BC_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -2645,7 +2645,7 @@ subroutine RPF_Mualem_BC_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   
 end subroutine RPF_Mualem_BC_Gas_Verify
@@ -2674,7 +2674,7 @@ subroutine RPF_Mualem_BC_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: Seg
@@ -2750,7 +2750,7 @@ subroutine RPF_Burdine_VG_Liq_Verify(this,name,option)
   
   class(rpf_Burdine_VG_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2762,7 +2762,7 @@ subroutine RPF_Burdine_VG_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%m)) then
     option%io_buffer = UninitializedMessage('M',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif   
   
 end subroutine RPF_Burdine_VG_Liq_Verify
@@ -2792,7 +2792,7 @@ subroutine RPF_Burdine_VG_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: one_over_m
@@ -2866,7 +2866,7 @@ subroutine RPF_Burdine_VG_Gas_Verify(this,name,option)
   
   class(rpf_Burdine_VG_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -2878,7 +2878,7 @@ subroutine RPF_Burdine_VG_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   
 end subroutine RPF_Burdine_VG_Gas_Verify
@@ -2907,7 +2907,7 @@ subroutine RPF_Burdine_VG_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: Seg
@@ -2981,7 +2981,7 @@ subroutine RPF_Mualem_Linear_Liq_Verify(this,name,option)
   
   class(rpf_Mualem_Linear_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -2993,11 +2993,11 @@ subroutine RPF_Mualem_Linear_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   if (Uninitialized(this%pcmax)) then
     option%io_buffer = UninitializedMessage('MAX_CAPILLARY_PRESSURE',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine RPF_Mualem_Linear_Liq_Verify
@@ -3023,7 +3023,7 @@ subroutine RPF_Mualem_Linear_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: one_over_alpha
@@ -3112,7 +3112,7 @@ subroutine RPF_Mualem_Linear_Gas_Verify(this,name,option)
   
   class(rpf_Mualem_Linear_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -3124,15 +3124,15 @@ subroutine RPF_Mualem_Linear_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   if (Uninitialized(this%alpha)) then
     option%io_buffer = UninitializedMessage('ALPHA',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   if (Uninitialized(this%pcmax)) then
     option%io_buffer = UninitializedMessage('MAX_CAPILLARY_PRESSURE',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine RPF_Mualem_Linear_Gas_Verify
@@ -3156,7 +3156,7 @@ subroutine RPF_Mualem_Linear_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: Seg
@@ -3239,7 +3239,7 @@ subroutine RPF_Burdine_Linear_Liq_Verify(this,name,option)
   
   class(rpf_Burdine_Linear_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -3272,7 +3272,7 @@ subroutine RPF_Burdine_Linear_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   
@@ -3337,7 +3337,7 @@ subroutine RPF_Burdine_Linear_Gas_Verify(this,name,option)
   
   class(rpf_Burdine_Linear_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string 
 
@@ -3350,7 +3350,7 @@ subroutine RPF_Burdine_Linear_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%Srg)) then
     option%io_buffer = UninitializedMessage('GAS_RESIDUAL_SATURATION',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif  
   
 end subroutine RPF_Burdine_Linear_Gas_Verify
@@ -3375,7 +3375,7 @@ subroutine RPF_Burdine_Linear_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   PetscReal :: Se
   PetscReal :: Seg
@@ -3446,7 +3446,7 @@ subroutine RPF_mK_Liq_Verify(this,name,option)
 
   class(rpf_mK_liq_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -3458,7 +3458,7 @@ subroutine RPF_mK_Liq_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%sigmaz)) then
     option%io_buffer = UninitializedMessage('SIGMAZ',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_mK_Liq_Verify
@@ -3492,7 +3492,7 @@ subroutine RPF_mK_Liq_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: Se, dkr_Se
   PetscReal :: InvSatRange
@@ -3578,7 +3578,7 @@ subroutine RPF_mK_Gas_Verify(this,name,option)
 
   class(rpf_mK_gas_type) :: this
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -3590,11 +3590,11 @@ subroutine RPF_mK_Gas_Verify(this,name,option)
   call RPFBaseVerify(this,string,option)
   if (Uninitialized(this%sigmaz)) then
     option%io_buffer = UninitializedMessage('SIGMAZ',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Uninitialized(this%srg)) then
     option%io_buffer = UninitializedMessage('SRG',string)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine RPF_mK_Gas_Verify
@@ -3628,7 +3628,7 @@ subroutine RPF_mK_Gas_RelPerm(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
 
   PetscReal :: Se, Seg, InvSatRange
   PetscReal :: dkr_Se

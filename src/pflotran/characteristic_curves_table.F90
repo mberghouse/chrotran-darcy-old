@@ -123,8 +123,8 @@ subroutine CharCurvesTableRead(this,input,option)
   implicit none
   
   class(char_curves_table_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXWORDLENGTH) :: press_unit
@@ -147,15 +147,15 @@ subroutine CharCurvesTableRead(this,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
     !-----------------------------------------------------------------------
       case('PRESSURE_UNITS')
-        call InputReadWord(input,option,press_unit,PETSC_TRUE)
-        call InputErrorMsg(input,option,'PRESSURE_UNITS',error_string)
+        call input%ReadWord(option,press_unit,PETSC_TRUE)
+        call input%ErrorMsg(option,'PRESSURE_UNITS',error_string)
         press_unit_found = PETSC_TRUE
       case('SWFN')
         this%itype = CCT_SWFN
@@ -192,7 +192,7 @@ subroutine CharCurvesTableRead(this,input,option)
 
  if ( .not. table_found ) then
    option%io_buffer = trim(error_string) // ', data block not found.'
-   call printErrMsg(option)
+   call option%PrintErrMsg()
  end if
 
  select case (this%itype)
@@ -200,14 +200,14 @@ subroutine CharCurvesTableRead(this,input,option)
      if ( .not.press_unit_found ) then
        option%io_buffer = trim(error_string) //  &
                                 ', SWFN table pressure unit not defined.'
-       call printErrMsg(option)
+       call option%PrintErrMsg()
      end if
      this%lookup_table%var_array(CCT_PCXW)%ptr%user_units = trim(press_unit)
    case(CCT_SGFN)
      if ( .not.press_unit_found ) then
        option%io_buffer = trim(error_string) //  &
                           ', SGFN table pressure unit not defined.'
-       call printErrMsg(option)
+       call option%PrintErrMsg()
      end if
      this%lookup_table%var_array(CCT_PCOG)%ptr%user_units = trim(press_unit)
  end select 
@@ -231,7 +231,7 @@ subroutine CharCurvesTableRead(this,input,option)
  if ( .not. AxisIsSMInc(ONE_INTEGER) ) then
    option%io_buffer = trim(error_string) //  &
                                    ', saturation not monotonically increasing.'
-   call printErrMsg(option)
+   call option%PrintErrMsg()
  end if
 
  deallocate(AxisIsSMInc)
@@ -316,7 +316,7 @@ subroutine SetSWFNTable(this,option)
   implicit none
 
   class(char_curves_table_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: cct_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -369,7 +369,7 @@ subroutine SetSGFNTable(this,option)
   implicit none
 
   class(char_curves_table_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: cct_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -422,7 +422,7 @@ subroutine SetSOF3Table(this,option)
   implicit none
 
   class(char_curves_table_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: cct_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -473,7 +473,7 @@ subroutine SetSOF2Table(this,option)
   implicit none
 
   class(char_curves_table_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: cct_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -517,7 +517,7 @@ function CCTVarIsMonotonic(this,var_iname,option)
   PetscBool :: CCTVarIsMonotonic
   class(char_curves_table_type) :: this
   PetscInt, intent(in) :: var_iname
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal, parameter :: diff_eps = 1.0d-6
   PetscInt :: data_idx, var_idx_max
@@ -608,7 +608,7 @@ function CharCurveTableGetPtrFromList(cc_table_name,list,error_string,option)
   character(len=MAXWORDLENGTH) :: cc_table_name
   class(char_curves_table_type), pointer :: list
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   class(char_curves_table_type), pointer :: cur_char_curve_table
   PetscInt :: length
@@ -631,7 +631,7 @@ function CharCurveTableGetPtrFromList(cc_table_name,list,error_string,option)
     error_string = trim(error_string) // "table name =" // &
                     trim(cc_table_name) // " not found"
     option%io_buffer = error_string
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
     
 end function CharCurveTableGetPtrFromList
@@ -656,7 +656,7 @@ subroutine SearchCCTVarInCCTableList(list,var_iname,cc_table_name, &
   PetscInt, intent(in) :: var_iname
   character(len=MAXWORDLENGTH), intent(out) :: cc_table_name
   character(len=MAXSTRINGLENGTH), intent(in) :: error_string
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   class(char_curves_table_type), pointer :: cur_char_curves_table
   PetscInt :: num_occurrences
@@ -682,11 +682,11 @@ subroutine SearchCCTVarInCCTableList(list,var_iname,cc_table_name, &
   else if (num_occurrences > 1) then
     option%io_buffer = trim(error_string) // &
             ' data found in multiple tables - please select one of the tables'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else if ( num_occurrences < 1) then
     option%io_buffer = trim(error_string) // &
                                'data not found within the tables'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
     
 end subroutine SearchCCTVarInCCTableList
@@ -709,14 +709,14 @@ subroutine CheckCCTVariableExists(this,var_iname,error_string,option)
   class(char_curves_table_type) :: this
   PetscInt, intent(in) :: var_iname
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: error_string_lc
 
   if (.not.this%lookup_table%LookupTableVarIsPresent(var_iname)) then
     error_string_lc = 'data not found in table = ' // trim(this%name)
     option%io_buffer = error_string_lc
-    call printErrMsg(option)      
+    call option%PrintErrMsg()
   end if
 
 end subroutine CheckCCTVariableExists

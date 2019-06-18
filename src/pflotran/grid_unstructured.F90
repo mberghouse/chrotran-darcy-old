@@ -59,9 +59,9 @@ subroutine UGridRead(unstructured_grid,filename,option)
   
   type(grid_unstructured_type) :: unstructured_grid
   character(len=MAXSTRINGLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: string, hint
   character(len=MAXWORDLENGTH) :: word
   PetscInt :: num_cells_local_save
@@ -109,14 +109,14 @@ subroutine UGridRead(unstructured_grid,filename,option)
 
   call InputReadPflotranString(input,option)
   string = 'unstructured grid'
-  call InputReadStringErrorMsg(input,option,hint)  
+  call input%ReadStringErrorMsg(option,hint)
 
   ! read num_cells
-  call InputReadInt(input,option,unstructured_grid%nmax)
-  call InputErrorMsg(input,option,'number of cells',hint)
+  call input%ReadInt(option,unstructured_grid%nmax)
+  call input%ErrorMsg(option,'number of cells',hint)
   ! read num_vertices
-  call InputReadInt(input,option,unstructured_grid%num_vertices_global)
-  call InputErrorMsg(input,option,'number of vertices',hint)
+  call input%ReadInt(option,unstructured_grid%num_vertices_global)
+  call input%ErrorMsg(option,'number of vertices',hint)
 
   ! divide cells across ranks
   num_cells_local = unstructured_grid%nmax/option%mycommsize 
@@ -144,9 +144,9 @@ subroutine UGridRead(unstructured_grid,filename,option)
       do icell = 1, num_to_read
         ! read in the vertices defining the grid cell
         call InputReadPflotranString(input,option)
-        call InputReadStringErrorMsg(input,option,hint)  
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'element type',hint)
+        call input%ReadStringErrorMsg(option,hint)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'element type',hint)
         call StringToUpper(word)
         select case(word)
           case('H')
@@ -161,8 +161,8 @@ subroutine UGridRead(unstructured_grid,filename,option)
             num_vertices = 4
         end select
         do ivertex = 1, num_vertices
-          call InputReadInt(input,option,temp_int_array(ivertex,icell))
-          call InputErrorMsg(input,option,'vertex id',hint)
+          call input%ReadInt(option,temp_int_array(ivertex,icell))
+          call input%ErrorMsg(option,'vertex id',hint)
         enddo
       enddo
       
@@ -227,10 +227,10 @@ subroutine UGridRead(unstructured_grid,filename,option)
       if (irank < remainder) num_to_read = num_to_read + 1
       do ivertex = 1, num_to_read
         call InputReadPflotranString(input,option)
-        call InputReadStringErrorMsg(input,option,hint)  
+        call input%ReadStringErrorMsg(option,hint)
         do idir = 1, 3
-          call InputReadDouble(input,option,temp_real_array(idir,ivertex))
-          call InputErrorMsg(input,option,'vertex coordinate',hint)
+          call input%ReadDouble(option,temp_real_array(idir,ivertex))
+          call input%ErrorMsg(option,'vertex coordinate',hint)
         enddo
       enddo
       
@@ -288,9 +288,9 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
   type(grid_unstructured_type) :: unstructured_grid
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXSTRINGLENGTH) :: surf_filename
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=MAXSTRINGLENGTH) :: string, hint
   character(len=MAXWORDLENGTH) :: word
   PetscInt :: num_cells_local_save
@@ -338,14 +338,14 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
 
   call InputReadPflotranString(input,option)
   string = 'unstructured grid'
-  call InputReadStringErrorMsg(input,option,hint)  
+  call input%ReadStringErrorMsg(option,hint)
 
   ! read num_cells
-  call InputReadInt(input,option,unstructured_grid%nmax)
-  call InputErrorMsg(input,option,'number of cells',hint)
+  call input%ReadInt(option,unstructured_grid%nmax)
+  call input%ErrorMsg(option,'number of cells',hint)
   ! read num_vertices
-  call InputReadInt(input,option,unstructured_grid%num_vertices_global)
-  call InputErrorMsg(input,option,'number of vertices',hint)
+  call input%ReadInt(option,unstructured_grid%num_vertices_global)
+  call input%ErrorMsg(option,'number of vertices',hint)
 
   ! divide cells across ranks
   !num_cells_local = unstructured_grid%nmax/option%mycommsize 
@@ -371,9 +371,9 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
     do icell = 1, num_to_read
       ! read in the vertices defining the grid cell
       call InputReadPflotranString(input,option)
-      call InputReadStringErrorMsg(input,option,hint)  
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      call InputErrorMsg(input,option,'element type',hint)
+      call input%ReadStringErrorMsg(option,hint)
+      call input%ReadWord(option,word,PETSC_TRUE)
+      call input%ErrorMsg(option,'element type',hint)
       call StringToUpper(word)
       select case(word)
         case('H')
@@ -388,8 +388,8 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
           num_vertices = 4
       end select
       do ivertex = 1, num_vertices
-        call InputReadInt(input,option,temp_int_array(ivertex,icell))
-        call InputErrorMsg(input,option,'vertex id',hint)
+        call input%ReadInt(option,temp_int_array(ivertex,icell))
+        call input%ErrorMsg(option,'vertex id',hint)
       enddo
     enddo
   endif
@@ -416,10 +416,10 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
       if (irank < remainder) num_to_read = num_to_read + 1
       do ivertex = 1, num_to_read
         call InputReadPflotranString(input,option)
-        call InputReadStringErrorMsg(input,option,hint)  
+        call input%ReadStringErrorMsg(option,hint)
         do idir = 1, 3
-          call InputReadDouble(input,option,temp_real_array(idir,ivertex))
-          call InputErrorMsg(input,option,'vertex coordinate',hint)
+          call input%ReadDouble(option,temp_real_array(idir,ivertex))
+          call input%ErrorMsg(option,'vertex coordinate',hint)
         enddo
       enddo
       
@@ -461,11 +461,11 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
   input => InputCreate(fileid,surf_filename,option)
   call InputReadPflotranString(input,option)
   string = 'unstructured sideset'
-  call InputReadStringErrorMsg(input,option,hint)  
+  call input%ReadStringErrorMsg(option,hint)
 
   ! read num_cells
-  call InputReadInt(input,option,unstructured_grid%nmax)
-  call InputErrorMsg(input,option,'number of cells',hint)
+  call input%ReadInt(option,unstructured_grid%nmax)
+  call input%ErrorMsg(option,'number of cells',hint)
 
   ! divide cells across ranks
   num_cells_local = unstructured_grid%nmax/option%mycommsize 
@@ -494,9 +494,9 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
       do icell = 1, num_to_read
         ! read in the vertices defining the cell face
         call InputReadPflotranString(input,option)
-        call InputReadStringErrorMsg(input,option,hint)  
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'element type',hint)
+        call input%ReadStringErrorMsg(option,hint)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'element type',hint)
         call StringToUpper(word)
         select case(word)
           case('Q')
@@ -505,8 +505,8 @@ subroutine UGridReadSurfGrid(unstructured_grid,filename,surf_filename,option)
             num_vertices = 3
         end select
         do ivertex = 1, num_vertices
-          call InputReadInt(input,option,temp_int_array(ivertex,icell))
-          call InputErrorMsg(input,option,'vertex id',hint)
+          call input%ReadInt(option,temp_int_array(ivertex,icell))
+          call input%ErrorMsg(option,'vertex id',hint)
         enddo
       enddo
 
@@ -580,7 +580,7 @@ subroutine UGridReadHDF5SurfGrid(unstructured_grid,filename,option)
   implicit none
 
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXSTRINGLENGTH) :: group_name
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -633,7 +633,7 @@ subroutine UGridReadHDF5SurfGrid(unstructured_grid,filename,option)
   ! Open group
   group_name = "/Regions/top/Vertex Ids"
   option%io_buffer = 'Opening group: ' // trim(group_name)
-  call printMsg(option)
+  call option%PrintMsg()
 
   ! Open dataset
   call h5dopen_f(file_id, "/Regions/top/Vertex Ids", data_set_id, hdf5_err)
@@ -646,7 +646,7 @@ subroutine UGridReadHDF5SurfGrid(unstructured_grid,filename,option)
   if (ndims_h5 /= 2) then
     option%io_buffer='Dimension of Domain/Cells dataset in ' // trim(filename) // &
           ' is not equal to 2.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! Allocate memory
@@ -740,7 +740,7 @@ subroutine UGridReadHDF5SurfGrid(unstructured_grid,filename,option)
   if (ndims_h5 /= 2) then
     option%io_buffer='Dimension of Domain/Vertices dataset in ' // trim(filename) // &
           ' is not equal to 2.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! Allocate memory
@@ -854,7 +854,7 @@ subroutine UGridReadHDF5(unstructured_grid,filename,option)
 
   type(grid_unstructured_type) :: unstructured_grid
   character(len=MAXSTRINGLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: group_name
   character(len=MAXSTRINGLENGTH) :: dataset_name
@@ -908,7 +908,7 @@ subroutine UGridReadHDF5(unstructured_grid,filename,option)
   ! Open group
   group_name = "Domain"
   option%io_buffer = 'Opening group: ' // trim(group_name)
-  call printMsg(option)
+  call option%PrintMsg()
 
   ! Open dataset
   call h5dopen_f(file_id, "Domain/Cells", data_set_id, hdf5_err)
@@ -921,7 +921,7 @@ subroutine UGridReadHDF5(unstructured_grid,filename,option)
   if (ndims_h5 /= 2) then
     option%io_buffer='Dimension of Domain/Cells dataset in ' // trim(filename) // &
           ' is not equal to 2.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! Allocate memory
@@ -996,7 +996,7 @@ subroutine UGridReadHDF5(unstructured_grid,filename,option)
         option%io_buffer = 'Unknown cell type : ' // trim(adjustl(string))
         error_count = error_count + 1
         if (error_count < 10) then
-          call printMsgByRank(option)
+          call option%PrintMsgByRank()
         endif
     end select
   enddo
@@ -1004,7 +1004,7 @@ subroutine UGridReadHDF5(unstructured_grid,filename,option)
                      MPI_MAX,option%mycomm,ierr)
   if (error_count > 0) then
     option%io_buffer = 'Unknown cell types in ' // trim(filename) // '.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   do ii = 1, num_cells_local
@@ -1035,7 +1035,7 @@ subroutine UGridReadHDF5(unstructured_grid,filename,option)
   if (ndims_h5 /= 2) then
     option%io_buffer='Dimension of Domain/Vertices dataset in ' // trim(filename) // &
           ' is not equal to 2.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! Allocate memory
@@ -1141,7 +1141,7 @@ subroutine UGridDecompose(unstructured_grid,option)
   implicit none
   
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: local_id, local_id2
   PetscInt :: ghosted_id
@@ -1248,13 +1248,13 @@ subroutine UGridDecompose(unstructured_grid,option)
 #if UGRID_DEBUG
   write(string,*) unstructured_grid%max_nvert_per_cell
   option%io_buffer = 'Maximum number of vertices per cell: ' // adjustl(string)
-  call printMsg(option)
+  call option%PrintMsg()
   write(string,*) index_format_flag
   option%io_buffer = 'Vertex indexing starts at: ' // adjustl(string)
-  call printMsg(option)
+  call option%PrintMsg()
   if (index_format_flag == 0) then
     option%io_buffer = 'Changing vertex indexing to 1-based.'
-    call printMsg(option)
+    call option%PrintMsg()
   endif
 #endif
 
@@ -1284,7 +1284,7 @@ subroutine UGridDecompose(unstructured_grid,option)
       num_common_vertices = 3 ! cells must share at least this number of vertices
     case default
         option%io_buffer = 'Grid type not recognized '
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
   ! determine the global offset from 0 for cells on this rank
@@ -1294,7 +1294,7 @@ subroutine UGridDecompose(unstructured_grid,option)
 
   ! create an adjacency matrix for calculating the duals (connnections)
 #if UGRID_DEBUG
-  call printMsg(option,'Adjacency matrix')
+  call option%PrintMsg('Adjacency matrix')
 #endif
 
   call MatCreateMPIAdj(option%mycomm,num_cells_local_old, &
@@ -1319,7 +1319,7 @@ subroutine UGridDecompose(unstructured_grid,option)
 #endif
 
 #if UGRID_DEBUG
-  call printMsg(option,'Dual matrix')
+  call option%PrintMsg('Dual matrix')
 #endif
 
 #if defined(PETSC_HAVE_PARMETIS)
@@ -1354,7 +1354,7 @@ subroutine UGridDecompose(unstructured_grid,option)
   if (.not.success .or. num_rows /= num_cells_local_old) then
     print *, option%myrank, num_rows, success, num_cells_local_old
     option%io_buffer = 'Error getting IJ row indices from dual matrix'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! calculate maximum number of connections for any given cell
@@ -1373,7 +1373,7 @@ subroutine UGridDecompose(unstructured_grid,option)
 #if UGRID_DEBUG
   write(string,*) unstructured_grid%max_ndual_per_cell
   option%io_buffer = 'Maximum number of duals per cell: ' // adjustl(string)
-  call printMsg(option)
+  call option%PrintMsg()
 #endif
   
   if (unstructured_grid%max_ndual_per_cell > 0) then
@@ -1448,7 +1448,7 @@ subroutine UGridDecompose(unstructured_grid,option)
     if (num_cols > unstructured_grid%max_ndual_per_cell) then
       option%io_buffer = &
         'Number of columns in Dual matrix is larger then max_ndual_per_cell.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
     do icol = 1, unstructured_grid%max_ndual_per_cell
       count = count + 1
@@ -1727,7 +1727,7 @@ subroutine UGridDecompose(unstructured_grid,option)
   call VecDestroy(vertices_new,ierr);CHKERRQ(ierr)
 
 #if UGRID_DEBUG
-  call printMsg(option,'Setting cell types')
+  call option%PrintMsg('Setting cell types')
 #endif
 
   allocate(unstructured_grid%cell_type(unstructured_grid%ngmax))
@@ -1747,7 +1747,7 @@ subroutine UGridDecompose(unstructured_grid,option)
             unstructured_grid%cell_type(ghosted_id) = TET_TYPE
           case default
             option%io_buffer = 'Cell type not recognized: '
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select      
       enddo
     case(TWO_DIM_GRID)
@@ -1759,12 +1759,12 @@ subroutine UGridDecompose(unstructured_grid,option)
             unstructured_grid%cell_type = TRI_TYPE
           case default
             option%io_buffer = 'Cell type not recognized: '
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       end do
     case default
       option%io_buffer = 'Grid type not recognized: '
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   
 end subroutine UGridDecompose
@@ -1789,7 +1789,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
   implicit none
 
   type(connection_set_type), pointer :: UGridComputeInternConnect
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: grid_x(*), grid_y(*), grid_z(*)
   type(grid_unstructured_type) :: unstructured_grid
 
@@ -1978,7 +1978,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
 #ifdef UGRID_DEBUG                
                   write(string,*) option%myrank, face_id2, ' -> ', face_id
                   option%io_buffer = 'Duplicated face removed:' // trim(string)
-                  call printMsg(option)
+                  call option%PrintMsg()
 #endif
                   cell_to_face(iface2,cell_id2) = face_id
                   ! flag face_id2 as removed
@@ -1989,7 +1989,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
 #ifdef UGRID_DEBUG                
                   write(string,*) option%myrank, face_id, ' -> ', face_id2
                   option%io_buffer = 'Duplicated face removed:' // trim(string)
-                  call printMsg(option)
+                  call option%PrintMsg()
 #endif
                   cell_to_face(iface,cell_id) = face_id2
                   ! flag face_id as removed  
@@ -2024,7 +2024,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
                      unstructured_grid%cell_vertices(ivertex2,cell_id2)), &
                      ivertex2=1,unstructured_grid%cell_vertices(0,cell_id2))
         option%io_buffer='No shared face found.'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       endif
     enddo ! idual-loop
   enddo  ! local_id-loop
@@ -2083,7 +2083,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
       enddo
       if (.not.found) then
         option%io_buffer = 'Remapping of cell face id unsuccessful'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     enddo
   enddo
@@ -2099,7 +2099,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
               unstructured_grid%max_cells_sharing_a_vertex, &
               ' cells. Rank = ', option%myrank, ' vertex_id = ', vertex_id, ' exceeds it.'
         option%io_buffer = string
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       vertex_to_cell(count,vertex_id) = ghosted_id
       vertex_to_cell(0,vertex_id) = count
@@ -2156,7 +2156,7 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
         else
           write(string,*) option%myrank,local_id,dual_local_id 
           option%io_buffer = 'face not found in connection loop' // trim(string)
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         face_type = &
           UCellGetFaceType(unstructured_grid%cell_type(local_id),iface,option)
@@ -2175,12 +2175,12 @@ function UGridComputeInternConnect(unstructured_grid,grid_x,grid_y,grid_z, &
           if (face_type /= face_type2) then
             write(string,*) option%myrank, local_id, cell_id2 
             option%io_buffer = 'face types do not match' // trim(string)
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         else
           write(string,*) option%myrank, iface, cell_id2
           option%io_buffer = 'global face not found' // trim(string)
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         connections%id_up(iconn) = local_id
         connections%id_dn(iconn) = abs(dual_local_id)
@@ -2437,7 +2437,7 @@ subroutine UGridPopulateConnection(unstructured_grid, connection, iface_cell, &
   PetscInt :: iface_cell
   PetscInt :: iconn
   PetscInt :: ghosted_id
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscErrorCode :: ierr
   
@@ -2458,7 +2458,7 @@ subroutine UGridPopulateConnection(unstructured_grid, connection, iface_cell, &
         option%io_buffer = 'Face id undefined for cell ' // &
           trim(adjustl(word)) // &
           ' in boundary condition.  Should this be a source/sink?'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       endif
       ! Compute cell centeroid
       v2 = 0.d0
@@ -2538,7 +2538,7 @@ subroutine UGridComputeCoord(unstructured_grid,option, &
   implicit none
 
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: grid_x(:), grid_y(:), grid_z(:)
   PetscReal :: x_min, x_max, y_min, y_max, z_min, z_max
 
@@ -2599,7 +2599,7 @@ subroutine UGridComputeVolumes(unstructured_grid,option,volume)
   implicit none
 
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   Vec :: volume
   
 
@@ -2649,7 +2649,7 @@ subroutine UGridComputeAreas(unstructured_grid,option,area)
   implicit none
 
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   Vec :: area
   
   PetscInt :: local_id
@@ -2667,7 +2667,7 @@ subroutine UGridComputeAreas(unstructured_grid,option,area)
     ghosted_id = local_id
     if (unstructured_grid%cell_vertices(0,ghosted_id) > 4 ) then
       option%io_buffer = 'ERROR: In UGridComputeAreas the no. of vertices > 4'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     do ivertex = 1, unstructured_grid%cell_vertices(0,ghosted_id)
       vertex_id = unstructured_grid%cell_vertices(ivertex,ghosted_id)
@@ -2706,7 +2706,7 @@ subroutine UGridComputeQuality(unstructured_grid,option)
   implicit none
 
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: local_id
   PetscInt :: ghosted_id
@@ -2782,7 +2782,7 @@ subroutine UGridEnsureRightHandRule(unstructured_grid,x,y,z,nG2A,nl2G,option)
   PetscReal :: x(:), y(:), z(:)
   PetscInt :: nG2A(:)
   PetscInt :: nL2G(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: local_id
   PetscInt :: ghosted_id
@@ -2871,7 +2871,7 @@ subroutine UGridEnsureRightHandRule(unstructured_grid,x,y,z,nG2A,nl2G,option)
             UCellComputeArea(cell_type,vertex_8,option)
           option%io_buffer = trim(option%io_buffer) // ' and area: ' // &
             trim(adjustl(string)) // '.'
-          call printMsgAnyRank(option)
+          call option%PrintMsgAnyRank()
           error_found = PETSC_TRUE
         else
           ! Error message for 3D cell type
@@ -2908,7 +2908,7 @@ subroutine UGridEnsureRightHandRule(unstructured_grid,x,y,z,nG2A,nl2G,option)
             UCellComputeVolume(cell_type,vertex_8,option)
           option%io_buffer = trim(option%io_buffer) // ' and volume: ' // &
             trim(adjustl(string)) // '.'
-          call printMsgAnyRank(option)
+          call option%PrintMsgAnyRank()
           error_found = PETSC_TRUE
         endif
       endif
@@ -2917,7 +2917,7 @@ subroutine UGridEnsureRightHandRule(unstructured_grid,x,y,z,nG2A,nl2G,option)
   
   if (error_found) then
     option%io_buffer = 'Cells founds that violate right hand rule.'
-    call printErrMsgByRank(option)
+    call option%PrintErrMsgByRank()
   endif
 
 end subroutine UGridEnsureRightHandRule
@@ -2940,7 +2940,7 @@ subroutine UGridGetCellFromPoint(x,y,z,unstructured_grid,option,icell)
   PetscReal :: x, y, z
   PetscInt :: icell
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: cell_type, num_faces, iface, face_type
   PetscInt :: vertex_ids(4)
@@ -3018,7 +3018,7 @@ subroutine UGridGetCellsInRectangle(x_min,x_max,y_min,y_max,z_min,z_max, &
                   
   PetscReal :: x_min, x_max, y_min, y_max, z_min, z_max
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: num_cells
   PetscInt, pointer :: cell_ids(:)
   PetscInt, pointer :: cell_face_ids(:)
@@ -3122,7 +3122,7 @@ subroutine UGridMapSideSet(unstructured_grid,face_vertices,n_ss_faces, &
   PetscInt :: face_vertices(:,:)
   PetscInt :: n_ss_faces
   character(len=MAXWORDLENGTH) :: region_name
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt, pointer :: cell_ids(:)
   PetscInt, pointer :: face_ids(:)
   
@@ -3393,7 +3393,7 @@ subroutine UGridMapSideSet(unstructured_grid,face_vertices,n_ss_faces, &
       enddo
       if (nvertices == 0) then ! the case if not found 
         option%io_buffer = 'Face not found in UGridMapSideSet'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       endif
       if (abs(nvertices - vec_ptr(iface)) < 0.5d0) then
         mapped_face_count = mapped_face_count + 1
@@ -3440,7 +3440,7 @@ subroutine UGridMapSideSet2(unstructured_grid,face_vertices,n_ss_faces, &
   PetscInt :: face_vertices(:,:)
   PetscInt :: n_ss_faces
   character(len=MAXWORDLENGTH) :: region_name
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt, pointer :: cell_ids(:)
   PetscInt, pointer :: face_ids(:)
 
@@ -3745,7 +3745,7 @@ subroutine UGridMapBoundFacesInPolVol(unstructured_grid,polygonal_volume, &
   type(grid_unstructured_type) :: unstructured_grid
   type(polygonal_volume_type) :: polygonal_volume
   character(len=MAXWORDLENGTH) :: region_name
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt, pointer :: cell_ids(:)
   PetscInt, pointer :: face_ids(:)
 
@@ -3806,7 +3806,7 @@ subroutine UGridMapBoundFacesInPolVol(unstructured_grid,polygonal_volume, &
         if (.not.found) then
           option%io_buffer = &
             'Boundary face mismatch in UGridMapBoundFacesInPolVol()'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         else
           cell_ids(iface) = cell_id
           face_ids(iface) = iface2
@@ -3839,7 +3839,7 @@ subroutine UGridGetBoundaryFaces(unstructured_grid,option,boundary_faces)
 
   type(grid_unstructured_type) :: unstructured_grid
   PetscInt, pointer :: boundary_faces(:)
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: boundary_face_count
   PetscInt :: nfaces
@@ -3906,7 +3906,7 @@ subroutine UGridGrowStencilSupport(unstructured_grid,stencil_width, &
   implicit none
 
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: stencil_width
   PetscInt, pointer :: ghosted_level(:)
   
@@ -4161,7 +4161,7 @@ subroutine UGridFindCellIDsAfterGrowingStencilWidthByOne(Mat_vert_to_cell, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   Mat :: Mat_vert_to_cell
   Vec :: Vec_cids_local
   !PetscInt, intent(out) :: ngmax_new
@@ -4324,7 +4324,7 @@ subroutine UGridFindNewGhostCellIDsAfterGrowingStencilWidth(unstructured_grid, &
 
   type(grid_unstructured_type) :: unstructured_grid
   PetscInt :: cids_new(:)
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ngmax_new
 
   ! local
@@ -4568,7 +4568,7 @@ subroutine UGridUpdateMeshAfterGrowingStencilWidth(unstructured_grid, &
   implicit none
 
   type(grid_unstructured_type) :: unstructured_grid
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ngmax_new
 
   ! local
@@ -4916,7 +4916,7 @@ subroutine UGridUpdateMeshAfterGrowingStencilWidth(unstructured_grid, &
             unstructured_grid%cell_type(ghosted_id) = TET_TYPE
           case default
             option%io_buffer = 'Cell type not recognized: '
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select      
       enddo
     case(TWO_DIM_GRID)
@@ -4928,12 +4928,12 @@ subroutine UGridUpdateMeshAfterGrowingStencilWidth(unstructured_grid, &
             unstructured_grid%cell_type = TRI_TYPE
           case default
             option%io_buffer = 'Cell type not recognized: '
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       end do
     case default
       option%io_buffer = 'Grid type not recognized: '
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   call VecDestroy(elements_petsc,ierr);CHKERRQ(ierr)

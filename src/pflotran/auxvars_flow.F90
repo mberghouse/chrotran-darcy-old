@@ -56,7 +56,7 @@ subroutine AuxVarFlowInit(this,option)
   implicit none
 
   class(auxvar_flow_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   allocate(this%pres(option%nphase))
   this%pres = 0.d0

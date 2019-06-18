@@ -231,7 +231,7 @@ subroutine RTAuxVarInit(auxvar,reaction,option)
   
   type(reactive_transport_auxvar_type) :: auxvar
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(surface_complexation_type), pointer :: surface_complexation
   
@@ -419,7 +419,7 @@ subroutine RTAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(reactive_transport_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   auxvar%pri_molal = auxvar2%pri_molal
 
@@ -527,7 +527,7 @@ subroutine RTAuxVarCopyInitialGuess(auxvar,auxvar2,option)
   implicit none
   
   type(reactive_transport_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   auxvar%pri_molal = auxvar2%pri_molal
 

@@ -96,7 +96,7 @@ function GeomechConditionCreate(option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(geomech_condition_type), pointer :: GeomechConditionCreate
   
   type(geomech_condition_type), pointer :: condition
@@ -180,7 +180,7 @@ subroutine GeomechSubConditionVerify(option, condition, sub_condition_name, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(geomech_condition_type) :: condition
   character(len=MAXWORDLENGTH) :: sub_condition_name
   type(geomech_sub_condition_type), pointer :: sub_condition
@@ -203,7 +203,7 @@ subroutine GeomechSubConditionVerify(option, condition, sub_condition_name, &
   if (len_trim(sub_condition%ctype) == NULL_CONDITION) then
     option%io_buffer = 'TYPE of condition ' // trim(condition%name) // &
       ' ' // trim(sub_condition_name) // ' dataset not defined.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   header = 'GEOMECHANICS_CONDITION' // '/' // &
@@ -232,8 +232,8 @@ subroutine GeomechConditionRead(condition,input,option)
   implicit none
   
   type(geomech_condition_type) :: condition
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word, internal_units
@@ -305,19 +305,19 @@ subroutine GeomechConditionRead(condition,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    call InputReadStringErrorMsg(input,option,'CONDITION')
+    call input%ReadStringErrorMsg(option,'CONDITION')
           
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','CONDITION')   
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CONDITION')
       
     select case(trim(word))
     
       case('UNITS') ! read default units for condition arguments
         do
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          if (InputError(input)) exit
+          call input%ReadWord(option,word,PETSC_TRUE)
+          if (input%Error()) exit
           select case(trim(word))
             case('s','sec','min','hr','d','day','y','yr')
               condition%time_units = trim(word)
@@ -331,8 +331,8 @@ subroutine GeomechConditionRead(condition,input,option)
       case('SYNC_TIMESTEP_WITH_UPDATE')
         condition%sync_time_with_update = PETSC_TRUE
       case('INTERPOLATION')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'INTERPOLATION','CONDITION')   
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'INTERPOLATION','CONDITION')
         call StringToUpper(word)
         select case(word)
           case('STEP')
@@ -345,13 +345,13 @@ subroutine GeomechConditionRead(condition,input,option)
       case('TYPE') ! read condition type (dirichlet, neumann, etc) for each dof
         do
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,'CONDITION')
+          call input%ReadStringErrorMsg(option,'CONDITION')
           
           if (InputCheckExit(input,option)) exit          
           
-          if (InputError(input)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword','CONDITION,TYPE')   
+          if (input%Error()) exit
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword','CONDITION,TYPE')
           call StringToUpper(word)
           select case(trim(word))
             case('PRESSURE')
@@ -371,8 +371,8 @@ subroutine GeomechConditionRead(condition,input,option)
               call InputKeywordUnrecognized(word, &
                      'geomechanics condition type',option)
           end select
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'TYPE','CONDITION')   
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'TYPE','CONDITION')
           call StringToLower(word)
           sub_condition_ptr%ctype = word
           select case(word)
@@ -388,8 +388,8 @@ subroutine GeomechConditionRead(condition,input,option)
           end select
         enddo
       case('TIME','TIMES')
-        call InputReadDouble(input,option,default_time)
-        call InputErrorMsg(input,option,'TIME','CONDITION')   
+        call input%ReadDouble(option,default_time)
+        call input%ErrorMsg(option,'TIME','CONDITION')
       case('DISPLACEMENT_X')
         internal_units = 'meter'
         call ConditionReadValues(input,option,word, &
@@ -503,7 +503,7 @@ subroutine GeomechConditionRead(condition,input,option)
   if (num_sub_conditions == 0) then
     option%io_buffer = 'displacement/force condition null in condition: ' // &
                         trim(condition%name)
-    call printErrMsg(option)   
+    call option%PrintErrMsg()
   endif
 
   condition%num_sub_conditions = num_sub_conditions
@@ -559,7 +559,7 @@ subroutine GeomechConditionPrint(condition,option)
   implicit none
   
   type(geomech_condition_type) :: condition
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i
@@ -604,7 +604,7 @@ subroutine GeomechConditionPrintSubCondition(subcondition,option)
   implicit none
   
   type(geomech_sub_condition_type) :: subcondition
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
@@ -626,7 +626,7 @@ subroutine GeomechConditionPrintSubCondition(subcondition,option)
   if (associated(subcondition%dataset)) then
 !geh    call DatasetPrint(subcondition%dataset,option)
     option%io_buffer = 'TODO(geh): add DatasetPrint()'
-    call printMsg(option)
+    call option%PrintMsg()
   endif
             
 end subroutine GeomechConditionPrintSubCondition
@@ -647,7 +647,7 @@ subroutine GeomechConditionUpdate(condition_list,option)
   implicit none
   
   type(geomech_condition_list_type) :: condition_list
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(geomech_condition_type), pointer :: condition
   type(geomech_sub_condition_type), pointer :: sub_condition

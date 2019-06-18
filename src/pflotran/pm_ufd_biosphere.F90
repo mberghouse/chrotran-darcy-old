@@ -289,9 +289,9 @@ subroutine PMUFDBRead(this,input)
   implicit none
   
   class(pm_ufd_biosphere_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXWORDLENGTH) :: word
   PetscReal :: double
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -304,15 +304,15 @@ subroutine PMUFDBRead(this,input)
   option => this%option
   input%ierr = 0
   option%io_buffer = 'pflotran card:: UFD_BIOSPHERE'
-  call printMsg(option)
+  call option%PrintMsg()
   
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     error_string = 'UFD_BIOSPHERE'
     call StringToUpper(word)
 
@@ -327,8 +327,8 @@ subroutine PMUFDBRead(this,input)
         error_string = trim(error_string) // ',ERB_1A'
         allocate(new_ERB1A)
         new_ERB1A => PMUFDB_ERB1ACreate()
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'name',error_string)
         new_ERB1A%name = adjustl(trim(word))
         error_string = trim(error_string) // ' ' // trim(new_ERB1A%name)
         call PMUFDBReadERBmodel(this,input,option,new_ERB1A,error_string)
@@ -355,8 +355,8 @@ subroutine PMUFDBRead(this,input)
         error_string = trim(error_string) // ',ERB_1B'
         allocate(new_ERB1B)
         new_ERB1B => PMUFDB_ERB1BCreate()
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'name',error_string)
         new_ERB1B%name = adjustl(trim(word))
         error_string = trim(error_string) // ' ' // trim(new_ERB1B%name)
         call PMUFDBReadERBmodel(this,input,option,new_ERB1B,error_string)
@@ -390,9 +390,9 @@ subroutine PMUFDBRead(this,input)
     !-----------------------------------------
     !-----------------------------------------
       case('OUTPUT_START_TIME')
-        call InputReadDouble(input,option,double)
-        call InputErrorMsg(input,option,'OUTPUT_START_TIME',error_string)
-        call InputReadAndConvertUnits(input,double,'sec',trim(error_string) &
+        call input%ReadDouble(option,double)
+        call input%ErrorMsg(option,'OUTPUT_START_TIME',error_string)
+        call input%ReadAndConvertUnits(double,'sec',trim(error_string) &
                                       // ',OUTPUT_START_TIME units',option)
         this%output_start_time = double
     !-----------------------------------------
@@ -408,13 +408,13 @@ subroutine PMUFDBRead(this,input)
     option%io_buffer = 'At least one ERB model must be specified &
                        &in the ' // trim(error_string) // ' block, with the &
                        &keyword ERB_1A or ERB_1B.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (.not.associated(this%supported_rad_list)) then
     option%io_buffer = 'At least one supported radionuclide must be specified &
                        &in the ' // trim(error_string) // ' block, with the &
                        &keyword SUPPORTED_RADIONUCLIDES.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (this%unsupp_rads_needed .and. &
      (.not.associated(this%unsupported_rad_list))) then
@@ -423,7 +423,7 @@ subroutine PMUFDBRead(this,input)
                        &radionuclides were specified. You must specify all &
                        &unsupported radionuclides using the keyword &
                        &UNSUPPORTED_RADIONUCLIDES block.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   
@@ -446,8 +446,8 @@ subroutine PMUFDBReadERBmodel(this,input,option,ERB_model,error_string)
   implicit none
   
   class(pm_ufd_biosphere_type) :: this
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   class(ERB_base_type) :: ERB_model
   character(len=MAXSTRINGLENGTH) :: error_string
   
@@ -458,16 +458,16 @@ subroutine PMUFDBReadERBmodel(this,input,option,ERB_model,error_string)
   num_errors = 0
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)
     select case(trim(word))
     !-----------------------------------
       case('REGION')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'region assignment',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'region assignment',error_string)
         ERB_model%region_name = trim(word)
     !-----------------------------------
       case('DILUTION_FACTOR')
@@ -475,18 +475,18 @@ subroutine PMUFDBReadERBmodel(this,input,option,ERB_model,error_string)
           type is(ERB_1A_type)
             option%io_buffer = 'ERROR: DILUTION_FACTOR cannot be specified &
                                &for ' // trim(error_string)
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           type is(ERB_1B_type)
-            call InputReadDouble(input,option,ERB_model%dilution_factor)
-            call InputErrorMsg(input,option,'DILUTION_FACTOR',error_string)
+            call input%ReadDouble(option,ERB_model%dilution_factor)
+            call input%ErrorMsg(option,'DILUTION_FACTOR',error_string)
         end select
     !-----------------------------------
       case('INDIVIDUAL_CONSUMPTION_RATE')
-          call InputReadDouble(input,option,double)
-          call InputErrorMsg(input,option,'INDIVIDUAL_CONSUMPTION_RATE', &
+          call input%ReadDouble(option,double)
+          call input%ErrorMsg(option,'INDIVIDUAL_CONSUMPTION_RATE', &
                              error_string)
-          call InputReadAndConvertUnits(input,double,'L/day', &
+          call input%ReadAndConvertUnits(double,'L/day', &
                trim(error_string) // ',INDIVIDUAL_CONSUMPTION_RATE units', &
                option)
           ERB_model%indv_consumption_rate = double
@@ -505,13 +505,13 @@ subroutine PMUFDBReadERBmodel(this,input,option,ERB_model,error_string)
   if (ERB_model%region_name == '') then
     option%io_buffer = 'ERROR: REGION must be specified in the ' // &
                        trim(error_string) // ' block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(ERB_model%indv_consumption_rate)) then
     option%io_buffer = 'ERROR: INDIVIDUAL_CONSUMPTION_RATE must be specified &
                        &in the ' // trim(error_string) // ' block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   
@@ -520,7 +520,7 @@ subroutine PMUFDBReadERBmodel(this,input,option,ERB_model,error_string)
       if (Uninitialized(ERB_model%dilution_factor)) then
         option%io_buffer = 'ERROR: DILUTION_FACTOR must be specified in &
                            &the ' // trim(error_string) // ' block.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
   end select
@@ -529,7 +529,7 @@ subroutine PMUFDBReadERBmodel(this,input,option,ERB_model,error_string)
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' //trim(error_string) // ' block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine PMUFDBReadERBmodel
@@ -551,8 +551,8 @@ subroutine PMUFDBReadSupportedRad(this,input,option,error_string)
   implicit none
   
   class(pm_ufd_biosphere_type) :: this
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: error_string
   
   type(supported_rad_type), pointer :: new_supp_rad
@@ -564,10 +564,10 @@ subroutine PMUFDBReadSupportedRad(this,input,option,error_string)
   
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     num_errors = 0
     call StringToUpper(word)
     select case(trim(word))
@@ -576,32 +576,32 @@ subroutine PMUFDBReadSupportedRad(this,input,option,error_string)
         error_string = trim(error_string) // ',RADIONUCLIDE'
         allocate(new_supp_rad)
         new_supp_rad => PMUFDBSupportedRadCreate()
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'radionuclide name',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'radionuclide name',error_string)
         new_supp_rad%name = adjustl(trim(word))
         error_string = trim(error_string) // ' ' // trim(new_supp_rad%name)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword',error_string)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword',error_string)
           call StringToUpper(word)
           select case(trim(word))
           !-----------------------------------
             case('ELEMENT_KD')
-              call InputReadDouble(input,option,new_supp_rad%kd)
-              call InputErrorMsg(input,option,'ELEMENT_KD',error_string)
+              call input%ReadDouble(option,new_supp_rad%kd)
+              call input%ErrorMsg(option,'ELEMENT_KD',error_string)
           !-----------------------------------
             case('INGESTION_DOSE_COEF')
-              call InputReadDouble(input,option,new_supp_rad%dcf)
-              call InputErrorMsg(input,option,'INGESTION_DOSE_COEF', &
+              call input%ReadDouble(option,new_supp_rad%dcf)
+              call input%ErrorMsg(option,'INGESTION_DOSE_COEF', &
                                  error_string)
           !-----------------------------------
             case('DECAY_RATE')
-              call InputReadDouble(input,option,double)
-              call InputErrorMsg(input,option,'DECAY_RATE',error_string)
-              call InputReadAndConvertUnits(input,double,'1/sec', &
+              call input%ReadDouble(option,double)
+              call input%ErrorMsg(option,'DECAY_RATE',error_string)
+              call input%ReadAndConvertUnits(double,'1/sec', &
                      trim(error_string) // ',DECAY_RATE units',option)
               new_supp_rad%decay_rate = double
           !-----------------------------------  
@@ -614,26 +614,26 @@ subroutine PMUFDBReadSupportedRad(this,input,option,error_string)
         if (Uninitialized(new_supp_rad%kd)) then
           option%io_buffer = 'ERROR: ELEMENT_KD must be specified &
                              &in the ' // trim(error_string) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_supp_rad%dcf)) then
           option%io_buffer = 'ERROR: INGESTION_DOSE_COEF must be specified &
                              &in the ' // trim(error_string) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_supp_rad%decay_rate)) then
           option%io_buffer = 'ERROR: DECAY_RATE must be specified &
                              &in the ' // trim(error_string) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (num_errors > 0) then
           write(option%io_buffer,*) num_errors
           option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' //trim(error_string) // ' block. See above.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         ! add new supported radionuclide to list
         added = PETSC_FALSE
@@ -679,8 +679,8 @@ subroutine PMUFDBReadUnsuppRad(this,input,option,error_string)
   implicit none
   
   class(pm_ufd_biosphere_type) :: this
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: error_string
   
   type(unsupported_rad_type), pointer :: new_unsupp_rad
@@ -692,10 +692,10 @@ subroutine PMUFDBReadUnsuppRad(this,input,option,error_string)
   
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     num_errors = 0
     call StringToUpper(word)
     select case(trim(word))
@@ -704,43 +704,43 @@ subroutine PMUFDBReadUnsuppRad(this,input,option,error_string)
         error_string = trim(error_string) // ',RADIONUCLIDE'
         allocate(new_unsupp_rad)
         new_unsupp_rad => PMUFDBUnsuppRadCreate()
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'radionuclide name',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'radionuclide name',error_string)
         new_unsupp_rad%name = adjustl(trim(word))
         error_string = trim(error_string) // ' ' // trim(new_unsupp_rad%name)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword',error_string)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword',error_string)
           call StringToUpper(word)
           select case(trim(word))
           !-----------------------------------
             case('ELEMENT_KD')
-              call InputReadDouble(input,option,new_unsupp_rad%kd)
-              call InputErrorMsg(input,option,'ELEMENT_KD',error_string)
+              call input%ReadDouble(option,new_unsupp_rad%kd)
+              call input%ErrorMsg(option,'ELEMENT_KD',error_string)
           !-----------------------------------
             case('SUPPORTED_PARENT')
-              call InputReadWord(input,option, &
+              call input%ReadWord(option, &
                               new_unsupp_rad%supported_parent_name,PETSC_TRUE)
-              call InputErrorMsg(input,option,'SUPPORTED_PARENT',error_string)
+              call input%ErrorMsg(option,'SUPPORTED_PARENT',error_string)
           !-----------------------------------
             case('INGESTION_DOSE_COEF')
-              call InputReadDouble(input,option,new_unsupp_rad%dcf)
-              call InputErrorMsg(input,option,'INGESTION_DOSE_COEF', &
+              call input%ReadDouble(option,new_unsupp_rad%dcf)
+              call input%ErrorMsg(option,'INGESTION_DOSE_COEF', &
                                  error_string)
           !-----------------------------------
             case('DECAY_RATE')
-              call InputReadDouble(input,option,double)
-              call InputErrorMsg(input,option,'DECAY_RATE',error_string)
-              call InputReadAndConvertUnits(input,double,'1/sec', &
+              call input%ReadDouble(option,double)
+              call input%ErrorMsg(option,'DECAY_RATE',error_string)
+              call input%ReadAndConvertUnits(double,'1/sec', &
                      trim(error_string) // ',DECAY_RATE units',option)
               new_unsupp_rad%decay_rate = double
           !-----------------------------------
             case('EMANATION_FACTOR')
-              call InputReadDouble(input,option,new_unsupp_rad%emanation_factor)
-              call InputErrorMsg(input,option,'EMANATION_FACTOR',error_string)
+              call input%ReadDouble(option,new_unsupp_rad%emanation_factor)
+              call input%ErrorMsg(option,'EMANATION_FACTOR',error_string)
           !-----------------------------------  
             case default
               call InputKeywordUnrecognized(word,error_string,option)
@@ -751,32 +751,32 @@ subroutine PMUFDBReadUnsuppRad(this,input,option,error_string)
         if (Uninitialized(new_unsupp_rad%kd)) then
           option%io_buffer = 'ERROR: ELEMENT_KD must be specified in the ' // &
                              trim(error_string) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_unsupp_rad%dcf)) then
           option%io_buffer = 'ERROR: INGESTION_DOSE_COEF must be specified in &
                              &the ' // trim(error_string) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_unsupp_rad%decay_rate)) then
           option%io_buffer = 'ERROR: DECAY_RATE must be specified &
                              &in the ' // trim(error_string) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (new_unsupp_rad%supported_parent_name == '') then
           option%io_buffer = 'ERROR: SUPPORTED_PARENT must be specified in &
                              &the ' // trim(error_string) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (num_errors > 0) then
           write(option%io_buffer,*) num_errors
           option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the ' //trim(error_string) // ' block. See above.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         ! add new unsupported radionuclide to list
         added = PETSC_FALSE
@@ -828,7 +828,7 @@ subroutine PMUFDBAssociateRegion(this,region_list)
   
   type(region_type), pointer :: cur_region
   class(ERB_base_type), pointer :: cur_ERB
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   class(material_auxvar_type), pointer :: material_auxvars(:)
   type(grid_type), pointer :: grid
   PetscInt :: ghosted_id
@@ -873,7 +873,7 @@ subroutine PMUFDBAssociateRegion(this,region_list)
         option%io_buffer = 'ERB model (' // trim(cur_ERB%name) // ') REGION ' &
                            // trim(cur_ERB%region_name) // ' not found among &
                            &defined regions.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     cur_ERB => cur_ERB%next
   enddo
@@ -973,7 +973,7 @@ subroutine PMUFDBSupportedRadCheckRT(this)
   
   type(pm_ufd_biosphere_type) :: this
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXWORDLENGTH), pointer :: pri_names(:)
   character(len=MAXWORDLENGTH), pointer :: sec_names(:)
   type(supported_rad_type), pointer :: cur_supp_rad
@@ -991,7 +991,7 @@ subroutine PMUFDBSupportedRadCheckRT(this)
   else
     option%io_buffer = 'The UFD_BIOSPHERE process model requires reactive &
                        &transport.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   cur_supp_rad => this%supported_rad_list
@@ -1021,7 +1021,7 @@ subroutine PMUFDBSupportedRadCheckRT(this)
       option%io_buffer = 'SUPPORTED_RADIONUCLIDE ' // trim(rad_name) // &
         ' must be included as a primary or secondary species under the &
         &CHEMISTRY block.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     
     cur_supp_rad => cur_supp_rad%next
@@ -1056,7 +1056,7 @@ subroutine PMUFDBAscUnsuppRadWithSuppRad(this)
   type(unsupported_rad_type), pointer :: cur_unsupp_rad
   class(ERB_base_type), pointer :: cur_ERB
   class(material_auxvar_type), pointer :: material_auxvar(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   PetscInt :: ghosted_id
   PetscBool :: no_density
@@ -1083,7 +1083,7 @@ subroutine PMUFDBAscUnsuppRadWithSuppRad(this)
         trim(cur_unsupp_rad%name) // "'s SUPPORTED_PARENT " &
         // trim(cur_unsupp_rad%supported_parent_name) // ' not found among &
         &defined supported radionuclides.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     cur_unsupp_rad => cur_unsupp_rad%next
   enddo
@@ -1103,7 +1103,7 @@ subroutine PMUFDBAscUnsuppRadWithSuppRad(this)
           option%io_buffer = 'ROCK_DENSITY is not specified in the &
               &MATERIAL_PROPERTY that ERB Model ' // trim(cur_ERB%name) // &
               ' resides in.'
-          call printErrMsgByRank(option)
+          call option%PrintErrMsgByRank()
         endif
       endif
     cur_ERB => cur_ERB%next
@@ -1134,7 +1134,7 @@ subroutine PMUFDBCheckSrcSinkCouplers(this)
   
   class(ERB_base_type), pointer :: cur_ERB
   type(coupler_type), pointer :: cur_ss
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscBool :: ERB1A_matched
   
   option => this%option
@@ -1159,7 +1159,7 @@ subroutine PMUFDBCheckSrcSinkCouplers(this)
             option%io_buffer = 'ERB_1B model "' // trim(cur_ERB%name) // &
               '" REGION "' // trim(cur_ERB%region_name) // '" cannot be &
               &associated with a SOURCE_SINK. Did you intend an ERB_1A model?' 
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
       !------------------------------------
       end select   
@@ -1173,7 +1173,7 @@ subroutine PMUFDBCheckSrcSinkCouplers(this)
                 &associated with a SOURCE_SINK. ERB_1A model types must &
                 &indicate a REGION that is associated with a SOURCE_SINK. &
                 &Did you intend an ERB_1B model type?' 
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
     end select
     cur_ERB => cur_ERB%next
@@ -1201,7 +1201,7 @@ subroutine PMUFDBAllocateERBarrays(this)
   class(ERB_base_type), pointer :: cur_ERB
   type(supported_rad_type), pointer :: cur_supp_rad
   type(unsupported_rad_type), pointer :: cur_unsupp_rad
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: temp_string
   PetscInt :: num_supp_rads
   PetscInt :: num_unsupp_rads
@@ -1510,7 +1510,7 @@ subroutine PMUFDBOutput(this)
 
   class(pm_ufd_biosphere_type) :: this
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   class(ERB_base_type), pointer :: cur_ERB
   type(supported_rad_type), pointer :: cur_supp_rad
@@ -1751,7 +1751,7 @@ function PMUFDBOutputFilename(option)
 
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   character(len=MAXSTRINGLENGTH) :: PMUFDBOutputFilename
   character(len=MAXWORDLENGTH) :: word

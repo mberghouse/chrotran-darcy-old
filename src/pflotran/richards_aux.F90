@@ -127,7 +127,7 @@ subroutine RichardsAuxVarInit(auxvar,option)
   implicit none
   
   type(richards_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   
   auxvar%pc = 0.d0
 
@@ -173,7 +173,7 @@ subroutine RichardsAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(richards_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%pc = auxvar%pc
 
@@ -223,7 +223,7 @@ subroutine RichardsAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   class(characteristic_curves_type) :: characteristic_curves
   PetscReal :: x(option%nflowdof)
   type(richards_auxvar_type) :: auxvar
@@ -282,7 +282,7 @@ subroutine RichardsAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
         class default
           option%io_buffer = 'CLM-PFLOTRAN only supports ' // &
             'sat_func_VG_type and sat_func_BC_type'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
 
       select type(rpf => characteristic_curves%liq_rel_perm_function)
@@ -296,7 +296,7 @@ subroutine RichardsAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
           rpf%m = auxvar%bc_lambda
         class default
           option%io_buffer = 'Unsupported LIQUID-REL-PERM-FUNCTION'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
     endif
 #endif
@@ -332,7 +332,7 @@ subroutine RichardsAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
     call EOSWaterDensity(global_auxvar%temp,pw,dw_kg,dw_mol, &
                          dw_dp,dw_dt,ierr)
     if (ierr /= 0) then
-      call printMsgByCell(option,natural_id, &
+      call option%PrintMsgByCell(natural_id, &
                           'Error in RichardsAuxVarCompute->EOSWaterDensity')
     endif
     ! may need to compute dpsat_dt to pass to VISW
@@ -345,7 +345,7 @@ subroutine RichardsAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
     call EOSWaterDensityExt(global_auxvar%temp,pw,aux, &
                             dw_kg,dw_mol,dw_dp,dw_dt,ierr)
     if (ierr /= 0) then
-      call printMsgByCell(option,natural_id, &
+      call option%PrintMsgByCell(natural_id, &
                           'Error in RichardsAuxVarCompute->EOSWaterDensityExt')
     endif
     call EOSWaterViscosityExt(global_auxvar%temp,pw,sat_pressure,0.d0,aux, &
@@ -388,7 +388,7 @@ subroutine RichardsAuxVarCompute2ndOrderDeriv(auxvar,characteristic_curves,optio
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   class(characteristic_curves_type) :: characteristic_curves
   type(richards_auxvar_type) :: auxvar
 

@@ -107,7 +107,7 @@ subroutine AuxVarTOWGInit(this,option)
   implicit none
   
   class(auxvar_towg_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   this%effective_porosity = 0.d0
   this%pert = 0.d0
@@ -232,7 +232,7 @@ subroutine InitTL(this,option)
   implicit none
   
   class(auxvar_towg_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   allocate(this%tl)
 
@@ -302,7 +302,7 @@ subroutine InitBO(this,option)
   implicit none
 
   class(auxvar_towg_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   allocate(this%bo)
 

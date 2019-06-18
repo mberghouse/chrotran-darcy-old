@@ -48,7 +48,7 @@ module TOilIms_module
       class(auxvar_toil_ims_type) :: toil_auxvar_up, toil_auxvar_dn
       type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
       class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-      type(option_type) :: option
+      class(option_type) :: option
       PetscReal :: sir_up(:), sir_dn(:)
       PetscReal :: v_darcy(option%nphase)
       PetscReal :: area
@@ -106,7 +106,7 @@ subroutine TOilImsSetup(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -142,17 +142,17 @@ subroutine TOilImsSetup(realization)
 
   if (minval(material_parameter%soil_residual_saturation(:,:)) < 0.d0) then
     option%io_buffer = 'Non-initialized soil residual saturation.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   if (minval(material_parameter%soil_heat_capacity(:)) < 0.d0) then
     option%io_buffer = 'Non-initialized soil heat capacity.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   if (minval(material_parameter%soil_thermal_conductivity(:,:)) < 0.d0) then
     option%io_buffer = 'Non-initialized soil thermal conductivity.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   
@@ -167,35 +167,35 @@ subroutine TOilImsSetup(realization)
     if (material_auxvars(ghosted_id)%volume < 0.d0 .and. flag(1) == 0) then
       flag(1) = 1
       option%io_buffer = 'Non-initialized cell volume.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%porosity < 0.d0 .and. flag(2) == 0) then
       flag(2) = 1
       option%io_buffer = 'Non-initialized porosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%tortuosity < 0.d0 .and. flag(3) == 0) then
       flag(3) = 1
       option%io_buffer = 'Non-initialized tortuosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%soil_particle_density < 0.d0 .and. &
         flag(4) == 0) then
       flag(4) = 1
       option%io_buffer = 'Non-initialized soil particle density.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (minval(material_auxvars(ghosted_id)%permeability) < 0.d0 .and. &
         flag(5) == 0) then
       option%io_buffer = 'Non-initialized permeability.'
-      call printMsg(option)
+      call option%PrintMsg()
       flag(5) = 1
     endif
   enddo
 
   if (error_found .or. maxval(flag) > 0) then
     option%io_buffer = 'Material property errors found in TOilImsSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   num_bc_connection = &
@@ -413,7 +413,7 @@ subroutine TOilImsUpdateAuxVars(realization)
   type(realization_subsurface_type), target :: realization
   PetscBool :: update_state
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -546,7 +546,7 @@ subroutine TOilImsUpdateAuxVars(realization)
         else
           option%io_buffer = 'Error setting up boundary condition' // &
                              ' in TOilImsUpdateAuxVars'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       enddo
         
@@ -596,7 +596,7 @@ subroutine TOilImsUpdateFixedAccum(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -701,7 +701,7 @@ subroutine TOilImsUpdateSolution(realization)
   class(well_data_type), pointer :: well_data
   type(well_data_list_type),pointer :: well_data_list
   PetscReal :: dt
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
 ! Loop over well_data wells if present
 
@@ -752,7 +752,7 @@ subroutine TOilImsComputeMassBalance(realization,mass_balance)
   PetscReal :: mass_balance(realization%option%nflowspec, &
                             realization%option%nphase)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -819,7 +819,7 @@ subroutine TOilImsUpdateMassBalance(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -877,7 +877,7 @@ subroutine TOilImsZeroMassBalanceDelta(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -919,7 +919,7 @@ subroutine TOilImsMapBCAuxVarsToGlobal(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_type), pointer :: cur_connection_set
@@ -982,7 +982,7 @@ subroutine TOilImsAccumulation(toil_auxvar,material_auxvar, &
   class(auxvar_toil_ims_type) :: toil_auxvar
   class(material_auxvar_type) :: material_auxvar
   PetscReal :: soil_heat_capacity
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(option%nflowdof) 
   !PetscBool :: debug_cell
   
@@ -1164,7 +1164,7 @@ subroutine TOilImsFluxPFL(toil_auxvar_up,global_auxvar_up, &
   class(auxvar_toil_ims_type) :: toil_auxvar_up, toil_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up(:), sir_dn(:)
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area
@@ -1550,7 +1550,7 @@ subroutine TOilImsFluxDipc(toil_auxvar_up,global_auxvar_up, &
   class(auxvar_toil_ims_type) :: toil_auxvar_up, toil_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up(:), sir_dn(:)
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area
@@ -1602,7 +1602,7 @@ subroutine TOilImsFluxDipc(toil_auxvar_up,global_auxvar_up, &
 
   if (analytical_derivatives) then
     option%io_buffer = 'TOilImsFluxDipc: analytical derivatives are not yet available.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   energy_id = option%energy_id  
@@ -1804,7 +1804,7 @@ subroutine TOilImsBCFlux(ibndtype,auxvar_mapping,auxvars, &
   class(auxvar_toil_ims_type) :: toil_auxvar_up, toil_auxvar_dn 
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn(:)
   PetscReal :: auxvars(:) ! from aux_real_var array
   PetscReal :: v_darcy(option%nphase), area
@@ -2095,7 +2095,7 @@ subroutine TOilImsBCFlux(ibndtype,auxvar_mapping,auxvars, &
       case default
         option%io_buffer = &
           'Boundary condition type not recognized in GeneralBCFlux phase loop.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
     if (dabs(v_darcy(iphase)) > 0.d0) then ! note need derivs even if this is case
@@ -2197,7 +2197,7 @@ subroutine TOilImsBCFlux(ibndtype,auxvar_mapping,auxvars, &
     case default
       option%io_buffer = 'Boundary condition type not recognized in ' // &
         'TOilImsBCFlux heat conduction loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   Res(energy_id) = Res(energy_id) + heat_flux ! MW
 
@@ -2227,7 +2227,7 @@ subroutine TOilImsSrcSink(option,src_sink_condition, toil_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(flow_toil_ims_condition_type), pointer :: src_sink_condition
   !type(toil_ims_auxvar_type) :: toil_auxvar
   class(auxvar_toil_ims_type) :: toil_auxvar
@@ -2281,7 +2281,7 @@ subroutine TOilImsSrcSink(option,src_sink_condition, toil_auxvar, &
   if (.not.associated(src_sink_condition%rate) ) then
     option%io_buffer = 'TOilImsSrcSink fow condition rate not defined ' // &
     'rate is needed for a valid src/sink term'
-    call printErrMsg(option)  
+    call option%PrintErrMsg()
   end if
 
   !qsrc => src_sink_condition%rate%dataset%rarray(:)
@@ -2303,7 +2303,7 @@ subroutine TOilImsSrcSink(option,src_sink_condition, toil_auxvar, &
     ) then
     option%io_buffer = "TOilImsSrcSink error: " // &
       "src(wat) and src(oil) with opposite sign"
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   end if
 
 
@@ -2527,7 +2527,7 @@ subroutine TOilImsDerivativePassTest(toil_auxvar,option)
 
   type(auxvar_flow_type) :: toil_auxvar(0:)
   !class(auxvar_flow_type) :: toil_auxvar(0:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   write(*,"('acc sat01 derivTest = ',e10.4)") toil_auxvar(0)%den(2)
   write(*,"('acc sat11 derivTest = ',e10.4)") toil_auxvar(1)%den(2) 
@@ -2560,7 +2560,7 @@ subroutine TOilImsAccumDerivative(toil_auxvar,material_auxvar, &
   !class(auxvar_toil_ims_type) :: toil_auxvar(0:)
   type(auxvar_toil_ims_type) :: toil_auxvar(0:)
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: soil_heat_capacity
   PetscReal :: J(option%nflowdof,option%nflowdof)
      
@@ -2684,7 +2684,7 @@ subroutine ToilImsFluxDerivative(toil_auxvar_up,global_auxvar_up, &
   type(auxvar_toil_ims_type) :: toil_auxvar_up(0:), toil_auxvar_dn(0:)
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up(:), sir_dn(:)
   PetscReal :: thermal_conductivity_dn(2)
   PetscReal :: thermal_conductivity_up(2)
@@ -2854,7 +2854,7 @@ subroutine ToilImsBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   type(auxvar_toil_ims_type) :: toil_auxvar_up, toil_auxvar_dn(0:) 
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn(:)
   PetscReal :: area
   PetscReal :: dist(-1:3)
@@ -2980,7 +2980,7 @@ subroutine ToilImsSrcSinkDerivative(option,src_sink_condition, toil_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(flow_toil_ims_condition_type), pointer :: src_sink_condition
   !type(toil_ims_auxvar_type) :: toil_auxvar(0:)
   !class(auxvar_toil_ims_type) :: toil_auxvar(0:)
@@ -3103,7 +3103,7 @@ subroutine TOilImsResidual(snes,xx,r,realization,ierr)
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(coupler_type), pointer :: boundary_condition
   type(coupler_type), pointer :: source_sink
@@ -3532,7 +3532,7 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
   PetscInt, pointer :: zeros(:)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(material_parameter_type), pointer :: material_parameter
   type(toil_ims_parameter_type), pointer :: toil_parameter
@@ -3851,13 +3851,13 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
   endif
 
 !  call MatView(J,PETSC_VIEWER_STDOUT_WORLD,ierr)

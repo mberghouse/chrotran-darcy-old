@@ -76,19 +76,19 @@ subroutine WIPPWellRead(this,input,option)
   implicit none
   
   class(srcsink_sandbox_wipp_well_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: word, internal_units
   PetscBool :: found
   
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'SRCSINK_SANDBOX,WIPP')
     call StringToUpper(word)   
 
@@ -97,17 +97,17 @@ subroutine WIPPWellRead(this,input,option)
     
     select case(trim(word))
       case('WELL_PRESSURE')
-        call InputReadDouble(input,option,this%well_pressure)
-        call InputErrorMsg(input,option,word,'SOURCE_SINK_SANDBOX,WIPP,WELL')
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadDouble(option,this%well_pressure)
+        call input%ErrorMsg(option,word,'SOURCE_SINK_SANDBOX,WIPP,WELL')
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           internal_units = 'Pa'
           this%well_pressure = this%well_pressure * &
                UnitsConvertToInternal(word,internal_units,option)
         endif
       case('WELL_PRODUCTIVITY_INDEX')
-        call InputReadDouble(input,option,this%productivity_index)
-        call InputErrorMsg(input,option,word,'SOURCE_SINK_SANDBOX,WIPP,WELL')
+        call input%ReadDouble(option,this%productivity_index)
+        call input%ErrorMsg(option,word,'SOURCE_SINK_SANDBOX,WIPP,WELL')
       case default
         call InputKeywordUnrecognized(word,'SRCSINK_SANDBOX,WIPP',option)
     end select
@@ -126,7 +126,7 @@ subroutine WIPPWellSetup(this,grid,option)
   
   class(srcsink_sandbox_wipp_well_type) :: this
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
     
   call SSSandboxBaseSetup(this,grid,option)
 
@@ -150,7 +150,7 @@ subroutine WIPPWellSrcSink(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(srcsink_sandbox_wipp_well_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: compute_derivative
   PetscReal :: Residual(option%nflowdof)
   PetscReal :: Jacobian(option%nflowdof,option%nflowdof)
@@ -195,7 +195,7 @@ subroutine WIPPWellSrcSink(this,Residual,Jacobian,compute_derivative, &
   if (compute_derivative) then
     option%io_buffer = 'WIPPWellSrcSink is not configured for &
       &analytical derivatives.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine WIPPWellSrcSink

@@ -8,7 +8,7 @@ program pflotran_derivative
 
 #include "petsc/finclude/petscsys.h"
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   option => OptionCreate()
   call OptionInitMPI(option)  

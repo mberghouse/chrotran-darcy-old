@@ -55,7 +55,7 @@ subroutine RichardsAccumDerivative(rich_auxvar,global_auxvar, &
   type(richards_auxvar_type) :: rich_auxvar
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   type(characteristic_curves_type) :: characteristic_curves
   PetscReal :: J(option%nflowdof,option%nflowdof)
      
@@ -145,7 +145,7 @@ subroutine RichardsAccumulation(rich_auxvar,global_auxvar, &
   type(richards_auxvar_type) :: rich_auxvar
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(1:option%nflowdof)
   
   PetscReal :: por, por1, vol_over_dt
@@ -195,7 +195,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   type(richards_auxvar_type) :: rich_auxvar_up, rich_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up, sir_dn
   PetscReal :: v_darcy, area, dist(-1:3)
   type(characteristic_curves_type) :: characteristic_curves_up
@@ -384,7 +384,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
   type(richards_auxvar_type) :: rich_auxvar_up, rich_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up, sir_dn
   PetscReal :: v_darcy, area, dist(-1:3)
   PetscReal :: Res(1:option%nflowdof) 
@@ -475,7 +475,7 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
   type(richards_auxvar_type) :: rich_auxvar_up, rich_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn
   PetscReal :: auxvars(:) ! from aux_real_var array in boundary condition
   PetscReal :: area
@@ -780,7 +780,7 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
   type(richards_auxvar_type) :: rich_auxvar_up, rich_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn
   PetscReal :: auxvars(:) ! from aux_real_var array
   PetscReal :: v_darcy, area
@@ -879,7 +879,7 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
             if (global_auxvar_dn%pres(1) <= rich_auxvar_dn%vars_for_sflow(1)) then
 
               if (Equal(rich_auxvar_dn%vars_for_sflow(7),-99999.d0)) then
-                call printErrMsg(option,'Coeffs for linear approx for darcy flux not set')
+                call option%PrintErrMsg('Coeffs for linear approx for darcy flux not set')
               endif
 
               ! Linear approximation
@@ -894,7 +894,7 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
             else if (global_auxvar_dn%pres(1) <= rich_auxvar_dn%vars_for_sflow(2)) then
 
               if (Equal(rich_auxvar_dn%vars_for_sflow(3),-99999.d0)) then
-                call printErrMsg(option,'Coeffs for cubic approx for darcy flux not set')
+                call option%PrintErrMsg('Coeffs for cubic approx for darcy flux not set')
               endif
 
               ! Cubic approximation

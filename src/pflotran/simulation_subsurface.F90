@@ -60,7 +60,7 @@ function SubsurfaceSimulationCreate(option)
   
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   class(simulation_subsurface_type), pointer :: SubsurfaceSimulationCreate
   
@@ -88,7 +88,7 @@ subroutine SubsurfaceSimulationInit(this,option)
   implicit none
   
   class(simulation_subsurface_type) :: this
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   call SimulationBaseInit(this,option)
   nullify(this%flow_process_model_coupler)
@@ -224,12 +224,12 @@ subroutine SubsurfaceSimulationJumpStart(this)
   class(timestepper_base_type), pointer :: master_timestepper
   class(timestepper_base_type), pointer :: flow_timestepper
   class(timestepper_base_type), pointer :: tran_timestepper
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   PetscBool :: snapshot_plot_flag, observation_plot_flag, massbal_plot_flag
   
 #ifdef DEBUG
-  call printMsg(this%option,'SubsurfaceSimulationJumpStart()')
+  call this%option%PrintMsg('SubsurfaceSimulationJumpStart()')
 #endif
 
   nullify(master_timestepper)
@@ -256,14 +256,14 @@ subroutine SubsurfaceSimulationJumpStart(this)
   
   !if TIMESTEPPER->MAX_STEPS < 0, print out solution composition only
   if (master_timestepper%max_time_step < 0) then
-    call printMsg(option,'')
+    call option%PrintMsg('')
     write(option%io_buffer,*) master_timestepper%max_time_step
     option%io_buffer = 'The maximum # of time steps (' // &
                        trim(adjustl(option%io_buffer)) // &
                        '), specified by TIMESTEPPER->MAX_STEPS, ' // &
                        'has been met.  Stopping....'  
-    call printMsg(option)
-    call printMsg(option,'')
+    call option%PrintMsg()
+    call option%PrintMsg('')
     option%status = DONE
     return
   endif
@@ -281,14 +281,14 @@ subroutine SubsurfaceSimulationJumpStart(this)
   
   !if TIMESTEPPER->MAX_STEPS < 1, print out initial condition only
   if (master_timestepper%max_time_step < 1) then
-    call printMsg(option,'')
+    call option%PrintMsg('')
     write(option%io_buffer,*) master_timestepper%max_time_step
     option%io_buffer = 'The maximum # of time steps (' // &
                        trim(adjustl(option%io_buffer)) // &
                        '), specified by TIMESTEPPER->MAX_STEPS, ' // &
                        'has been met.  Stopping....'  
-    call printMsg(option)
-    call printMsg(option,'') 
+    call option%PrintMsg()
+    call option%PrintMsg('')
     option%status = DONE
     return
   endif
@@ -302,7 +302,7 @@ subroutine SubsurfaceSimulationJumpStart(this)
       option%io_buffer = &
         'Null flow waypoint list; final time likely equal to start time.&
         &time or simulation time needs to be extended on a restart.'
-      call printMsg(option)
+      call option%PrintMsg()
       option%status = FAIL
       return
     else
@@ -314,7 +314,7 @@ subroutine SubsurfaceSimulationJumpStart(this)
       option%io_buffer = &
         'Null transport waypoint list; final time likely equal to start &
         &time or simulation time needs to be extended on a restart.'
-      call printMsg(option)
+      call option%PrintMsg()
       option%status = FAIL
       return
     else
@@ -364,7 +364,7 @@ subroutine SubsurfaceFinalizeRun(this)
   class(timestepper_BE_type), pointer :: tran_timestepper
 
 #ifdef DEBUG
-  call printMsg(this%option,'SubsurfaceFinalizeRun()')
+  call this%option%PrintMsg('SubsurfaceFinalizeRun()')
 #endif
   
   call SimulationBaseFinalizeRun(this)
@@ -409,7 +409,7 @@ subroutine SubsurfaceSimulationStrip(this)
   class(simulation_subsurface_type) :: this
   
 #ifdef DEBUG
-  call printMsg(this%option,'SubsurfaceSimulationStrip()')
+  call this%option%PrintMsg('SubsurfaceSimulationStrip()')
 #endif
   
   call SimulationBaseStrip(this)
@@ -436,7 +436,7 @@ subroutine SubsurfaceSimulationDestroy(simulation)
   class(simulation_subsurface_type), pointer :: simulation
   
 #ifdef DEBUG
-  call printMsg(simulation%option,'SimulationDestroy()')
+  call simulation%option%PrintMsg('SimulationDestroy()')
 #endif
   
   if (.not.associated(simulation)) return

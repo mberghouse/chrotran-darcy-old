@@ -43,7 +43,7 @@ subroutine AuxVarTOilImsInit(this,option)
   implicit none
 
   class(auxvar_toil_ims_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   this%effective_porosity = 0.d0
   this%pert = 0.d0

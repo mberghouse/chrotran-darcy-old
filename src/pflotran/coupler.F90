@@ -230,9 +230,9 @@ subroutine CouplerRead(coupler,input,option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(coupler_type) :: coupler
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
 
@@ -240,21 +240,21 @@ subroutine CouplerRead(coupler,input,option)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','COUPLER')   
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','COUPLER')
     call StringToUpper(word)      
     
     select case(trim(word))
     
       case('REGION','SURF_REGION')
-        call InputReadWord(input,option,coupler%region_name,PETSC_TRUE)
+        call input%ReadWord(option,coupler%region_name,PETSC_TRUE)
       case('FLOW_CONDITION','SURF_FLOW_CONDITION')
-        call InputReadWord(input,option,coupler%flow_condition_name,PETSC_TRUE)
+        call input%ReadWord(option,coupler%flow_condition_name,PETSC_TRUE)
       case('TRANSPORT_CONDITION')
-        call InputReadWord(input,option,coupler%tran_condition_name,PETSC_TRUE)
+        call input%ReadWord(option,coupler%tran_condition_name,PETSC_TRUE)
       case default
         call InputKeywordUnrecognized(word,'coupler ',option)
     end select 
@@ -302,7 +302,7 @@ subroutine CouplerListComputeConnections(grid,option,coupler_list)
   implicit none
  
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   type(coupler_list_type), pointer :: coupler_list
   
   type(coupler_type), pointer :: coupler
@@ -347,7 +347,7 @@ subroutine CouplerComputeConnections(grid,option,coupler)
   implicit none
  
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   type(coupler_type), pointer :: coupler_list
   
   PetscInt :: iconn

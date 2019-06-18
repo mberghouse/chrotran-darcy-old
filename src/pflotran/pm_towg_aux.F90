@@ -142,7 +142,7 @@ module PM_TOWG_Aux_module
       use Characteristic_Curves_module
       use Material_Aux_class
       implicit none
-      type(option_type) :: option
+      class(option_type) :: option
       class(characteristic_curves_type) :: characteristic_curves
       PetscReal :: x(option%nflowdof)
       class(auxvar_towg_type) :: auxvar
@@ -161,7 +161,7 @@ module PM_TOWG_Aux_module
       use Global_Aux_module
       use Material_Aux_class
       implicit none
-      type(option_type) :: option
+      class(option_type) :: option
       PetscInt :: natural_id
       type(auxvar_towg_type) :: auxvar(0:)
       type(global_auxvar_type) :: global_auxvar
@@ -201,7 +201,7 @@ function TOWGAuxCreate(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(pm_towg_aux_type), pointer :: TOWGAuxCreate
 
@@ -215,7 +215,7 @@ function TOWGAuxCreate(option)
     option%io_buffer = 'TOWG: gas FMW not initialised. ' // &
                        'Define its value in the the input deck' // &
                        ' or add EOS GAS card to default to FMWAIR'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   towg_fmw_comp(1) = FMWH2O
@@ -230,7 +230,7 @@ function TOWGAuxCreate(option)
       option%io_buffer = 'Solvent FMW not initialised. ' // &
                          'Define its value in the the input deck' // &
                          ' or add EOS SOLVENT card to default to FMWCO2'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     towg_fmw_comp(4) =EOSSlvGetFMW()
   end if
@@ -308,7 +308,7 @@ subroutine InitTOWGAuxVars(this,grid,num_bc_connection, &
   PetscInt :: num_bc_connection
   PetscInt :: num_ss_connection
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: ghosted_id, iconn, local_id
   PetscInt :: idof
@@ -402,7 +402,7 @@ subroutine TOWGImsAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: x(option%nflowdof)
   class(auxvar_towg_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar ! passing this for salt conc.
@@ -659,7 +659,7 @@ subroutine TOWGBlackOilAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: x(option%nflowdof)
   class(auxvar_towg_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -721,7 +721,7 @@ subroutine TOWGBlackOilAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
       option%io_buffer = 'towg bo auxvars: towg_analytical_derivatives is true, &
                           but auxvar%has_derivs is false, should both be true. &
                           How did this happen?'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
 
     auxvar%D_pres = 0.d0
@@ -896,11 +896,11 @@ subroutine TOWGBlackOilAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
   if (auxvar%bo%xo < 0.d0) then
     print *, "xo negative ", auxvar%bo%xo, " pb is ", auxvar%bo%bubble_point
     option%io_buffer = 'xo has gone negative; xo and bubble point are'
-    call printMsg(option)
+    call option%PrintMsg()
     write(option%io_buffer,*) auxvar%bo%xo
-    call printMsg(option)
+    call option%PrintMsg()
     write(option%io_buffer,*) auxvar%bo%bubble_point
-    call printMsg(option)
+    call option%PrintMsg()
   endif
 
 !==============================================================================
@@ -1523,7 +1523,7 @@ subroutine TL4PAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: x(option%nflowdof)
   class(auxvar_towg_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -1618,7 +1618,7 @@ if (towg_analytical_derivatives) then
     option%io_buffer = 'towg tl4p auxvars: towg_analytical_derivatives is true, &
                         but auxvar%has_derivs is false, should both be true. &
                         How did this happen?'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   auxvar%D_pres = 0.d0
@@ -2900,7 +2900,7 @@ subroutine TOWGTLAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: x(option%nflowdof)
   class(auxvar_towg_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar ! passing this for salt conc.
@@ -2947,7 +2947,7 @@ subroutine TOWGTLAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
       option%io_buffer = 'towg tl auxvars: towg_analytical_derivatives is true, &
                           but auxvar%has_derivs is false, should both be true. &
                           How did this happen?'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
 
     auxvar%D_pres = 0.d0
@@ -3409,7 +3409,7 @@ subroutine vToddLongstaff( oid,gid,krh,visco,viscg,deno,deng,auxvar   &
   PetscInt,intent(in)     :: ndof
 
   PetscReal,dimension(1:ndof),optional,intent(in ):: D_visco,D_viscg,D_krh
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal,dimension(1:ndof),optional,intent(out):: D_krotl,D_krgtl
   PetscReal,dimension(1:ndof),optional,intent(out):: D_viscotl,D_viscgtl
   PetscReal,dimension(1:ndof),optional,intent(out):: D_denotl,D_dengtl
@@ -3429,7 +3429,7 @@ subroutine vToddLongstaff( oid,gid,krh,visco,viscg,deno,deng,auxvar   &
             present(D_viscotl).AND.present(D_viscgtl).AND.present(D_denotl).AND.present(D_dengtl)                    )) then
       option%io_buffer = 'vToddLongstaff(): attempting to get analytical &
                           derivatives but not all optional arguments in place'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   endif
           
 
@@ -3525,7 +3525,7 @@ subroutine vToddLongstaffViscosity(fo,fg,so,sg,visco,viscg,viscotl,viscgtl &
   PetscBool,intent(in)    :: getDerivs
   PetscInt,intent(in)     :: ndof
   PetscReal,dimension(1:ndof),optional,intent(in ):: D_fo,D_fg,D_visco,D_viscg
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal,intent(out):: viscotl,viscgtl
   PetscReal,dimension(1:ndof),optional,intent(out):: D_viscotl,D_viscgtl
@@ -3541,7 +3541,7 @@ subroutine vToddLongstaffViscosity(fo,fg,so,sg,visco,viscg,viscotl,viscgtl &
             present(D_viscotl).AND.present(D_viscgtl)                   )) then
       option%io_buffer = 'vToddLongstaffViscosity(): attempting to get analytical &
                           derivatives but not all optional arguments in place'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   endif
 
 !--Set up complement of the Todd Longstaff omega-------------------------------
@@ -3655,7 +3655,7 @@ subroutine vToddLongstaffDensity( fo,fg,visco,viscg,viscotl,viscgtl &
   PetscReal,dimension(1:ndof),optional,intent(in ):: D_deno,D_deng,D_visco,D_viscg
   PetscReal,dimension(1:ndof),optional,intent(in ):: D_viscotl,D_viscgtl,D_fo,D_fg
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal,intent(out):: denotl,dengtl
 
@@ -3674,7 +3674,7 @@ subroutine vToddLongstaffDensity( fo,fg,visco,viscg,viscotl,viscgtl &
             present(D_denotl).AND.present(D_dengtl)                                            )) then
       option%io_buffer = 'vToddLongstaffDensity(): attempting to get analytical &
                           derivatives but not all optional arguments in place'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   endif
 
 !--Set up complement of omega--------------------------------------------------
@@ -3808,7 +3808,7 @@ subroutine TOWGImsTLAuxVarPerturb(auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   type(auxvar_towg_type) :: auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
@@ -3897,7 +3897,7 @@ subroutine TOWGBlackOilAuxVarPerturb(auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   type(auxvar_towg_type) :: auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
@@ -4002,7 +4002,7 @@ subroutine TL4PAuxVarPerturb(auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   type(auxvar_towg_type) :: auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
@@ -5253,7 +5253,7 @@ subroutine TOWGAuxFieldVolRefAve(this,grid,material,imat,option)
   type(grid_type) :: grid
   type(material_type), pointer :: material
   PetscInt, intent(in) :: imat(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(material_auxvar_type), pointer :: material_auxvars(:)
   PetscInt :: local_id, ghosted_id
@@ -5346,7 +5346,7 @@ subroutine TOWGGetLocalSol(this,grid,material,imat,option,vsoll,isol,zsol)
   type(grid_type) :: grid
   type(material_type), pointer :: material
   PetscInt, intent(in) :: imat(:)
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: vsoll(:,:)
   PetscInt,intent(in)::isol
   character(len=8)::zsol

@@ -114,7 +114,7 @@ subroutine THSetupPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -140,7 +140,7 @@ subroutine THSetupPatch(realization)
 ! option%io_buffer = 'Before TH can be run, the TH_parameter object ' // &
 !                    'must be initialized with the proper variables ' // &
 !                    'THAuxCreate() is called anywhere.'
-! call printErrMsg(option)
+! call option%PrintErrMsg()
   allocate(patch%aux%TH%TH_parameter%sir(option%nphase, &
                                   size(patch%saturation_function_array)))
   
@@ -165,7 +165,7 @@ subroutine THSetupPatch(realization)
     if (Uninitialized(patch%material_property_array(i)%ptr%specific_heat)) then
       option%io_buffer = 'ERROR: Non-initialized HEAT_CAPACITY in material ' &
                          // trim(word)
-      call printMsg(option)
+      call option%PrintMsg()
       error_found = PETSC_TRUE
     endif
     if (Uninitialized(patch%material_property_array(i)%ptr% &
@@ -173,7 +173,7 @@ subroutine THSetupPatch(realization)
       option%io_buffer = 'ERROR: Non-initialized THERMAL_CONDUCTIVITY_WET in &
                          &material ' // &
                          trim(word)
-      call printMsg(option)
+      call option%PrintMsg()
       error_found = PETSC_TRUE
     endif
     if (Uninitialized(patch%material_property_array(i)%ptr% &
@@ -181,7 +181,7 @@ subroutine THSetupPatch(realization)
       option%io_buffer = 'ERROR: Non-initialized THERMAL_CONDUCTIVITY_DRY in &
                          &material ' // &
                          trim(word)
-      call printMsg(option)
+      call option%PrintMsg()
       error_found = PETSC_TRUE
     endif
     if (option%use_th_freezing) then
@@ -189,14 +189,14 @@ subroutine THSetupPatch(realization)
                         thermal_conductivity_frozen)) then
         option%io_buffer = 'ERROR: Non-initialized THERMAL_CONDUCTIVITY_&
                            &FROZEN in material ' // trim(word)
-        call printMsg(option)
+        call option%PrintMsg()
         error_found = PETSC_TRUE
       endif
       if (Uninitialized(patch%material_property_array(i)%ptr% &
                         alpha_fr)) then
         option%io_buffer = 'ERROR: Non-initialized THERMAL_COND_EXPONENT&
                            &_FROZEN in material ' // trim(word)
-        call printMsg(option)
+        call option%PrintMsg()
         error_found = PETSC_TRUE
       endif
     endif
@@ -225,7 +225,7 @@ subroutine THSetupPatch(realization)
 
   if (error_found) then
     option%io_buffer = 'Material property errors found in THSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   do i = 1, size(patch%saturation_function_array)
@@ -423,7 +423,7 @@ subroutine THComputeMassBalancePatch(realization,mass_balance)
   type(realization_subsurface_type) :: realization
   PetscReal :: mass_balance(realization%option%nphase)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -499,7 +499,7 @@ subroutine THZeroMassBalDeltaPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -552,7 +552,7 @@ subroutine THUpdateMassBalancePatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -644,7 +644,7 @@ subroutine THUpdateAuxVarsPatch(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -809,7 +809,7 @@ subroutine THUpdateAuxVarsPatch(realization)
         case default
           option%io_buffer='Unsupported temperature flow condtion for ' // &
             'a source-sink in TH mode: ' // trim(source_sink%name)
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
 
       xx(1) = xx_loc_p(istart)
@@ -934,7 +934,7 @@ subroutine THUpdateSolutionPatch(realization)
   type(realization_subsurface_type) :: realization
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:)
@@ -1044,7 +1044,7 @@ subroutine THUpdateFixedAccumPatch(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1168,7 +1168,7 @@ subroutine THNumericalJacobianTest(xx,realization)
   PetscReal, pointer :: vec_p(:), vec2_p(:)
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   
@@ -1257,7 +1257,7 @@ subroutine THAccumDerivative(TH_auxvar,global_auxvar, &
   type(TH_auxvar_type) :: TH_auxvar
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: vol,por,rock_dencpr
   type(TH_parameter_type) :: th_parameter
   PetscInt :: ithrm
@@ -1493,7 +1493,7 @@ subroutine THAccumulation(auxvar,global_auxvar, &
   type(TH_auxvar_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(1:option%nflowdof) 
   PetscReal ::rock_dencpr,por1
 
@@ -1590,7 +1590,7 @@ subroutine THFluxDerivative(auxvar_up,global_auxvar_up, &
   type(TH_auxvar_type) :: auxvar_up, auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up, sir_dn
   PetscReal :: dd_up, dd_dn
   PetscReal :: perm_up, perm_dn
@@ -2221,7 +2221,7 @@ subroutine THFlux(auxvar_up,global_auxvar_up, &
   type(TH_auxvar_type) :: auxvar_up, auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up, sir_dn
   PetscReal :: dd_up, dd_dn
   PetscReal :: Dk_up, Dk_dn
@@ -2439,7 +2439,7 @@ subroutine THBCFluxDerivative(ibndtype,auxvars, &
   type(TH_auxvar_type) :: auxvar_up, auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn
   PetscReal :: auxvars(:) ! from aux_real_var array in boundary condition
   PetscReal :: por_dn,perm_dn,Dk_dn,tor_dn
@@ -3204,7 +3204,7 @@ subroutine THBCFlux(ibndtype,auxvars,auxvar_up,global_auxvar_up, &
   type(TH_auxvar_type) :: auxvar_up, auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn
   PetscReal :: auxvars(:) ! from aux_real_var array
   PetscReal :: Dk_dn
@@ -3454,7 +3454,7 @@ subroutine THBCFlux(ibndtype,auxvars,auxvar_up,global_auxvar_up, &
       option%io_buffer = 'BC type "' // &
         trim(GetSubConditionName(ibndtype(TH_PRESSURE_DOF))) // &
         '" not implemented in TH mode.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
 
   end select
 
@@ -3566,7 +3566,7 @@ subroutine THBCFlux(ibndtype,auxvars,auxvar_up,global_auxvar_up, &
       option%io_buffer = 'BC type "' // &
         trim(GetSubConditionName(ibndtype(TH_TEMPERATURE_DOF))) // &
         '" not implemented in TH mode.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   ! If only solving the energy equation, set Res(1) is 0.d0
@@ -3607,7 +3607,7 @@ subroutine THResidual(snes,xx,r,realization,ierr)
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
   type(patch_type), pointer :: cur_patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
   PetscViewer :: viewer
 
@@ -3670,7 +3670,7 @@ subroutine THResidualPreliminaries(xx,r,realization,ierr)
   type(realization_subsurface_type) :: realization
 
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscErrorCode :: ierr
 
   patch => realization%patch
@@ -3720,7 +3720,7 @@ subroutine THUpdateLocalVecs(xx,realization,ierr)
 
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
 
   field => realization%field
@@ -3814,7 +3814,7 @@ subroutine THResidualInternalConn(r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:)
@@ -4017,7 +4017,7 @@ subroutine THResidualBoundaryConn(r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -4184,7 +4184,7 @@ subroutine THResidualAccumulation(r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:)
@@ -4333,7 +4333,7 @@ subroutine THResidualSourceSink(r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -4576,7 +4576,7 @@ subroutine THJacobian(snes,xx,A,B,realization,ierr)
   PetscViewer :: viewer
   type(patch_type), pointer :: cur_patch
   type(grid_type),  pointer :: grid
-  type(option_type),  pointer :: option
+  class(option_type),  pointer :: option
   PetscReal :: norm
   
   character(len=MAXSTRINGLENGTH) :: string
@@ -4613,13 +4613,13 @@ subroutine THJacobian(snes,xx,A,B,realization,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
   endif
   
   TH_ni_count = TH_ni_count + 1
@@ -4689,7 +4689,7 @@ subroutine THJacobianInternalConn(A,realization,ierr)
   PetscReal :: distance_gravity 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:)
@@ -4909,7 +4909,7 @@ subroutine THJacobianBoundaryConn(A,realization,ierr)
   PetscReal :: distance_gravity 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars_bc(:), auxvars(:)
@@ -5067,7 +5067,7 @@ subroutine THJacobianAccumulation(A,realization,ierr)
   PetscReal :: distance_gravity 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:)
@@ -5223,7 +5223,7 @@ subroutine THJacobianSourceSink(A,realization,ierr)
   PetscReal :: distance_gravity 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(TH_parameter_type), pointer :: TH_parameter
   type(TH_auxvar_type), pointer :: auxvars(:), auxvars_ss(:)
@@ -5390,7 +5390,7 @@ subroutine THMaxChange(realization,dpmax,dtmpmax)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field  
   
   PetscReal :: dpmax, dtmpmax
@@ -5436,7 +5436,7 @@ subroutine THResidualToMass(realization)
   type(field_type), pointer :: field
   type(patch_type), pointer :: cur_patch
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   PetscReal, pointer :: mass_balance_p(:)
   type(TH_auxvar_type), pointer :: auxvars(:) 
@@ -5498,7 +5498,7 @@ function THGetTecplotHeader(realization,icolumn)
   PetscInt :: icolumn
   
   character(len=MAXSTRINGLENGTH) :: string, string2
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field  
   PetscInt :: i
   
@@ -5734,7 +5734,7 @@ subroutine THComputeGradient(grid, global_auxvars, ghosted_id, gradient, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(grid_type), pointer :: grid
   type(global_auxvar_type), pointer :: global_auxvars(:)
 
@@ -5796,7 +5796,7 @@ subroutine THSecondaryHeat(sec_heat_vars,global_auxvar, &
   
   type(sec_heat_type) :: sec_heat_vars
   type(global_auxvar_type) :: global_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(sec_heat_vars%ncells)
   PetscReal :: coeff_diag(sec_heat_vars%ncells)
   PetscReal :: coeff_right(sec_heat_vars%ncells)
@@ -5893,7 +5893,7 @@ subroutine THSecondaryHeatJacobian(sec_heat_vars, &
   implicit none
   
   type(sec_heat_type) :: sec_heat_vars
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: coeff_left(sec_heat_vars%ncells)
   PetscReal :: coeff_diag(sec_heat_vars%ncells)
   PetscReal :: coeff_right(sec_heat_vars%ncells)
@@ -5974,7 +5974,7 @@ function THInitGuessCheck(xx, option)
   use Option_module
 
   Vec :: xx
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt :: THInitGuessCheck
   PetscInt :: idx
@@ -6027,7 +6027,7 @@ subroutine EnergyToTemperatureBisection(T,TL,TR,h,energy,Cwi,Pr,option)
   implicit none
 
   PetscReal :: T,TL,TR,h,energy,Cwi,Pr
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscReal :: Tp,rho,rho_t,f,fR,fL,rtol
   PetscInt :: iter,niter
@@ -6044,7 +6044,7 @@ subroutine EnergyToTemperatureBisection(T,TL,TR,h,energy,Cwi,Pr,option)
      print *,"[fL,fR] = ",fL,fR
      write(option%io_buffer,'("th.F90: EnergyToTemperatureBisection -->&
                               & root is not bracketed")')
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
   T = 0.5d0*(TL+TR)
@@ -6077,7 +6077,7 @@ subroutine EnergyToTemperatureBisection(T,TL,TR,h,energy,Cwi,Pr,option)
      print *,"[TL,T,TR] = ",TL,T,TR
      write(option%io_buffer,'("th.F90: EnergyToTemperatureBisection -->&
                               & root not found!")')
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
 
 end subroutine EnergyToTemperatureBisection
@@ -6145,7 +6145,7 @@ subroutine THUpdateSurfaceBC(realization)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_type), pointer :: cur_connection_set
   type(global_auxvar_type), pointer :: global_auxvars(:)  
@@ -6179,7 +6179,7 @@ subroutine THUpdateSurfaceBC(realization)
 
       if (boundary_condition%flow_condition%itype(TH_PRESSURE_DOF) /= &
          HET_SURF_SEEPAGE_BC) then
-        call printErrMsg(option,'from_surface_bc is not of type ' // &
+        call option%PrintErrMsg('from_surface_bc is not of type ' // &
                         'HET_SURF_SEEPAGE_BC')
       endif
 
@@ -6365,7 +6365,7 @@ subroutine THUpdateSurfaceWaterFlag(realization)
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(connection_set_type), pointer :: cur_connection_set
 
   PetscInt :: ghosted_id
@@ -6445,7 +6445,7 @@ subroutine THComputeCoeffsForSurfFlux(realization)
 
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -6519,7 +6519,7 @@ subroutine THComputeCoeffsForSurfFlux(realization)
         boundary_condition%flow_condition%itype(TH_PRESSURE_DOF)
 
       if (pressure_bc_type /= HET_SURF_SEEPAGE_BC) then
-        call printErrMsg(option,'from_surface_bc is not of type &
+        call option%PrintErrMsg('from_surface_bc is not of type &
                          &HET_SURF_SEEPAGE_BC')
       endif
 
@@ -6706,7 +6706,7 @@ subroutine ComputeCoeffsForApprox(P_up, T_up, ithrm_up, &
   PetscReal :: area
   PetscReal :: Dq
   PetscReal :: sir_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal, intent(out) :: P_min
   PetscReal, intent(out) :: P_max
   PetscReal, intent(out) :: coeff_for_cubic_approx(4)

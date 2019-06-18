@@ -112,12 +112,12 @@ subroutine SFBaseVerify(this,name,option)
   
   class(sat_func_base_type) :: this  
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option  
+  class(option_type) :: option  
   
   if (Uninitialized(this%Sr)) then
     option%io_buffer = UninitializedMessage('LIQUID_RESIDUAL_SATURATION', &
                                             name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   if ((.not.this%analytical_derivative_available) .and. &
@@ -125,7 +125,7 @@ subroutine SFBaseVerify(this,name,option)
     option%io_buffer = 'Analytical derivatives are not available for the &
       &capillary pressure - saturation function chosen: ' // &
       trim(name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine SFBaseVerify
@@ -155,19 +155,19 @@ subroutine RPFBaseVerify(this,name,option)
   
   class(rel_perm_func_base_type) :: this  
   character(len=MAXSTRINGLENGTH) :: name
-  type(option_type) :: option  
+  class(option_type) :: option  
 
   if (Uninitialized(this%Sr)) then
     option%io_buffer = UninitializedMessage('LIQUID_RESIDUAL_SATURATION', &
                                             name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   if ((.not.this%analytical_derivative_available) .and. &
       (.not.option%flow%numerical_derivatives)) then
     option%io_buffer = 'Analytical derivatives are not available for the &
       &relative permeability function chosen: ' // trim(name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine RPFBaseVerify
@@ -183,11 +183,11 @@ subroutine SFBaseSetupPolynomials(this,option,error_string)
   implicit none
   
   class(sat_func_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
   
   option%io_buffer = 'SF Smoothing not supported for ' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine SFBaseSetupPolynomials
 
@@ -202,11 +202,11 @@ subroutine RPFBaseSetupPolynomials(this,option,error_string)
   implicit none
   
   class(rel_perm_func_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: error_string
   
   option%io_buffer = 'RPF Smoothing not supported for ' // trim(error_string)
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine RPFBaseSetupPolynomials
 
@@ -222,10 +222,10 @@ subroutine SFBaseCapillaryPressure(this,liquid_saturation, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: capillary_pressure
   PetscReal, intent(out) :: dpc_dsatl
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'SFBaseCapillaryPressure must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine SFBaseCapillaryPressure
 
@@ -241,10 +241,10 @@ subroutine SFBaseSaturation(this,capillary_pressure, &
   PetscReal, intent(in) :: capillary_pressure
   PetscReal, intent(out) :: liquid_saturation
   PetscReal, intent(out) :: dsat_dpres
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'SFBaseSaturation must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine SFBaseSaturation
 
@@ -259,10 +259,10 @@ subroutine SFBaseD2SatDP2(this,pc,d2s_dp2,option)
   class(sat_func_base_type) :: this
   PetscReal, intent(in) :: pc
   PetscReal, intent(out) :: d2s_dp2
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'SFBaseD2SatDP2 must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine SFBaseD2SatDP2
 
@@ -277,7 +277,7 @@ subroutine SFBaseTest(this,cc_name,option)
   
   class(sat_func_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt, parameter :: num_values = 101
@@ -377,10 +377,10 @@ subroutine RPF_Base_RelPerm(this,liquid_saturation,relative_permeability, &
   PetscReal, intent(in) :: liquid_saturation
   PetscReal, intent(out) :: relative_permeability
   PetscReal, intent(out) :: dkr_sat
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   option%io_buffer = 'RPF_Base_RelPerm must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine RPF_Base_RelPerm
 
@@ -395,7 +395,7 @@ subroutine RPF_Base_Test(this,cc_name,phase,option)
   class(rel_perm_func_base_type) :: this
   character(len=MAXWORDLENGTH) :: cc_name
   character(len=MAXWORDLENGTH) :: phase
-  type(option_type), intent(inout) :: option
+  class(option_type), intent(inout) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i

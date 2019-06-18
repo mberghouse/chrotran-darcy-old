@@ -230,45 +230,80 @@ module Option_module
     !man: impose restrictions on when a grid block can change state 
     PetscBool :: restrict_state_chng
 
+  contains
+    procedure :: PrintMsg1 => OptionPrintMsg1
+    procedure :: PrintMsg2 => OptionPrintMsg2
+    generic, public :: PrintMsg => PrintMsg1,PrintMsg2
+    procedure :: PrintMsgAnyRank1 => OptionPrintMsgAnyRank1
+    procedure, nopass :: PrintMsgAnyRank2 => OptionPrintMsgAnyRank2
+    generic, public :: PrintMsgAnyRank => PrintMsgAnyRank1, &
+                                          PrintMsgAnyRank2
+    procedure :: PrintMsgByRank1 => OptionPrintMsgByRank1
+    procedure :: PrintMsgByRank2 => OptionPrintMsgByRank2
+    generic, public :: PrintMsgByRank => PrintMsgByRank1, &
+                                         PrintMsgByRank2
+    procedure :: PrintErrMsgByRank1 => OptionPrintErrMsgByRank1
+    procedure :: PrintErrMsgByRank2 => OptionPrintErrMsgByRank2
+    generic, public :: PrintErrMsgByRank => PrintErrMsgByRank1, &
+                                            PrintErrMsgByRank2
+    procedure :: PrintErrMsgNoStopByRank1 => OptionPrintErrMsgNoStopByRank1
+    procedure :: PrintErrMsgNoStopByRank2 => &
+                           OptionPrintErrMsgNoStopByRank2
+    generic, public :: PrintErrMsgNoStopByRank => &
+                           PrintErrMsgNoStopByRank1, &
+                           PrintErrMsgNoStopByRank2
+    procedure :: PrintErrMsg1 => OptionPrintErrMsg1
+    procedure :: PrintErrMsg2 => OptionPrintErrMsg2
+    generic, public :: PrintErrMsg => PrintErrMsg1,PrintErrMsg2
+    procedure :: PrintWrnMsg1 => OptionPrintWrnMsg1
+    procedure :: PrintWrnMsg2 => OptionPrintWrnMsg2
+    generic, public :: PrintWrnMsg => PrintWrnMsg1,PrintWrnMsg2
+    procedure :: PrintErrMsgToDev => OptionPrintErrMsgToDev
+    procedure :: PrintErrMsgByRankToDev => OptionPrintErrMsgByRankToDev
+    procedure :: PrintMsgByCell => OptionPrintMsgByCell
+    procedure :: PrintVerboseMsg => OptionPrintVerboseMsg
+    procedure :: InitMPI1 => OptionInitMPI1
+    procedure :: InitMPI2 => OptionInitMPI2
+    generic, public :: InitMPI => InitMPI1,InitMPI2
   end type option_type
 
   PetscInt, parameter, public :: SUBSURFACE_SIM_TYPE = 1
   PetscInt, parameter, public :: MULTISIMULATION_SIM_TYPE = 2
   PetscInt, parameter, public :: STOCHASTIC_SIM_TYPE = 3
 
-  interface printMsg
-    module procedure printMsg1
-    module procedure printMsg2
+  interface OptionPrintMsg
+    module procedure OptionPrintMsg1
+    module procedure OptionPrintMsg2
   end interface
 
-  interface printMsgAnyRank
-    module procedure printMsgAnyRank1
-    module procedure printMsgAnyRank2
+  interface OptionPrintMsgAnyRank
+    module procedure OptionPrintMsgAnyRank1
+    module procedure OptionPrintMsgAnyRank2
   end interface
 
-  interface printMsgByRank
-    module procedure printMsgByRank1
-    module procedure printMsgByRank2
+  interface OptionPrintMsgByRank
+    module procedure OptionPrintMsgByRank1
+    module procedure OptionPrintMsgByRank2
   end interface
 
-  interface printErrMsgByRank
-    module procedure printErrMsgByRank1
-    module procedure printErrMsgByRank2
+  interface OptionPrintErrMsgByRank
+    module procedure OptionPrintErrMsgByRank1
+    module procedure OptionPrintErrMsgByRank2
   end interface
 
-  interface printErrMsgNoStopByRank
-    module procedure printErrMsgNoStopByRank1
-    module procedure printErrMsgNoStopByRank2
+  interface OptionPrintErrMsgNoStopByRank
+    module procedure OptionPrintErrMsgNoStopByRank1
+    module procedure OptionPrintErrMsgNoStopByRank2
   end interface
 
-  interface printErrMsg
-    module procedure printErrMsg1
-    module procedure printErrMsg2
+  interface OptionPrintErrMsg
+    module procedure OptionPrintErrMsg1
+    module procedure OptionPrintErrMsg2
   end interface
 
-  interface printWrnMsg
-    module procedure printWrnMsg1
-    module procedure printWrnMsg2
+  interface OptionPrintWrnMsg
+    module procedure OptionPrintWrnMsg1
+    module procedure OptionPrintWrnMsg2
   end interface
 
   interface OptionInitMPI
@@ -278,17 +313,17 @@ module Option_module
 
   public :: OptionCreate, &
             OptionCheckCommandLine, &
-            printErrMsg, &
-            PrintErrMsgToDev, &
-            printErrMsgByRank, &
-            PrintErrMsgByRankToDev, &
-            printWrnMsg, &
-            printMsg, &
-            printMsgAnyRank, &
-            printMsgByRank, &
-            printMsgByCell, &
-            printErrMsgNoStopByRank, &
-            printVerboseMsg, &
+            OptionPrintErrMsg, &
+            OptionPrintErrMsgToDev, &
+            OptionPrintErrMsgByRank, &
+            OptionPrintErrMsgByRankToDev, &
+            OptionPrintWrnMsg, &
+            OptionPrintMsg, &
+            OptionPrintMsgAnyRank, &
+            OptionPrintMsgByRank, &
+            OptionPrintMsgByCell, &
+            OptionPrintErrMsgNoStopByRank, &
+            OptionPrintVerboseMsg, &
             OptionCheckTouch, &
             OptionPrint, &
             OptionPrintToScreen, &
@@ -320,9 +355,9 @@ function OptionCreate()
 
   implicit none
 
-  type(option_type), pointer :: OptionCreate
+  class(option_type), pointer :: OptionCreate
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   allocate(option)
   option%flow => OptionFlowCreate()
@@ -350,7 +385,7 @@ subroutine OptionInitAll(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   ! These variables should only be initialized once at the beginning of a
   ! PFLOTRAN run (regardless of whether stochastic)
@@ -419,7 +454,7 @@ subroutine OptionInitRealization(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   ! These variables should be initialized once at the beginning of every
   ! PFLOTRAN realization or simulation of a single realization
@@ -621,7 +656,7 @@ subroutine OptionCheckCommandLine(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscBool :: option_found
   PetscInt :: temp_int
@@ -670,7 +705,7 @@ end subroutine OptionCheckCommandLine
 
 ! ************************************************************************** !
 
-subroutine printErrMsg1(option)
+subroutine OptionPrintErrMsg1(option)
   !
   ! Prints the error message from p0 and stops
   !
@@ -680,15 +715,15 @@ subroutine printErrMsg1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
-  call printErrMsg2(option,option%io_buffer)
+  call option%PrintErrMsg2(option%io_buffer)
 
-end subroutine printErrMsg1
+end subroutine OptionPrintErrMsg1
 
 ! ************************************************************************** !
 
-subroutine printErrMsg2(option,string)
+subroutine OptionPrintErrMsg2(option,string)
   !
   ! Prints the error message from p0 and stops
   !
@@ -698,7 +733,7 @@ subroutine printErrMsg2(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   PetscBool :: petsc_initialized
@@ -717,11 +752,11 @@ subroutine printErrMsg2(option,string)
   endif
   stop
 
-end subroutine printErrMsg2
+end subroutine OptionPrintErrMsg2
 
 ! ************************************************************************** !
 
-subroutine printErrMsgByRank1(option)
+subroutine OptionPrintErrMsgByRank1(option)
   !
   ! Prints the error message from processor with error along
   ! with rank
@@ -732,15 +767,15 @@ subroutine printErrMsgByRank1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
-  call printErrMsgByRank2(option,option%io_buffer)
+  call option%PrintErrMsgByRank2(option%io_buffer)
 
-end subroutine printErrMsgByRank1
+end subroutine OptionPrintErrMsgByRank1
 
 ! ************************************************************************** !
 
-subroutine printErrMsgByRank2(option,string)
+subroutine OptionPrintErrMsgByRank2(option,string)
   !
   ! Prints the error message from processor with error along
   ! with rank
@@ -751,7 +786,7 @@ subroutine printErrMsgByRank2(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   character(len=MAXWORDLENGTH) :: word
@@ -765,11 +800,11 @@ subroutine printErrMsgByRank2(option,string)
   endif
   stop
 
-end subroutine printErrMsgByRank2
+end subroutine OptionPrintErrMsgByRank2
 
 ! ************************************************************************** !
 
-subroutine printErrMsgNoStopByRank1(option)
+subroutine OptionPrintErrMsgNoStopByRank1(option)
   !
   ! Prints the error message from processor with error along
   ! with rank
@@ -780,15 +815,15 @@ subroutine printErrMsgNoStopByRank1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
-  call printErrMsgNoStopByRank2(option,option%io_buffer)
+  call option%PrintErrMsgNoStopByRank2(option%io_buffer)
 
-end subroutine printErrMsgNoStopByRank1
+end subroutine OptionPrintErrMsgNoStopByRank1
 
 ! ************************************************************************** !
 
-subroutine printErrMsgNoStopByRank2(option,string)
+subroutine OptionPrintErrMsgNoStopByRank2(option,string)
   !
   ! Prints the error message from processor with error along
   ! with rank
@@ -799,7 +834,7 @@ subroutine printErrMsgNoStopByRank2(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   character(len=MAXWORDLENGTH) :: word
@@ -811,15 +846,15 @@ subroutine printErrMsgNoStopByRank2(option,string)
     print *
   endif
 
-end subroutine printErrMsgNoStopByRank2
+end subroutine OptionPrintErrMsgNoStopByRank2
 
 ! ************************************************************************** !
 
-subroutine PrintErrMsgToDev(option,string)
+subroutine OptionPrintErrMsgToDev(option,string)
   !
   ! Prints the error message from p0, appends a request to submit input 
   ! deck to pflotran-dev, and stops.  The reverse order of arguments is 
-  ! to avoid conflict with variants of PrintErrMsg()
+  ! to avoid conflict with variants of OptionPrintErrMsg()
   !
   ! Author: Glenn Hammond
   ! Date: 07/26/18
@@ -827,7 +862,7 @@ subroutine PrintErrMsgToDev(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   if (len_trim(string) > 0) then
@@ -838,17 +873,17 @@ subroutine PrintErrMsgToDev(option,string)
     option%io_buffer = trim(option%io_buffer) // &
       ' Please email pflotran-dev@googlegroups.com.'
   endif
-  call PrintErrMsg(option)
+  call option%PrintErrMsg()
 
-end subroutine PrintErrMsgToDev
+end subroutine OptionPrintErrMsgToDev
 
 ! ************************************************************************** !
 
-subroutine PrintErrMsgByRankToDev(option,string)
+subroutine OptionPrintErrMsgByRankToDev(option,string)
   !
   ! Prints the error message from processor with error along
   ! with rank. The reverse order of arguments is to avoid conflict with
-  ! variants of PrintErrMsg()
+  ! variants of OptionPrintErrMsg()
   !
   ! Author: Glenn Hammond
   ! Date: 11/04/11
@@ -856,7 +891,7 @@ subroutine PrintErrMsgByRankToDev(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   if (len_trim(string) > 0) then
@@ -867,13 +902,13 @@ subroutine PrintErrMsgByRankToDev(option,string)
     option%io_buffer = trim(option%io_buffer) // &
       ' Please email pflotran-dev@googlegroups.com.'
   endif
-  call PrintErrMsgByRank(option)
+  call option%PrintErrMsgByRank()
 
-end subroutine PrintErrMsgByRankToDev
+end subroutine OptionPrintErrMsgByRankToDev
 
 ! ************************************************************************** !
 
-subroutine printWrnMsg1(option)
+subroutine OptionPrintWrnMsg1(option)
   !
   ! Prints the warning message from p0
   !
@@ -883,15 +918,15 @@ subroutine printWrnMsg1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
-  call printWrnMsg2(option,option%io_buffer)
+  call option%PrintWrnMsg2(option%io_buffer)
 
-end subroutine printWrnMsg1
+end subroutine OptionPrintWrnMsg1
 
 ! ************************************************************************** !
 
-subroutine printWrnMsg2(option,string)
+subroutine OptionPrintWrnMsg2(option,string)
   !
   ! Prints the warning message from p0
   !
@@ -901,16 +936,16 @@ subroutine printWrnMsg2(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   if (OptionPrintToScreen(option)) print *, 'WARNING: ' // trim(string)
 
-end subroutine printWrnMsg2
+end subroutine OptionPrintWrnMsg2
 
 ! ************************************************************************** !
 
-subroutine printMsg1(option)
+subroutine OptionPrintMsg1(option)
   !
   ! Prints the message from p0
   !
@@ -920,15 +955,15 @@ subroutine printMsg1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
-  call printMsg2(option,option%io_buffer)
+  call option%PrintMsg2(option%io_buffer)
 
-end subroutine printMsg1
+end subroutine OptionPrintMsg1
 
 ! ************************************************************************** !
 
-subroutine printMsg2(option,string)
+subroutine OptionPrintMsg2(option,string)
   !
   ! Prints the message from p0
   !
@@ -938,16 +973,16 @@ subroutine printMsg2(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   if (OptionPrintToScreen(option)) print *, trim(string)
 
-end subroutine printMsg2
+end subroutine OptionPrintMsg2
 
 ! ************************************************************************** !
 
-subroutine printMsgAnyRank1(option)
+subroutine OptionPrintMsgAnyRank1(option)
   !
   ! Prints the message from any processor core
   !
@@ -957,15 +992,15 @@ subroutine printMsgAnyRank1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
-  if (option%print_to_screen) call printMsgAnyRank2(option%io_buffer)
+  if (option%print_to_screen) call option%PrintMsgAnyRank2(option%io_buffer)
 
-end subroutine printMsgAnyRank1
+end subroutine OptionPrintMsgAnyRank1
 
 ! ************************************************************************** !
 
-subroutine printMsgAnyRank2(string)
+subroutine OptionPrintMsgAnyRank2(string)
   !
   ! Prints the message from any processor core
   !
@@ -979,11 +1014,11 @@ subroutine printMsgAnyRank2(string)
   
   print *, trim(string)
 
-end subroutine printMsgAnyRank2
+end subroutine OptionPrintMsgAnyRank2
 
 ! ************************************************************************** !
 
-subroutine printMsgByRank1(option)
+subroutine OptionPrintMsgByRank1(option)
   !
   ! Prints a message from processor along with rank
   !
@@ -993,15 +1028,15 @@ subroutine printMsgByRank1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
-  call printMsgByRank2(option,option%io_buffer)
+  call option%PrintMsgByRank2(option%io_buffer)
 
-end subroutine printMsgByRank1
+end subroutine OptionPrintMsgByRank1
 
 ! ************************************************************************** !
 
-subroutine printMsgByRank2(option,string)
+subroutine OptionPrintMsgByRank2(option,string)
   !
   ! Prints a message from processor along with rank
   !
@@ -1011,7 +1046,7 @@ subroutine printMsgByRank2(option,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   character(len=MAXWORDLENGTH) :: word
@@ -1021,11 +1056,11 @@ subroutine printMsgByRank2(option,string)
     print *, '(' // trim(adjustl(word)) // '): ' // trim(string)
   endif
 
-end subroutine printMsgByRank2
+end subroutine OptionPrintMsgByRank2
 
 ! ************************************************************************** !
 
-subroutine printMsgByCell(option,cell_id,string)
+subroutine OptionPrintMsgByCell(option,cell_id,string)
   !
   ! Prints the message from p0
   !
@@ -1035,7 +1070,7 @@ subroutine printMsgByCell(option,cell_id,string)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: cell_id
   character(len=*) :: string
 
@@ -1044,13 +1079,13 @@ subroutine printMsgByCell(option,cell_id,string)
   write(word,*) cell_id
   word = adjustl(word)
   option%io_buffer = trim(string) // ' for cell ' // trim(word) // '.'
-  call printMsgByRank(option)
+  call option%PrintMsgByRank()
 
-end subroutine printMsgByCell
+end subroutine OptionPrintMsgByCell
 
 ! ************************************************************************** !
 
-subroutine printVerboseMsg(option)
+subroutine OptionPrintVerboseMsg(option)
   !
   ! Prints the message from p0
   !
@@ -1060,13 +1095,13 @@ subroutine printVerboseMsg(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (option%verbosity > 0) then
-    call printMsg(option,option%io_buffer)
+    call option%PrintMsg(option%io_buffer)
   endif
 
-end subroutine printVerboseMsg
+end subroutine OptionPrintVerboseMsg
 
 ! ************************************************************************** !
 
@@ -1080,7 +1115,7 @@ function OptionCheckTouch(option,filename)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXSTRINGLENGTH) :: filename
 
   PetscInt :: ios
@@ -1114,7 +1149,7 @@ function OptionPrintToScreen(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscBool :: OptionPrintToScreen
 
@@ -1138,7 +1173,7 @@ function OptionPrintToFile(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscBool :: OptionPrintToFile
 
@@ -1164,7 +1199,7 @@ subroutine OptionPrint(string,option)
   implicit none
 
   character(len=*) :: string
-  type(option_type) :: option
+  class(option_type) :: option
 
   ! note that these flags can be toggled off specific time steps
   if (option%print_screen_flag) then
@@ -1187,7 +1222,7 @@ function OptionGetFIDs(option)
   !
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: OptionGetFIDs(2)
 
@@ -1212,7 +1247,7 @@ subroutine OptionMaxMinMeanVariance(value,max,min,mean,variance, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: value
   PetscReal :: max
   PetscReal :: min
@@ -1248,7 +1283,7 @@ subroutine OptionMeanVariance(value,mean,variance,calculate_variance,option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: value
   PetscReal :: mean
   PetscReal :: variance
@@ -1284,7 +1319,7 @@ subroutine OptionInitMPI1(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscErrorCode :: ierr
 
@@ -1305,7 +1340,7 @@ subroutine OptionInitMPI2(option,communicator)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscMPIInt :: communicator
   PetscErrorCode :: ierr
@@ -1335,7 +1370,7 @@ subroutine OptionInitPetsc(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscErrorCode :: ierr
@@ -1370,7 +1405,7 @@ subroutine OptionBeginTiming(option)
 
 #include "petsc/finclude/petsclog.h"
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscLogDouble :: timex_wall
   PetscErrorCode :: ierr
@@ -1396,7 +1431,7 @@ subroutine OptionEndTiming(option)
 
 #include "petsc/finclude/petsclog.h"
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscLogDouble :: timex_wall
   PetscErrorCode :: ierr
@@ -1444,7 +1479,7 @@ subroutine OptionDivvyUpSimulations(option,filenames)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: i
   character(len=MAXSTRINGLENGTH) :: string
@@ -1480,7 +1515,7 @@ subroutine OptionCreateProcessorGroups(option,num_groups)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: num_groups
 
   PetscInt :: local_commsize
@@ -1498,7 +1533,7 @@ subroutine OptionCreateProcessorGroups(option,num_groups)
       ') must be equal to or less than the number of processes (' // &
       adjustl(word)
     option%io_buffer = trim(option%io_buffer) // ').'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   local_commsize = option%global_commsize / num_groups
   remainder = option%global_commsize - num_groups * local_commsize
@@ -1535,7 +1570,7 @@ subroutine OptionFinalize(option)
 
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt :: iflag
   PetscErrorCode :: ierr
@@ -1567,7 +1602,7 @@ subroutine OptionDestroy(option)
 
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   call OptionFlowDestroy(option%flow)
   call OptionTransportDestroy(option%transport)

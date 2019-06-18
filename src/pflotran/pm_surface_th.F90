@@ -76,11 +76,11 @@ subroutine PMSurfaceTHRead(this,input)
   implicit none
   
   class(pm_surface_th_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscBool :: found
 
   option => this%option
@@ -91,11 +91,11 @@ subroutine PMSurfaceTHRead(this,input)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)
 
     found = PETSC_FALSE
@@ -363,7 +363,7 @@ subroutine PMSurfaceTHDestroy(this)
   endif
 
 #ifdef PM_SURFACE_FLOW_DEBUG
-  call printMsg(this%option,'PMSurfaceTHDestroy()')
+  call this%option%PrintMsg('PMSurfaceTHDestroy()')
 #endif
 
   call SurfaceTHDestroy(this%surf_realization)

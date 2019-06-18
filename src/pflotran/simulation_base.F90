@@ -18,7 +18,7 @@ module Simulation_Base_class
   private
 
   type, public :: simulation_base_type
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(waypoint_list_type), pointer :: waypoint_list_outer ! for outer sync loop
     type(checkpoint_option_type), pointer :: checkpoint_option
     type(output_option_type), pointer :: output_option
@@ -65,7 +65,7 @@ function SimulationBaseCreate(option)
   
   class(simulation_base_type), pointer :: SimulationBaseCreate
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   allocate(SimulationBaseCreate)
   call SimulationBaseCreate%Init(option)
@@ -89,7 +89,7 @@ subroutine SimulationBaseInit(this,option)
   implicit none
   
   class(simulation_base_type) :: this
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   this%option => option
   this%waypoint_list_outer => WaypointListCreate()
@@ -128,7 +128,7 @@ subroutine SimulationBaseInitializeRun(this)
   PetscErrorCode :: ierr
   
 #ifdef DEBUG
-  call printMsg(this%option,'SimulationBaseInitializeRun()')
+  call this%option%PrintMsg('SimulationBaseInitializeRun()')
 #endif
   
   ! the user may request output of variable that do not exist for the 
@@ -144,7 +144,7 @@ subroutine SimulationBaseInitializeRun(this)
       else
         this%option%io_buffer = 'Unknown restart filename format. ' // &
         'Only *.chk and *.h5 supported.'
-        call printErrMsg(this%option)
+        call this%option%PrintErrMsg()
       endif
     endif
   
@@ -154,8 +154,8 @@ subroutine SimulationBaseInitializeRun(this)
   endif
   
   call SimulationInputRecordPrint(this)
-  call printMsg(this%option," ")
-  call printMsg(this%option,"  Finished Initialization")
+  call this%option%PrintMsg(" ")
+  call this%option%PrintMsg("  Finished Initialization")
   call PetscLogEventEnd(logging%event_init,ierr);CHKERRQ(ierr)
   ! pushed in PFLOTRANInitializePostPetsc()
   call PetscLogStagePop(ierr);CHKERRQ(ierr)
@@ -217,12 +217,12 @@ subroutine SimulationInputRecord(this)
   class(simulation_base_type) :: this
 
 #ifdef DEBUG
-  call printMsg(this%option,'SimulationInputRecord()')
+  call this%option%PrintMsg('SimulationInputRecord()')
 #endif
 
   this%option%io_buffer = 'SimulationInputRecord must be extended for ' // &
     'each simulation mode.'
-  call printErrMsg(this%option)
+  call this%option%PrintErrMsg()
 
 end subroutine SimulationInputRecord
 
@@ -242,12 +242,12 @@ subroutine SimulationBaseJumpStart(this)
   class(simulation_base_type) :: this
   
 #ifdef DEBUG
-  call printMsg(this%option,'SimulationBaseJumpStart()')
+  call this%option%PrintMsg('SimulationBaseJumpStart()')
 #endif
 
   this%option%io_buffer = 'SimulationBaseJumpStart must be extended for ' // &
     'each simulation mode.'
-  call printErrMsg(this%option)
+  call this%option%PrintErrMsg()
   
 end subroutine SimulationBaseJumpStart
 
@@ -275,7 +275,7 @@ subroutine ExecuteRun(this)
   character(len=MAXSTRINGLENGTH) :: append_name
 
 #ifdef DEBUG
-  call printMsg(this%option,'SimulationBaseExecuteRun()')
+  call this%option%PrintMsg('SimulationBaseExecuteRun()')
 #endif
 
   if (.not.associated(this%process_model_coupler_list)) then
@@ -322,7 +322,7 @@ subroutine RunToTime(this,target_time)
   class(pmc_base_type), pointer :: cur_process_model_coupler
   
 #ifdef DEBUG
-  call printMsg(this%option,'SimulationBaseRunToTime()')
+  call this%option%PrintMsg('SimulationBaseRunToTime()')
 #endif
   
   call this%process_model_coupler_list%RunToTime(target_time,this%stop_flag)
@@ -351,12 +351,12 @@ subroutine SimulationBaseFinalizeRun(this)
   class(pmc_base_type), pointer :: cur_process_model_coupler
 
 #ifdef DEBUG
-  call printMsg(this%option,'SimulationBaseFinalizeRun()')
+  call this%option%PrintMsg('SimulationBaseFinalizeRun()')
 #endif
   
   if (this%stop_flag == TS_STOP_WALLCLOCK_EXCEEDED) then
-    call printMsg(this%option,"Wallclock stop time exceeded.  Exiting!!!")
-    call printMsg(this%option,"")
+    call this%option%PrintMsg("Wallclock stop time exceeded.  Exiting!!!")
+    call this%option%PrintMsg("")
   endif
   
   if (associated(this%process_model_coupler_list)) then
@@ -427,7 +427,7 @@ subroutine SimulationBaseStrip(this)
   class(simulation_base_type) :: this
   
 #ifdef DEBUG
-  call printMsg(this%option,'SimulationBaseStrip()')
+  call this%option%PrintMsg('SimulationBaseStrip()')
 #endif
   call WaypointListDestroy(this%waypoint_list_outer)
   call SimAuxDestroy(this%sim_aux)
@@ -460,7 +460,7 @@ subroutine SimulationBaseDestroy(simulation)
   class(simulation_base_type), pointer :: simulation
   
 #ifdef DEBUG
-  call printMsg(simulation%option,'SimulationDestroy()')
+  call simulation%option%PrintMsg('SimulationDestroy()')
 #endif
   
   if (.not.associated(simulation)) return

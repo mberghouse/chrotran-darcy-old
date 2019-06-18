@@ -95,11 +95,11 @@ subroutine PMTOilImsRead(this,input)
   implicit none
 
   class(pm_toil_ims_type) :: this  
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: keyword, word
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: tempreal
   character(len=MAXSTRINGLENGTH) :: error_string
   PetscBool :: found
@@ -115,8 +115,8 @@ subroutine PMTOilImsRead(this,input)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)   
 
     found = PETSC_FALSE
@@ -126,55 +126,55 @@ subroutine PMTOilImsRead(this,input)
           
     select case(trim(keyword))
       case('ITOL_SCALED_RESIDUAL')
-        call InputReadDouble(input,option,toil_ims_itol_scaled_res)
-        call InputDefaultMsg(input,option,'toil_ims_itol_scaled_res')
+        call input%ReadDouble(option,toil_ims_itol_scaled_res)
+        call input%DefaultMsg(option,'toil_ims_itol_scaled_res')
         this%check_post_convergence = PETSC_TRUE
       case('ITOL_RELATIVE_UPDATE')
-        call InputReadDouble(input,option,toil_ims_itol_rel_update)
-        call InputDefaultMsg(input,option,'toil_ims_itol_rel_update')
+        call input%ReadDouble(option,toil_ims_itol_rel_update)
+        call input%DefaultMsg(option,'toil_ims_itol_rel_update')
         this%check_post_convergence = PETSC_TRUE        
       case('TOUGH2_ITOL_SCALED_RESIDUAL')
-        call InputReadDouble(input,option,tempreal)
-        call InputDefaultMsg(input,option,'tough_itol_scaled_residual_e1')
+        call input%ReadDouble(option,tempreal)
+        call input%DefaultMsg(option,'tough_itol_scaled_residual_e1')
         toil_ims_tgh2_itol_scld_res_e1 = tempreal
-        call InputReadDouble(input,option,toil_ims_tgh2_itol_scld_res_e2)
-        call InputDefaultMsg(input,option,'tough_itol_scaled_residual_e2')
+        call input%ReadDouble(option,toil_ims_tgh2_itol_scld_res_e2)
+        call input%DefaultMsg(option,'tough_itol_scaled_residual_e2')
         toil_ims_tough2_conv_criteria = PETSC_TRUE
         this%check_post_convergence = PETSC_TRUE
       case('WINDOW_EPSILON') 
-        call InputReadDouble(input,option,toil_ims_window_epsilon)
-        call InputErrorMsg(input,option,'window epsilon',error_string)
+        call input%ReadDouble(option,toil_ims_window_epsilon)
+        call input%ErrorMsg(option,'window epsilon',error_string)
       case('ISOTHERMAL')
         toil_ims_isothermal = PETSC_TRUE
       case('MAXIMUM_PRESSURE_CHANGE')
-        call InputReadDouble(input,option,toil_ims_max_pressure_change)
-        call InputErrorMsg(input,option,'maximum pressure change', &
+        call input%ReadDouble(option,toil_ims_max_pressure_change)
+        call input%ErrorMsg(option,'maximum pressure change', &
                            error_string)
       case('MAX_ITERATION_BEFORE_DAMPING')
-        call InputReadInt(input,option,toil_ims_max_it_before_damping)
-        call InputErrorMsg(input,option,'maximum iteration before damping', &
+        call input%ReadInt(option,toil_ims_max_it_before_damping)
+        call input%ErrorMsg(option,'maximum iteration before damping', &
                            error_string)
       case('DAMPING_FACTOR')
-        call InputReadDouble(input,option,toil_ims_damping_factor)
-        call InputErrorMsg(input,option,'damping factor',error_string)
+        call input%ReadDouble(option,toil_ims_damping_factor)
+        call input%ErrorMsg(option,'damping factor',error_string)
 #if 0
       case('GOVERN_MAXIMUM_PRESSURE_CHANGE')
-        call InputReadDouble(input,option,this%pressure_change_governor)
-        call InputErrorMsg(input,option,'maximum allowable pressure change', &
+        call input%ReadDouble(option,this%pressure_change_governor)
+        call input%ErrorMsg(option,'maximum allowable pressure change', &
                            error_string)
       case('GOVERN_MAXIMUM_TEMPERATURE_CHANGE')
-        call InputReadDouble(input,option,this%temperature_change_governor)
-        call InputErrorMsg(input,option, &
+        call input%ReadDouble(option,this%temperature_change_governor)
+        call input%ErrorMsg(option, &
                            'maximum allowable temperature change', &
                            error_string)
       case('GOVERN_MAXIMUM_SATURATION_CHANGE')
-        call InputReadDouble(input,option,this%saturation_change_governor)
-        call InputErrorMsg(input,option,'maximum allowable saturation change', &
+        call input%ReadDouble(option,this%saturation_change_governor)
+        call input%ErrorMsg(option,'maximum allowable saturation change', &
                            error_string)
 #endif
       case('DEBUG_CELL')
-        call InputReadInt(input,option,toil_ims_debug_cell_id)
-        call InputErrorMsg(input,option,'debug cell id',error_string)
+        call input%ReadInt(option,toil_ims_debug_cell_id)
+        call input%ErrorMsg(option,'debug cell id',error_string)
       ! might need some input here for the thermal diffusion model
       !case('NO_TEMP_DEPENDENT_DIFFUSION')
       !  general_temp_dep_gas_air_diff = PETSC_FALSE
@@ -484,7 +484,7 @@ subroutine PMTOilImsCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   PetscReal, pointer :: X_p(:), dX_p(:)
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
 
@@ -715,7 +715,7 @@ subroutine PMTOilImsCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   PetscReal, pointer :: r_p(:)
   PetscReal, pointer :: accum_p(:), accum_p2(:)
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   class(material_auxvar_type), pointer :: material_auxvars(:)  
@@ -911,7 +911,7 @@ subroutine PMTOilImsMaxChange(this)
   class(pm_toil_ims_type) :: this
   
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   PetscReal, pointer :: vec_ptr(:), vec_ptr2(:)

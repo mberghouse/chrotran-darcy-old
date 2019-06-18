@@ -83,7 +83,7 @@ subroutine TimeStorageVerify(default_time, time_storage, &
   type(time_storage_type), pointer :: time_storage
   type(time_storage_type), pointer :: default_time_storage
   character(len=MAXSTRINGLENGTH) :: header
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: array_size
   
@@ -100,7 +100,7 @@ subroutine TimeStorageVerify(default_time, time_storage, &
   if (time_storage%time_interpolation_method == INTERPOLATION_NULL) then
     option%io_buffer = 'Time interpolation method must be specified in ' // &
       trim(header) // '.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   time_storage%max_time_index = 1
@@ -144,7 +144,7 @@ subroutine TimeStorageGetTimes(time_storage, option, max_sim_time, time_array)
   implicit none
   
   type(time_storage_type), pointer :: time_storage
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: max_sim_time
   PetscReal, pointer :: time_array(:)
   
@@ -208,7 +208,7 @@ subroutine TimeStoragePrint(time_storage,option)
   implicit none
   
   type(time_storage_type) :: time_storage
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
 

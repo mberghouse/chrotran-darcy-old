@@ -81,8 +81,8 @@ subroutine SurfaceMaterialPropertyRead(surf_material_property,input,option)
   implicit none
   
   type(surface_material_property_type) :: surf_material_property
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word
   character(len=MAXSTRINGLENGTH) :: string
@@ -92,17 +92,17 @@ subroutine SurfaceMaterialPropertyRead(surf_material_property,input,option)
     
     if (InputCheckExit(input,option)) exit
   
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','SURFACE_MATERIAL_PROPERTY')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','SURFACE_MATERIAL_PROPERTY')
     call StringToUpper(keyword)
     
     select case(trim(keyword))
       case('ID')
-        call InputReadInt(input,option,surf_material_property%external_id)
-        call InputErrorMsg(input,option,'id','SURFACE_MATERIAL_PROPERTY')
+        call input%ReadInt(option,surf_material_property%external_id)
+        call input%ErrorMsg(option,'id','SURFACE_MATERIAL_PROPERTY')
       case('MANNINGS')
-        call InputReadDouble(input,option,surf_material_property%mannings)
-        call InputErrorMsg(input,option,'MANNINGS','SURFACE_MATERIAL_PROPERTY')
+        call input%ReadDouble(option,surf_material_property%mannings)
+        call input%ErrorMsg(option,'MANNINGS','SURFACE_MATERIAL_PROPERTY')
       case default
         call InputKeywordUnrecognized(keyword,'SURFACE_MATERIAL_PROPERTY',option)
       end select
@@ -184,7 +184,7 @@ subroutine SurfaceMaterialPropConvertListToArray(list,array,option)
 
   type(surface_material_property_type), pointer :: list
   type(surface_material_property_ptr_type), pointer :: array(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(surface_material_property_type), pointer :: cur_material_property
   type(surface_material_property_type), pointer :: prev_material_property
@@ -211,7 +211,7 @@ subroutine SurfaceMaterialPropConvertListToArray(list,array,option)
       write(string,*) cur_material_property%internal_id
       option%io_buffer = trim(option%io_buffer) // &
         'and internal id "' // trim(adjustl(string)) // '".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     cur_material_property => cur_material_property%next
   enddo
@@ -241,7 +241,7 @@ subroutine SurfaceMaterialPropConvertListToArray(list,array,option)
       write(string,*) i
       option%io_buffer = 'Material ID ' // trim(adjustl(string)) // &
         ' is duplicated in input file.'
-      call printMsg(option)
+      call option%PrintMsg()
       error_flag = PETSC_TRUE
     endif
   enddo
@@ -250,7 +250,7 @@ subroutine SurfaceMaterialPropConvertListToArray(list,array,option)
 
   if (error_flag) then
     option%io_buffer = 'Duplicate Material IDs.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! ensure unique material names
@@ -266,7 +266,7 @@ subroutine SurfaceMaterialPropConvertListToArray(list,array,option)
             option%io_buffer = 'Material name "' // &
               trim(adjustl(array(i)%ptr%name)) // &
               '" is duplicated in input file.'
-            call printMsg(option)
+            call option%PrintMsg()
             error_flag = PETSC_TRUE
           endif
         endif
@@ -276,7 +276,7 @@ subroutine SurfaceMaterialPropConvertListToArray(list,array,option)
 
   if (error_flag) then
     option%io_buffer = 'Duplicate Material names.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine SurfaceMaterialPropConvertListToArray

@@ -29,7 +29,7 @@ subroutine GeneralDerivativeDriver(option)
 
   implicit none
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   PetscInt, parameter :: ACCUMULATION = 1
   PetscInt, parameter :: INTERIOR_FLUX = 2
@@ -203,7 +203,7 @@ subroutine GeneralDerivativeDriver(option)
                                     material_auxvar,srcsink_scale,option)
     case default
       option%io_buffer = 'The user must specify a process to be tested.'
-      call printWrnMsg(option)
+      call option%PrintWrnMsg()
   end select
   
   ! Destroy objects
@@ -232,7 +232,7 @@ subroutine GeneralDerivativeSetup(general_parameter, &
   type(general_parameter_type), pointer :: general_parameter
   class(characteristic_curves_type), pointer :: characteristic_curves
   type(material_parameter_type), pointer :: material_parameter
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   class(sat_func_VG_type), pointer :: sf
   class(rpf_Mualem_VG_liq_type), pointer :: rpf_liq
@@ -297,7 +297,7 @@ subroutine GeneralDerivativeSetupAuxVar(istate,xx,pert,general_auxvar, &
   type(global_auxvar_type), pointer :: global_auxvar(:)
   class(material_auxvar_type), pointer :: material_auxvar(:)
   class(characteristic_curves_type) :: characteristic_curves
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscReal :: xx_pert(3)
   PetscInt :: natural_id = 1
@@ -353,7 +353,7 @@ subroutine GeneralDerivativeSetupEOS(option)
   
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: tlow, thigh, plow, phigh
   PetscInt :: ntemp, npres  
   PetscReal :: aux(1)
@@ -424,7 +424,7 @@ subroutine GeneralDerivativeAuxVar(pert,general_auxvar,global_auxvar, &
   type(general_auxvar_type) :: general_auxvar(0:)
   type(global_auxvar_type) :: global_auxvar(0:)
   class(material_auxvar_type) :: material_auxvar(0:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt :: natural_id = 1
   PetscBool :: analytical_derivative = PETSC_TRUE
@@ -471,7 +471,7 @@ subroutine GeneralDerivativeAccum(pert,general_auxvar,global_auxvar, &
   type(global_auxvar_type) :: global_auxvar(0:)
   class(material_auxvar_type) :: material_auxvar(0:)
   type(material_parameter_type) :: material_parameter
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt :: natural_id = 1
   PetscInt :: i
@@ -540,7 +540,7 @@ subroutine GeneralDerivativeFlux(pert,general_auxvar,global_auxvar, &
   class(characteristic_curves_type) :: characteristic_curves2
   type(material_parameter_type) :: material_parameter2
   type(general_parameter_type) :: general_parameter
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt :: natural_id = 1
   PetscInt :: i
@@ -648,7 +648,7 @@ subroutine GeneralDerivativeFluxBC(pert, &
   
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: pert(3)
   PetscInt :: ibndtype(1:option%nflowdof)
   PetscInt :: auxvar_mapping(GENERAL_MAX_INDEX)  
@@ -732,7 +732,7 @@ subroutine GeneralDerivativeSrcSink(pert,source_sink, &
   
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(coupler_type), pointer :: source_sink
   PetscReal :: pert(3)  
   type(general_auxvar_type) :: general_auxvar_ss
@@ -792,7 +792,7 @@ subroutine GeneralDerivativeSetFlowMode(option)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   
   option%iflowmode = G_MODE
   option%nphase = 2
@@ -826,7 +826,7 @@ subroutine GeneralDerivativeDestroyAuxVar(general_auxvar,global_auxvar, &
   type(general_auxvar_type), pointer :: general_auxvar(:)
   type(global_auxvar_type), pointer :: global_auxvar(:)
   class(material_auxvar_type), pointer :: material_auxvar(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   PetscInt :: i
 
@@ -856,7 +856,7 @@ subroutine GeneralDerivativeDestroy(general_parameter, &
   type(general_parameter_type), pointer :: general_parameter
   class(characteristic_curves_type), pointer :: characteristic_curves
   type(material_parameter_type), pointer :: material_parameter
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   if (associated(general_parameter)) then
     deallocate(general_parameter%diffusion_coefficient)

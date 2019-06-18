@@ -53,7 +53,7 @@ subroutine HDF5ReadNDimRealArray(option,file_id,dataset_name,ndims,dims, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: dataset_name
   integer(HID_T) :: file_id
   PetscInt :: ndims
@@ -159,7 +159,7 @@ subroutine HDF5ReadDatasetReal1D(filename,dataset_name,read_option,option, &
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXSTRINGLENGTH) :: dataset_name
   integer                        :: read_option
-  type(option_type)              :: option
+  class(option_type)              :: option
   
   ! out
   PetscReal,pointer              :: data(:)
@@ -182,7 +182,7 @@ subroutine HDF5ReadDatasetReal1D(filename,dataset_name,read_option,option, &
   if (ndims.ne.1) then
     option%io_buffer='Dimension of ' // dataset_name // ' dataset in ' // filename // &
 	   ' is not equal to 1.'
-	call printErrMsg(option)
+	call option%PrintErrMsg()
   endif
   
   ! Get size of each dimension
@@ -238,7 +238,7 @@ subroutine HDF5GroupOpen(parent_id,group_name,group_id,option)
   integer(HID_T) :: parent_id
   character(len=*) :: group_name
   integer(HID_T) :: group_id
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscMPIInt :: hdf5_err
@@ -247,7 +247,7 @@ subroutine HDF5GroupOpen(parent_id,group_name,group_id,option)
   call h5gopen_f(parent_id,trim(string),group_id,hdf5_err)
   if (hdf5_err < 0) then
     option%io_buffer = 'HDF5 Group "' // trim(string) // '" not found.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine HDF5GroupOpen
@@ -271,7 +271,7 @@ function HDF5GroupExists(filename,group_name,option)
 
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXWORDLENGTH) :: group_name
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HID_T) :: file_id  
   integer(HID_T) :: grp_id  
@@ -292,7 +292,7 @@ function HDF5GroupExists(filename,group_name,option)
   call h5pclose_f(prop_id,hdf5_err)
 
   option%io_buffer = 'Testing group: ' // trim(group_name)
-  call printMsg(option)
+  call option%PrintMsg()
   ! I turn off error messaging since if the group does not exist, an error
   ! will be printed, but the user does not need to see this.
   call h5eset_auto_f(OFF,hdf5_err)
@@ -311,7 +311,7 @@ function HDF5GroupExists(filename,group_name,option)
       trim(filename) // '" not found in file.  Therefore, assuming a ' // &
       'cell-indexed dataset.'
   endif
-  call printMsg(option)
+  call option%PrintMsg()
 
   call h5fclose_f(file_id,hdf5_err)
   call h5close_f(hdf5_err)  
@@ -338,7 +338,7 @@ function HDF5DatasetExists(filename,group_name,dataset_name,option)
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXWORDLENGTH) :: group_name
   character(len=MAXWORDLENGTH) :: dataset_name
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: group_name_local
   integer(HID_T) :: file_id
@@ -441,7 +441,7 @@ subroutine HDF5ReadDbase(filename,option)
   implicit none
   
   character(len=*) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH), allocatable :: wbuffer(:)
   character(len=MAXWORDLENGTH) :: wbuffer_word
@@ -479,7 +479,7 @@ subroutine HDF5ReadDbase(filename,option)
 
   call h5open_f(hdf5_err)
   option%io_buffer = 'Opening hdf5 file: ' // trim(filename)
-  call printMsg(option)
+  call option%PrintMsg()
   call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
 #ifndef SERIAL_HDF5
   call h5pset_fapl_mpio_f(prop_id,option%mycomm,MPI_INFO_NULL,hdf5_err)
@@ -498,7 +498,7 @@ subroutine HDF5ReadDbase(filename,option)
     if (len_trim(string) > MAXWORDLENGTH) then
       option%io_buffer = 'HDF5 DBASE object names must be shorter than &
         &32 characters: ' // trim(string)
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     object_name = trim(string)
     if (object_type == H5G_DATASET_F) then
@@ -516,7 +516,7 @@ subroutine HDF5ReadDbase(filename,option)
       else
         option%io_buffer = 'Unrecognized HDF5 datatype in Dbase: ' // &
           trim(object_name)
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       call h5tclose_f(datatype_id, hdf5_err)
       call h5dclose_f(dataset_id,hdf5_err)
@@ -572,7 +572,7 @@ subroutine HDF5ReadDbase(filename,option)
 !          option%io_buffer = 'DBASE dataset "' // trim(object_name) // &
 !            '" is too small (' // trim(adjustl(word)) // &
 !            ') for number of realizations.'
-!          call printErrMsg(option)
+!          call option%PrintErrMsg()
 !        endif
 !        dbase%value(icount) = buffer(option%id)
 !      else
@@ -592,7 +592,7 @@ subroutine HDF5ReadDbase(filename,option)
             trim(object_name) // &
             '" is too small (' // trim(adjustl(word)) // &
             ') for number of realizations.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       endif
       rank_mpi = 1
@@ -697,14 +697,14 @@ subroutine HDF5OpenFileReadOnly(filename,file_id,prop_id,option)
   character(len=*) :: filename  ! must be of variable length
   integer(HID_T) :: file_id
   integer(HID_T) :: prop_id
-  type(option_type) :: option
+  class(option_type) :: option
   
   integer :: hdf5_err
 
   call h5fopen_f(filename,H5F_ACC_RDONLY_F,file_id,hdf5_err,prop_id)
   if (hdf5_err /= 0) then
     option%io_buffer = 'HDF5 file "' // trim(filename) // '" not found.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine HDF5OpenFileReadOnly

@@ -55,7 +55,7 @@ subroutine WIPPFloSetup(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(output_variable_list_type), pointer :: list
@@ -85,7 +85,7 @@ subroutine WIPPFloSetup(realization)
   error_found = PETSC_FALSE
   if (minval(material_parameter%soil_residual_saturation(:,:)) < 0.d0) then
     option%io_buffer = 'ERROR: Non-initialized soil residual saturation.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   
@@ -99,24 +99,24 @@ subroutine WIPPFloSetup(realization)
     if (material_auxvars(ghosted_id)%volume < 0.d0 .and. flag(1) == 0) then
       flag(1) = 1
       option%io_buffer = 'ERROR: Non-initialized cell volume.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%porosity < 0.d0 .and. flag(2) == 0) then
       flag(2) = 1
       option%io_buffer = 'ERROR: Non-initialized porosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (minval(material_auxvars(ghosted_id)%permeability) < 0.d0 .and. &
         flag(5) == 0) then
       option%io_buffer = 'ERROR: Non-initialized permeability.'
-      call printMsg(option)
+      call option%PrintMsg()
       flag(5) = 1
     endif
   enddo
   
   if (error_found .or. maxval(flag) > 0) then
     option%io_buffer = 'Material property errors found in WIPPFloSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ndof = option%nflowdof
@@ -284,7 +284,7 @@ subroutine WIPPFloComputeMassBalance(realization,mass_balance)
   type(realization_subsurface_type) :: realization
   PetscReal :: mass_balance(realization%option%nphase)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -345,7 +345,7 @@ subroutine WIPPFloZeroMassBalanceDelta(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -386,7 +386,7 @@ subroutine WIPPFloUpdateMassBalance(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -444,7 +444,7 @@ subroutine WIPPFloUpdateAuxVars(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -535,7 +535,7 @@ subroutine WIPPFloUpdateAuxVars(realization)
                     option%io_buffer = 'Mixed FLOW_CONDITION "' // &
                       trim(boundary_condition%flow_condition%name) // &
                       '" needs gas pressure defined.'
-                    call printErrMsg(option)
+                    call option%PrintErrMsg()
                   endif
                 ! for gas saturation dof
                 case(WIPPFLO_GAS_SATURATION_INDEX)
@@ -548,7 +548,7 @@ subroutine WIPPFloUpdateAuxVars(realization)
             case(NEUMANN_BC)
             case default
               option%io_buffer = 'Unknown BC type in WIPPFloUpdateAuxVars().'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
           end select
         enddo  
       else
@@ -561,7 +561,7 @@ subroutine WIPPFloUpdateAuxVars(realization)
           else
             option%io_buffer = 'Error setting up boundary condition in &
                                &WIPPFloUpdateAuxVars'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         enddo
       endif
@@ -609,7 +609,7 @@ subroutine WIPPFloUpdateFixedAccum(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -705,7 +705,7 @@ subroutine WIPPFloNumericalJacobianTest(xx,B,realization,pmwss_ptr)
 
   PetscViewer :: viewer
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   PetscReal :: derivative, perturbation
@@ -864,7 +864,7 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(coupler_type), pointer :: boundary_condition
   type(coupler_type), pointer :: source_sink
@@ -1360,7 +1360,7 @@ subroutine WIPPFloJacobian(snes,xx,A,B,realization,pmwss_ptr,ierr)
   PetscInt, pointer :: zeros(:)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(material_parameter_type), pointer :: material_parameter
   type(wippflo_parameter_type), pointer :: wippflo_parameter
@@ -1691,13 +1691,13 @@ subroutine WIPPFloJacobian(snes,xx,A,B,realization,pmwss_ptr,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
   endif
   
 
@@ -1792,7 +1792,7 @@ subroutine WIPPFloCreepShutDown(realization)
   
   class(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
@@ -1857,7 +1857,7 @@ subroutine WIPPFloSSSandbox(residual,Jacobian,compute_derivative, &
   type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
   
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscReal, pointer :: r_p(:)
   PetscReal :: res(option%nflowdof)
@@ -1929,7 +1929,7 @@ subroutine WIPPFloSSSandboxLoadAuxReal(srcsink,aux_real,wippflo_auxvar,option)
   class(srcsink_sandbox_base_type) :: srcsink
   PetscReal :: aux_real(:)
   type(wippflo_auxvar_type) wippflo_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   
   aux_real = 0.d0
   select type(srcsink)
@@ -1973,7 +1973,7 @@ subroutine WIPPFloMapBCAuxVarsToGlobal(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_type), pointer :: cur_connection_set

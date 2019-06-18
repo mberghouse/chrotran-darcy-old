@@ -116,7 +116,7 @@ subroutine PMTHTSUpdateAuxVarsPatch(realization)
 
   class(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch

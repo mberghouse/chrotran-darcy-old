@@ -242,7 +242,7 @@ subroutine initialiseWell(well_data, grid, material_auxvars, option)
   class(well_data_type) , pointer :: well_data
   type (grid_type)      , pointer :: grid
   type (material_auxvar_type), pointer :: material_auxvars(:)
-  type (option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt  :: icmpl, icmplg, ncmpl
   PetscInt  :: drilling_direction
@@ -392,7 +392,7 @@ subroutine doWellMPISetup(option, num_well, well_data_list)
 
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt, intent(in) :: num_well
   type(well_data_list_type), pointer :: well_data_list
@@ -514,7 +514,7 @@ subroutine SolveWell(aux, option, well_data, r_p)
   implicit none
 
   type(auxiliary_type) :: aux
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   class(well_data_type), pointer :: well_data
   PetscReal, pointer :: r_p(:)
 
@@ -848,7 +848,7 @@ function solveForWellTarget(well_data, pw, option, itt, jwwi, wellisdead)
   PetscBool :: solveForWellTarget
   class(well_data_type), pointer :: well_data
   PetscReal, intent(inout) :: pw
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt, intent(inout) :: itt
   PetscReal, intent(out)  :: jwwi
   PetscBool, intent(out) :: wellisdead
@@ -1012,7 +1012,7 @@ subroutine getRwAndJw(option, itt, pw, rw, jww)
 
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt, intent(in)   :: itt
   PetscReal, intent(in)  :: pw
   PetscReal, intent(out) :: rw, jww
@@ -1043,7 +1043,7 @@ function extractResidualandJacobian(pw, option, itt, jww)
 
   PetscReal :: extractResidualandJacobian
   PetscReal, intent(in) :: pw
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt, intent(in) :: itt
   PetscReal, intent(out) :: jww
 
@@ -1086,7 +1086,7 @@ function getActualFlowForTargetType(pw, option, itt, possible, tactpw)
 
   PetscReal :: getActualFlowForTargetType
   PetscReal, intent(in) :: pw
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt, intent(in) :: itt
   PetscBool, intent(out) :: possible
   PetscReal, intent(out) :: tactpw
@@ -1185,7 +1185,7 @@ subroutine updateMainResidual(option, r_p)
 
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal, pointer :: r_p(:)
 
   PetscReal :: res(option%nflowdof)
@@ -1448,7 +1448,7 @@ subroutine findAllCompletionFlows(pw, option)
   implicit none
 
   PetscReal, intent(in) :: pw
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: icmpl, icmplg
 
   c_flows   = 0.0
@@ -1474,7 +1474,7 @@ subroutine findCompletionFlows(pw, option, icmpl, icmplg)
   implicit none
 
   PetscReal, intent(in) :: pw
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt , intent(in) :: icmpl
   PetscInt , intent(in) :: icmplg
 
@@ -1966,7 +1966,7 @@ subroutine findWellboreSolution(pw, option)
   implicit none
 
   PetscReal, intent(in) :: pw
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt  :: iterwbs, ir, irw, ixw, icmpl, icompe, jdof, jcmplg, ierr, &
                itry, mtry
@@ -2221,7 +2221,7 @@ subroutine packWellboreSolution(option)
 
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   if (ws_oil) then
     xwbs(ws_loc_soil) = w_sp(option%oil_phase)
@@ -2350,7 +2350,7 @@ subroutine getRwbsAndJwbs(pw, option, sum)
   implicit none
 
   PetscReal, intent(in) :: pw
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal, intent(out) :: sum
 
   PetscReal :: so, sg, sw, ss, pb, t
@@ -2663,7 +2663,7 @@ subroutine findWellborePropertiesAndDerivatives(pw, so, sg, sw, ss, &
   implicit none
 
   PetscReal, intent(in)  :: pw, so, sg, sw, ss, pb, t
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscReal :: mdos, mdost, mdospb
   PetscReal :: usf, usft, usfpw, usfpb
@@ -3223,7 +3223,7 @@ subroutine wellSolverLoaderTOWG(aux, option)
   implicit none
 
   type(auxiliary_type) :: aux
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   class(pm_towg_aux_type), pointer :: TOWG
 
@@ -3258,7 +3258,7 @@ subroutine wellSolverLoaderTOIL(aux, option)
   implicit none
 
   type(auxiliary_type) :: aux
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   class(pm_toil_ims_aux_type), pointer :: toil
 
@@ -3290,7 +3290,7 @@ subroutine loadCellDataTOWG(auxvar, option, icmpl)
   implicit none
 
   class(auxvar_towg_type) :: auxvar
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt, intent(in) :: icmpl
   PetscInt :: iphase, idof
 
@@ -3363,7 +3363,7 @@ subroutine loadCellDataTOIL(auxvar, option, icmpl)
   implicit none
 
   class(auxvar_toil_ims_type) :: auxvar
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt, intent(in) :: icmpl
   PetscInt :: iphase, idof
 
@@ -3829,7 +3829,7 @@ subroutine checkSurfaceDensities(option)
 
   implicit none
 
-  type (option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt  :: iphase, ierr
   PetscReal :: mw, sd
@@ -3885,7 +3885,7 @@ subroutine checkSurfaceDensities(option)
   enddo
 
   if (ierr == 1) then
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine checkSurfaceDensities
@@ -3903,7 +3903,7 @@ subroutine checkSolverAvailable(option)
 
   implicit none
 
-  type (option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt  :: ncmp, iphase, nphase, wsnx
   PetscBool :: water_found, mode_ok, is_grdecl
 
@@ -3919,7 +3919,7 @@ subroutine checkSolverAvailable(option)
   endif
   if (wsnx>3) then
     option%io_buffer = 'Wellsolver needs n>3 direct solver for this system'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! Is water present?
@@ -3930,7 +3930,7 @@ subroutine checkSolverAvailable(option)
   enddo
   if (.not.water_found) then
     option%io_buffer = 'Well solver assumes water phase is present'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! Is is a supported mode ?
@@ -3942,13 +3942,13 @@ subroutine checkSolverAvailable(option)
 
   if (.not.mode_ok) then
     option%io_buffer = 'This mode not yet supported by well solver'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   is_grdecl = GetIsGrdecl()
   if (.not.is_grdecl) then
     option%io_buffer = 'Well solver requires grdecl type input'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine checkSolverAvailable

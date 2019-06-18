@@ -36,8 +36,8 @@ subroutine ImmobileRead(immobile,input,option)
   implicit none
   
   type(immobile_type) :: immobile
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   type(immobile_species_type), pointer :: new_immobile_species, &
                                           prev_immobile_species
@@ -56,13 +56,13 @@ subroutine ImmobileRead(immobile,input,option)
   endif
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     ! this count is required for comparisons prior to BasisInit()
     immobile%nimmobile = immobile%nimmobile + 1          
     new_immobile_species => ImmobileSpeciesCreate()
-    call InputReadWord(input,option,new_immobile_species%name,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,new_immobile_species%name,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                         'CHEMISTRY,IMMOBILE_SPECIES')
     if (.not.associated(prev_immobile_species)) then
       immobile%list => new_immobile_species
@@ -97,8 +97,8 @@ subroutine ImmobileDecayRxnRead(immobile,input,option)
   implicit none
   
   type(immobile_type) :: immobile
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: word, internal_units
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -112,32 +112,32 @@ subroutine ImmobileDecayRxnRead(immobile,input,option)
   immobile_decay_rxn => ImmobileDecayRxnCreate()
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)   
 
     select case(trim(word))
       case('SPECIES_NAME')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'species name',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'species name',error_string)
         immobile_decay_rxn%species_name = word
       case('RATE_CONSTANT')
         internal_units = '1/sec'
-        call InputReadDouble(input,option,immobile_decay_rxn%rate_constant)  
-        call InputErrorMsg(input,option,'rate cosntant', &
+        call input%ReadDouble(option,immobile_decay_rxn%rate_constant)
+        call input%ErrorMsg(option,'rate cosntant', &
                              'CHEMISTRY,IMMOBILE_DECAY_REACTION') 
-        call InputReadAndConvertUnits(input,immobile_decay_rxn%rate_constant, &
+        call input%ReadAndConvertUnits(immobile_decay_rxn%rate_constant, &
                                       internal_units, &
                                       trim(error_string)//',rate constant', &
                                       option)
       case('HALF_LIFE')
         internal_units = 'sec'
-        call InputReadDouble(input,option,immobile_decay_rxn%half_life)
-        call InputErrorMsg(input,option,'half life',error_string)
-        call InputReadAndConvertUnits(input,immobile_decay_rxn%half_life, &
+        call input%ReadDouble(option,immobile_decay_rxn%half_life)
+        call input%ErrorMsg(option,'half life',error_string)
+        call input%ReadAndConvertUnits(immobile_decay_rxn%half_life, &
                                       internal_units, &
                                       trim(error_string)//',half life',option)
         ! convert half life to rate constant
@@ -150,7 +150,7 @@ subroutine ImmobileDecayRxnRead(immobile,input,option)
   if (Uninitialized(immobile_decay_rxn%rate_constant)) then
     option%io_buffer = 'RATE_CONSTANT or HALF_LIFE must be set in ' // &
       'IMMOBILE_DECAY_REACTION.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (.not.associated(immobile%decay_rxn_list)) then
     immobile%decay_rxn_list => immobile_decay_rxn
@@ -193,7 +193,7 @@ subroutine ImmobileProcessConstraint(immobile,constraint_name, &
   type(immobile_type), pointer :: immobile
   character(len=MAXWORDLENGTH) :: constraint_name
   type(immobile_constraint_type), pointer :: constraint
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: found
   PetscInt :: iimmobile, jimmobile
@@ -223,7 +223,7 @@ subroutine ImmobileProcessConstraint(immobile,constraint_name, &
                 'Immobile species "' // trim(constraint%names(iimmobile)) // &
                 '" from CONSTRAINT "' // trim(constraint_name) // &
                 '" not found among immobile species.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
       immobile_name(iimmobile) = constraint%names(iimmobile)
       constraint_conc(iimmobile) = &
@@ -259,7 +259,7 @@ subroutine RImmobileDecay(Res,Jac,compute_derivative,rt_auxvar, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   PetscReal :: Res(reaction%ncomp)

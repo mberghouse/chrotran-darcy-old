@@ -175,51 +175,51 @@ subroutine GeomechanicsSubsurfacePropsRead(this,input,option)
   implicit none
   
   class(geomechanics_subsurface_properties_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: word
   
   do
       call InputReadPflotranString(input,option)
-      call InputReadStringErrorMsg(input,option, &
+      call input%ReadStringErrorMsg(option, &
                         'MATERIAL_PROPERTY,GEOMECHANICS_SUBSURFACE_PROPS')
           
       if (InputCheckExit(input,option)) exit
           
-      if (InputError(input)) exit
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      call InputErrorMsg(input,option,'keyword', &
+      if (input%Error()) exit
+      call input%ReadWord(option,word,PETSC_TRUE)
+      call input%ErrorMsg(option,'keyword', &
                           'MATERIAL_PROPERTY,GEOMECHANICS_SUBSURFACE_PROPS')   
       select case(trim(word))
         case('COMPRESSIBILITY_FUNCTION')
-          call InputReadWord(input,option, &
+          call input%ReadWord(option, &
                              this%geomechanical_compressibility_function, &
                              PETSC_TRUE)
-          call InputErrorMsg(input,option, &
+          call input%ErrorMsg(option, &
                              'geomechanical compressibility function', &
                              'GEOMECHANICS_SUBSURFACE_PROPS')
         case('BANDIS_A') 
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                                this%Bandis_A)
-          call InputErrorMsg(input,option,'Bandis A parameter', &
+          call input%ErrorMsg(option,'Bandis A parameter', &
                              'GEOMECHANICS_SUBSURFACE_PROPS')
         case('BANDIS_B') 
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                                this%Bandis_B)
-          call InputErrorMsg(input,option,'Bandis B parameter', &
+          call input%ErrorMsg(option,'Bandis B parameter', &
                              'GEOMECHANICS_SUBSURFACE_PROPS')
         case('MAXIMUM_APERTURE') 
-          call InputReadDouble(input,option, &
+          call input%ReadDouble(option, &
                                this%maximum_aperture)
-          call InputErrorMsg(input,option,'max aperture for Bandis Model', &
+          call input%ErrorMsg(option,'max aperture for Bandis Model', &
                              'GEOMECHANICS_SUBSURFACE_PROPS')
         case('NORMAL_VECTOR')
-          call InputReadDouble(input,option,this%normal_vector_x)
-          call InputErrorMsg(input,option,'x-direction','NORMAL_VECTOR')
-          call InputReadDouble(input,option,this%normal_vector_y)
-          call InputErrorMsg(input,option,'y-direction','NORMAL_VECTOR')
-          call InputReadDouble(input,option,this%normal_vector_z)
-          call InputErrorMsg(input,option,'z-direction','NORMAL_VECTOR')
+          call input%ReadDouble(option,this%normal_vector_x)
+          call input%ErrorMsg(option,'x-direction','NORMAL_VECTOR')
+          call input%ReadDouble(option,this%normal_vector_y)
+          call input%ErrorMsg(option,'y-direction','NORMAL_VECTOR')
+          call input%ReadDouble(option,this%normal_vector_z)
+          call input%ErrorMsg(option,'z-direction','NORMAL_VECTOR')
         case default
           call InputKeywordUnrecognized(word, &
                   'MATERIAL_PROPERTY,GEOMECHANICS_SUBSURFACE_PROPS', &
@@ -251,7 +251,7 @@ subroutine GeomechanicsSubsurfacePropsPoroEvaluate(grid, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(material_auxvar_type), intent(inout) :: auxvar
   type(grid_type), pointer, intent(inout) :: grid
@@ -292,7 +292,7 @@ subroutine GeomechanicsSubsurfacePropsPoroEvaluate(grid, &
       write(string,*) model_id
       option%io_buffer = 'geomechanical compressibility model "' // &
         trim(string) // '" not recognized.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end select
           
 end subroutine GeomechanicsSubsurfacePropsPoroEvaluate
@@ -413,7 +413,7 @@ subroutine GeomechanicsSubsurfacePropsPermEvaluate(grid, &
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(material_auxvar_type), intent(inout) :: auxvar
   type(grid_type), pointer, intent(inout) :: grid
@@ -451,7 +451,7 @@ subroutine GeomechanicsSubsurfacePropsPermEvaluate(grid, &
       write(string,*) model_id
       option%io_buffer = 'geomechanical perm model "' // &
       trim(string) // '" not recognized.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine GeomechanicsSubsurfacePropsPermEvaluate

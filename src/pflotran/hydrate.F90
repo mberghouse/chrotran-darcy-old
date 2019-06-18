@@ -102,7 +102,7 @@ subroutine HydrateSetFlowMode(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   option%iflowmode = G_MODE
   option%nphase = 4
@@ -148,7 +148,7 @@ subroutine HydrateUpdateState(x,gen_auxvar,global_auxvar, material_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   class(characteristic_curves_type) :: characteristic_curves
   type(general_auxvar_type) :: gen_auxvar
@@ -866,7 +866,7 @@ subroutine HydrateUpdateState(x,gen_auxvar,global_auxvar, material_auxvar, &
         write(option%io_buffer,*) global_auxvar%hstate
         option%io_buffer = 'State (' // trim(adjustl(option%io_buffer)) // &
           ') not recognized in HydrateUpdateState.'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
 
     end select
 
@@ -896,7 +896,7 @@ subroutine HydrateAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   class(characteristic_curves_type) :: characteristic_curves
   PetscReal :: x(option%nflowdof)
   type(general_auxvar_type) :: gen_auxvar
@@ -1012,7 +1012,7 @@ subroutine HydrateAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
         write(option%io_buffer,'(''Negative gas pressure at cell '', &
           & i8,'' in HydrateAuxVarCompute(LIQUID_STATE).  Attempting bailout.'')') &
           natural_id
-        call printMsgByRank(option)
+        call option%PrintMsgByRank()
         gen_auxvar%pres(vpid) = 0.5d0*gen_auxvar%pres(spid)
         gen_auxvar%pres(gid) = gen_auxvar%pres(vpid) + gen_auxvar%pres(apid)
       else
@@ -1607,7 +1607,7 @@ subroutine HydrateAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
       write(option%io_buffer,*) global_auxvar%hstate
       option%io_buffer = 'State (' // trim(adjustl(option%io_buffer)) // &
         ') not recognized in HydrateAuxVarCompute.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
 
   end select
 
@@ -1761,7 +1761,7 @@ subroutine HydrateAccumulation(gen_auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   PetscReal :: soil_heat_capacity
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(option%nflowdof)
   PetscReal :: Jac(option%nflowdof,option%nflowdof)
   PetscBool :: analytical_derivatives
@@ -1837,7 +1837,7 @@ subroutine HydrateAuxVarPerturb(gen_auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   type(general_auxvar_type) :: gen_auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
@@ -2242,7 +2242,7 @@ subroutine HydratePE(T,sat, PE, characteristic_curves, option)
   PetscReal, intent(out) :: PE
 
   class(characteristic_curves_type) :: characteristic_curves
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: T_temp, dTf
 
@@ -2425,7 +2425,7 @@ subroutine GibbsThomsonFreezing(sat,Hf,rho,Tb,dTf,characteristic_curves,option)
   PetscReal, intent(in) :: Hf
   PetscReal, intent(in) :: rho
   PetscReal, intent(in) :: Tb
-  type(option_type) :: option
+  class(option_type) :: option
   class(characteristic_curves_type) :: characteristic_curves
   PetscReal, intent(out) :: dTf
 

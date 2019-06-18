@@ -169,11 +169,11 @@ subroutine PMNWTReadSimulationBlock(this,input)
   implicit none
   
   class(pm_nwt_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscBool :: found
 
   option => this%option
@@ -184,11 +184,11 @@ subroutine PMNWTReadSimulationBlock(this,input)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(keyword)
     
     found = PETSC_FALSE
@@ -200,17 +200,17 @@ subroutine PMNWTReadSimulationBlock(this,input)
         option%transport%nw_transport_coupling = GLOBAL_IMPLICIT
       case('OPERATOR_SPLIT','OPERATOR_SPLITTING')
       case('MAX_VOLUME_FRACTION_CHANGE')
-        call InputReadDouble(input,option,this%controls%volfrac_change_governor)
-        call InputErrorMsg(input,option,'MAX_VOLUME_FRACTION_CHANGE', &
+        call input%ReadDouble(option,this%controls%volfrac_change_governor)
+        call input%ErrorMsg(option,'MAX_VOLUME_FRACTION_CHANGE', &
                            'NUCLEAR_WASTE_TRANSPORT OPTIONS')
       case('ITOL_RELATIVE_UPDATE')
-        call InputReadDouble(input,option,nwt_itol_rel_update)
-        call InputErrorMsg(input,option,'ITOL_RELATIVE_UPDATE', &
+        call input%ReadDouble(option,nwt_itol_rel_update)
+        call input%ErrorMsg(option,'ITOL_RELATIVE_UPDATE', &
                            'NUCLEAR_WASTE_TRANSPORT OPTIONS')
         this%controls%check_post_convergence = PETSC_TRUE
       case('MINIMUM_SATURATION')
-        call InputReadDouble(input,option,nwt_min_saturation)
-        call InputErrorMsg(input,option,'MINIMUM_SATURATION', &
+        call input%ReadDouble(option,nwt_min_saturation)
+        call input%ErrorMsg(option,'MINIMUM_SATURATION', &
                            'NUCLEAR_WASTE_TRANSPORT OPTIONS')
       case('NUMERICAL_JACOBIAN')
         option%transport%numerical_derivatives = PETSC_TRUE
@@ -218,8 +218,8 @@ subroutine PMNWTReadSimulationBlock(this,input)
       case('TEMPERATURE_DEPENDENT_DIFFUSION')
         this%params%temperature_dependent_diffusion = PETSC_TRUE
       case('MAX_CFL')
-        call InputReadDouble(input,option,this%controls%cfl_governor)
-        call InputErrorMsg(input,option,'MAX_CFL', &
+        call input%ReadDouble(option,this%controls%cfl_governor)
+        call input%ErrorMsg(option,'MAX_CFL', &
                            'NUCLEAR_WASTE_TRANSPORT OPTIONS')
       case('MULTIPLE_CONTINUUM')
         option%use_mc = PETSC_TRUE          
@@ -733,7 +733,7 @@ subroutine PMNWTCheckUpdatePre(this,line_search,X,dX,changed,ierr)
             'LOG_FORMULATION keyword or TRUNCATE_CONCENTRATION <float> in &
             &the NUCLEAR_WASTE_TRANSPORT block).'
           this%realization%option%io_buffer = string
-          call PrintErrMsgToDev(this%realization%option, 'send your input &
+          call this%realization%option%PrintErrMsgToDev('send your input &
                                 &deck if that does not work')
         endif
         ! scale by 0.99 to make the update slightly smaller than the min_ratio
@@ -778,7 +778,7 @@ subroutine PMNWTCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   PetscErrorCode :: ierr
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch  
   PetscReal, pointer :: C0_p(:)
@@ -926,7 +926,7 @@ subroutine PMNWTTimeCut(this)
   
   class(realization_subsurface_type), pointer :: realization
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscErrorCode :: ierr
 
   realization => this%realization
@@ -966,7 +966,7 @@ subroutine PMNWTSetPlotVariables(list,nw_trans,option,time_unit)
   
   type(output_variable_list_type), pointer :: list
   type(nw_trans_realization_type), pointer :: nw_trans
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXWORDLENGTH) :: time_unit
   
   character(len=MAXWORDLENGTH) :: name,  units

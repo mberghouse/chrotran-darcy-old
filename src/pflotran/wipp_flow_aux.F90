@@ -163,7 +163,7 @@ function WIPPFloAuxCreate(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
     
   type(wippflo_type), pointer :: WIPPFloAuxCreate
   
@@ -209,7 +209,7 @@ subroutine WIPPFloAuxVarInit(auxvar,option)
   implicit none
   
   type(wippflo_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar%temp = 0.d0
   auxvar%effective_porosity = 0.d0
@@ -247,7 +247,7 @@ subroutine WIPPFloAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(wippflo_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%pres = auxvar%pres
   auxvar2%temp = auxvar%temp
@@ -292,7 +292,7 @@ subroutine WIPPFloAuxVarCompute(x,wippflo_auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   class(characteristic_curves_type) :: characteristic_curves
   PetscReal :: x(option%nflowdof)
   type(wippflo_auxvar_type) :: wippflo_auxvar
@@ -525,7 +525,7 @@ subroutine WIPPFloAuxVarPerturb(wippflo_auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: natural_id
   type(wippflo_auxvar_type) :: wippflo_auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
@@ -655,7 +655,7 @@ subroutine WIPPFloPrintAuxVars(wippflo_auxvar,global_auxvar,material_auxvar, &
   class(material_auxvar_type) :: material_auxvar
   PetscInt :: natural_id
   character(len=*) :: string
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: cpid, spid
   PetscInt :: gid, lid
@@ -731,7 +731,7 @@ subroutine WIPPFloOutputAuxVars1(wippflo_auxvar,global_auxvar,material_auxvar, &
   PetscInt :: natural_id
   character(len=*) :: string
   PetscBool :: append
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string2
   PetscInt :: cpid, spid
@@ -826,7 +826,7 @@ subroutine WIPPFloOutputAuxVars2(wippflo_auxvars,global_auxvars,option)
 
   type(wippflo_auxvar_type) :: wippflo_auxvars(0:,:)
   type(global_auxvar_type) :: global_auxvars(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: cpid, spid
@@ -993,7 +993,7 @@ subroutine WIPPFloConvertUnitsToBRAGFloRes(Res,material_auxvar,option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(option%nflowdof)
   class(material_auxvar_type) :: material_auxvar
 
@@ -1018,7 +1018,7 @@ subroutine WIPPFloConvertUnitsToBRAGFloJac(Jac,material_auxvar,option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Jac(option%nflowdof,option%nflowdof)
   class(material_auxvar_type) :: material_auxvar
 

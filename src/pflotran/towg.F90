@@ -85,7 +85,7 @@ module TOWG_module
       type(global_auxvar_type) :: global_auxvar
       class(material_auxvar_type) :: material_auxvar
       PetscReal :: soil_heat_capacity
-      type(option_type) :: option
+      class(option_type) :: option
       PetscReal :: Res(option%nflowdof) 
       PetscBool :: debug_cell
       PetscReal :: j(1:option%nflowspec,1:option%nflowdof) 
@@ -121,7 +121,7 @@ module TOWG_module
       class(auxvar_towg_type) :: auxvar_up, auxvar_dn
       type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
       class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-      type(option_type) :: option
+      class(option_type) :: option
       PetscReal :: sir_up(:), sir_dn(:)
       PetscReal :: v_darcy(option%nphase)
       PetscReal :: area
@@ -153,7 +153,7 @@ module TOWG_module
       class(auxvar_towg_type) :: auxvar_up, auxvar_dn
       type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
       class(material_auxvar_type) :: material_auxvar_dn
-      type(option_type) :: option
+      class(option_type) :: option
       PetscReal :: sir_dn(:)
       PetscReal :: bc_auxvars(:)
       PetscReal :: v_darcy(option%nphase), area
@@ -176,7 +176,7 @@ module TOWG_module
       use Global_Aux_module
       use Condition_module  
       implicit none
-      type(option_type) :: option
+      class(option_type) :: option
       type(flow_towg_condition_type), pointer :: src_sink_condition
       class(auxvar_towg_type) :: auxvar
       type(global_auxvar_type) :: global_auxvar
@@ -254,7 +254,7 @@ function checkBlackOilCIP(iphase,icomp,is_oil_in_oil,is_gas_in_oil,option)
   PetscInt,  intent(in )       :: iphase
   PetscInt,  intent(in )       :: icomp
   PetscBool, intent(out)       :: is_oil_in_oil,is_gas_in_oil
-  type(option_type),intent(in) :: option
+  class(option_type),intent(in) :: option
   PetscBool                    :: componentInPhase
 
 !  Default return values
@@ -303,7 +303,7 @@ subroutine TOWGSetup(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -373,17 +373,17 @@ subroutine TOWGSetup(realization)
 
   if (minval(material_parameter%soil_residual_saturation(:,:)) < 0.d0) then
     option%io_buffer = 'Non-initialized soil residual saturation.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   if (minval(material_parameter%soil_heat_capacity(:)) < 0.d0) then
     option%io_buffer = 'Non-initialized soil heat capacity.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   if (minval(material_parameter%soil_thermal_conductivity(:,:)) < 0.d0) then
     option%io_buffer = 'Non-initialized soil thermal conductivity.'
-    call printMsg(option)
+    call option%PrintMsg()
     error_found = PETSC_TRUE
   endif
   
@@ -398,35 +398,35 @@ subroutine TOWGSetup(realization)
     if (material_auxvars(ghosted_id)%volume < 0.d0 .and. flag(1) == 0) then
       flag(1) = 1
       option%io_buffer = 'Non-initialized cell volume.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%porosity < 0.d0 .and. flag(2) == 0) then
       flag(2) = 1
       option%io_buffer = 'Non-initialized porosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%tortuosity < 0.d0 .and. flag(3) == 0) then
       flag(3) = 1
       option%io_buffer = 'Non-initialized tortuosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%soil_particle_density < 0.d0 .and. &
         flag(4) == 0) then
       flag(4) = 1
       option%io_buffer = 'Non-initialized soil particle density.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (minval(material_auxvars(ghosted_id)%permeability) < 0.d0 .and. &
         flag(5) == 0) then
       option%io_buffer = 'Non-initialized permeability.'
-      call printMsg(option)
+      call option%PrintMsg()
       flag(5) = 1
     endif
   enddo
 
   if (error_found .or. maxval(flag) > 0) then
     option%io_buffer = 'Material property errors found in TOWGSetup.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   num_bc_connection = &
@@ -455,7 +455,7 @@ subroutine TOWGSetup(realization)
   !    diffusion_coefficient(option%liquid_phase))) then
   !  option%io_buffer = &
   !    UninitializedMessage('Liquid phase diffusion coefficient','')
-  !  call printErrMsg(option)
+  !  call option%PrintErrMsg()
   !endif
   !
 
@@ -500,7 +500,7 @@ subroutine TOWGSetup(realization)
        end select
     case default
        option%io_buffer = 'TOWGSetup: mode not supported.'
-       call printErrMsg(option)
+       call option%PrintErrMsg()
   end select
 
 !------------------------------------------------------------------------------
@@ -516,7 +516,7 @@ subroutine TOWGSetup(realization)
        TOWGBCFlux => TOWGImsTLBOBCFlux
     case default
       option%io_buffer = 'TOWGSetup: mode not supported.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 #ifdef DEBUG_TOWG_FILEOUTPUT
@@ -629,7 +629,7 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
   type(realization_subsurface_type) :: realization
   PetscBool :: update_state
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -756,7 +756,7 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
                         option%io_buffer = 'TOWG Mixed FLOW_CONDITION "' // &
                           trim(boundary_condition%flow_condition%name) // &
                           '" needs oil pressure defined.'
-                        call printErrMsg(option)
+                        call option%PrintErrMsg()
                       endif
                     ! for oil saturation dof
                     case(TOWG_OIL_SATURATION_INDEX)
@@ -768,7 +768,7 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
                         !option%io_buffer = 'Mixed FLOW_CONDITION "' // &
                         !  trim(boundary_condition%flow_condition%name) // &
                         !  '" needs oil saturation defined.'
-                        !call printErrMsg(option)
+                        !call option%PrintErrMsg()
                       endif
                     case(TOWG_GAS_SATURATION_INDEX)
                       real_index = boundary_condition%flow_aux_mapping(variable)
@@ -779,7 +779,7 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
                         !option%io_buffer = 'Mixed FLOW_CONDITION "' // &
                         !  trim(boundary_condition%flow_condition%name) // &
                         !  '" needs gas saturation defined.'
-                        !call printErrMsg(option)
+                        !call option%PrintErrMsg()
                       endif
                     case(TOWG_TEMPERATURE_INDEX)
                       real_index = boundary_condition%flow_aux_mapping(variable)
@@ -789,13 +789,13 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
                         option%io_buffer = 'TOWG Mixed FLOW_CONDITION "' // &
                           trim(boundary_condition%flow_condition%name) // &
                           '" needs temperature defined.'
-                        call printErrMsg(option)
+                        call option%PrintErrMsg()
                       endif
                   end select
                 case(NEUMANN_BC)
                 case default
                   option%io_buffer = 'Unknown BC type in TOWGUpdateAuxVars().'
-                  call printErrMsg(option)
+                  call option%PrintErrMsg()
               end select
             enddo  
         end select
@@ -809,7 +809,7 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
           else
             option%io_buffer = 'Error setting up boundary ' // &
                                 'condition in TOWGUpdateAuxVars'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         enddo
       endif
@@ -895,7 +895,7 @@ subroutine TOWGUpdateSolution(realization)
   class(well_data_type), pointer :: well_data
   type(well_data_list_type),pointer :: well_data_list
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -967,7 +967,7 @@ subroutine TOWGTimeCut(realization)
   implicit none
   
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -1017,7 +1017,7 @@ subroutine TOWGZeroMassBalanceDelta(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -1058,7 +1058,7 @@ subroutine TOWGUpdateMassBalance(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -1114,7 +1114,7 @@ subroutine TOWGImsTLBOComputeMassBalance(realization,mass_balance)
   PetscReal :: mass_balance(realization%option%nflowspec, &
                             realization%option%nphase)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -1212,7 +1212,7 @@ subroutine TOWGImsTLMaxChange(realization,max_change_ivar,max_change_isubvar,&
   PetscReal :: max_saturation_change
   PetscReal :: max_temperature_change
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   PetscReal, pointer :: vec_ptr(:), vec_ptr2(:)
@@ -1308,7 +1308,7 @@ subroutine TOWGBOMaxChange(realization,max_change_ivar,max_change_isubvar,&
   PetscReal :: max_saturation_change
   PetscReal :: max_temperature_change
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   PetscReal, pointer :: vec_ptr(:), vec_ptr2(:)
@@ -1448,7 +1448,7 @@ subroutine TOWGTL4PMaxChange(realization,max_change_ivar,max_change_isubvar,&
   PetscReal :: max_saturation_change
   PetscReal :: max_temperature_change
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   PetscReal, pointer :: vec_ptr(:), vec_ptr2(:)
@@ -1580,7 +1580,7 @@ subroutine TOWGMapBCAuxVarsToGlobal(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_type), pointer :: cur_connection_set
@@ -1746,7 +1746,7 @@ subroutine TOWGUpdateFixedAccum(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1851,7 +1851,7 @@ subroutine TOWGImsTLBOAccumulation(auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   PetscReal :: soil_heat_capacity
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(option%nflowdof) 
   PetscBool :: debug_cell
   
@@ -2040,7 +2040,7 @@ subroutine TOWGImsTLBOFlux(auxvar_up,global_auxvar_up, &
   class(auxvar_towg_type) :: auxvar_up, auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up(:), sir_dn(:)
   PetscReal :: v_darcy(option%nphase)
   PetscReal :: area
@@ -2115,7 +2115,7 @@ subroutine TOWGImsTLBOFlux(auxvar_up,global_auxvar_up, &
       ! something has gone horribly wrong here
       option%io_buffer = 'TOWGImsTLBOFlux: analytical derivatives mode is ON but &
                           intermediate workers are not allocated.'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
     endif
   endif
 #endif
@@ -2642,7 +2642,7 @@ subroutine TOWGImsTLBOBCFlux(ibndtype,bc_auxvar_mapping,bc_auxvars, &
   class(auxvar_towg_type) :: auxvar_up, auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn(:)
   PetscReal :: bc_auxvars(:) ! from aux_real_var array
   PetscReal :: v_darcy(option%nphase), area
@@ -2792,7 +2792,7 @@ subroutine TOWGImsTLBOBCFlux(ibndtype,bc_auxvar_mapping,bc_auxvars, &
 
 ! The values at TOWG_LIQ_CONDUCTANCE_INDEX etc are not actually set
          option%io_buffer = 'Boundary conductances are not available'
-         call printErrMsg(option)
+         call option%PrintErrMsg()
 
           select case(option%phase_map(iphase)) 
             case(LIQUID_PHASE)
@@ -3005,7 +3005,7 @@ subroutine TOWGImsTLBOBCFlux(ibndtype,bc_auxvar_mapping,bc_auxvars, &
       case default
         option%io_buffer = &
          'Boundary condition type not recognized in TOWGImsTLBOBCFlux phase loop'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
     if (dabs(v_darcy(iphase)) > 0.d0 .OR. analytical_derivatives) then   !!!!! CHECK - need exception for aderivs here too?  -YES
@@ -3016,7 +3016,7 @@ subroutine TOWGImsTLBOBCFlux(ibndtype,bc_auxvar_mapping,bc_auxvars, &
       endif
       if (density_ave < 1.d-40) then
         option%io_buffer = 'Zero density in TOWGImsTLBOBCFlux()'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       endif
       ! mole_flux[kmol phase/sec] = q[m^3 phase/sec] * 
       !                              density_ave[kmol phase/m^3 phase]
@@ -3170,7 +3170,7 @@ subroutine TOWGImsTLBOBCFlux(ibndtype,bc_auxvar_mapping,bc_auxvars, &
     case default
       option%io_buffer = 'Boundary condition type not recognized in ' // &
         'TOWGImsTLBOBCFlux heat conduction loop.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   Res(energy_id) = Res(energy_id) + heat_flux ! MW
 ! CONDUCTION
@@ -3230,7 +3230,7 @@ subroutine TOWGImsTLSrcSink(option,src_sink_condition, auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(flow_towg_condition_type), pointer :: src_sink_condition
   class(auxvar_towg_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar !keep global_auxvar for salinity
@@ -3265,7 +3265,7 @@ subroutine TOWGImsTLSrcSink(option,src_sink_condition, auxvar, &
 #if 0
   if (analytical_derivatives) then
     option%io_buffer = 'TOWGImsTLSrcSink: analytical derivatives are not yet available.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 #endif
 
@@ -3286,7 +3286,7 @@ subroutine TOWGImsTLSrcSink(option,src_sink_condition, auxvar, &
   if (.not.associated(src_sink_condition%rate) ) then
     option%io_buffer = 'TOWGImsTLSrcSink fow condition rate not defined ' // &
     'rate is needed for a valid src/sink term'
-    call printErrMsg(option)  
+    call option%PrintErrMsg()
   end if
 
   qsrc => src_sink_condition%rate%dataset%rarray
@@ -3307,7 +3307,7 @@ subroutine TOWGImsTLSrcSink(option,src_sink_condition, auxvar, &
   !   ) then
   !   option%io_buffer = "TOilImsSrcSink error: " // &
   !     "src(wat) and src(oil) with opposite sign"
-  !   call printErrMsg(option)
+  !   call option%PrintErrMsg()
   ! end if
 
   ! if not given, approximates BHP with pressure of perforated cell
@@ -3627,7 +3627,7 @@ subroutine TOWGBOSrcSink(option,src_sink_condition, auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(flow_towg_condition_type), pointer :: src_sink_condition
   class(auxvar_towg_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar !keep global_auxvar for salinity
@@ -3691,7 +3691,7 @@ subroutine TOWGBOSrcSink(option,src_sink_condition, auxvar, &
   if (.not.associated(src_sink_condition%rate) ) then
     option%io_buffer = 'TOWGBOSrcSink flow condition rate not defined ' // &
     'rate is needed for a valid src/sink term'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   qsrc => src_sink_condition%rate%dataset%rarray
@@ -4258,7 +4258,7 @@ subroutine TOWGAccumDerivative(auxvar,global_auxvar,material_auxvar, &
   type(auxvar_towg_type) :: auxvar(0:)
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: soil_heat_capacity
   PetscReal :: J(option%nflowdof,option%nflowdof)
 
@@ -4378,7 +4378,7 @@ subroutine TOWGFluxDerivative(auxvar_up,global_auxvar_up, &
   type(auxvar_towg_type) :: auxvar_up(0:), auxvar_dn(0:)
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up(:), sir_dn(:)
   PetscReal :: thermal_conductivity_dn(2)
   PetscReal :: thermal_conductivity_up(2)
@@ -4595,7 +4595,7 @@ subroutine TOWGBCFluxDerivative(ibndtype,bc_auxvar_mapping,bc_auxvars, &
   type(auxvar_towg_type) :: auxvar_up, auxvar_dn(0:)
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
   class(material_auxvar_type) :: material_auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_dn(:)
   PetscReal :: area
   PetscReal :: dist(-1:3)
@@ -4721,7 +4721,7 @@ subroutine TOWGSrcSinkDerivative(option,src_sink_condition,auxvars, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(flow_towg_condition_type), pointer :: src_sink_condition
   type(auxvar_towg_type) :: auxvars(0:)
   type(global_auxvar_type) :: global_auxvar
@@ -4843,7 +4843,7 @@ subroutine TOWGResidual(snes,xx,r,realization,ierr)
   type(discretization_type), pointer :: discretization
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(coupler_type), pointer :: boundary_condition
   type(coupler_type), pointer :: source_sink
@@ -5313,7 +5313,7 @@ subroutine TOWGJacobian(snes,xx,A,B,realization,ierr)
   PetscInt, pointer :: zeros(:)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(material_parameter_type), pointer :: material_parameter
   class(pm_towg_aux_type), pointer :: towg
@@ -5648,13 +5648,13 @@ subroutine TOWGJacobian(snes,xx,A,B,realization,ierr)
     option => realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
   endif
 
 !  call MatView(J,PETSC_VIEWER_STDOUT_WORLD,ierr)
@@ -5707,7 +5707,7 @@ subroutine TOWGImsTLCheckUpdatePre(line_search,X,dX,changed,realization, &
   PetscReal, pointer :: X_p(:), dX_p(:)
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
 
@@ -5887,7 +5887,7 @@ subroutine TOWGBlackOilCheckUpdatePre(line_search,X,dX,changed,realization, &
   PetscReal, pointer :: X_p(:), dX_p(:)
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
 

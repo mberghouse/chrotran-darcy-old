@@ -51,7 +51,7 @@ subroutine ImmisTimeCut(realization)
   implicit none
   
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   
   PetscReal, pointer :: xx_p(:),yy_p(:)
@@ -119,7 +119,7 @@ subroutine ImmisSetupPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -139,7 +139,7 @@ subroutine ImmisSetupPatch(realization)
 !  option%io_buffer = 'Before Immis can be run, the thc_parameter object ' // &
 !                     'must be initialized with the proper variables ' // &
 !                     'ImmisAuxCreate() is called anyhwere.'
-!  call printErrMsg(option)
+!  call option%PrintErrMsg()
 ! print *,' ims setup get Aux', option%nphase, size(patch%saturation_function_array)     
 ! immis_parameters create *********************************************
 ! Sir
@@ -274,7 +274,7 @@ subroutine ImmisComputeMassBalancePatch(realization,mass_balance)
 ! PetscReal :: mass_balance(realization%option%nflowspec,realization%option%nphase)
   PetscReal :: mass_balance(realization%option%nflowspec,1)
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
@@ -333,7 +333,7 @@ subroutine ImmisZeroMassBalDeltaPatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -384,7 +384,7 @@ end subroutine ImmisZeroMassBalDeltaPatch
   
   PetscInt ::  ImmisInitGuessCheck
   type(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: cur_patch
   PetscInt :: ipass, ipass0
   PetscErrorCode :: ierr    
@@ -434,7 +434,7 @@ subroutine ImmisUpdateReasonPatch(reason,realization)
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   PetscReal, pointer :: xx_p(:), yy_p(:) 
   PetscInt :: n,n0,re
   PetscInt :: re0
@@ -463,7 +463,7 @@ subroutine ImmisUpdateReasonPatch(reason,realization)
 !     error message and let someone sort the use of option%dpmxe later
         option%io_buffer = 'option%dpmxe and option%dtmpmxe needs to be ' // &
           'refactored in ImmisUpdateReasonPatch'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
 !geh        if (dabs(xx_p(n0 + 1)- yy_p(n0 + 1))> (10.0D0 * option%dpmxe))then
            re=0; print *,'huge change in p', xx_p(n0 + 1), yy_p(n0 + 1)
            exit
@@ -560,7 +560,7 @@ end subroutine ImmisUpdateReason
     type(realization_subsurface_type) :: realization
     type(grid_type), pointer :: grid
     type(patch_type), pointer :: patch
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(field_type), pointer :: field
       
     PetscInt :: local_id, ghosted_id, ipass
@@ -654,7 +654,7 @@ subroutine ImmisUpdateAuxVarsPatch(realization)
 
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -905,7 +905,7 @@ subroutine ImmisUpdateMassBalancePatch(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -987,7 +987,7 @@ subroutine ImmisUpdateFixedAccumPatch(realization)
   
   type(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
@@ -1067,7 +1067,7 @@ subroutine ImmisAccumulation(auxvar,por,vol,rock_dencpr,option,iireac,Res)
   implicit none
 
   type(Immis_auxvar_elem_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal Res(1:option%nflowdof) 
   PetscReal vol,por,rock_dencpr
      
@@ -1125,7 +1125,7 @@ subroutine ImmisSourceSink(mmsrc,nsrcpara,psrc,tsrc,hsrc,auxvar,isrctype,Res, &
   implicit none
 
   type(Immis_auxvar_elem_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res(1:option%nflowdof) 
   PetscReal, pointer :: mmsrc(:)
 ! PetscReal :: mmsrc(option%nflowspec), psrc(option%nphase),tsrc,hsrc 
@@ -1182,7 +1182,7 @@ subroutine ImmisSourceSink(mmsrc,nsrcpara,psrc,tsrc,hsrc,auxvar,isrctype,Res, &
       endif  
     
       if (msrc(2) > 0.d0) then ! CO2 injection
-!       call printErrMsg(option,"concentration source not yet implemented in Immis")
+!       call option%PrintErrMsg("concentration source not yet implemented in Immis")
         if (option%co2eos == EOS_SPAN_WAGNER) then
          !  span-wagner
           rho = auxvar%den(jco2)*FMWCO2  
@@ -1216,7 +1216,7 @@ subroutine ImmisSourceSink(mmsrc,nsrcpara,psrc,tsrc,hsrc,auxvar,isrctype,Res, &
           qsrc_phase(2) = msrc(2)/auxvar%den(jco2)
           enth_src_co2 = enth_src_co2*FMWCO2*option%scale
       else
-         call printErrMsg(option,'pflow Immis ERROR: Need specify CO2 EOS')
+         call option%PrintErrMsg('pflow Immis ERROR: Need specify CO2 EOS')
       endif
               
       Res(jco2) = Res(jco2) + msrc(2)*option%flow_dt
@@ -1345,7 +1345,7 @@ subroutine ImmisFlux(auxvar_up,por_up,tor_up,sir_up,dd_up,perm_up,Dk_up, &
   implicit none
   
   type(Immis_auxvar_elem_type) :: auxvar_up, auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: sir_up(:), sir_dn(:)
   PetscReal :: por_up, por_dn
   PetscReal :: tor_up, tor_dn
@@ -1466,7 +1466,7 @@ subroutine ImmisBCFlux(ibndtype,auxvars,auxvar_up,auxvar_dn, &
   
   PetscInt :: ibndtype(:)
   type(Immis_auxvar_elem_type) :: auxvar_up, auxvar_dn
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: dd_up, sir_dn(:)
   PetscReal :: auxvars(:) ! from aux_real_var array
   PetscReal :: por_dn,perm_dn,Dk_dn,tor_dn
@@ -1630,7 +1630,7 @@ subroutine ImmisResidual(snes,xx,r,realization,ierr)
   PetscErrorCode :: ierr
   
   type(discretization_type), pointer :: discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(patch_type), pointer :: cur_patch
@@ -1732,7 +1732,7 @@ subroutine ImmisResidualPatch(snes,xx,r,realization,ierr)
 
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(immis_type), pointer :: immis
   type(Immis_parameter_type), pointer :: immis_parameter
@@ -2307,7 +2307,7 @@ subroutine ImmisJacobianPatch(snes,xx,A,B,realization,ierr)
            realization%option%nflowdof)
   type(grid_type), pointer :: grid
   type(patch_type), pointer :: patch
-  type(option_type), pointer :: option 
+  class(option_type), pointer :: option 
   type(field_type), pointer :: field 
   type(Immis_parameter_type), pointer :: immis_parameter
   type(Immis_auxvar_type), pointer :: auxvars(:), auxvars_bc(:)
@@ -2779,13 +2779,13 @@ subroutine ImmisJacobianPatch(snes,xx,A,B,realization,ierr)
   if (realization%debug%norm_Jacobian) then
     call MatNorm(A,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
     call MatNorm(A,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
     call MatNorm(A,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option)
+    call option%PrintMsg()
 !    call GridCreateVector(grid,ONEDOF,debug_vec,GLOBAL)
 !    call MatGetRowMaxAbs(A,debug_vec,PETSC_NULL_INTEGER,ierr)
 !    call VecMax(debug_vec,i,norm,ierr)
@@ -2812,7 +2812,7 @@ subroutine ImmisMaxChange(realization,dpmax,dtmpmax,dsmax)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   PetscReal :: dpmax, dtmpmax, dsmax
   PetscErrorCode :: ierr 
@@ -2858,7 +2858,7 @@ function ImmisGetTecplotHeader(realization, icolumn)
   PetscInt :: icolumn
   
   character(len=MAXSTRINGLENGTH) :: string, string2
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field  
   PetscInt :: i
   

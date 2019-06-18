@@ -31,7 +31,7 @@ subroutine InitSubsurfTranSetupRealization(realization)
   
   class(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   option => realization%option
   
@@ -63,7 +63,7 @@ subroutine InitNWTranSetupRealization(realization)
   
   class(realization_subsurface_type) :: realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   option => realization%option
   
@@ -94,7 +94,7 @@ subroutine InitFlowGlobalAuxVar(realization,option)
   implicit none
   
   class(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   ! initialize densities and saturations
   if (option%nflowdof == 0) then

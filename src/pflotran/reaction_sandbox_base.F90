@@ -42,7 +42,7 @@ module Reaction_Sandbox_Base_class
   
       class(reaction_sandbox_base_type) :: this
       type(reaction_type) :: reaction
-      type(option_type) :: option
+      class(option_type) :: option
   
     end subroutine Base_Setup 
 
@@ -56,8 +56,8 @@ module Reaction_Sandbox_Base_class
       implicit none
   
       class(reaction_sandbox_base_type) :: this
-      type(input_type), pointer :: input
-      type(option_type) :: option
+      class(input_type), pointer :: input
+      class(option_type) :: option
   
     end subroutine Base_Read 
     
@@ -71,8 +71,8 @@ module Reaction_Sandbox_Base_class
       implicit none
   
       class(reaction_sandbox_base_type) :: this
-      type(input_type), pointer :: input
-      type(option_type) :: option
+      class(input_type), pointer :: input
+      class(option_type) :: option
   
     end subroutine Base_SkipBlock 
     
@@ -90,7 +90,7 @@ module Reaction_Sandbox_Base_class
       implicit none
   
       class(reaction_sandbox_base_type) :: this
-      type(option_type) :: option
+      class(option_type) :: option
       type(reaction_type) :: reaction
       PetscBool :: compute_derivative
       ! the following arrays must be declared after reaction
@@ -129,7 +129,7 @@ contains
   
     class(reaction_sandbox_base_type) :: this
     type(reaction_type) :: reaction
-    type(option_type) :: option
+    class(option_type) :: option
   
   end subroutine Base_Setup 
 
@@ -143,8 +143,8 @@ contains
     implicit none
   
     class(reaction_sandbox_base_type) :: this
-    type(input_type), pointer :: input
-    type(option_type) :: option
+    class(input_type), pointer :: input
+    class(option_type) :: option
   
   end subroutine Base_Read
 
@@ -158,8 +158,8 @@ contains
     implicit none
   
     class(reaction_sandbox_base_type) :: this
-    type(input_type), pointer :: input
-    type(option_type) :: option
+    class(input_type), pointer :: input
+    class(option_type) :: option
   
   end subroutine Base_SkipBlock   
 
@@ -175,7 +175,7 @@ contains
   
     class(reaction_sandbox_base_type) :: this
     type(output_variable_list_type), pointer :: list
-    type(option_type) :: option
+    class(option_type) :: option
     type(reaction_type) :: reaction
   
   end subroutine Base_AuxiliaryPlotVariables
@@ -193,7 +193,7 @@ contains
     implicit none
   
     class(reaction_sandbox_base_type) :: this
-    type(option_type) :: option
+    class(option_type) :: option
     type(reaction_type) :: reaction
     PetscBool :: compute_derivative
     ! the following arrays must be declared after reaction
@@ -218,7 +218,7 @@ contains
     implicit none
   
     class(reaction_sandbox_base_type) :: this
-    type(option_type) :: option
+    class(option_type) :: option
     type(reaction_type) :: reaction
     type(reactive_transport_auxvar_type) :: rt_auxvar
     type(global_auxvar_type) :: global_auxvar

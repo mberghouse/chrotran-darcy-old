@@ -181,8 +181,8 @@ subroutine StrataRead(strata,input,option)
   implicit none
   
   type(strata_type) :: strata
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: string
@@ -197,39 +197,39 @@ subroutine StrataRead(strata,input,option)
     
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','STRATA')   
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','STRATA')
       
     select case(trim(keyword))
     
       case('FILE')
-        call InputReadFilename(input,option,strata%material_property_filename)
-        call InputErrorMsg(input,option,'material property filename','STRATA')
+        call input%ReadFilename(option,strata%material_property_filename)
+        call input%ErrorMsg(option,'material property filename','STRATA')
       case('REGION','SURF_REGION')
-        call InputReadWord(input,option,strata%region_name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'region name','STRATA')
+        call input%ReadWord(option,strata%region_name,PETSC_TRUE)
+        call input%ErrorMsg(option,'region name','STRATA')
       case('MATERIAL')
-        call InputReadWord(input,option,strata%material_property_name, &
+        call input%ReadWord(option,strata%material_property_name, &
                            PETSC_TRUE)
-        call InputErrorMsg(input,option,'material property name','STRATA')
+        call input%ErrorMsg(option,'material property name','STRATA')
       case('REALIZATION_DEPENDENT')
         strata%realization_dependent = PETSC_TRUE
       case('START_TIME')
-        call InputReadDouble(input,option,strata%start_time)
-        call InputErrorMsg(input,option,'start time','STRATA')
+        call input%ReadDouble(option,strata%start_time)
+        call input%ErrorMsg(option,'start time','STRATA')
         ! read units, if present
         internal_units = 'sec'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           strata%start_time = strata%start_time * &
                               UnitsConvertToInternal(word,internal_units,option)
         endif
       case('FINAL_TIME')
-        call InputReadDouble(input,option,strata%final_time)
-        call InputErrorMsg(input,option,'final time','STRATA')
+        call input%ReadDouble(option,strata%final_time)
+        call input%ErrorMsg(option,'final time','STRATA')
         ! read units, if present
         internal_units = 'sec'
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           strata%final_time = strata%final_time * &
                               UnitsConvertToInternal(word,internal_units,option)
@@ -248,7 +248,7 @@ subroutine StrataRead(strata,input,option)
       trim(strata%material_property_name) // '" must have an associated &
       &REGION in the STRATA block.  Otherwise, please use "FILE <filename>" &
       &to read material IDs from a file.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   if ((Initialized(strata%start_time) .and. &
@@ -258,7 +258,7 @@ subroutine StrataRead(strata,input,option)
     option%io_buffer = &
       'Both START_TIME and FINAL_TIME must be set for STRATA with region "' // &
       trim(strata%region_name) // '".'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   if (Initialized(strata%start_time)) then
     option%flow%transient_porosity = PETSC_TRUE

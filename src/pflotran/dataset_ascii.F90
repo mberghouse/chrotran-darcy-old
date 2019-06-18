@@ -120,9 +120,9 @@ subroutine DatasetAsciiReadFile(this,filename,data_external_units, &
   character(len=*) :: data_external_units
   character(len=*) :: data_internal_units
   character(len=*) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   input => InputCreate(IUNIT_TEMP,filename,option)
   call DatasetAsciiReadList(this,input,data_external_units, &
@@ -152,11 +152,11 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
   implicit none
   
   class(dataset_ascii_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=*) :: data_external_units
   character(len=*) :: data_internal_units
   character(len=*) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: time_units
   character(len=MAXSTRINGLENGTH) :: string, data_units
@@ -186,19 +186,19 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
   do
     call InputReadPflotranString(input,option)
     ! reach the end of file or close out block
-    if (InputError(input)) exit  ! check for end of file
+    if (input%Error()) exit  ! check for end of file
     if (InputCheckExit(input,option)) exit  ! check for end of list
     ! check for units on first or second line
     if (row_count == 0) then
       string = input%buf
       ierr = 0
       call InputReadWord(string,word,PETSC_TRUE,ierr)
-      call InputErrorMsg(input,option,'KEYWORD',error_string)
+      call input%ErrorMsg(option,'KEYWORD',error_string)
       call StringToUpper(word)
       select case(word)
         case('HEADER')
           call InputReadWord(string,word,PETSC_TRUE,ierr)
-          call InputErrorMsg(input,option,'HEADER',error_string)
+          call input%ErrorMsg(option,'HEADER',error_string)
           this%header = trim(input%buf)
           cycle
         case('CYCLIC')
@@ -207,12 +207,12 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
         case('TIME_UNITS')
           call InputReadWord(string,time_units,PETSC_TRUE,ierr)
           input%ierr = ierr
-          call InputErrorMsg(input,option,'TIME_UNITS',error_string)
+          call input%ErrorMsg(option,'TIME_UNITS',error_string)
           cycle
         case('INTERPOLATION')
           call InputReadWord(string,word,PETSC_TRUE,ierr)
           input%ierr = ierr
-          call InputErrorMsg(input,option,'INTERPOLATION',error_string)   
+          call input%ErrorMsg(option,'INTERPOLATION',error_string)
           call StringToUpper(word)
           select case(word)
             case('STEP')
@@ -229,7 +229,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
           ! entire string
           data_units = adjustl(string)
           if (len_trim(data_units) < 1) then
-            call InputErrorMsg(input,option,'DATA_UNITS',error_string)
+            call input%ErrorMsg(option,'DATA_UNITS',error_string)
           endif
           cycle
         case default
@@ -254,8 +254,8 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
     
     ! read columns of data, including the time in the first column
     do i = 1, column_count
-      call InputReadDouble(input,option,temp_array(i,row_count))
-      call InputErrorMsg(input,option,'column data','ascii dataset file') 
+      call input%ReadDouble(option,temp_array(i,row_count))
+      call input%ErrorMsg(option,'column data','ascii dataset file')
     enddo
     
     ! enlarge the array as needed.
@@ -266,7 +266,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
   
   if (row_count == 0) then
     option%io_buffer = 'No values provided in Ascii Dataset.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else if (row_count == 1) then
     default_interpolation_method = INTERPOLATION_STEP
   endif
@@ -309,7 +309,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
         ierr = 0
         call InputReadWord(data_units,word,PETSC_TRUE,ierr)
         input%ierr = ierr
-        call InputErrorMsg(input,option,'DATA_UNITS',error_string)
+        call input%ErrorMsg(option,'DATA_UNITS',error_string)
         internal_units = trim(internal_data_units_strings( &
                            min(i,size(internal_data_units_strings))))
         conversion = UnitsConvertToInternal(word,internal_units,option)
@@ -317,7 +317,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
       temp_array(i+1,:) = conversion * temp_array(i+1,:)
     enddo
   else
-    call InputCheckMandatoryUnits(input,option)
+    call input%CheckMandatoryUnits(option)
   endif
 
   ! now that the data units conversion has taken place with temp_array, copy
@@ -339,7 +339,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
         trim(word) // ') and rank in file ('
       write(word,*) data_count
       option%io_buffer = trim(option%io_buffer) // trim(word) // ').'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   else
     this%array_width = data_count
@@ -350,7 +350,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
     write(word,*) size(internal_data_units_strings)
     option%io_buffer = 'Incorrect internal data units (' // &
       trim(adjustl(word)) // '): ' // error_string
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   deallocate(internal_data_units_strings)
@@ -381,11 +381,11 @@ subroutine DatasetAsciiReadSingle(this,input,data_external_units, &
   implicit none
   
   class(dataset_ascii_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len=*) :: data_external_units
   character(len=*) :: data_internal_units
   character(len=*) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word, internal_units
@@ -401,25 +401,25 @@ subroutine DatasetAsciiReadSingle(this,input,data_external_units, &
   ! read data
   allocate(this%rarray(this%array_width))
   do icol=1,this%array_width
-    call InputReadDouble(input,option,this%rarray(icol))
+    call input%ReadDouble(option,this%rarray(icol))
     write(input%err_buf,'(a,i2)') 'DatasetAsciiReadSingle: &
                                   & dataset_values, icol = ', icol
     input%err_buf2 = error_string
-    call InputErrorMsg(input,option)
+    call input%ErrorMsg(option)
   enddo
 
   ! read units
   if (len_trim(input%buf) == 0) then
-    call InputCheckMandatoryUnits(input,option)
+    call input%CheckMandatoryUnits(option)
     word = trim(error_string) // ' UNITS'
-    call InputDefaultMsg(input,option,word)
+    call input%DefaultMsg(option,word)
   else
     string = adjustl(input%buf) ! remove leading blanks
     external_data_units_strings => StringSplit(string,' ')
     do icol=1,this%array_width
       if (icol == 1 .or. size(external_data_units_strings) > 1) then
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'units',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'units',error_string)
       endif
       internal_units = trim(internal_data_units_strings( &
                             min(icol,size(internal_data_units_strings))))
@@ -434,7 +434,7 @@ subroutine DatasetAsciiReadSingle(this,input,data_external_units, &
     write(word,*) size(internal_data_units_strings)
     option%io_buffer = 'Incorrect internal data units (' // &
       trim(adjustl(word)) // '): ' // error_string
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   deallocate(internal_data_units_strings)
@@ -461,7 +461,7 @@ subroutine DatasetAsciiUpdate(this,option)
   implicit none
   
   class(dataset_ascii_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   if (.not. associated(this%time_storage)) return
   
@@ -487,7 +487,7 @@ subroutine DatasetAsciiVerify(this,dataset_error,option)
   
   class(dataset_ascii_type) :: this
   PetscBool :: dataset_error
-  type(option_type) :: option
+  class(option_type) :: option
 
   call DatasetBaseVerify(this,dataset_error,option)
   if (StringCompare(this%name,'Unnamed Dataset')) then
@@ -497,7 +497,7 @@ subroutine DatasetAsciiVerify(this,dataset_error,option)
     if (this%array_width /= this%dims(1)) then
       option%io_buffer = &
         '"array_width" is not equal to "dims(1)"'
-      call printMsg(option)
+      call option%PrintMsg()
       dataset_error = PETSC_TRUE
     endif
     ! set initial values
@@ -521,7 +521,7 @@ subroutine DatasetAsciiPrint(this,option)
   implicit none
   
   class(dataset_ascii_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   write(option%fid_out,'(10x,''Array Rank: '',i2)') this%array_width
   

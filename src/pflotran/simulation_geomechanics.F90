@@ -55,7 +55,7 @@ function GeomechanicsSimulationCreate(option)
 
   implicit none
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   class(simulation_geomechanics_type), pointer :: GeomechanicsSimulationCreate
 
@@ -82,7 +82,7 @@ subroutine GeomechanicsSimulationInit(this, option)
   implicit none
 
   class(simulation_geomechanics_type) :: this
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   call SubsurfaceSimulationInit(this, option)
   nullify(this%geomech_realization)
@@ -108,11 +108,11 @@ subroutine GeomechanicsSimulationInitializeRun(this)
 
   class(simulation_geomechanics_type) :: this
 
-  call printMsg(this%option,'Simulation%InitializeRun()')
+  call this%option%PrintMsg('Simulation%InitializeRun()')
   call this%process_model_coupler_list%InitializeRun()
 
   if (this%option%restart_flag) then
-    call printErrMsg(this%option,'add code for restart of GeomechanicsSimulation')
+    call this%option%PrintErrMsg('add code for restart of GeomechanicsSimulation')
   endif
 
 end subroutine GeomechanicsSimulationInitializeRun
@@ -170,7 +170,7 @@ subroutine GeomechanicsSimulationExecuteRun(this)
 
   final_time = SimulationGetFinalWaypointTime(this)
 
-  call printMsg(this%option,'GeomechanicsSimulationExecuteRun()')
+  call this%option%PrintMsg('GeomechanicsSimulationExecuteRun()')
 
   if (.not.associated(this%geomech_realization)) then
     call this%RunToTime(final_time)
@@ -181,7 +181,7 @@ subroutine GeomechanicsSimulationExecuteRun(this)
     ! dt_coupling to be dt_max
     if (Equal(this%geomech_realization%dt_coupling,0.d0)) then
       this%option%io_buffer = 'Set non-zero COUPLING_TIME_SIZE in GEOMECHANICS_TIME.'
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
     else
       do
         if (time + this%geomech_realization%dt_coupling > final_time) then
@@ -221,7 +221,7 @@ subroutine GeomechanicsSimulationFinalizeRun(this)
   class(simulation_geomechanics_type) :: this
   class(timestepper_steady_type), pointer :: geomech_timestepper
 
-  call printMsg(this%option,'GeomechanicsSimulationFinalizeRun')
+  call this%option%PrintMsg('GeomechanicsSimulationFinalizeRun')
 
   call SubsurfaceFinalizeRun(this)
   !call GeomechanicsFinalizeRun(this)
@@ -254,7 +254,7 @@ subroutine GeomechanicsSimulationStrip(this)
   
   class(simulation_geomechanics_type) :: this
   
-  call printMsg(this%option,'GeomechanicsSimulationStrip()')
+  call this%option%PrintMsg('GeomechanicsSimulationStrip()')
   
   call SubsurfaceSimulationStrip(this)
   call GeomechanicsRegressionDestroy(this%geomech_regression)
@@ -277,7 +277,7 @@ subroutine GeomechanicsSimulationDestroy(simulation)
   
   class(simulation_geomechanics_type), pointer :: simulation
   
-  call printMsg(simulation%option,'GeomehanicsSimulationDestroy()')
+  call simulation%option%PrintMsg('GeomehanicsSimulationDestroy()')
   
   if (.not.associated(simulation)) return
   

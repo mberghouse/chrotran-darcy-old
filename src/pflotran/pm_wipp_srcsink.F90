@@ -801,7 +801,7 @@ subroutine PMWSSAssociateRegion(this,region_list)
 ! -----------------------------------------------------
   type(region_type), pointer :: cur_region
   class(srcsink_panel_type), pointer :: cur_waste_panel
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 ! -----------------------------------------------------
   
   option => this%option
@@ -821,7 +821,7 @@ subroutine PMWSSAssociateRegion(this,region_list)
       if (.not.associated(cur_waste_panel%region)) then
         option%io_buffer = 'WASTE_PANEL REGION ' // &
                            trim(cur_waste_panel%region_name) // ' not found.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       allocate(cur_waste_panel%calculate_chemistry(cur_waste_panel%region% &
                                                      num_cells))
@@ -861,7 +861,7 @@ subroutine PMWSSAssociateInventory(this)
 ! -----------------------------------------------------
   type(pre_inventory_type), pointer :: cur_preinventory
   class(srcsink_panel_type), pointer :: cur_waste_panel
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 ! -----------------------------------------------------
   
   option => this%option
@@ -882,7 +882,7 @@ subroutine PMWSSAssociateInventory(this)
     if (.not.associated(cur_waste_panel%inventory%preinventory)) then
       option%io_buffer = 'WASTE_PANEL INVENTORY ' // &
                          trim(cur_waste_panel%inventory_name) // ' not found.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     if (cur_waste_panel%scale_by_volume .and. &
         Uninitialized(cur_waste_panel%inventory%preinventory%vrepos)) then
@@ -890,7 +890,7 @@ subroutine PMWSSAssociateInventory(this)
                         // ' indicated SCALE_BY VOLUME = YES, but keyword &
                         &VREPOS was not given in INVENTORY ' // &
                         trim(cur_waste_panel%inventory%preinventory%name) // '.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     cur_waste_panel => cur_waste_panel%next
   enddo
@@ -1015,7 +1015,7 @@ subroutine PMWSSRead(this,input)
 ! input (input/output): pointer to input object
 ! -----------------------------------
   class(pm_wipp_srcsink_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 ! -----------------------------------
   
 ! LOCAL VARIABLES:
@@ -1033,7 +1033,7 @@ subroutine PMWSSRead(this,input)
 ! spec_num: [-] looping index integer for the species number
 ! added: temporary Boolean
 ! ----------------------------------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXWORDLENGTH) :: word, word2
   PetscReal :: double
   character(len=MAXSTRINGLENGTH) :: error_string, error_string2, error_string3
@@ -1052,15 +1052,15 @@ subroutine PMWSSRead(this,input)
   bh_materials = ''
   input%ierr = 0
   option%io_buffer = 'pflotran card:: WIPP_SOURCE_SINK'
-  call printMsg(option)
+  call option%PrintMsg()
   
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     num_errors = 0
     error_string = 'WIPP_SOURCE_SINK'
 
@@ -1072,69 +1072,69 @@ subroutine PMWSSRead(this,input)
     select case(trim(word))
     !-----------------------------------------
       case('ALPHARXN')
-        call InputReadDouble(input,option,this%alpharxn)
-        call InputErrorMsg(input,option,'ALPHARXN',error_string)
+        call input%ReadDouble(option,this%alpharxn)
+        call input%ErrorMsg(option,'ALPHARXN',error_string)
       case('SOCMIN')
-        call InputReadDouble(input,option,this%smin)
-        call InputErrorMsg(input,option,'SOCMIN',error_string)
+        call input%ReadDouble(option,this%smin)
+        call input%ErrorMsg(option,'SOCMIN',error_string)
       case('SALT_PERCENT')
-        call InputReadDouble(input,option,this%salt_wtpercent)
-        call InputErrorMsg(input,option,'salt weight percent &
+        call input%ReadDouble(option,this%salt_wtpercent)
+        call input%ErrorMsg(option,'salt weight percent &
                            &(SALT_PERCENT)',error_string)
       case('SAT_WICK')
-        call InputReadDouble(input,option,this%satwick)
-        call InputErrorMsg(input,option,'wicking saturation parameter &
+        call input%ReadDouble(option,this%satwick)
+        call input%ErrorMsg(option,'wicking saturation parameter &
                            &(SAT_WICK)',error_string)
       case('CORRMCO2')
-        call InputReadDouble(input,option,this%corrmco2)
-        call InputErrorMsg(input,option,'inundated steel corrosion rate &
+        call input%ReadDouble(option,this%corrmco2)
+        call input%ErrorMsg(option,'inundated steel corrosion rate &
                            &(CORRMCO2)',error_string)
       case('HUMCORR')
-        call InputReadDouble(input,option,this%humcorr)
-        call InputErrorMsg(input,option,'humid steel corrosion rate &
+        call input%ReadDouble(option,this%humcorr)
+        call input%ErrorMsg(option,'humid steel corrosion rate &
                            &(HUMCORR)',error_string)
       case('GRATMICI')
-        call InputReadDouble(input,option,this%gratmici)
-        call InputErrorMsg(input,option,'inundated biodegradation rate for &
+        call input%ReadDouble(option,this%gratmici)
+        call input%ErrorMsg(option,'inundated biodegradation rate for &
                            &cellulose (GRATMICI)',error_string)
       case('GRATMICH')
-        call InputReadDouble(input,option,this%gratmich)
-        call InputErrorMsg(input,option,'humid diodegradation rate for &
+        call input%ReadDouble(option,this%gratmich)
+        call input%ErrorMsg(option,'humid diodegradation rate for &
                            &cellulose (GRATMICH)',error_string)
       case('BRUCITEC','BRUCITES','BRUCITEI')
-        call InputReadDouble(input,option,this%brucitei)
-        call InputErrorMsg(input,option,'MgO inundated hydration rate in &
+        call input%ReadDouble(option,this%brucitei)
+        call input%ErrorMsg(option,'MgO inundated hydration rate in &
                            &Castile or Salado brine (BRUCITE[C/S])', &
                            error_string)
       case('BRUCITEH')
-        call InputReadDouble(input,option,this%bruciteh)
-        call InputErrorMsg(input,option,'MgO humid hydration rate (BRUCITEH)', &
+        call input%ReadDouble(option,this%bruciteh)
+        call input%ErrorMsg(option,'MgO humid hydration rate (BRUCITEH)', &
                            error_string)
       case('HYMAGCON')
-        call InputReadDouble(input,option,this%hymagcon_rate)
-        call InputErrorMsg(input,option,'hydromagnesite to magnesite &
+        call input%ReadDouble(option,this%hymagcon_rate)
+        call input%ErrorMsg(option,'hydromagnesite to magnesite &
                            &conversion rate (HYMAGCON)',error_string)
       case('ASDRUM')
-        call InputReadDouble(input,option,this%drum_surface_area)
-        call InputErrorMsg(input,option,'surface area of corrodable metal &
+        call input%ReadDouble(option,this%drum_surface_area)
+        call input%ErrorMsg(option,'surface area of corrodable metal &
                            &per drum (ASDRUM)',error_string)
       case('BIOGENFC')
-        call InputReadDouble(input,option,this%biogenfc)
-        call InputErrorMsg(input,option,'probability of attaining sampled &
+        call input%ReadDouble(option,this%biogenfc)
+        call input%ErrorMsg(option,'probability of attaining sampled &
                            &microbial gas generation rates (BIOGENFC)', &
                            error_string)
       case('PROBDEG')
-        call InputReadInt(input,option,this%probdeg)
-        call InputErrorMsg(input,option,'flag: (PROBDEG)',error_string)
+        call input%ReadInt(option,this%probdeg)
+        call input%ErrorMsg(option,'flag: (PROBDEG)',error_string)
       case('OUTPUT_START_TIME')
-        call InputReadDouble(input,option,double)
-        call InputErrorMsg(input,option,'OUTPUT_START_TIME',error_string)
-        call InputReadAndConvertUnits(input,double,'sec',trim(error_string) &
+        call input%ReadDouble(option,double)
+        call input%ErrorMsg(option,'OUTPUT_START_TIME',error_string)
+        call input%ReadAndConvertUnits(double,'sec',trim(error_string) &
                                       // ',OUTPUT_START_TIME units',option)
         this%output_start_time = double
       case('RATE_UPDATE_FREQUENCY')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword',error_string)
         call StringToUpper(word)
         select case(trim(word))
         !-----------------------------------
@@ -1153,33 +1153,33 @@ subroutine PMWSSRead(this,input)
         error_string = trim(error_string) // ',WASTE_PANEL'
         allocate(new_waste_panel)
         new_waste_panel => PMWSSWastePanelCreate()
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'name',error_string)
         new_waste_panel%name = adjustl(trim(word))
         error_string = trim(error_string) // ' ' // trim(new_waste_panel%name)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword',error_string)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword',error_string)
           call StringToUpper(word)
           select case(trim(word))
           !-----------------------------------
             case('REGION')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'region assignment',error_string)
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'region assignment',error_string)
               new_waste_panel%region_name = trim(word)
           !-----------------------------------
             case('INVENTORY')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'inventory assignment', &        
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'inventory assignment', &
                                  error_string)
               new_waste_panel%inventory_name = trim(word)
           !-----------------------------------
             case('SCALE_BY_VOLUME')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'SCALE_BY_VOLUME',error_string)
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'SCALE_BY_VOLUME',error_string)
               call StringToUpper(word)
               select case(trim(word))
                 case('YES')
@@ -1201,21 +1201,21 @@ subroutine PMWSSRead(this,input)
           option%io_buffer = 'ERROR: REGION must be specified in the ' // &
                  trim(error_string) // ' block. WASTE_PANEL name "' // &
                  trim(new_waste_panel%name) // '".'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (new_waste_panel%inventory_name == '') then
           option%io_buffer = 'ERROR: INVENTORY must be specified in the ' // &
                  trim(error_string) // ' block. WASTE_PANEL name "' // &
                  trim(new_waste_panel%name) // '".'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (num_errors > 0) then
           write(option%io_buffer,*) num_errors
           option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                              &WIPP_SOURCE_SINK,WASTE_PANEL block. See above.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         added = PETSC_FALSE
         if (.not.associated(this%waste_panel_list)) then
@@ -1242,13 +1242,13 @@ subroutine PMWSSRead(this,input)
           do spec_num = 1,10
             write(word,'(i1)') rxn_num
             write(word2,'(i2)') spec_num
-            call InputReadDouble(input,option,this%stoic_mat(rxn_num,spec_num))
-            call InputErrorMsg(input,option,'ROW ' // trim(adjustl(word)) // &
+            call input%ReadDouble(option,this%stoic_mat(rxn_num,spec_num))
+            call input%ErrorMsg(option,'ROW ' // trim(adjustl(word)) // &
                                ', COL ' // trim(adjustl(word2)),error_string)
           enddo
         enddo
         call InputReadPflotranString(input,option)
-        if (InputError(input)) exit
+        if (input%Error()) exit
         !if (InputCheckExit(input,option)) exit
     !-----------------------------------------
     !-----------------------------------------
@@ -1256,16 +1256,16 @@ subroutine PMWSSRead(this,input)
         error_string = trim(error_string) // ',INVENTORY'
         allocate(new_inventory)
         new_inventory => PMWSSPreInventoryCreate()
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'name',error_string)
         new_inventory%name = adjustl(trim(word))
         error_string = trim(error_string) // ' ' // trim(new_inventory%name)
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword',error_string)
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword',error_string)
           call StringToUpper(word)
           select case(trim(word))
           !-----------------------------------
@@ -1273,178 +1273,178 @@ subroutine PMWSSRead(this,input)
               error_string2 = trim(error_string) // ',SOLIDS'
               do
                 call InputReadPflotranString(input,option)
-                if (InputError(input)) exit
+                if (input%Error()) exit
                 if (InputCheckExit(input,option)) exit
-                call InputReadWord(input,option,word,PETSC_TRUE)
-                call InputErrorMsg(input,option,'keyword',error_string2)
+                call input%ReadWord(option,word,PETSC_TRUE)
+                call input%ErrorMsg(option,'keyword',error_string2)
                 call StringToUpper(word)
                 select case(trim(word))
                 !-----------------------------
                   case('IRONCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'IRONCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'IRONCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                           trim(error_string2) // ',IRONCHW',option)
                     new_inventory%ironchw = double
                 !-----------------------------
                   case('IRONRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'IRONRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'IRONRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                           trim(error_string2) // ',IRONRHW',option)
                     new_inventory%ironrhw = double
                 !-----------------------------
                   case('IRNCCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'IRNCCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'IRNCCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                           trim(error_string2) // ',IRNCCHW',option)
                     new_inventory%irncchw = double
                 !-----------------------------
                   case('IRNCRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'IRNCRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'IRNCRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                           trim(error_string2) // ',IRNCRHW',option)
                     new_inventory%irncrhw = double
                 !-----------------------------
                   case('MGO_EF')
-                    call InputReadDouble(input,option,new_inventory%mgo_ef)
-                    call InputErrorMsg(input,option,'MGO_EF',error_string2)
+                    call input%ReadDouble(option,new_inventory%mgo_ef)
+                    call input%ErrorMsg(option,'MGO_EF',error_string2)
                 !-----------------------------
                   case('CELLCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'CELLCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'CELLCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',CELLCHW',option)
                     new_inventory%cellchw = double
                 !-----------------------------
                   case('CELLRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'CELLRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'CELLRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',CELLRHW',option)
                     new_inventory%cellrhw = double
                 !-----------------------------
                   case('CELCCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'CELCCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'CELCCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',CELCCHW',option)
                     new_inventory%celcchw = double
                 !-----------------------------
                   case('CELCRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'CELCRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'CELCRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',CELCRHW',option)
                     new_inventory%celcrhw = double
                 !-----------------------------
                   case('CELECHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'CELECHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'CELECHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',CELECHW',option)
                     new_inventory%celechw = double
                 !-----------------------------
                   case('CELERHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'CELERHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'CELERHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',CELERHW',option)
                     new_inventory%celerhw = double
                 !-----------------------------
                   case('RUBBCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'RUBBCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'RUBBCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',RUBBCHW',option)
                     new_inventory%rubbchw = double
                 !-----------------------------
                   case('RUBBRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'RUBBRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'RUBBRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',RUBBRHW',option)
                     new_inventory%rubbrhw = double
                 !-----------------------------
                   case('RUBCCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'RUBCCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'RUBCCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',RUBCCHW',option)
                     new_inventory%rubcchw = double
                 !-----------------------------
                   case('RUBCRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'RUBCRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'RUBCRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',RUBCRHW',option)
                     new_inventory%rubcrhw = double
                 !-----------------------------
                   case('RUBECHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'RUBECHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'RUBECHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',RUBECHW',option)
                     new_inventory%rubechw = double
                 !-----------------------------
                   case('RUBERHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'RUBERHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'RUBERHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',RUBERHW',option)
                     new_inventory%ruberhw = double
                 !-----------------------------
                   case('PLASCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'PLASCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'PLASCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',PLASCHW',option)
                     new_inventory%plaschw = double
                 !-----------------------------
                   case('PLASRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'PLASRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'PLASRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',PLASRHW',option)
                     new_inventory%plasrhw = double    
                 !-----------------------------
                   case('PLSCCHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'PLSCCHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'PLSCCHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',PLSCCHW',option)
                     new_inventory%plscchw = double
                 !-----------------------------
                   case('PLSCRHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'PLSCRHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'PLSCRHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',PLSCRHW',option)
                     new_inventory%plscrhw = double
                 !-----------------------------
                   case('PLSECHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'PLSECHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'PLSECHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',PLSECHW',option)
                     new_inventory%plsechw = double
                 !-----------------------------
                   case('PLSERHW')
-                    call InputReadDouble(input,option,double)
-                    call InputErrorMsg(input,option,'PLSERHW',error_string2)
-                    call InputReadAndConvertUnits(input,double,'kg', &
+                    call input%ReadDouble(option,double)
+                    call input%ErrorMsg(option,'PLSERHW',error_string2)
+                    call input%ReadAndConvertUnits(double,'kg', &
                          trim(error_string2) // ',PLSERHW',option)
                     new_inventory%plserhw = double
                 !-----------------------------
                   case('PLASFAC')
-                    call InputReadDouble(input,option,new_inventory%plasfac)
-                    call InputErrorMsg(input,option,'PLASFAC',error_string2)
+                    call input%ReadDouble(option,new_inventory%plasfac)
+                    call input%ErrorMsg(option,'PLASFAC',error_string2)
                 !-----------------------------------
                   case('DRMCONC')
-                    call InputReadDouble(input,option,new_inventory%drum_conc)
-                    call InputErrorMsg(input,option,'DRMCONC',error_string2)
+                    call input%ReadDouble(option,new_inventory%drum_conc)
+                    call input%ErrorMsg(option,'DRMCONC',error_string2)
                 !-----------------------------
                   case default
                     call InputKeywordUnrecognized(word,error_string2,option)
@@ -1456,21 +1456,21 @@ subroutine PMWSSRead(this,input)
               error_string3 = trim(error_string) // ',AQUEOUS'
               do
                 call InputReadPflotranString(input,option)
-                if (InputError(input)) exit
+                if (input%Error()) exit
                 if (InputCheckExit(input,option)) exit
-                call InputReadWord(input,option,word,PETSC_TRUE)
-                call InputErrorMsg(input,option,'keyword',error_string3)
+                call input%ReadWord(option,word,PETSC_TRUE)
+                call input%ErrorMsg(option,'keyword',error_string3)
                 call StringToUpper(word)
                 select case(trim(word))
                 !-----------------------------
                   case('NITRATE')
-                    call InputReadDouble(input,option,new_inventory%nitrate)
-                    call InputErrorMsg(input,option,'initial nitrate moles &
+                    call input%ReadDouble(option,new_inventory%nitrate)
+                    call input%ErrorMsg(option,'initial nitrate moles &
                                        &(NITRATE)',error_string3)
                 !-----------------------------
                   case('SULFATE')
-                    call InputReadDouble(input,option,new_inventory%sulfate)
-                    call InputErrorMsg(input,option,'initial sulfate moles &
+                    call input%ReadDouble(option,new_inventory%sulfate)
+                    call input%ErrorMsg(option,'initial sulfate moles &
                                        &(SULFATE)',error_string3)
                 !-----------------------------
                   case default
@@ -1480,9 +1480,9 @@ subroutine PMWSSRead(this,input)
               enddo
           !-----------------------------------
             case('VREPOS')
-              call InputReadDouble(input,option,double)
-              call InputErrorMsg(input,option,'VREPOS',error_string)
-              call InputReadAndConvertUnits(input,double,'m^3', &
+              call input%ReadDouble(option,double)
+              call input%ErrorMsg(option,'VREPOS',error_string)
+              call input%ReadAndConvertUnits(double,'m^3', &
                       trim(error_string) // ',VREPOS volume',option)
               new_inventory%vrepos = double
           !-----------------------------------    
@@ -1497,7 +1497,7 @@ subroutine PMWSSRead(this,input)
                         &area must be specified using the SOLIDS,DRMCONC &
                         &keyword in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
       !----- IRON -----!
@@ -1506,7 +1506,7 @@ subroutine PMWSSRead(this,input)
                         &waste must be specified using the SOLIDS,IRONCHW &
                         &keyword in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%ironrhw)) then
@@ -1514,7 +1514,7 @@ subroutine PMWSSRead(this,input)
                         &waste must be specified using the SOLIDS,IRONRHW &
                         &keyword in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%irncchw)) then
@@ -1522,7 +1522,7 @@ subroutine PMWSSRead(this,input)
                         &waste must be specified using the SOLIDS,IRNCCHW &
                         &keyword in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%irncrhw)) then
@@ -1530,7 +1530,7 @@ subroutine PMWSSRead(this,input)
                         &waste must be specified using the SOLIDS,IRNCRHW &
                         &keyword in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
       !----- MGO -----!
@@ -1539,7 +1539,7 @@ subroutine PMWSSRead(this,input)
                         &specified using the SOLIDS,MGO_EF keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
       !----- CELLULOSICS -----!
@@ -1548,7 +1548,7 @@ subroutine PMWSSRead(this,input)
                         &must be specified using the SOLIDS,CELLCHW keyword &
                         &in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%cellrhw)) then
@@ -1556,7 +1556,7 @@ subroutine PMWSSRead(this,input)
                         &must be specified using the SOLIDS,CELLRHW keyword &
                         &in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%celcchw)) then
@@ -1565,7 +1565,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,CELCCHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%celcrhw)) then
@@ -1574,7 +1574,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,CELCRHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%celechw)) then
@@ -1583,7 +1583,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,CELECHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%celerhw)) then
@@ -1592,7 +1592,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,CELERHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
       !----- RUBBER -----!
@@ -1601,7 +1601,7 @@ subroutine PMWSSRead(this,input)
                         &specified using the SOLIDS,RUBBCHW keyword &
                         &in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%rubbrhw)) then
@@ -1609,7 +1609,7 @@ subroutine PMWSSRead(this,input)
                         &specified using the SOLIDS,RUBBRHW keyword &
                         &in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%rubcchw)) then
@@ -1618,7 +1618,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,RUBCCHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%rubcrhw)) then
@@ -1627,7 +1627,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,RUBCRHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%rubechw)) then
@@ -1636,7 +1636,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,RUBECHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%ruberhw)) then
@@ -1645,7 +1645,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,RUBERHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
       !----- PLASTICS -----!
@@ -1654,7 +1654,7 @@ subroutine PMWSSRead(this,input)
                         &be specified using the SOLIDS,PLASCHW keyword &
                         &in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%plasrhw)) then
@@ -1662,7 +1662,7 @@ subroutine PMWSSRead(this,input)
                         &be specified using the SOLIDS,PLASRHW keyword &
                         &in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%plscchw)) then
@@ -1671,7 +1671,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,PLSCCHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%plscrhw)) then
@@ -1680,7 +1680,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,PLSCRHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%plsechw)) then
@@ -1689,7 +1689,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,PLSECHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%plserhw)) then
@@ -1698,7 +1698,7 @@ subroutine PMWSSRead(this,input)
                         &SOLIDS,PLSERHW keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%plasfac)) then
@@ -1706,7 +1706,7 @@ subroutine PMWSSRead(this,input)
                         &carbon must be specified using the SOLIDS,PLASFAC &
                         &keyword in the WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
       !----- AQUEOUS -----!
@@ -1715,7 +1715,7 @@ subroutine PMWSSRead(this,input)
                         &be specified using the AQUEOUS,NITRATE keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
         if (Uninitialized(new_inventory%sulfate)) then
@@ -1723,7 +1723,7 @@ subroutine PMWSSRead(this,input)
                         &be specified using the AQUEOUS,SULFATE keyword in the &
                         &WIPP_SOURCE_SINK,INVENTORY ' // &
                         trim(new_inventory%name) // ' block.'
-          call printMsg(option)
+          call option%PrintMsg()
           num_errors = num_errors + 1
         endif
       !----- END COUNT -----!
@@ -1731,7 +1731,7 @@ subroutine PMWSSRead(this,input)
           write(option%io_buffer,*) num_errors
           option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                              &WIPP_SOURCE_SINK,INVENTORY block. See above.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         added = PETSC_FALSE
         if (.not.associated(this%pre_inventory_list)) then
@@ -1755,11 +1755,11 @@ subroutine PMWSSRead(this,input)
         spec_num = 0
         do
           call InputReadPflotranString(input,option)
-          if (InputError(input)) exit
+          if (input%Error()) exit
           if (InputCheckExit(input,option)) exit
           spec_num = spec_num + 1
-          call InputReadWord(input,option,bh_materials(spec_num),PETSC_TRUE)
-          call InputErrorMsg(input,option,'name',error_string)
+          call input%ReadWord(option,bh_materials(spec_num),PETSC_TRUE)
+          call input%ErrorMsg(option,'name',error_string)
         enddo
         allocate(this%bh_material_names(spec_num))
         do spec_num = 1, size(this%bh_material_names)
@@ -1774,96 +1774,96 @@ subroutine PMWSSRead(this,input)
   if (.not.associated(this%waste_panel_list)) then
     option%io_buffer = 'ERROR: At least one WASTE_PANEL must be specified &
                        &in the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (.not.associated(this%pre_inventory_list)) then
     option%io_buffer = 'ERROR: At least one INVENTORY must be specified in &
                        &the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%alpharxn)) then
     option%io_buffer = 'ERROR: ALPHARXN must be specified in the &
                        &WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%smin)) then
     option%io_buffer = 'ERROR: SOCMIN must be specified in the &
                        &WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%satwick)) then
     option%io_buffer = 'ERROR: SAT_WICK (wicking saturation parameter) must be &
                        &specified in the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%gratmici)) then
     option%io_buffer = 'ERROR: GRATMICI (inundated biodegradation rate for &
                        &cellulose) must be specified in the WIPP_SOURCE_SINK &
                        &block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%brucitei)) then
     option%io_buffer = 'ERROR: BRUCITE[C/S] (MgO inundated hydration rate in &
                        &Castile or Salado brine) must be specified in the &
                        &WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%corrmco2)) then
     option%io_buffer = 'ERROR: CORRMCO2 (inundated steel corrosion rate) must &
                        &be specified in the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%gratmich)) then
     option%io_buffer = 'ERROR: GRATMICH (humid biodegradation rate for &
                        &cellulose) must be specified in the WIPP_SOURCE_SINK &
                        &block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%bruciteh)) then
     option%io_buffer = 'ERROR: BRUCITEH (MgO humid hydration rate) must be &
                        &specified in the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%humcorr)) then
     option%io_buffer = 'ERROR: HUMCORR (humid steel corrosion rate) must be &
                        &specified in the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%hymagcon_rate)) then
     option%io_buffer = 'ERROR: HYMAGCON (hydromagnesite to magnesite &
                        &conversion rate) must be specified in the &
                        &WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%drum_surface_area)) then
     option%io_buffer = 'ERROR: ASDRUM (metal drum surface area) &
                        &must be specified in the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%biogenfc)) then
     option%io_buffer = 'ERROR: BIOGENFC (microbial gas generation probability) &
                        &must be specified in the WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   if (Uninitialized(this%probdeg)) then
     option%io_buffer = 'ERROR: PROBDEG (biodegradation and/or plastics &
                        &inclusion flag) must be specified in the &
                        &WIPP_SOURCE_SINK block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   do rxn_num = 1,8
@@ -1877,7 +1877,7 @@ subroutine PMWSSRead(this,input)
                            trim(adjustl(word2)) // '. This may mean you did &
                            &not provide enough values for the matrix. The &
                            &matrix should be sized 8x10.'
-      call printMsg(option)
+      call option%PrintMsg()
       num_errors = num_errors + 1
       endif
     enddo
@@ -1891,7 +1891,7 @@ subroutine PMWSSRead(this,input)
                        &PROCESS_MODELS block. The WIPP_SOURCE_SINK process &
                        &model is now embedded in WIPP_FLOW, and should no &
                        &longer be included in the PROCESS_MODELS block.]]'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   call PMWSSAssociateInventory(this)
@@ -1962,7 +1962,7 @@ subroutine PMWSSProcessAfterRead(this,waste_panel)
       this%plasidx = 1
     case default
       this%option%io_buffer = 'WIPP_SOURCE_SINK,PROBDEG values: 0,1,2 only.'
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
   end select
   
   preinventory => waste_panel%inventory%preinventory
@@ -2129,7 +2129,7 @@ subroutine PMWSSSetup(this)
 ! ranks(:): [-] pointer to array of size(ranks) used to find local waste 
 !    panel objects
 ! -----------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(srcsink_panel_type), pointer :: cur_waste_panel
   type(srcsink_panel_type), pointer :: prev_waste_panel
   type(srcsink_panel_type), pointer :: next_waste_panel
@@ -2442,7 +2442,7 @@ subroutine PMWSSInitializeRun(this)
         this%option%io_buffer = 'Borehole material "' // &
           trim(this%bh_material_names(p)) // &
           '" not found among material properties.'
-        call printErrMsg(this%option)
+        call this%option%PrintErrMsg()
       endif
       this%bh_material_ids(p) = material_property%internal_id
       print *, this%bh_material_names(p), this%bh_material_ids(p)
@@ -2520,7 +2520,7 @@ subroutine PMWSSInitializeTimestep(this)
           this%option%io_buffer = 'Chemistry zeroed at cell ' // &
             trim(adjustl(this%option%io_buffer)) // &
             ' due to borehole material.'
-          call printMsg(this%option)
+          call this%option%PrintMsg()
           cur_waste_panel%calculate_chemistry(k) = PETSC_FALSE
           cur_waste_panel%inventory%Fe_s%current_conc_mol(k) = 0.d0
           cur_waste_panel%inventory%Fe_s%current_conc_kg(k) = 0.d0
@@ -2569,7 +2569,7 @@ subroutine PMWSSUpdateInventory(waste_panel,dt,option)
 ! ---------------------------------------
   type(srcsink_panel_type) :: waste_panel
   PetscReal :: dt
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 ! ---------------------------------------
 
 ! LOCAL VARIABLES:
@@ -2648,7 +2648,7 @@ subroutine PMWSSUpdateChemSpecies(chem_species,waste_panel,dt,option)
   type(chem_species_type) :: chem_species
   type(srcsink_panel_type) :: waste_panel
   PetscReal :: dt
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 ! ---------------------------------------
   
 ! LOCAL VARIABLES:
@@ -2754,7 +2754,7 @@ end subroutine PMWSSUpdateChemSpecies
 !    in the waste materials
 ! sg_eff: [-] effective gas saturation (1-s_eff)
 ! -----------------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -3390,7 +3390,7 @@ subroutine PMWSSFinalizeTimestep(this)
 ! dt: [sec] flow time step value
 ! ----------------------------------------------------
   type(srcsink_panel_type), pointer :: cur_waste_panel
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: dt
 ! ----------------------------------------------------
 
@@ -3447,7 +3447,7 @@ end subroutine PMWSSFinalizeTimestep
 ! global_variables: [units vary] an array of global variable values for the 
 !    parallel averaging calculation
 ! -----------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   class(srcsink_panel_type), pointer :: cwp
   character(len=MAXSTRINGLENGTH) :: filename
@@ -3647,7 +3647,7 @@ function PMWSSOutputFilename(option)
 ! ================
 ! option (input): pointer to option object
 ! ------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 ! ------------------------------------
 
 ! LOCAL VARIABLES:

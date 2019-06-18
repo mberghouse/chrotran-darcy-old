@@ -67,7 +67,7 @@ subroutine SurfaceGlobalSetupPatch(surf_realization)
   
   class(realization_surface_type) :: surf_realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -191,7 +191,7 @@ subroutine SurfaceGlobalSetAuxVarScalarPatch(surf_realization,value,ivar)
   PetscReal :: value
   PetscInt :: ivar
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
     
   PetscInt :: i
@@ -286,7 +286,7 @@ subroutine SurfaceGlobalSetAuxVarVecLocPatch(surf_realization,vec_loc,ivar,isubv
   PetscInt :: ivar
   PetscInt :: isubvar  
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   
@@ -352,7 +352,7 @@ subroutine SurfaceGlobalUpdateAuxVars(surf_realization,time_level)
   PetscInt :: time_level
   
   type(surface_field_type), pointer :: surf_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   option => surf_realization%option
   surf_field => surf_realization%surf_field

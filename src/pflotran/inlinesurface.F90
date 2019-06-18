@@ -35,7 +35,7 @@ contains
     implicit none
     type(inlinesurface_auxvar_type) :: auxvar
     type(material_auxvar_type)      :: material_auxvar
-    type(option_type)               :: option
+    class(option_type)               :: option
     PetscReal                       :: Res(option%nflowdof),area
 
     area   = 0.5d0 * material_auxvar%volume / auxvar%half_cell_height
@@ -57,7 +57,7 @@ contains
     implicit none
     type(inlinesurface_auxvar_type) :: auxvar
     type(material_auxvar_type)      :: material_auxvar
-    type(option_type)               :: option
+    class(option_type)               :: option
     PetscReal                       :: J(option%nflowdof,option%nflowdof),area
 
     J(1,1) = 0.0d0
@@ -171,7 +171,7 @@ contains
     use PFLOTRAN_Constants_module, only : FMWH2O
     implicit none
     type(inlinesurface_auxvar_type) :: auxvar_up,auxvar_dn
-    type(option_type)               :: option
+    class(option_type)               :: option
     PetscReal :: area,dist(-1:3),Jup(1,1),Jdn(1,1)
     PetscReal :: Cf,dphi,dz,epsilon,have,rho,slope,const,deriv
 
@@ -221,7 +221,7 @@ contains
     implicit none
     PetscInt :: ibndtype(:)
     type(inlinesurface_auxvar_type) :: auxvar_up,auxvar_dn
-    type(option_type)               :: option
+    class(option_type)               :: option
     PetscReal :: area,dist(-1:3),Jup(1,1),Jdn(1,1)
 
     select case(ibndtype(RICHARDS_PRESSURE_DOF))

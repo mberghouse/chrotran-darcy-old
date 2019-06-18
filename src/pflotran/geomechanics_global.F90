@@ -59,7 +59,7 @@ subroutine GeomechGlobalSetupPatch(geomech_realization)
   
   class(realization_geomech_type) :: geomech_realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type),pointer :: patch
   type(geomech_grid_type), pointer :: grid
   type(geomech_coupler_type), pointer :: boundary_condition
@@ -133,7 +133,7 @@ subroutine GeomechGlobalSetAuxVarScalarPatch(geomech_realization,value,ivar)
   PetscReal :: value
   PetscInt :: ivar
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch
     
   PetscInt :: i
@@ -220,7 +220,7 @@ subroutine GeomechGlobalSetAuxVarVecLocPatch(geomech_realization,vec_loc,ivar,&
   PetscInt :: ivar
   PetscInt :: isubvar  
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch
   type(geomech_grid_type), pointer :: grid
   
@@ -290,7 +290,7 @@ subroutine GeomechGlobalUpdateAuxVars(geomech_realization,time_level)
   PetscInt :: time_level
   
   type(geomech_field_type), pointer :: geomech_field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   option => geomech_realization%option
   geomech_field => geomech_realization%geomech_field

@@ -117,11 +117,11 @@ subroutine PMRichardsRead(this,input)
   implicit none
   
   class(pm_richards_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: Mannings_coeff
   PetscBool :: found
   PetscReal :: tempreal
@@ -134,11 +134,11 @@ subroutine PMRichardsRead(this,input)
   do
   
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)
 
     found = PETSC_FALSE
@@ -152,48 +152,48 @@ subroutine PMRichardsRead(this,input)
 
       ! All Residual
       case('RESIDUAL_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%residual_abs_inf_tol = tempreal
         this%residual_scaled_inf_tol = tempreal
 
       ! Absolute Residual
       case('RESIDUAL_ABS_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%residual_abs_inf_tol = tempreal
 
       ! Scaled Residual
       case('RESIDUAL_SCALED_INF_TOL','ITOL_SCALED_RESIDUAL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%residual_scaled_inf_tol = tempreal
 
       ! All Updates
       case('UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%abs_update_inf_tol = tempreal
         this%rel_update_inf_tol = tempreal
 
       ! Absolute Updates
       case('ABS_UPDATE_INF_TOL')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%abs_update_inf_tol = tempreal
 
       ! Relative Updates
       case('REL_UPDATE_INF_TOL','ITOL_RELATIVE_UPDATE')
-        call InputReadDouble(input,option,tempreal)
-        call InputErrorMsg(input,option,word,error_string)
+        call input%ReadDouble(option,tempreal)
+        call input%ErrorMsg(option,word,error_string)
         this%rel_update_inf_tol = tempreal
 
       case('INLINE_SURFACE_REGION')
         option%inline_surface_flow = PETSC_TRUE
-        call InputReadWord(input,option,word,PETSC_FALSE)
+        call input%ReadWord(option,word,PETSC_FALSE)
         option%inline_surface_region_name = word
       case('INLINE_SURFACE_MANNINGS_COEFF')
-        call InputReadDouble(input,option,Mannings_coeff)
+        call input%ReadDouble(option,Mannings_coeff)
         option%inline_surface_Mannings_coeff = Mannings_coeff
       case default
         call InputKeywordUnrecognized(word,error_string,option)
@@ -391,7 +391,7 @@ subroutine PMRichardsCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   PetscReal, pointer :: dX_p(:)
   PetscReal, pointer :: r_p(:)
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(field_type), pointer :: field
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
@@ -430,7 +430,7 @@ subroutine PMRichardsCheckUpdatePre(this,line_search,X,dX,changed,ierr)
       if (delP_pert < dabs(delP)) then
         write(option%io_buffer,'("dP_trunc:",1i7,2es15.7)') &
           grid%nG2A(grid%nL2G(local_id)),delP_pert,dabs(delP)
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
       endif
       delP = sign(min(dabs(delP),delP_pert),delP)
       dX_p(local_id) = delP
@@ -457,24 +457,24 @@ subroutine PMRichardsCheckUpdatePre(this,line_search,X,dX,changed,ierr)
       if (P0 < P_R .and. P1 > P_R) then
         write(option%io_buffer,'("U -> S:",1i7,2f12.1)') &
           grid%nG2A(grid%nL2G(local_id)),P0,P1 
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #if 0
         ghosted_id = grid%nL2G(local_id)
         call RichardsPrintAuxVars(rich_auxvars(ghosted_id), &
                                   global_auxvars(ghosted_id),ghosted_id)
         write(option%io_buffer,'("Residual:",es15.7)') r_p(local_id)
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #endif
       else if (P1 < P_R .and. P0 > P_R) then
         write(option%io_buffer,'("S -> U:",1i7,2f12.1)') &
           grid%nG2A(grid%nL2G(local_id)),P0,P1
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #if 0
         ghosted_id = grid%nL2G(local_id)
         call RichardsPrintAuxVars(rich_auxvars(ghosted_id), &
                                   global_auxvars(ghosted_id),ghosted_id)
         write(option%io_buffer,'("Residual:",es15.7)') r_p(local_id)
-        call printMsgAnyRank(option)
+        call option%PrintMsgAnyRank()
 #endif
       endif
       ! transition from unsaturated to saturated
@@ -518,7 +518,7 @@ subroutine PMRichardsCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   PetscReal, pointer :: X0_p(:)
   PetscReal, pointer :: dX_p(:)
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   PetscInt :: local_id, ghosted_id, natural_id, ival
@@ -628,7 +628,7 @@ subroutine PMRichardsCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
   PetscErrorCode :: ierr
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   PetscReal, pointer :: r_p(:)

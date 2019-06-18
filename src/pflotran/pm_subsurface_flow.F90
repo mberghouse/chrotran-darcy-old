@@ -145,11 +145,11 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
   implicit none
   
   class(pm_subsurface_flow_type) :: this
-  type(input_type) :: input
+  class(input_type) :: input
   character(len=MAXWORDLENGTH) :: keyword
   PetscBool :: found
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   call PMBaseReadSelectCase(this,input,keyword,found,error_string,option)
   if (found) return
@@ -158,49 +158,49 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
   select case(trim(keyword))
   
     case('MAX_PRESSURE_CHANGE')
-      call InputReadDouble(input,option,this%pressure_change_governor)
-      call InputDefaultMsg(input,option,'dpmxe')
+      call input%ReadDouble(option,this%pressure_change_governor)
+      call input%DefaultMsg(option,'dpmxe')
       if (option%flow%resdef) then
         option%io_buffer = 'WARNING: MAX_PRESSURE_CHANGE has been selected, &
           &overwritting the RESERVOIR_DEFAULTS default'
-        call printMsg(option)
+        call option%PrintMsg()
       endif
 
     case('MAX_TEMPERATURE_CHANGE')
-      call InputReadDouble(input,option,this%temperature_change_governor)
-      call InputDefaultMsg(input,option,'dtmpmxe')
+      call input%ReadDouble(option,this%temperature_change_governor)
+      call input%DefaultMsg(option,'dtmpmxe')
   
     case('MAX_CONCENTRATION_CHANGE')
-      call InputReadDouble(input,option,this%xmol_change_governor)
-      call InputDefaultMsg(input,option,'dcmxe')
+      call input%ReadDouble(option,this%xmol_change_governor)
+      call input%DefaultMsg(option,'dcmxe')
 
     case('MAX_SATURATION_CHANGE')
-      call InputReadDouble(input,option,this%saturation_change_governor)
-      call InputDefaultMsg(input,option,'dsmxe')
+      call input%ReadDouble(option,this%saturation_change_governor)
+      call input%DefaultMsg(option,'dsmxe')
 
     case('PRESSURE_DAMPENING_FACTOR')
-      call InputReadDouble(input,option,this%pressure_dampening_factor)
-      call InputErrorMsg(input,option,'PRESSURE_DAMPENING_FACTOR', &
+      call input%ReadDouble(option,this%pressure_dampening_factor)
+      call input%ErrorMsg(option,'PRESSURE_DAMPENING_FACTOR', &
                          error_string)
 
     case('SATURATION_CHANGE_LIMIT')
-      call InputReadDouble(input,option,this%saturation_change_limit)
-      call InputErrorMsg(input,option,'SATURATION_CHANGE_LIMIT', &
+      call input%ReadDouble(option,this%saturation_change_limit)
+      call input%ErrorMsg(option,'SATURATION_CHANGE_LIMIT', &
                          error_string)
                            
     case('PRESSURE_CHANGE_LIMIT')
-      call InputReadDouble(input,option,this%pressure_change_limit)
-      call InputErrorMsg(input,option,'PRESSURE_CHANGE_LIMIT', &
+      call input%ReadDouble(option,this%pressure_change_limit)
+      call input%ErrorMsg(option,'PRESSURE_CHANGE_LIMIT', &
                          error_string)
                            
     case('TEMPERATURE_CHANGE_LIMIT')
-      call InputReadDouble(input,option,this%temperature_change_limit)
-      call InputErrorMsg(input,option,'TEMPERATURE_CHANGE_LIMIT', &
+      call input%ReadDouble(option,this%temperature_change_limit)
+      call input%ErrorMsg(option,'TEMPERATURE_CHANGE_LIMIT', &
                          error_string)
 
     case('MAX_CFL')
-      call InputReadDouble(input,option,this%cfl_governor)
-      call InputErrorMsg(input,option,'MAX_CFL',error_string)
+      call input%ReadDouble(option,this%cfl_governor)
+      call input%ErrorMsg(option,'MAX_CFL',error_string)
 
     case('MULTIPLE_CONTINUUM')
       option%use_mc = PETSC_TRUE
@@ -210,7 +210,7 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
       if (option%flow%resdef) then
         option%io_buffer = 'WARNING: NUMERICAL_JACOBIAN has been selected, &
           &overwritting the RESERVOIR_DEFAULTS default'
-        call printMsg(option)
+        call option%PrintMsg()
       endif
 
     case('ANALYTICAL_JACOBIAN')
@@ -220,23 +220,23 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
       option%flow%resdef = PETSC_TRUE
       option%io_buffer = 'RESERVOIR_DEFAULTS has been selected under &
         &process model options'
-      call printMsg(option)
+      call option%PrintMsg()
 
       option%flow%numerical_derivatives = PETSC_FALSE
       option%io_buffer = 'process model options: ANLYTICAL_JACOBIAN has &
         &been automatically selected (RESERVOIR_DEFAULTS)'
-      call printMsg(option)
+      call option%PrintMsg()
 
       this%pressure_change_governor=5.5d6
-      call InputDefaultMsg(input,option,'dpmxe')
+      call input%DefaultMsg(option,'dpmxe')
       option%io_buffer = 'process model options: MAX_PRESSURE_CHANGE has &
         &been set to 5.5D6 (RESERVOIR_DEFAULTS)'
-      call printMsg(option)
+      call option%PrintMsg()
 
     case('ANALYTICAL_DERIVATIVES')
       option%io_buffer = 'ANALYTICAL_DERIVATIVES has been deprecated.  &
         &Please use ANALYTICAL_JACOBIAN instead.'
-      call PrintErrMsg(option)
+      call option%PrintErrMsg()
 
     case('ANALYTICAL_JACOBIAN_COMPARE')
       option%flow%numerical_derivatives_compare = PETSC_TRUE
@@ -253,22 +253,22 @@ subroutine PMSubsurfaceFlowReadSelectCase(this,input,keyword,found, &
     case('COUNT_UPWIND_DIRECTION_FLIP')
       count_upwind_direction_flip = PETSC_TRUE
     case('UPWIND_DIR_UPDATE_FREQUENCY')
-      call InputReadInt(input,option,upwind_dir_update_freq)
-      call InputErrorMsg(input,option,keyword,error_string)
+      call input%ReadInt(option,upwind_dir_update_freq)
+      call input%ErrorMsg(option,keyword,error_string)
       
     case('USE_INFINITY_NORM_CONVERGENCE')
       this%check_post_convergence = PETSC_TRUE
 
     case('LOGGING_VERBOSITY')
-      call InputReadInt(input,option,this%logging_verbosity)
-      call InputErrorMsg(input,option,keyword,error_string)
+      call input%ReadInt(option,this%logging_verbosity)
+      call input%ErrorMsg(option,keyword,error_string)
 
     case('DEBUG_TOL')
-      call InputReadDouble(input,option,flow_aux_debug_tol)
-      call InputErrorMsg(input,option,'DEBUG_TOL',error_string)
+      call input%ReadDouble(option,flow_aux_debug_tol)
+      call input%ErrorMsg(option,'DEBUG_TOL',error_string)
     case('DEBUG_RELTOL')
-      call InputReadDouble(input,option,flow_aux_debug_reltol)
-      call InputErrorMsg(input,option,'DEBUG_RELTOL',error_string)
+      call input%ReadDouble(option,flow_aux_debug_reltol)
+      call input%ErrorMsg(option,'DEBUG_RELTOL',error_string)
 
     case('GEOMETRIC_PENALTY')
       flow_aux_use_GP= PETSC_TRUE
@@ -346,7 +346,7 @@ subroutine PMSubsurfaceFlowSetup(this)
               &Please chose a different mode, such as General Mode or &
               &WIPP Flow Mode, or use &
               &the IGNORE_PERMEABILITY feature, and provide ALPHA.'
-            call printErrMsg(this%option)
+            call this%option%PrintErrMsg()
           endif
       end select
       endif
@@ -488,7 +488,7 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
   type(material_type), pointer :: Material
   type(material_property_ptr_type), pointer :: material_property_array(:)
   type(material_property_type), pointer :: material_property
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal, pointer :: vec_loc_p(:)
 
   PetscInt :: ghosted_id
@@ -541,7 +541,7 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
         class is(dataset_gridded_hdf5_type)
           option%io_buffer = 'Gridded dataset "' // trim(dataset%name) // &
             ' not yet suppored in RealizSetSoilReferencePressure().'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         class is(dataset_common_hdf5_type)
           dataset_name = dataset%hdf5_dataset_name
           group_name = ''
@@ -553,7 +553,7 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
         class default
           option%io_buffer = 'Dataset "' // trim(dataset%name) // '" is of the &
             &wrong type for RealizSetSoilReferencePressure()'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
       call DiscretizationGlobalToLocal(realization%discretization, &
                                        realization%field%work, &
@@ -582,7 +582,7 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
     option%io_buffer = 'Restarted simulations (restarted with time > 0) &
       &that set reference pressure based on the initial pressure will be &
       &incorrect as the initial pressure is not stored in a checkpoint file.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   if (dataset_vec /= PETSC_NULL_VEC) then
@@ -615,7 +615,7 @@ subroutine InitialiseAllWells(this)
   type(grid_type), pointer :: grid
   type(material_auxvar_type), pointer :: type_material_auxvars(:)
   class(material_auxvar_type), pointer :: class_material_auxvars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   PetscInt  :: num_well
   PetscBool :: cast_ok,is_grdecl
@@ -647,12 +647,12 @@ subroutine InitialiseAllWells(this)
     is_grdecl = GetIsGrdecl()
     if (grid%itype /= STRUCTURED_GRID .and. (.not. is_grdecl)) then
       option%io_buffer='WELL_DATA well specification can only be used with structured grids'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
 
     if (.not.cast_ok) then
       option%io_buffer='WELL_DATA call cannot cast CLASS to TYPE'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else
 
       do
@@ -816,7 +816,7 @@ subroutine PMSubsurfaceFlowPostSolve(this)
   class(pm_subsurface_flow_type) :: this
   
   this%option%io_buffer = 'PMSubsurfaceFlowPostSolve() must be extended.'
-  call printErrMsg(this%option)  
+  call this%option%PrintErrMsg()
   
 end subroutine PMSubsurfaceFlowPostSolve
 
@@ -1032,7 +1032,7 @@ subroutine PMSubsurfaceFlowUpdateAuxVars(this)
   class(pm_subsurface_flow_type) :: this
 
   this%option%io_buffer = 'PMSubsurfaceFlowUpdateAuxVars() must be extended.'
-  call printErrMsg(this%option)
+  call this%option%PrintErrMsg()
 
 end subroutine PMSubsurfaceFlowUpdateAuxVars   
 

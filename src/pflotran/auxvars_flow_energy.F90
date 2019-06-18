@@ -42,7 +42,7 @@ subroutine AuxVarFlowEnergyInit(this,option)
   implicit none
 
   class(auxvar_flow_energy_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   this%temp = 0.d0
   allocate(this%H(option%nphase))

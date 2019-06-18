@@ -217,7 +217,7 @@ subroutine EOSSlvSetEOSDBase(filename,option)
   implicit none
 
   character(len=MAXWORDLENGTH) :: filename
-  type(option_type) :: option
+  class(option_type) :: option
 
   eos_dbase => EOSDatabaseCreate(filename,'slv_database')
   call eos_dbase%Read(option)
@@ -744,8 +744,8 @@ subroutine EOSSlvSetPVDS(input,option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   type(lookup_table_var_type), pointer :: db_var => null()
   character(len=MAXWORDLENGTH) :: internal_units, user_units
@@ -796,7 +796,7 @@ subroutine EOSSlvTableProcess(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (.not.associated(pvt_table)) return
 
@@ -1007,10 +1007,10 @@ subroutine throwDerivativeError(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   option%io_buffer = 'Derivatives are not available'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine throwDerivativeError
 

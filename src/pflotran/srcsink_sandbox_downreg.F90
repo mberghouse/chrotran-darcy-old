@@ -91,8 +91,8 @@ subroutine DownregRead(this,input,option)
   implicit none
   
   class(srcsink_sandbox_downreg_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   class(dataset_ascii_type), pointer :: dataset_ascii
 
   PetscInt :: i
@@ -113,11 +113,11 @@ subroutine DownregRead(this,input,option)
 
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword', &
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword', &
                        'SOURCE_SINK_SANDBOX,DOWNREG')
     call StringToUpper(word)   
 
@@ -131,30 +131,30 @@ subroutine DownregRead(this,input,option)
         call ConditionReadValues(input,option,word,this%dataset, &
                                  units,internal_units)
       case('POSITIVE_REG_PRESSURE')
-        call InputReadDouble(input,option,this%pressure_max)
-        call InputErrorMsg(input,option,'maximum pressure', &
+        call input%ReadDouble(option,this%pressure_max)
+        call input%ErrorMsg(option,'maximum pressure', &
           'SOURCE_SINK_SANDBOX,DOWNREG')
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           internal_units = 'Pa'
           this%pressure_max = this%pressure_max * &
             UnitsConvertToInternal(word,internal_units,option)
         endif
       case('NEGATIVE_REG_PRESSURE')
-        call InputReadDouble(input,option,this%pressure_min)
-        call InputErrorMsg(input,option,'minimum pressure', &
+        call input%ReadDouble(option,this%pressure_min)
+        call input%ErrorMsg(option,'minimum pressure', &
           'SOURCE_SINK_SANDBOX,DOWNREG')
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           internal_units = 'Pa'
           this%pressure_min = this%pressure_min * &
             UnitsConvertToInternal(word,internal_units,option)
         endif
       case('DELTA_REG_PRESSURE')
-        call InputReadDouble(input,option,this%pressure_delta)
-        call InputErrorMsg(input,option,'delta pressure', &
+        call input%ReadDouble(option,this%pressure_delta)
+        call input%ErrorMsg(option,'delta pressure', &
           'SOURCE_SINK_SANDBOX,DOWNREG')
-        call InputReadWord(input,option,word,PETSC_TRUE)
+        call input%ReadWord(option,word,PETSC_TRUE)
         if (input%ierr == 0) then
           internal_units = 'Pa'
           this%pressure_delta = this%pressure_delta * &
@@ -163,7 +163,7 @@ subroutine DownregRead(this,input,option)
         if (this%pressure_delta <= 1.0d-10) then
           option%io_buffer = 'SRCSINK_SANDBOX,DOWNREG,DELTA_REG_PRESSURE' // &
             ': the pressure delta is too close to 0 Pa.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif 
       case default
         call InputKeywordUnrecognized(word,'SRCSINK_SANDBOX,DOWNREG',option)
@@ -197,7 +197,7 @@ subroutine DownregSetup(this,grid,option)
   
   class(srcsink_sandbox_downreg_type) :: this
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   call SSSandboxBaseSetup(this,grid,option)
 
@@ -213,7 +213,7 @@ subroutine DownregUpdate(this,option)
   implicit none
 
   class(srcsink_sandbox_downreg_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   call DatasetUpdate(this%dataset,option)
 
@@ -238,7 +238,7 @@ subroutine DownregSrcSink(this,Residual,Jacobian,compute_derivative, &
   implicit none
   
   class(srcsink_sandbox_downreg_type) :: this  
-  type(option_type) :: option
+  class(option_type) :: option
   PetscBool :: compute_derivative
   PetscReal :: Residual(option%nflowdof)
   PetscReal :: Jacobian(option%nflowdof,option%nflowdof)
@@ -300,7 +300,7 @@ subroutine DownregSrcSink(this,Residual,Jacobian,compute_derivative, &
     else
       option%io_buffer = 'srcsink_sandbox_downreg is implemented ' // &
                          'only for RICHARDS mode.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   enddo
   
@@ -313,7 +313,7 @@ subroutine DownregSrcSink(this,Residual,Jacobian,compute_derivative, &
       else
         option%io_buffer = 'srcsink_sandbox_downreg is implemented ' // &
                            'only for RICHARDS mode.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     enddo
   endif

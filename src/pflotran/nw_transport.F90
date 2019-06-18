@@ -89,7 +89,7 @@ subroutine NWTSetup(realization)
   type(realization_subsurface_type) :: realization
   
   type(nw_trans_realization_type), pointer :: nw_trans
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(material_property_type), pointer :: cur_material_property
   type(fluid_property_type), pointer :: cur_fluid_property
@@ -133,17 +133,17 @@ subroutine NWTSetup(realization)
     if (material_auxvars(ghosted_id)%volume < 0.d0 .and. flag(1) == 0) then
       flag(1) = 1
       option%io_buffer = 'Non-initialized cell volume.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%porosity < 0.d0 .and. flag(2) == 0) then
       flag(2) = 1
       option%io_buffer = 'Non-initialized porosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif
     if (material_auxvars(ghosted_id)%tortuosity < 0.d0 .and. flag(3) == 0) then
       flag(3) = 1
       option%io_buffer = 'Non-initialized tortuosity.'
-      call printMsg(option)
+      call option%PrintMsg()
     endif 
   
   enddo 
@@ -151,7 +151,7 @@ subroutine NWTSetup(realization)
   if (maxval(flag) > 0) then
     option%io_buffer = &
       'Material property errors found in NWTSetup (Nuclear Waste Transport).'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   ! jenn:todo Should we make this compatible with secondary continuum?
@@ -268,7 +268,7 @@ subroutine NWTUpdateAuxVars(realization,update_cells,update_bcs)
   PetscBool :: update_bcs
   PetscBool :: update_cells
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   type(nw_trans_realization_type), pointer :: nw_trans
@@ -417,7 +417,7 @@ subroutine NWTAuxVarCompute(nwt_auxvar,global_auxvar,material_auxvar, &
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
   type(nw_trans_realization_type) :: nw_trans
-  type(option_type) :: option
+  class(option_type) :: option
   
   ! aqueous concentration (equilibrium)
   nwt_auxvar%aqueous_eq_conc(:) = nwt_auxvar%total_bulk_conc(:) / &
@@ -477,7 +477,7 @@ subroutine NWTEquilibrateConstraint(nw_trans,nwt_species_constraint, &
   type(nw_transport_auxvar_type) :: nwt_auxvar
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: ispecies
   PetscInt :: c_type
@@ -559,7 +559,7 @@ subroutine NWTResidual(snes,xx,r,realization,ierr)
   PetscInt :: istart, iend, offset
   type(discretization_type), pointer :: discretization
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(nw_trans_realization_type), pointer :: nw_trans
   type(nw_transport_auxvar_type), pointer :: nwt_auxvars(:)
@@ -857,7 +857,7 @@ subroutine NWTUpdateFixedAccumulation(realization)
   type(nw_transport_auxvar_type), pointer :: nwt_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)  
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(nw_trans_realization_type), pointer :: nw_trans
@@ -1137,7 +1137,7 @@ subroutine NWTResidualFlux(nwt_auxvar_up,nwt_auxvar_dn, &
   PetscReal :: area, dist(-1:3)
   PetscReal :: velocity(*)
   type(nw_trans_realization_type), pointer :: nw_trans
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Res_up(nw_trans%params%nspecies)
   PetscReal :: Res_dn(nw_trans%params%nspecies)
   
@@ -1259,7 +1259,7 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   MatType :: mat_type
   PetscViewer :: viewer 
   PetscReal, pointer :: work_loc_p(:) 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type),  pointer :: grid
   type(nw_trans_realization_type), pointer :: nw_trans
   type(nw_transport_auxvar_type), pointer :: nwt_auxvars(:)
@@ -1532,7 +1532,7 @@ subroutine NWTJacobianAccum(material_auxvar,nw_trans,option,Jac)
   
   class(material_auxvar_type) :: material_auxvar
   type(nw_trans_realization_type) :: nw_trans
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Jac(nw_trans%params%nspecies,nw_trans%params%nspecies)
   
   PetscReal :: vol_dt
@@ -1733,7 +1733,7 @@ subroutine NWTJacobianFlux(nwt_auxvar_up,nwt_auxvar_dn, &
   PetscReal :: area, dist(-1:3)
   PetscReal :: velocity(*) ! at connection, not at cell center
   type(nw_trans_realization_type), pointer :: nw_trans
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: Jac_up(nw_trans%params%nspecies,nw_trans%params%nspecies)
   PetscReal :: Jac_dn(nw_trans%params%nspecies,nw_trans%params%nspecies)
   
@@ -1838,7 +1838,7 @@ subroutine NWTComputeMassBalance(realization,max_size,sum_mol)
   type(realization_subsurface_type) :: realization
   PetscInt :: max_size
   PetscReal :: sum_mol(max_size,4)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(grid_type), pointer :: grid
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -1928,7 +1928,7 @@ subroutine NWTUpdateMassBalance(realization)
   
   type(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(nw_transport_auxvar_type), pointer :: nwt_auxvars_bc(:)
   type(nw_transport_auxvar_type), pointer :: nwt_auxvars_ss(:)
 

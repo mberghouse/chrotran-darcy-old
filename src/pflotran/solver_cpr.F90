@@ -28,8 +28,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
 
   implicit none
   type(cpr_pc_type) :: stash
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscErrorCode :: ierr
 
   character(len=MAXWORDLENGTH) :: keyword, word, word2
@@ -42,14 +42,14 @@ subroutine SolverCPRRead(stash, input, option, ierr)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','CPR OPTIONS')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CPR OPTIONS')
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
       case('CPRT2_TYPE')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'cprT2_type','CPR OPTIONS')
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'cprT2_type','CPR OPTIONS')
         call StringToUpper(word)
         select case(trim(word))
           case('SAILS')
@@ -72,12 +72,12 @@ subroutine SolverCPRRead(stash, input, option, ierr)
           case default
             option%io_buffer  = 'CPR T2 Preconditioner type: ' // trim(word) // &
                                 ' unknown.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
 
       case('CPRT1_TYPE')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'cprT1_type','CPR OPTIONS')
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'cprT1_type','CPR OPTIONS')
         call StringToUpper(word)
         select case(trim(word))
           case('RICHARDSON')
@@ -89,12 +89,12 @@ subroutine SolverCPRRead(stash, input, option, ierr)
           case default
             option%io_buffer  = 'CPR T1 KSP type: ' // trim(word) // &
                                 ' unknown.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
 
       case('CPR_EXTRACTION_TYPE')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'cpr_extraction_type','CPR OPTIONS')
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'cpr_extraction_type','CPR OPTIONS')
         call StringToUpper(word)
         select case(trim(word))
           case('QIMPES_VARIABLE')
@@ -104,17 +104,17 @@ subroutine SolverCPRRead(stash, input, option, ierr)
           case default
             option%io_buffer  = 'CPR Extraction type: ' // trim(word) // &
                                 ' unknown.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
 
       case('CPR_EX_OFFSET')
-        call InputReadInt(input,option, stash%exrow_offset)
+        call input%ReadInt(option, stash%exrow_offset)
 
       case('T2FILLIN')
-        call InputReadInt(input,option, stash%t2fillin)
+        call input%ReadInt(option, stash%t2fillin)
 
       case('T2ASMOVERLAP')
-        call InputReadInt(input,option, stash%asmoverlap)
+        call input%ReadInt(option, stash%asmoverlap)
 
       case('T2SHIFTINBLOCKS')
         stash%t2shiftinblocks= PETSC_TRUE
@@ -150,14 +150,14 @@ subroutine SolverCPRRead(stash, input, option, ierr)
         do
           call InputReadPflotranString(input,option)
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,keyword,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword', &
+          call input%ReadWord(option,keyword,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword', &
                              'CPR OPTIONS, HYPRE options')
           call StringToUpper(keyword)
           select case(trim(keyword))
             case('BOOMERAMG_CYCLE_TYPE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'BoomerAMG cycle type', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'BoomerAMG cycle type', &
                                  'CPR OPTIONS, HYPRE options')
               call StringToLower(word)
               string = '-pc_hypre_boomeramg_cycle_type'
@@ -173,27 +173,27 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                 case default
                   option%io_buffer  = 'HYPRE BoomerAMG cycle type: ' &
                                       // trim(word) // ' unknown.'
-                  call printErrMsg(option)
+                  call option%PrintErrMsg()
               end select
             case('BOOMERAMG_MAX_LEVELS')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'BoomerAMG maximum levels', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'BoomerAMG maximum levels', &
                                  'CPR OPTIONS, HYPRE options')
               string =  '-pc_hypre_boomeramg_max_levels'
               call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_MAX_ITER')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'BoomerAMG maximum iterations', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'BoomerAMG maximum iterations', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_max_iter'
               call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_TOL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG convergence tolerance', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_tol'
@@ -201,8 +201,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_TRUNCFACTOR')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG interpolation truncation factor', &
                                  'CPR OPTIONS, HYPRE options')
               string =  '-pc_hypre_boomeramg_truncfactor'
@@ -210,8 +210,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_AGG_NL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG # levels aggressive coarsening', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_agg_nl'
@@ -219,8 +219,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_AGG_NUM_PATHS')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                 'BoomerAMG # paths for aggressive coarsening', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_agg_num_paths'
@@ -228,8 +228,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_STRONG_THRESHOLD')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                 'BoomerAMG threshold for strong connectivity', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_strong_threshold'
@@ -237,8 +237,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_GRID_SWEEPS_ALL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                          'BoomerAMG number of grid sweeps up and down cycles', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_grid_sweeps_all'
@@ -246,8 +246,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_GRID_SWEEPS_DOWN')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                 'BoomerAMG number of grid sweeps down cycles', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_grid_sweeps_down'
@@ -255,8 +255,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_GRID_SWEEPS_UP')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                   'BoomerAMG number of grid sweeps up cycles', &
                                  'CPR OPTIONS, HYPRE options')
               !string = trim(prefix) // 'pc_hypre_boomeramg_grid_sweeps_up'
@@ -265,8 +265,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_GRID_SWEEPS_COARSE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                            'BoomerAMG number of grid sweeps for coarse level', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_grid_sweeps_coarse'
@@ -274,8 +274,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_RELAX_TYPE_ALL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                            'BoomerAMG relaxation type for up and down cycles', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_relax_type_all'
@@ -283,8 +283,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_RELAX_TYPE_DOWN')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                   'BoomerAMG relaxation type for down cycles', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_relax_type_down'
@@ -292,8 +292,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_RELAX_TYPE_UP')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG relaxation type for up cycles', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_relax_type_up'
@@ -301,8 +301,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_RELAX_TYPE_COARSE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG relaxation type for coarse grids', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_relax_type_coarse'
@@ -310,8 +310,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_RELAX_WEIGHT_ALL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG relaxation weight for all levels', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_relax_weight_all'
@@ -319,9 +319,9 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_RELAX_WEIGHT_LEVEL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputReadWord(input,option,word2,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ReadWord(option,word2,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG relaxation weight for a level', &
                                  'CPR OPTIONS, HYPRE options')
               word = trim(word) // ' ' // trim(word2)
@@ -330,8 +330,8 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_OUTER_RELAX_WEIGHT_ALL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                            'BoomerAMG outer relaxation weight for all levels', &
                                  'CPR OPTIONS, HYPRE options')
               string =  '-pc_hypre_boomeramg_outer_relax_weight_all'
@@ -339,9 +339,9 @@ subroutine SolverCPRRead(stash, input, option, ierr)
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_OUTER_RELAX_WEIGHT_LEVEL')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputReadWord(input,option,word2,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ReadWord(option,word2,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                               'BoomerAMG outer relaxation weight for a level', &
                                  'CPR OPTIONS, HYPRE options')
               word = trim(word) // ' ' // trim(word2)
@@ -355,40 +355,40 @@ subroutine SolverCPRRead(stash, input, option, ierr)
               call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                         trim(string),'',ierr);CHKERRQ(ierr)
             case('BOOMERAMG_MEASURE_TYPE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'BoomerAMG measure type', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'BoomerAMG measure type', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_measure_type'
               call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_COARSEN_TYPE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'BoomerAMG coarsen type', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'BoomerAMG coarsen type', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_coarsen_type'
               call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_INTERPOLATION_TYPE','BOOMERAMG_INTERP_TYPE')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'BoomerAMG interpolation type', &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'BoomerAMG interpolation type', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_interp_type'
               call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                         trim(string),trim(word), &
                                         ierr);CHKERRQ(ierr)
             case('BOOMERAMG_NODAL_COARSEN')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG set nodal coarsening', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_nodal_coarsen'
               call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                         trim(string),'',ierr);CHKERRQ(ierr)
             case('BOOMERAMG_NODAL_RELAXATION')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                                  'BoomerAMG nodal relaxation via Schwarz', &
                                  'CPR OPTIONS, HYPRE options')
               string = '-pc_hypre_boomeramg_nodal_relaxation'
@@ -397,13 +397,13 @@ subroutine SolverCPRRead(stash, input, option, ierr)
             case default
               option%io_buffer  = 'HYPRE option: ' // trim(keyword) // &
                                   ' unknown.'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
           end select
         enddo
     case default
       option%io_buffer  = 'CPR preconditioner option: ' // trim(keyword) // &
                           ' unknown.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     end select
   enddo
 
@@ -426,7 +426,7 @@ subroutine SolverCPRInit(J, stash, pcin, ierr, option)
   PC :: pcin
   MPI_Comm :: C
   PetscErrorCode :: ierr
-  type(option_type) :: option
+  class(option_type) :: option
   MatType :: Jtype
 
   ! Unfortunately we cannot guarantee currently compatibilty with AIJ type
@@ -441,7 +441,7 @@ subroutine SolverCPRInit(J, stash, pcin, ierr, option)
     option%io_buffer  = 'CPR preconditioner: not compatible with matrix type: ' // trim(Jtype) // &
                         ' -  Please try again with blocked matrix type BAIJ '                  // &
                         '(for most modes this should be the default).'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 

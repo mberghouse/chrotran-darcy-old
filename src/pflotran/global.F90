@@ -39,7 +39,7 @@ subroutine GlobalSetup(realization)
   
   class(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type),pointer :: patch
   type(grid_type), pointer :: grid
   type(coupler_type), pointer :: boundary_condition
@@ -140,7 +140,7 @@ subroutine GlobalSetAuxVarScalar(realization,value,ivar)
   PetscReal :: value
   PetscInt :: ivar
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(global_auxvar_type), pointer :: auxvars(:)
   type(global_auxvar_type), pointer :: auxvars_bc(:)
@@ -259,7 +259,7 @@ subroutine GlobalSetAuxVarVecLoc(realization,vec_loc,ivar,isubvar)
   PetscInt :: ivar
   PetscInt :: isubvar  
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(global_auxvar_type), pointer :: auxvars(:)
@@ -547,7 +547,7 @@ subroutine GlobalGetAuxVarVecLoc(realization,vec_loc,ivar,isubvar)
   PetscInt :: ivar
   PetscInt :: isubvar  
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   
@@ -569,7 +569,7 @@ subroutine GlobalGetAuxVarVecLoc(realization,vec_loc,ivar,isubvar)
       enddo
     case default
       option%io_buffer = 'Variable unrecognized in GlobalGetAuxVarVecLoc.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   call VecRestoreArrayReadF90(vec_loc,vec_loc_p,ierr);CHKERRQ(ierr)
@@ -596,7 +596,7 @@ subroutine GlobalWeightAuxVars(realization,weight)
   class(realization_subsurface_type) :: realization
   PetscReal :: weight
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(global_auxvar_type), pointer :: auxvars(:)
   PetscInt :: ghosted_id
   
@@ -704,7 +704,7 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
   PetscInt :: time_level
   
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   option => realization%option
   field => realization%field

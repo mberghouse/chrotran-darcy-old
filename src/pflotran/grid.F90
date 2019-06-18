@@ -194,7 +194,7 @@ subroutine GridComputeInternalConnect(grid,option,ugdm)
   PetscInt ierr
 
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   type(ugdm_type), optional :: ugdm
   
   type(connection_set_type), pointer :: connection_set, connection_bound_set
@@ -357,7 +357,7 @@ subroutine GridPopulateConnection(grid,connection,iface,iconn,cell_id_local, &
   PetscInt :: iface
   PetscInt :: iconn
   PetscInt :: cell_id_local
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: cell_id_ghosted
   
@@ -402,7 +402,7 @@ subroutine GridMapIndices(grid, dm_ptr, sgrid_stencil_type,option)
   type(grid_type) :: grid
   type(dm_ptr_type) :: dm_ptr
   PetscEnum :: sgrid_stencil_type
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt, allocatable :: int_tmp(:)
 ! PetscInt, pointer :: int_tmp(:)
@@ -439,7 +439,7 @@ subroutine GridComputeSpacing(grid,origin_global,option)
   
   type(grid_type) :: grid
   PetscReal :: origin_global(3)
-  type(option_type) :: option
+  class(option_type) :: option
   
   select case(grid%itype)
     case(STRUCTURED_GRID)
@@ -467,7 +467,7 @@ subroutine GridComputeCoordinates(grid,origin_global,option,ugdm)
 
   type(grid_type) :: grid
   PetscReal :: origin_global(3)
-  type(option_type) :: option
+  class(option_type) :: option
   type(ugdm_type), optional :: ugdm ! sp 
   PetscInt :: icell
   
@@ -545,7 +545,7 @@ subroutine GridComputeVolumes(grid,volume,option)
   implicit none
 
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   Vec :: volume
   
   select case(grid%itype)
@@ -581,7 +581,7 @@ subroutine GridComputeAreas(grid,area,option)
   implicit none
   
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   Vec :: area
   
   select case(grid%itype)
@@ -590,7 +590,7 @@ subroutine GridComputeAreas(grid,area,option)
       call UGridComputeQuality(grid%unstructured_grid,option)
     case default
       option%io_buffer = 'ERROR: GridComputeAreas only implemented for Unstructured grid'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine GridComputeAreas
@@ -613,7 +613,7 @@ subroutine GridLocalizeRegions(grid,region_list,option)
   
   type(region_list_type), pointer :: region_list
   type(grid_type), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(region_type), pointer :: region
   character(len=MAXSTRINGLENGTH) :: string
@@ -659,12 +659,12 @@ subroutine GridLocalizeRegions(grid,region_list,option)
           case default
             option%io_buffer = 'GridLocalizeRegions() must tbe extended ' // &
             'for unstructured region DEFINED_BY_CELL_AND_FACE_IDS'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       case (DEFINED_BY_VERTEX_IDS)
         option%io_buffer = 'GridLocalizeRegions() must tbe extended ' // &
           'for unstructured region DEFINED_BY_VERTEX_IDS'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       case (DEFINED_BY_SIDESET_UGRID)
         call UGridMapSideSet2(grid%unstructured_grid, &
                              region%sideset%face_vertices, &
@@ -705,7 +705,7 @@ subroutine GridLocalizeRegions(grid,region_list,option)
         region%num_cells = size(region%cell_ids)
       case default
         option%io_buffer = 'GridLocalizeRegions: Region definition not recognized'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
     if (region%num_cells == 0 .and. associated(region%cell_ids)) then
@@ -724,7 +724,7 @@ subroutine GridLocalizeRegions(grid,region_list,option)
     if (global_cell_count == 0) then
       option%io_buffer = 'No cells assigned to REGION "' // &
         trim(region%name) // '".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     region => region%next
 
@@ -770,7 +770,7 @@ subroutine GridLocalizeRegionsFromCellIDs(grid, region, option)
 
   type(grid_type) :: grid
   type(region_type) :: region
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: word
   Vec :: vec_cell_ids
@@ -814,7 +814,7 @@ subroutine GridLocalizeRegionsFromCellIDs(grid, region, option)
         write(iface,*) iface
         option%io_buffer = 'Face ID (' // trim(adjustl(word)) // ') greater &
           &than 14 in GridLocalizeRegionsFromCellIDs()'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       tmp_scl_array(ii) = 10.d0**dble(region%faces(ii))
     else
@@ -830,7 +830,7 @@ subroutine GridLocalizeRegionsFromCellIDs(grid, region, option)
     option%io_buffer = 'The following region includes a cell-id that is &
       &greater than number of control volumes present in the grid: ' // &
     trim(region%name)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call VecSetValues(vec_cell_ids, region%num_cells, tmp_int_array, &
@@ -960,7 +960,7 @@ subroutine GridLocalizeExplicitFaceset(ugrid,region,option)
   
   type(grid_unstructured_type) :: ugrid
   type(region_type) :: region
-  type(option_type) :: option
+  class(option_type) :: option
   Vec :: volume
 
   type(unstructured_explicit_type), pointer :: explicit_grid
@@ -1206,7 +1206,7 @@ subroutine GridCreateNaturalToGhostedHash(grid,option)
   implicit none
   
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: local_ghosted_id, natural_id
@@ -1263,7 +1263,7 @@ subroutine GridCreateNaturalToGhostedHash(grid,option)
   call MPI_Allreduce(max_num_ids_per_hash,num_in_hash,ONE_INTEGER_MPI, &
                      MPIU_INTEGER,MPI_MAX,option%mycomm,ierr)
   write(option%io_buffer,'("max_num_ids_per_hash: ",i5)') num_in_hash
-  call printMsg(option)
+  call option%PrintMsg()
 
   call PetscLogEventEnd(logging%event_hash_create,ierr);CHKERRQ(ierr)
 
@@ -1426,7 +1426,7 @@ subroutine GridGetGhostedNeighbors(grid,ghosted_id,stencil_type, &
   implicit none
   
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ghosted_id
   PetscEnum :: stencil_type
   PetscInt :: stencil_width_i
@@ -1448,7 +1448,7 @@ subroutine GridGetGhostedNeighbors(grid,ghosted_id,stencil_type, &
     case(IMPLICIT_UNSTRUCTURED_GRID,EXPLICIT_UNSTRUCTURED_GRID) 
       option%io_buffer = 'GridGetNeighbors not currently supported for ' // &
         'unstructured grids.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine GridGetGhostedNeighbors
@@ -1472,7 +1472,7 @@ subroutine GridGetGhostedNeighborsWithCorners(grid,ghosted_id,stencil_type, &
   implicit none
   
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ghosted_id
   PetscEnum :: stencil_type
   PetscInt :: stencil_width_i
@@ -1493,7 +1493,7 @@ subroutine GridGetGhostedNeighborsWithCorners(grid,ghosted_id,stencil_type, &
     case(IMPLICIT_UNSTRUCTURED_GRID,EXPLICIT_UNSTRUCTURED_GRID) 
       option%io_buffer = 'GridGetNeighbors not currently supported for ' // &
         'unstructured grids.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
 end subroutine GridGetGhostedNeighborsWithCorners
@@ -1598,7 +1598,7 @@ subroutine GridLocalizeRegionFromBlock(grid,region,option)
   
   type(region_type), pointer :: region
   type(grid_type), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt, allocatable :: temp_int_array(:)
@@ -1615,7 +1615,7 @@ subroutine GridLocalizeRegionFromBlock(grid,region,option)
   if (grid%itype /= STRUCTURED_GRID) then
      option%io_buffer='Region definition using BLOCK is only supported for ' //&
        ' structured grids'
-     call printErrMsg(option)
+     call option%PrintErrMsg()
   endif
   
   ! convert indexing from global (entire domain) to local processor
@@ -1668,7 +1668,7 @@ subroutine GridLocalizeRegionFromBlock(grid,region,option)
 
   if (count /= region%num_cells) then
     option%io_buffer = 'Mismatch in number of cells in block region'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine GridLocalizeRegionFromBlock
@@ -1691,7 +1691,7 @@ subroutine GridLocalizeRegionFromCartBound(grid,region,option)
   
   type(region_type), pointer :: region
   type(grid_type), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt, allocatable :: temp_int_array(:)
@@ -1708,7 +1708,7 @@ subroutine GridLocalizeRegionFromCartBound(grid,region,option)
   if (grid%itype /= STRUCTURED_GRID) then
     option%io_buffer='Region definition using CARTESIAN_BOUNDARY is ' // &
       'only supported for structured grids.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   region%i1 = 1
@@ -1755,7 +1755,7 @@ subroutine GridLocalizeRegionFromCoordinates(grid,region,option)
   
   type(region_type), pointer :: region
   type(grid_type), pointer :: grid
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt, allocatable :: temp_int_array(:)
@@ -1773,7 +1773,7 @@ subroutine GridLocalizeRegionFromCoordinates(grid,region,option)
   if (size(region%coordinates) > TWO_INTEGER) then
     option%io_buffer = 'GridLocalizeRegions: more than 2 coordinates' // &
                        ' not supported in region object'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   same_point = PETSC_FALSE
@@ -1817,7 +1817,7 @@ subroutine GridLocalizeRegionFromCoordinates(grid,region,option)
             region%coordinates(ONE_INTEGER)%y, &
             region%coordinates(ONE_INTEGER)%z, &
             ' not found in global domain.', count
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     else if (count > 1) then
       write(option%io_buffer,*) 'Region: (coord)', &
             region%coordinates(ONE_INTEGER)%x, &
@@ -1825,7 +1825,7 @@ subroutine GridLocalizeRegionFromCoordinates(grid,region,option)
             region%coordinates(ONE_INTEGER)%z, &
             ' duplicated across ', count, &
             ' procs in global domain.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   else ! 2 coordinates
     x_min = min(region%coordinates(ONE_INTEGER)%x, &
@@ -2000,7 +2000,7 @@ subroutine GridLocalizeRegionFromCoordinates(grid,region,option)
             if (grid%itype == EXPLICIT_UNSTRUCTURED_GRID) then
               option%io_buffer = 'Regions defined with 2D planes are not ' // &
                 'supported with explicit unstructured grids.'
-              call printErrMsg(option)
+              call option%PrintErrMsg()
             endif
             if (grid%itype == IMPLICIT_UNSTRUCTURED_GRID) then
               call UGridGetCellsInRectangle(x_min,x_max,y_min,y_max, &
@@ -2025,7 +2025,7 @@ subroutine GridLocalizeRegionFromCoordinates(grid,region,option)
     iflag = i
     if (iflag > 0) then
       option%io_buffer = 'GridLocalizeRegions, between two points'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   endif
 
@@ -2049,7 +2049,7 @@ subroutine GridMapCellsInPolVol(grid,polygonal_volume, &
   type(grid_type) :: grid
   type(polygonal_volume_type) :: polygonal_volume
   character(len=MAXWORDLENGTH) :: region_name
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt, pointer :: cell_ids(:)
 
   PetscInt :: local_id, ghosted_id, icount
@@ -2092,7 +2092,7 @@ subroutine GridGetLocalIDFromCoordinate(grid,coordinate,option,local_id)
 
   type(grid_type) :: grid
   type(point3d_type) :: coordinate
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: local_id
   
   PetscReal, parameter :: pert = 1.d-8, tol = 1.d-20
@@ -2145,12 +2145,12 @@ subroutine GridGetLocalIDFromCoordinate(grid,coordinate,option,local_id)
           option%io_buffer = 'Locating a grid cell through a specified &
             &coordinate (GridGetLocalIDFromCoordinate)is not supported for &
             &explicit (primal) unstructured grids.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       case(POLYHEDRA_UNSTRUCTURED_GRID)
           option%io_buffer = &
             'add code POLYHDERA in GridGetLocalIDFromCoordinate'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
     end select
   endif
   
@@ -2176,7 +2176,7 @@ subroutine GridPrintExtents(grid,option)
   implicit none
 
   type(grid_type) :: grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word1, word2

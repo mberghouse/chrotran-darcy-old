@@ -116,7 +116,7 @@ subroutine MiscibleAuxVarInit(auxvar,option)
   implicit none
   
   type(Miscible_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: var_elem_size, var_node_size
   PetscInt :: nvar 
@@ -169,7 +169,7 @@ subroutine MiscibleAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(Miscible_auxvar_elem_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%pres = auxvar%pres
   auxvar2%temp = auxvar%temp
@@ -224,7 +224,7 @@ subroutine MiscibleAuxVarCompute_NINC(x,auxvar,global_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(Miscible_auxvar_elem_type) :: auxvar
   type(global_auxvar_type) :: global_auxvar
@@ -305,7 +305,7 @@ subroutine MiscibleAuxVarCompute_WINC(x,delx,auxvar,global_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(fluid_property_type) :: fluid_properties
   type(Miscible_auxvar_elem_type) :: auxvar(1:option%nflowdof)
   type(global_auxvar_type) :: global_auxvar

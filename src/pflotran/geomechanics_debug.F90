@@ -72,8 +72,8 @@ subroutine GeomechDebugRead(debug,input,option)
   implicit none
     
   type(geomech_debug_type) :: debug
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
 
@@ -84,8 +84,8 @@ subroutine GeomechDebugRead(debug,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS_DEBUG')   
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS_DEBUG')
       
     select case(trim(keyword))
     

@@ -466,9 +466,9 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   class(well_data_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscReal, pointer :: waytime(:)
   PetscInt, intent(inout) :: nwaytime, mwaytime
 
@@ -491,23 +491,23 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
 
   do
 
-    call InputReadPflotranString(input, option)
-    if (InputError(input)) exit
+    call InputReadPflotranString(input,option)
+    if (input%Error()) exit
     if (InputCheckExit(input, option)) exit
 
-    call InputReadWord(input, option, keyword, PETSC_TRUE)
-    call InputErrorMsg(input, option, 'keyword', 'WELL_DATA')
+    call input%ReadWord(option, keyword, PETSC_TRUE)
+    call input%ErrorMsg(option, 'keyword', 'WELL_DATA')
     call StringToUpper(keyword)
 
     select case(trim(keyword))
       case('RADIUS')  ! this has a conversion factor to account for
-        call InputReadDouble(input, option, this%w_radius)
-        call InputErrorMsg(input, option, 'well-radius' , 'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ReadDouble(option, this%w_radius)
+        call input%ErrorMsg(option, 'well-radius' , 'WELL_DATA')
+        call input%ReadWord(option, word, PETSC_TRUE)
         internal_units = 'meter'
-        if (InputError(input)) then
+        if (input%Error()) then
           word = trim(keyword) // ' UNITS'
-          call InputDefaultMsg(input, option, word)
+          call input%DefaultMsg(option, word)
         else
           units = trim(word)
           this%w_radius = this%w_radius &
@@ -515,24 +515,24 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
           this%w_radius_set = PETSC_TRUE
         endif
       case('SKIN_FACTOR')
-        call InputReadDouble(input, option, this%w_skin_factor)
+        call input%ReadDouble(option, this%w_skin_factor)
         this%w_skin_factor_set = PETSC_TRUE
-        call InputErrorMsg(input, option, 'skin factor', 'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ErrorMsg(option, 'skin factor', 'WELL_DATA')
+        call input%ReadWord(option, word, PETSC_TRUE)
       case('THETA_FRACTION')
-        call InputReadDouble(input, option, this%w_theta_frac)
+        call input%ReadDouble(option, this%w_theta_frac)
         this%w_theta_frac_set = PETSC_TRUE
-        call InputErrorMsg(input, option, 'theta angle fraction', 'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ErrorMsg(option, 'theta angle fraction', 'WELL_DATA')
+        call input%ReadWord(option, word, PETSC_TRUE)
       case('INJECTION_ENTHALPY_P')
-        call InputReadDouble(input, option, v)
-        call InputErrorMsg(input, option, &
+        call input%ReadDouble(option, v)
+        call input%ErrorMsg(option, &
                            'Injection enthalpy pressure', 'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ReadWord(option, word, PETSC_TRUE)
         internal_units = 'Pa'
-        if (InputError(input)) then
+        if (input%Error()) then
           word = trim(keyword) // ' UNITS'
-          call InputDefaultMsg(input, option, word)
+          call input%DefaultMsg(option, word)
         else
           units = trim(word)
           v = UnitsConvertToInternal(units, internal_units, option)*v
@@ -543,18 +543,18 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
           endif
         endif
       case('INJECTION_ENTHALPY_T')
-        call InputReadDouble(input, option, v)
-        call InputErrorMsg(input, option, 'injection enthalpy temp', &
+        call input%ReadDouble(option, v)
+        call input%ErrorMsg(option, 'injection enthalpy temp', &
                            'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ReadWord(option, word, PETSC_TRUE)
         if (this%w_readtime>0.0) then
           call StoreEvent(this, EVENT_TINJ, ival, v)
         else
           this%w_injection_t = v
         endif
       case('WELL_TYPE')
-        call InputReadWord(input, option,  keyword , PETSC_TRUE)
-        call InputErrorMsg(input, option, 'keyword', 'WELL_TYPE')
+        call input%ReadWord(option,  keyword , PETSC_TRUE)
+        call input%ErrorMsg(option, 'keyword', 'WELL_TYPE')
         call StringToUpper(keyword)
 
         select case(trim(keyword))
@@ -571,12 +571,12 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
           case default
             option%io_buffer = 'WELL_DATA keyword: ' &
                                // trim(keyword) // ' not recognized'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       case('CONST_DRILL_DIR')
         this%w_const_drill_dir_set = PETSC_TRUE
-        call InputReadWord(input, option, keyword, PETSC_TRUE)
-        call InputErrorMsg(input, option, 'keyword', 'CONST_DRILL_DIR')
+        call input%ReadWord(option, keyword, PETSC_TRUE)
+        call input%ErrorMsg(option, 'keyword', 'CONST_DRILL_DIR')
         call StringToUpper(keyword)
 
         select case(trim(keyword))
@@ -589,17 +589,17 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
           case default
             option%io_buffer = &
             'Drilling direction ' // trim(keyword) // ' not recognized'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       case('Z_REF')
         this%w_z_ref_set = PETSC_TRUE
-        call InputReadDouble(input, option, v)
-        call InputErrorMsg(input, option, 'z_ref', 'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ReadDouble(option, v)
+        call input%ErrorMsg(option, 'z_ref', 'WELL_DATA')
+        call input%ReadWord(option, word, PETSC_TRUE)
         internal_units = 'meter'
-        if (InputError(input)) then
+        if (input%Error()) then
           word = trim(keyword) // ' UNITS'
-          call InputDefaultMsg(input, option, word)
+          call input%DefaultMsg(option, word)
         else
           units = trim(word)
           this%w_z_ref = v*UnitsConvertToInternal(units, internal_units, &
@@ -608,13 +608,13 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
       case('CIJK', 'CIJK_Z', 'CIJK_D')
       case('BHPL')
   ! Read a well bhp limit (will be max for injector, min for producer)
-        call InputReadDouble(input, option, v)
-        call InputErrorMsg(input, option, 'BHPL', 'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ReadDouble(option, v)
+        call input%ErrorMsg(option, 'BHPL', 'WELL_DATA')
+        call input%ReadWord(option, word, PETSC_TRUE)
         internal_units = 'Pa'
-        if (InputError(input)) then
+        if (input%Error()) then
           word = trim(keyword) // ' UNITS'
-          call InputDefaultMsg(input, option, word)
+          call input%DefaultMsg(option, word)
         else
           units = trim(word)
           v = UnitsConvertToInternal(units, internal_units, option)*v
@@ -638,13 +638,13 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
           endif
       case('TIME')
   ! Read the time associated with susbsequent instructions
-        call InputReadDouble(input, option, v)
-        call InputErrorMsg(input, option, 'TIME', 'WELL_DATA')
-        call InputReadWord(input, option, word, PETSC_TRUE)
+        call input%ReadDouble(option, v)
+        call input%ErrorMsg(option, 'TIME', 'WELL_DATA')
+        call input%ReadWord(option, word, PETSC_TRUE)
         internal_units = 'sec'
-        if (InputError(input)) then
+        if (input%Error()) then
           word = trim(keyword) // ' UNITS'
-          call InputDefaultMsg(input, option, word)
+          call input%DefaultMsg(option, word)
         else
           units = trim(word)
           v = UnitsConvertToInternal(units, internal_units, option)*v
@@ -678,7 +678,7 @@ subroutine WellDataRead(this, input, option, waytime, nwaytime, mwaytime)
     case default
         option%io_buffer = 'WELL_DATA keyword: ' &
                            // trim(keyword) // ' not recognized'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
   enddo
 
@@ -720,7 +720,7 @@ subroutine WellDataDestroyList(well_data_list, option)
   implicit none
 
   type(well_data_list_type), pointer :: well_data_list
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(well_data_type), pointer :: well_data, prev_well_data
 
@@ -1350,7 +1350,7 @@ subroutine SetZRefInList(this, option)
   implicit none
 
   class(well_data_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: icmpl, ierr
   PetscReal :: ztop, zcmpl
@@ -1753,7 +1753,7 @@ subroutine DoUpdateInList(this, dt, option)
 
   class(well_data_type) :: this
   PetscReal, intent(in) :: dt
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: itt, vmtype, ierr, ievent, event_code, itarg, itype
   PetscReal :: den, deni, time, event_time, vtarg
@@ -1845,7 +1845,7 @@ subroutine DoIncrJacInList(this, option, nflowdof, Jup, A)
   implicit none
 
   class(well_data_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt , intent(in ) :: nflowdof
   PetscReal, intent(out) :: Jup(nflowdof, nflowdof)
   Mat :: A
@@ -2240,8 +2240,8 @@ subroutine readWellTarget(this, input, option, keyword, word, target_type)
   implicit none
 
   class(well_data_type) :: this
-  type(option_type)            :: option
-  type(input_type), pointer    :: input
+  class(option_type)            :: option
+  class(input_type), pointer    :: input
   character(len=*), intent(in) :: keyword
   PetscInt, intent(in)         :: target_type
   PetscInt                     :: vmtype
@@ -2250,10 +2250,10 @@ subroutine readWellTarget(this, input, option, keyword, word, target_type)
   PetscReal                    :: v
 
   ! Read a well surface target rate int v
-  call InputReadDouble(input, option, v)
-  call InputErrorMsg(input, option, keyword, 'WELL_DATA')
+  call input%ReadDouble(option, v)
+  call input%ErrorMsg(option, keyword, 'WELL_DATA')
   ! Read the units into word
-  call InputReadWord(input, option, word, PETSC_TRUE)
+  call input%ReadWord(option, word, PETSC_TRUE)
   vmtype=GetTargetUnitType(target_type)
 
   internal_units = 'unitless'
@@ -2261,9 +2261,9 @@ subroutine readWellTarget(this, input, option, keyword, word, target_type)
   if (vmtype == TT_V) internal_units = 'm^3/sec'
   if (vmtype == TT_M) internal_units = 'Kg/sec'
 
-  if (InputError(input)) then
+  if (input%Error()) then
     option%io_buffer = 'Keyword ' // trim(keyword) // ' units not found'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   else
     ! All OK, convert units and store
     units = trim(word)

@@ -84,8 +84,8 @@ subroutine GeomechanicsMaterialPropertyRead(geomech_material_property, &
   implicit none
   
   type(geomech_material_property_type) :: geomech_material_property
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword, word
   character(len=MAXSTRINGLENGTH) :: string
@@ -95,38 +95,38 @@ subroutine GeomechanicsMaterialPropertyRead(geomech_material_property, &
     
     if (InputCheckExit(input,option)) exit
   
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS_MATERIAL_PROPERTY')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS_MATERIAL_PROPERTY')
     call StringToUpper(keyword)
     
     select case(trim(keyword))
       case('ID')
-        call InputReadInt(input,option,geomech_material_property%id)
-        call InputErrorMsg(input,option,'id','GEOMECHANICS_MATERIAL_PROPERTY')
+        call input%ReadInt(option,geomech_material_property%id)
+        call input%ErrorMsg(option,'id','GEOMECHANICS_MATERIAL_PROPERTY')
       case('YOUNGS_MODULUS')
-        call InputReadDouble(input,option,geomech_material_property% &
+        call input%ReadDouble(option,geomech_material_property% &
                              youngs_modulus)
-        call InputErrorMsg(input,option,'YOUNGS_MODULUS', &
+        call input%ErrorMsg(option,'YOUNGS_MODULUS', &
                            'GEOMECHANICS_MATERIAL_PROPERTY')
       case('POISSONS_RATIO')
-        call InputReadDouble(input,option,geomech_material_property% &
+        call input%ReadDouble(option,geomech_material_property% &
                              poissons_ratio)
-        call InputErrorMsg(input,option,'POISSONS_RATIO', &
+        call input%ErrorMsg(option,'POISSONS_RATIO', &
                            'GEOMECHANICS_MATERIAL_PROPERTY')
       case('ROCK_DENSITY')
-        call InputReadDouble(input,option,geomech_material_property% &
+        call input%ReadDouble(option,geomech_material_property% &
                              density)
-        call InputErrorMsg(input,option,'ROCK_DENSITY', &
+        call input%ErrorMsg(option,'ROCK_DENSITY', &
                            'GEOMECHANICS_MATERIAL_PROPERTY')
       case('BIOT_COEFFICIENT')
-        call InputReadDouble(input,option,geomech_material_property% &
+        call input%ReadDouble(option,geomech_material_property% &
                              biot_coeff)
-        call InputErrorMsg(input,option,'BIOT_COEFFICIENT', &
+        call input%ErrorMsg(option,'BIOT_COEFFICIENT', &
                            'GEOMECHANICS_MATERIAL_PROPERTY')
       case('THERMAL_EXPANSION_COEFFICIENT')
-        call InputReadDouble(input,option,geomech_material_property% &
+        call input%ReadDouble(option,geomech_material_property% &
                              thermal_exp_coeff)
-        call InputErrorMsg(input,option,'THERMAL_EXPANSION_COEFFICIENT', &
+        call input%ErrorMsg(option,'THERMAL_EXPANSION_COEFFICIENT', &
                            'GEOMECHANICS_MATERIAL_PROPERTY')
       case default
         call InputKeywordUnrecognized(keyword, &
@@ -186,7 +186,7 @@ subroutine GeomechanicsMaterialPropConvertListToArray(list,array,option)
 
   type(geomech_material_property_type), pointer :: list
   type(geomech_material_property_ptr_type), pointer :: array(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   type(geomech_material_property_type), pointer :: cur_material_property
   type(geomech_material_property_type), pointer :: prev_material_property
@@ -229,7 +229,7 @@ subroutine GeomechanicsMaterialPropConvertListToArray(list,array,option)
       write(string,*) i
       option%io_buffer = 'Material ID ' // trim(adjustl(string)) // &
         ' is duplicated in input file.'
-      call printMsg(option)
+      call option%PrintMsg()
       error_flag = PETSC_TRUE
     endif
   enddo
@@ -238,7 +238,7 @@ subroutine GeomechanicsMaterialPropConvertListToArray(list,array,option)
 
   if (error_flag) then
     option%io_buffer = 'Duplicate Material IDs.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   ! ensure unique material names
@@ -254,7 +254,7 @@ subroutine GeomechanicsMaterialPropConvertListToArray(list,array,option)
             option%io_buffer = 'Material name "' // &
               trim(adjustl(array(i)%ptr%name)) // &
               '" is duplicated in input file.'
-            call printMsg(option)
+            call option%PrintMsg()
             error_flag = PETSC_TRUE
           endif
         endif
@@ -264,7 +264,7 @@ subroutine GeomechanicsMaterialPropConvertListToArray(list,array,option)
 
   if (error_flag) then
     option%io_buffer = 'Duplicate Material names.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine GeomechanicsMaterialPropConvertListToArray

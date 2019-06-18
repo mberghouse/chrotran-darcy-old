@@ -48,11 +48,11 @@ subroutine DatasetRead(input,dataset,option)
   
   implicit none
 
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   class(dataset_base_type), pointer :: dataset
   class(dataset_map_hdf5_type), pointer :: dataset_map_hdf5
   class(dataset_global_hdf5_type), pointer :: dataset_global_hdf5
-  type(option_type) :: option
+  class(option_type) :: option
 
   character(len=MAXWORDLENGTH) :: word, word2
 
@@ -60,34 +60,34 @@ subroutine DatasetRead(input,dataset,option)
   ! not match any of type in the select case, assume default and use the 
   ! word as the name.
   
-  call InputReadWord(input,option,word,PETSC_TRUE)
+  call input%ReadWord(option,word,PETSC_TRUE)
   word2 = word
   call StringToUpper(word2)
   
   select case(word2)
     case('MAPPED')
       dataset_map_hdf5 => DatasetMapHDF5Create()
-      call InputReadWord(input,option,dataset_map_hdf5%name,PETSC_TRUE)
-      call InputDefaultMsg(input,option,'DATASET name') 
+      call input%ReadWord(option,dataset_map_hdf5%name,PETSC_TRUE)
+      call input%DefaultMsg(option,'DATASET name')
       call DatasetMapHDF5Read(dataset_map_hdf5,input,option)
       dataset => dataset_map_hdf5
     case('GLOBAL')
       dataset_global_hdf5 => DatasetGlobalHDF5Create()
-      call InputReadWord(input,option,dataset_global_hdf5%name,PETSC_TRUE)
-      call InputDefaultMsg(input,option,'DATASET name') 
+      call input%ReadWord(option,dataset_global_hdf5%name,PETSC_TRUE)
+      call input%DefaultMsg(option,'DATASET name')
       call DatasetCommonHDF5Read(dataset_global_hdf5,input,option)
       dataset => dataset_global_hdf5
     case default ! CELL_INDEXED, GLOBAL, GRIDDED
       dataset => DatasetCommonHDF5Create()
       select case(word2)
         case('CELL_INDEXED', 'GRIDDED')
-          call InputReadWord(input,option,dataset%name,PETSC_TRUE)
+          call input%ReadWord(option,dataset%name,PETSC_TRUE)
         case default
-          if (.not.InputError(input)) then
+          if (.not.input%Error()) then
             dataset%name = trim(word)
           endif
       end select
-      call InputDefaultMsg(input,option,'DATASET name') 
+      call input%DefaultMsg(option,'DATASET name')
       call DatasetCommonHDF5Read(DatasetCommonHDF5Cast(dataset),input, &
                                  option)
   end select
@@ -110,7 +110,7 @@ subroutine DatasetScreenForNonCellIndexed(datasets,option)
   implicit none
   
   class(dataset_base_type), pointer :: datasets
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(dataset_base_type), pointer :: cur_dataset
   class(dataset_base_type), pointer :: prev_dataset
@@ -143,7 +143,7 @@ subroutine DatasetScreenForNonCellIndexed(datasets,option)
       class default
         option%io_buffer = &
           'Unknown dataset type in DatasetScreenForNonCellIndexed.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
     ! if we changed the derived type, we need to replace the old dataset
     ! in the linked list of datasets and destroy the old dataset.
@@ -183,7 +183,7 @@ subroutine DatasetVerify(dataset,default_time_storage,header,option)
   class(dataset_base_type), pointer :: dataset
   type(time_storage_type), pointer :: default_time_storage
   character(len=MAXSTRINGLENGTH) :: header
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscBool :: dataset_error 
 
@@ -200,7 +200,7 @@ subroutine DatasetVerify(dataset,default_time_storage,header,option)
       call DatasetBaseVerify(dataset_ptr,dataset_error,option)
     class default
       option%io_buffer = 'DatasetXXXVerify needed for unknown dataset type'
-      call printMsg(option) 
+      call option%PrintMsg()
       dataset_error = PETSC_TRUE
   end select
 
@@ -210,7 +210,7 @@ subroutine DatasetVerify(dataset,default_time_storage,header,option)
       option%io_buffer = trim(option%io_buffer) // '/' // trim(dataset%name) 
     endif
     option%io_buffer = trim(option%io_buffer) // '.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
 end subroutine DatasetVerify
@@ -230,7 +230,7 @@ recursive subroutine DatasetUpdate(dataset,option)
   implicit none
   
   class(dataset_base_type), pointer :: dataset
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(dataset_ascii_type), pointer :: dataset_ascii
 
@@ -268,7 +268,7 @@ recursive subroutine DatasetLoad(dataset,option)
   implicit none
   
   class(dataset_base_type), pointer :: dataset
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(dataset_global_hdf5_type), pointer :: dataset_global_hdf5
   class(dataset_gridded_hdf5_type), pointer :: dataset_gridded_hdf5
@@ -290,18 +290,18 @@ recursive subroutine DatasetLoad(dataset,option)
       dataset_common_hdf5 => selector
       if (dataset_common_hdf5%is_cell_indexed) then
         option%io_buffer = 'Cell Indexed datasets opened later.'
-        call printMsg(option)
+        call option%PrintMsg()
       else
         option%io_buffer = 'Unrecognized dataset that extends ' // &
           'dataset_common_hdf5 in DatasetLoad.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     class is (dataset_ascii_type)
       ! do nothing.  dataset should already be in memory at this point
     class is (dataset_base_type)
       dataset_base => selector
       option%io_buffer = 'DatasetLoad not yet supported for base dataset class.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
   
 end subroutine DatasetLoad
@@ -329,7 +329,7 @@ subroutine DatasetFindInList(list,dataset_base,default_time_storage, &
   class(dataset_base_type), pointer :: dataset_base
   type(time_storage_type), pointer :: default_time_storage
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: dataset_name
   PetscReal, parameter :: time = 0.d0
@@ -405,7 +405,7 @@ subroutine DatasetPrint(this,option)
   implicit none
   
   class(dataset_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   write(option%fid_out,'(8x,''Dataset: '',a)') trim(this%name)
   write(option%fid_out,'(10x,''Type: '',a)') trim(DatasetGetClass(this))
@@ -484,29 +484,29 @@ subroutine DatasetReadDoubleOrDataset(input,double_value,dataset, &
 
   implicit none
   
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscReal :: double_value
   class(dataset_base_type), pointer :: dataset
   character(len=*) :: error_variable
   character(len=*) :: error_card
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXSTRINGLENGTH) :: buffer_save
 
   buffer_save = input%buf
-  call InputReadNChars(input,option,string,MAXSTRINGLENGTH,PETSC_TRUE)
-  call InputErrorMsg(input,option,error_variable,error_card)
+  call input%ReadNChars(option,string,MAXSTRINGLENGTH,PETSC_TRUE)
+  call input%ErrorMsg(option,error_variable,error_card)
   call StringToUpper(string)
   if (StringCompare(string,'DATASET',SEVEN_INTEGER)) then
     dataset => DatasetBaseCreate()
-    call InputReadWord(input,option,dataset%name,PETSC_TRUE)
+    call input%ReadWord(option,dataset%name,PETSC_TRUE)
     string = trim(error_card) // ',' // trim(error_variable)
-    call InputErrorMsg(input,option,'DATASET,NAME',string)   
+    call input%ErrorMsg(option,'DATASET,NAME',string)
   else
     input%buf = buffer_save
-    call InputReadDouble(input,option,double_value)
-    call InputErrorMsg(input,option,error_variable,error_card)
+    call input%ReadDouble(option,double_value)
+    call input%ErrorMsg(option,error_variable,error_card)
   endif
   
 end subroutine DatasetReadDoubleOrDataset
@@ -526,7 +526,7 @@ function DatasetGetMinRValue(dataset,option)
   implicit none
   
   class(dataset_base_type) :: dataset
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: DatasetGetMinRValue
 
@@ -575,14 +575,14 @@ subroutine DatasetUnknownClass(this,option,string)
   implicit none
   
   class(dataset_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   character(len=*) :: string
 
   option%io_buffer = 'Dataset "' // trim(this%name) // &
     '" from filename "' // trim(this%filename) // '" of class "' // &
     trim(DatasetGetClass(this)) // '" is not recognized in "' // &
     trim(string) // '".'
-  call PrintErrMsg(option)
+  call option%PrintErrMsg()
             
 end subroutine DatasetUnknownClass
 

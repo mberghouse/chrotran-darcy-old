@@ -70,7 +70,7 @@ subroutine GeomechanicsInitializePostPETSc(simulation)
 
   class(simulation_geomechanics_type) :: simulation
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   class(realization_subsurface_type), pointer :: subsurf_realization
   class(realization_geomech_type), pointer :: geomech_realization
   class(pmc_base_type), pointer :: cur_process_model_coupler
@@ -81,7 +81,7 @@ subroutine GeomechanicsInitializePostPETSc(simulation)
   class(timestepper_steady_type), pointer :: timestepper
   character(len=MAXSTRINGLENGTH) :: string
   type(waypoint_type), pointer :: waypoint
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscErrorCode :: ierr
 
   option => simulation%option
@@ -134,7 +134,7 @@ subroutine GeomechanicsInitializePostPETSc(simulation)
 
     string = 'GEOMECHANICS'
     call InputFindStringInFile(input,option,string)
-    call InputFindStringErrorMsg(input,option,string)  
+    call input%FindStringErrorMsg(option,string)
     geomech_realization%output_option => &
       OutputOptionDuplicate(simulation%output_option)
     nullify(geomech_realization%output_option%output_snap_variable_list)
@@ -285,7 +285,7 @@ subroutine GeomechanicsJumpStart(simulation)
   class(realization_geomech_type), pointer :: geomch_realization
   class(timestepper_steady_type), pointer :: master_timestepper
   class(timestepper_steady_type), pointer :: geomech_timestepper
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
 
   character(len=MAXSTRINGLENGTH) :: string
@@ -311,7 +311,7 @@ subroutine GeomechanicsJumpStart(simulation)
   if (option%steady_state) then
     option%io_buffer = 'Running in steady-state not yet supported for &
                        &surface-flow.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
     return
   endif
   
@@ -358,11 +358,11 @@ subroutine GeomechicsInitReadRequiredCards(geomech_realization,input)
   implicit none
   
   class(realization_geomech_type) :: geomech_realization
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 
   type(geomech_discretization_type), pointer :: geomech_discretization
   character(len=MAXSTRINGLENGTH) :: string
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   option         => geomech_realization%option  
   
@@ -372,7 +372,7 @@ subroutine GeomechicsInitReadRequiredCards(geomech_realization,input)
   ! GEOMECHANICS information
   string = "GEOMECHANICS"
   call InputFindStringInFile(input,option,string)
-  if (InputError(input)) return
+  if (input%Error()) return
   option%ngeomechdof = 3  ! displacements in x, y, z directions
   option%n_stress_strain_dof = 6
   
@@ -409,8 +409,8 @@ subroutine GeomechanicsInit(geomech_realization,input,option)
   class(realization_geomech_type) :: geomech_realization
   type(geomech_discretization_type), pointer :: geomech_discretization
   type(geomech_patch_type), pointer :: patch
-  type(input_type), pointer :: input
-  type(option_type), pointer :: option
+  class(input_type), pointer :: input
+  class(option_type), pointer :: option
   character(len=MAXWORDLENGTH) :: word
   type(grid_unstructured_type), pointer :: ugrid
   character(len=MAXWORDLENGTH) :: card
@@ -423,23 +423,23 @@ subroutine GeomechanicsInit(geomech_realization,input,option)
 
   do
     call InputReadPflotranString(input,option)
-    call InputReadStringErrorMsg(input,option,card)
+    call input%ReadStringErrorMsg(option,card)
     if (InputCheckExit(input,option)) exit
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS')
     call StringToUpper(word)
     
     select case(trim(word))
       case ('TYPE')
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword','TYPE')
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword','TYPE')
         call StringToUpper(word)
 
         select case(trim(word))
           case ('UNSTRUCTURED')
             geomech_discretization%itype = UNSTRUCTURED_GRID
-            call InputReadFilename(input,option,geomech_discretization%filename)
-            call InputErrorMsg(input,option,'keyword','filename')
+            call input%ReadFilename(option,geomech_discretization%filename)
+            call input%ErrorMsg(option,'keyword','filename')
 
             geomech_discretization%grid  => GMGridCreate()
             ugrid => UGridCreate()
@@ -453,15 +453,15 @@ subroutine GeomechanicsInit(geomech_realization,input,option)
             geomech_realization%geomech_patch => patch
           case default
             option%io_buffer = 'Geomechanics supports only unstructured grid'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       case ('GRAVITY')
-        call InputReadDouble(input,option,option%geomech_gravity(X_DIRECTION))
-        call InputErrorMsg(input,option,'x-direction','GEOMECH GRAVITY')
-        call InputReadDouble(input,option,option%geomech_gravity(Y_DIRECTION))
-        call InputErrorMsg(input,option,'y-direction','GEOMECH GRAVITY')
-        call InputReadDouble(input,option,option%geomech_gravity(Z_DIRECTION))
-        call InputErrorMsg(input,option,'z-direction','GEOMECH GRAVITY')
+        call input%ReadDouble(option,option%geomech_gravity(X_DIRECTION))
+        call input%ErrorMsg(option,'x-direction','GEOMECH GRAVITY')
+        call input%ReadDouble(option,option%geomech_gravity(Y_DIRECTION))
+        call input%ErrorMsg(option,'y-direction','GEOMECH GRAVITY')
+        call input%ReadDouble(option,option%geomech_gravity(Z_DIRECTION))
+        call input%ErrorMsg(option,'z-direction','GEOMECH GRAVITY')
         if (option%myrank == option%io_rank .and. &
             option%print_to_screen) &
             write(option%fid_out,'(/," *GEOMECH_GRAV",/, &
@@ -513,10 +513,10 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
   
   class(simulation_geomechanics_type) :: simulation
   type(solver_type) :: geomech_solver
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   
   class(realization_geomech_type), pointer :: geomech_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_discretization_type), pointer :: geomech_discretization
   type(geomech_material_property_type),pointer :: geomech_material_property
   type(waypoint_type), pointer :: waypoint
@@ -557,11 +557,11 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
     call InputReadPflotranString(input,option)
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','GEOMECHANICS')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','GEOMECHANICS')
     call StringToUpper(word)
     option%io_buffer = 'word :: ' // trim(word)
-    call printMsg(option)   
+    call option%PrintMsg()
 
     select case(trim(word))
     
@@ -575,10 +575,10 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
       case ('GEOMECHANICS_MATERIAL_PROPERTY')
         geomech_material_property => GeomechanicsMaterialPropertyCreate()
 
-        call InputReadWord(input,option,geomech_material_property%name, &
+        call input%ReadWord(option,geomech_material_property%name, &
                            PETSC_TRUE)
                            
-        call InputErrorMsg(input,option,'name','GEOMECHANICS_MATERIAL_PROPERTY')
+        call input%ErrorMsg(option,'name','GEOMECHANICS_MATERIAL_PROPERTY')
         call GeomechanicsMaterialPropertyRead(geomech_material_property,input, &
                                               option)
         call GeomechanicsMaterialPropertyAddToList(geomech_material_property, &
@@ -588,9 +588,9 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
       !.........................................................................
       case ('GEOMECHANICS_REGION')
         region => GeomechRegionCreate()
-        call InputReadWord(input,option,region%name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'name','GEOMECHANICS_REGION')
-        call printMsg(option,region%name)
+        call input%ReadWord(option,region%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'name','GEOMECHANICS_REGION')
+        call option%PrintMsg(region%name)
         call GeomechRegionRead(region,input,option)
         ! we don't copy regions down to patches quite yet, since we
         ! don't want to duplicate IO in reading the regions
@@ -600,9 +600,9 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
       !.........................................................................
       case ('GEOMECHANICS_CONDITION')
         condition => GeomechConditionCreate(option)
-        call InputReadWord(input,option,condition%name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'GEOMECHANICS_CONDITION','name')
-        call printMsg(option,condition%name)
+        call input%ReadWord(option,condition%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'GEOMECHANICS_CONDITION','name')
+        call option%PrintMsg(condition%name)
         call GeomechConditionRead(condition,input,option)
         call GeomechConditionAddToList(condition,geomech_realization%geomech_conditions)
         nullify(condition)
@@ -610,8 +610,8 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
      !.........................................................................
       case ('GEOMECHANICS_BOUNDARY_CONDITION')
         coupler =>  GeomechCouplerCreate(GM_BOUNDARY_COUPLER_TYPE)
-        call InputReadWord(input,option,coupler%name,PETSC_TRUE)
-        call InputDefaultMsg(input,option,'Geomech Boundary Condition name')
+        call input%ReadWord(option,coupler%name,PETSC_TRUE)
+        call input%DefaultMsg(option,'Geomech Boundary Condition name')
         call GeomechCouplerRead(coupler,input,option)
         call GeomechRealizAddGeomechCoupler(geomech_realization,coupler)
         nullify(coupler)
@@ -619,15 +619,15 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
       !.........................................................................
       case ('GEOMECHANICS_SRC_SINK')
         coupler => GeomechCouplerCreate(GM_SRC_SINK_COUPLER_TYPE)
-        call InputReadWord(input,option,coupler%name,PETSC_TRUE)
-        call InputDefaultMsg(input,option,'Source Sink name') 
+        call input%ReadWord(option,coupler%name,PETSC_TRUE)
+        call input%DefaultMsg(option,'Source Sink name')
         call GeomechCouplerRead(coupler,input,option)
         call GeomechRealizAddGeomechCoupler(geomech_realization,coupler)
         nullify(coupler)
                  
       !.........................................................................
       case('NEWTON_SOLVER')
-        call InputReadWord(input,option,word,PETSC_FALSE)
+        call input%ReadWord(option,word,PETSC_FALSE)
         call StringToUpper(word)
         select case(word)
           case('GEOMECHANICS')
@@ -636,7 +636,7 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
         
      !....................
       case ('LINEAR_SOLVER')
-        call InputReadWord(input,option,word,PETSC_FALSE)
+        call input%ReadWord(option,word,PETSC_FALSE)
         call StringToUpper(word)
         select case(word)
           case('GEOMECHANICS')
@@ -651,18 +651,18 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
       case ('GEOMECHANICS_TIME')
         do
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,card)
+          call input%ReadStringErrorMsg(option,card)
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'word','GEOMECHANICS_TIME')
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'word','GEOMECHANICS_TIME')
           select case(trim(word))
             case('COUPLING_TIMESTEP_SIZE')
               internal_units = 'sec'
-              call InputReadDouble(input,option,temp_real)
-              call InputErrorMsg(input,option, &
+              call input%ReadDouble(option,temp_real)
+              call input%ErrorMsg(option, &
                                  'Coupling Timestep Size','GEOMECHANICS_TIME') 
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option, &
                         'Coupling Timestep Size Time Units','GEOMECHANICS_TIME')
               geomech_realization%dt_coupling = &
                             temp_real*UnitsConvertToInternal(word, &
@@ -679,7 +679,7 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
       !.........................................................................
       case ('GEOMECHANICS_SUBSURFACE_COUPLING')
         option%geomech_subsurf_coupling = -1
-        call InputReadWord(input,option,word,PETSC_FALSE)
+        call input%ReadWord(option,word,PETSC_FALSE)
         call StringToUpper(word)
         select case (word)
           case ('ONE_WAY_COUPLED')      
@@ -692,12 +692,12 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
         end select
         do
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,card)
+          call input%ReadStringErrorMsg(option,card)
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword','MAPPING_FILE')
-          call InputReadFilename(input,option,grid%mapping_filename)
-          call InputErrorMsg(input,option,'keyword','mapping_file')
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword','MAPPING_FILE')
+          call input%ReadFilename(option,grid%mapping_filename)
+          call input%ErrorMsg(option,'keyword','mapping_file')
           call GeomechSubsurfMapFromFilename(grid,grid%mapping_filename, &
                                              option)
         enddo
@@ -705,27 +705,27 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
       case ('GEOMECHANICS_OUTPUT')
         do
           call InputReadPflotranString(input,option)
-          call InputReadStringErrorMsg(input,option,card)
+          call input%ReadStringErrorMsg(option,card)
           if (InputCheckExit(input,option)) exit
-          call InputReadWord(input,option,word,PETSC_TRUE)
-          call InputErrorMsg(input,option,'keyword','GEOMECHANICS_OUTPUT')
+          call input%ReadWord(option,word,PETSC_TRUE)
+          call input%ErrorMsg(option,'keyword','GEOMECHANICS_OUTPUT')
           call StringToUpper(word)
           select case(trim(word))
             case('TIMES')
               option%io_buffer = 'Subsurface times are now used for ' // &
               'geomechanics as well. No need for TIMES keyword under ' // &
               'GEOMECHANICS_OUTPUT.'
-              call printWrnMsg(option)
+              call option%PrintWrnMsg()
             case('FORMAT')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'keyword','GEOMECHANICS_OUTPUT,&
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'keyword','GEOMECHANICS_OUTPUT,&
                                                          &FORMAT') 
               call StringToUpper(word)
               select case(trim(word))
                 case ('HDF5')
                   output_option%print_hdf5 = PETSC_TRUE
-                  call InputReadWord(input,option,word,PETSC_TRUE)
-                  call InputDefaultMsg(input,option, &
+                  call input%ReadWord(option,word,PETSC_TRUE)
+                  call input%DefaultMsg(option, &
                                        'GEOMECHANICS_OUTPUT,FORMAT,HDF5,&
                                         &# FILES')
                   if (len_trim(word) > 1) then 
@@ -739,15 +739,15 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
                         option%io_buffer = 'HDF5 keyword (' // trim(word) // &
                           ') not recongnized.  Use "SINGLE_FILE" or ' // &
                           '"MULTIPLE_FILES".'
-                        call printErrMsg(option)
+                        call option%PrintErrMsg()
                     end select
                   endif
                 case ('MAD')
                   output_option%print_mad = PETSC_TRUE
                 case ('TECPLOT')
                   output_option%print_tecplot = PETSC_TRUE
-                  call InputReadWord(input,option,word,PETSC_TRUE)
-                  call InputErrorMsg(input,option,'TECPLOT','GEOMECHANICS_OUTPUT,FORMAT') 
+                  call input%ReadWord(option,word,PETSC_TRUE)
+                  call input%ErrorMsg(option,'TECPLOT','GEOMECHANICS_OUTPUT,FORMAT')
                   call StringToUpper(word)
                   output_option%tecplot_format = TECPLOT_FEQUADRILATERAL_FORMAT ! By default it is unstructured
                 case ('VTK')
@@ -816,7 +816,7 @@ subroutine GeomechInitMatPropToGeomechRegions(geomech_realization)
   character(len=MAXSTRINGLENGTH) :: dataset_name
   PetscErrorCode :: ierr
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_grid_type), pointer :: grid
   type(geomech_discretization_type), pointer :: geomech_discretization
   type(geomech_field_type), pointer :: field
@@ -852,7 +852,7 @@ subroutine GeomechInitMatPropToGeomechRegions(geomech_realization)
     if (.not.associated(strata%region) .and. strata%active) then
       option%io_buffer = 'Reading of material prop from file for' // &
         ' geomech is not implemented.'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     ! Otherwise, set based on region
     else if (strata%active) then
       update_ghosted_material_ids = PETSC_TRUE
@@ -904,24 +904,24 @@ subroutine GeomechInitMatPropToGeomechRegions(geomech_realization)
         option%io_buffer = 'No material property for geomech material id ' // &
                             trim(adjustl(dataset_name)) &
                             //  ' defined in input file.'
-        call printErrMsgByRank(option)
+        call option%PrintErrMsgByRank()
       endif
     else if (Uninitialized(geomech_material_id)) then 
       write(dataset_name,*) grid%nG2A(ghosted_id)
       option%io_buffer = 'Uninitialized geomech material id in patch at cell ' // &
                          trim(adjustl(dataset_name))
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     else if (geomech_material_id > size(geomech_realization% &
       geomech_material_property_array)) then
       write(option%io_buffer,*) geomech_material_id
       option%io_buffer = 'Unmatched geomech material id in patch:' // &
         adjustl(trim(option%io_buffer))
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     else
       option%io_buffer = 'Something messed up with geomech material ids. ' // &
         ' Possibly material ids not assigned to all grid cells. ' // &
         ' Contact Glenn/Satish!'
-      call printErrMsgByRank(option)
+      call option%PrintErrMsgByRank()
     endif
     imech_loc_p(ghosted_id) = geomech_material_property%id
   enddo ! local_id - loop
@@ -959,7 +959,7 @@ subroutine GeomechInitSetupRealization(simulation)
   
   class(realization_subsurface_type), pointer :: subsurf_realization
   class(realization_geomech_type), pointer :: geomech_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   subsurf_realization => simulation%realization
   geomech_realization => simulation%geomech_realization
@@ -1025,7 +1025,7 @@ subroutine GeomechInitSetupSolvers(geomech_realization,realization, &
   type(convergence_context_type), pointer :: convergence_context
   type(solver_type), pointer :: solver
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   SNESLineSearch :: linesearch
   character(len=MAXSTRINGLENGTH) :: string
   PetscErrorCode :: ierr
@@ -1035,11 +1035,11 @@ subroutine GeomechInitSetupSolvers(geomech_realization,realization, &
 print *, 'GeomechInitSetupSolvers cannot be removed.'
 stop
   
-  call printMsg(option,"  Beginning setup of GEOMECH SNES ")
+  call option%PrintMsg("  Beginning setup of GEOMECH SNES ")
     
   if (solver%J_mat_type == MATAIJ) then
     option%io_buffer = 'AIJ matrix not supported for geomechanics.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   call SolverCreateSNES(solver,option%mycomm)  
@@ -1085,9 +1085,9 @@ stop
   call SolverSetSNESOptions(solver,option)
 
   option%io_buffer = 'Solver: ' // trim(solver%ksp_type)
-  call printMsg(option)
+  call option%PrintMsg()
   option%io_buffer = 'Preconditioner: ' // trim(solver%pc_type)
-  call printMsg(option)
+  call option%PrintMsg()
 
   ! shell for custom convergence test.  The default SNES convergence test
   ! is call within this function.
@@ -1097,7 +1097,7 @@ stop
                               convergence_context, &
                               PETSC_NULL_FUNCTION,ierr);CHKERRQ(ierr)                                                  
 
-  call printMsg(option,"  Finished setting up GEOMECH SNES ")
+  call option%PrintMsg("  Finished setting up GEOMECH SNES ")
     
 end subroutine GeomechInitSetupSolvers
 

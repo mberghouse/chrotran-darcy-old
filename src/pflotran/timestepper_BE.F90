@@ -151,8 +151,8 @@ subroutine TimestepperBERead(this,input,option)
   implicit none
 
   class(timestepper_BE_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: string
@@ -160,10 +160,10 @@ subroutine TimestepperBERead(this,input,option)
 
   if (option%flow%resdef) then
     option%io_buffer = 'TIMESTEPPER CARD: applying common defaults (RESERVOIR_DEFAULTS)'
-    call printMsg(option)
+    call option%PrintMsg()
     this%iaccel=100
     option%io_buffer = 'TIMESTEPPER CARD: TS_ACCELERATION as been set to 100 (RESERVOIR_DEFAULTS)'
-    call printMsg(option)
+    call option%PrintMsg()
   endif
 
   input%ierr = 0
@@ -173,18 +173,18 @@ subroutine TimestepperBERead(this,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','TIMESTEPPER_BE')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','TIMESTEPPER_BE')
     call StringToUpper(keyword)   
 
     select case(trim(keyword))
   
       case('TS_ACCELERATION')
-        call InputReadInt(input,option,this%iaccel)
-        call InputDefaultMsg(input,option,'iaccel')
+        call input%ReadInt(option,this%iaccel)
+        call input%DefaultMsg(option,'iaccel')
         if (option%flow%resdef) then
           option%io_buffer = 'WARNING: TS_ACCELERATION has been changed, overwritting the RESERVOIR_DEFAULTS default'
-          call printMsg(option)
+          call option%PrintMsg()
         endif
 
       case('DT_FACTOR')
@@ -285,7 +285,7 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
   PetscInt :: icut
   
   type(solver_type), pointer :: solver
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   PetscLogDouble :: log_start_time
   PetscLogDouble :: log_end_time
@@ -309,7 +309,7 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
   write(process_model%option%io_buffer,'(es12.5)') this%dt
   process_model%option%io_buffer = 'StepperStepDT(' // &
     trim(adjustl(process_model%option%io_buffer)) // ')'
-  call printMsg(process_model%option)  
+  call process_model%option%PrintMsg()
 #endif
 
   tconv = process_model%output_option%tconv
@@ -363,20 +363,20 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
 
         if (icut > this%max_time_step_cuts) then
           option%io_buffer = ' Stopping: Time step cut criteria exceeded.'
-          call printMsg(option)
+          call option%PrintMsg()
           write(option%io_buffer, &
                 '("    icut =",i3,", max_time_step_cuts=",i3)') &
                 icut,this%max_time_step_cuts
-          call printMsg(option)
+          call option%PrintMsg()
         endif
         if (this%dt < this%dt_min) then
           option%io_buffer = ' Stopping: Time step size is less than the &
                              &minimum allowable time step.'
-          call printMsg(option)
+          call option%PrintMsg()
           write(option%io_buffer, &
                 '("    dt   =",es15.7,", dt_min=",es15.7," [",a,"]")') &
                this%dt/tconv,this%dt_min/tconv,trim(tunit)
-          call printMsg(option)
+          call option%PrintMsg()
         endif
         
         process_model%output_option%plot_name = 'flow_cut_to_failure'
@@ -399,7 +399,7 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
            this%cumulative_time_step_cuts+icut, &
            option%time/tconv, &
            this%dt/tconv
-      call printMsg(option)
+      call option%PrintMsg()
       if (snes_reason < SNES_CONVERGED_ITERATING) then
         call SolverNewtonPrintFailedReason(solver,option)
         if (solver%verbose_logging) then
@@ -532,7 +532,7 @@ subroutine TimestepperBECheckpointBinary(this,viewer,option)
   
   class(timestepper_BE_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(stepper_BE_header_type), pointer :: header
   type(stepper_BE_header_type) :: dummy_header
@@ -640,7 +640,7 @@ subroutine TimestepperBERestartBinary(this,viewer,option)
 
   class(timestepper_BE_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(stepper_BE_header_type), pointer :: header
   type(stepper_BE_header_type) :: dummy_header
@@ -679,7 +679,7 @@ subroutine TimestepperBECheckpointHDF5(this, h5_chk_grp_id, option)
   
   class(timestepper_BE_type) :: this
   integer(HID_T) :: h5_chk_grp_id
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
@@ -811,7 +811,7 @@ subroutine TimestepperBERestartHDF5(this, h5_chk_grp_id, option)
   
   class(timestepper_BE_type) :: this
   integer(HID_T) :: h5_chk_grp_id
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
@@ -986,7 +986,7 @@ subroutine TimestepperBEPrintInfo(this,option)
   implicit none
 
   class(timestepper_BE_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: fids(2)
   PetscInt :: i
@@ -1063,12 +1063,12 @@ recursive subroutine TimestepperBEFinalizeRun(this,option)
   implicit none
   
   class(timestepper_BE_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
 #ifdef DEBUG
-  call printMsg(option,'TimestepperBEFinalizeRun()')
+  call option%PrintMsg('TimestepperBEFinalizeRun()')
 #endif
   
   if (OptionPrintToScreen(option)) then

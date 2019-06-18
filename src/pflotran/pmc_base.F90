@@ -28,7 +28,7 @@ module PMC_Base_class
     character(len=MAXWORDLENGTH) :: name
     PetscInt :: stage
     PetscBool :: is_master
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(checkpoint_option_type), pointer :: checkpoint_option
     class(timestepper_base_type), pointer :: timestepper
     class(pm_base_type), pointer :: pm_list
@@ -246,7 +246,7 @@ recursive subroutine PMCBaseSetChildPeerPtr(pmcA,relationship_to,pmcB, &
   if (.not.associated(pmcB)) then
     pmcA%option%io_buffer = 'pmcB passed PMCBaseSetChildPeerPtr is not &
                             &associated.'
-    call printErrMsg(pmcA%option)
+    call pmcA%option%PrintErrMsg()
   endif
 
   select case(relationship_to)
@@ -261,7 +261,7 @@ recursive subroutine PMCBaseSetChildPeerPtr(pmcA,relationship_to,pmcB, &
 #ifdef DEBUG
         pmcA%option%io_buffer = trim(pmcA%name)// ' assigned as first child&
                                 & of ' // trim(pmcB%name) // '.'
-        call printMsg(pmcA%option)
+        call pmcA%option%PrintMsg()
 #endif
       endif
   !--------------------------------------------------------
@@ -278,7 +278,7 @@ recursive subroutine PMCBaseSetChildPeerPtr(pmcA,relationship_to,pmcB, &
 #ifdef DEBUG
         pmcA%option%io_buffer = trim(pmcA%name) // ' assigned as peer of ' // &
                                 trim(pmcB%name) // ' via "append".'
-        call printMsg(pmcA%option)
+        call pmcA%option%PrintMsg()
 #endif
           endif
       !----------------------------------------------------
@@ -289,12 +289,12 @@ recursive subroutine PMCBaseSetChildPeerPtr(pmcA,relationship_to,pmcB, &
 #ifdef DEBUG
         pmcA%option%io_buffer = trim(pmcA%name)// ' assigned as first child&
                                 & of ' // trim(pmcB%name) // ' via "insert".'
-        call printMsg(pmcA%option)
+        call pmcA%option%PrintMsg()
 #endif
           else
             pmcA%option%io_buffer = 'Null pointer for pmcB_parent passed into &
                                      &PMCBaseSetChildPeerPtr.'
-            call printErrMsg(pmcA%option)
+            call pmcA%option%PrintErrMsg()
           endif
       !----------------------------------------------------
       end select
@@ -302,7 +302,7 @@ recursive subroutine PMCBaseSetChildPeerPtr(pmcA,relationship_to,pmcB, &
     case default
       pmcA%option%io_buffer = 'PMC relationship_to not understood in &
                               &PMCBaseSetChildPeerPtr.'
-      call printErrMsg(pmcA%option)
+      call pmcA%option%PrintErrMsg()
   !--------------------------------------------------------
   end select
   
@@ -343,7 +343,7 @@ subroutine PMCBaseSetupSolvers(this)
   class(pmc_base_type) :: this
 
 #ifdef DEBUG
-  call printMsg(this%option,'PMCBase%SetupSolvers()')
+  call this%option%PrintMsg('PMCBase%SetupSolvers()')
 #endif
 
   ! For now there is nothing to be done here.  Most everything is done in
@@ -367,7 +367,7 @@ subroutine PMCBaseSetTimestepper(this,timestepper)
   class(timestepper_base_type), pointer :: timestepper
 
 #ifdef DEBUG
-  call printMsg(this%option,'PMCBase%SetTimestepper()')
+  call this%option%PrintMsg('PMCBase%SetTimestepper()')
 #endif
   
   this%timestepper => timestepper
@@ -391,7 +391,7 @@ recursive subroutine InitializeRun(this)
   class(pm_base_type), pointer :: cur_pm
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMCBase%InitializeRun()')
+  call this%option%PrintMsg('PMCBase%InitializeRun()')
 #endif
   
   if (associated(this%timestepper)) then
@@ -455,7 +455,7 @@ recursive subroutine PMCBaseRunToTime(this,sync_time,stop_flag)
     call PetscLogStagePush(this%stage,ierr);CHKERRQ(ierr)
   endif
   this%option%io_buffer = trim(this%name) // ':' // trim(this%pm_list%name)  
-  call printVerboseMsg(this%option)
+  call this%option%PrintVerboseMsg()
   
   ! Get data of other process-model
   call this%GetAuxData()
@@ -624,7 +624,7 @@ recursive subroutine PMCBaseUpdateSolution(this)
   class(pm_base_type), pointer :: cur_pm
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMCBase%UpdateSolution()')
+  call this%option%PrintMsg('PMCBase%UpdateSolution()')
 #endif
   
   cur_pm => this%pm_list
@@ -655,7 +655,7 @@ recursive subroutine FinalizeRun(this)
   character(len=MAXSTRINGLENGTH) :: string
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMCBase%FinalizeRun()')
+  call this%option%PrintMsg('PMCBase%FinalizeRun()')
 #endif
   
   if (associated(this%timestepper)) then
@@ -732,7 +732,7 @@ recursive subroutine OutputLocal(this)
   class(pm_base_type), pointer :: cur_pm
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMC%Output()')
+  call this%option%PrintMsg('PMC%Output()')
 #endif
   
   cur_pm => this%pm_list
@@ -853,7 +853,7 @@ recursive subroutine PMCBaseCheckpointBinary(this,viewer,append_name)
     write(this%option%io_buffer, &
           '("      Seconds to write to checkpoint file: ", f10.2)') &
       tend-tstart
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call PetscLogEventEnd(logging%event_checkpoint,ierr);CHKERRQ(ierr)
     call PetscLogStagePop(ierr);CHKERRQ(ierr)
   endif
@@ -958,11 +958,11 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
     if (.not.flag) then
       this%option%io_buffer = 'Restart file "' // &
         trim(this%option%restart_filename) // '" not found.'
-      call PrintErrMsg(this%option)
+      call this%option%PrintErrMsg()
     endif
     this%option%io_buffer = 'Restarting with checkpoint file "' // &
       trim(this%option%restart_filename) // '".'
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call PetscLogEventBegin(logging%event_restart,ierr);CHKERRQ(ierr)
     call PetscTime(tstart,ierr);CHKERRQ(ierr)
     call PetscViewerBinaryOpen(this%option%mycomm, &
@@ -1010,7 +1010,7 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
         &is at or beyond the end of checkpointed simulation (' // &
         trim(adjustl(this%option%io_buffer)) // &
         trim(this%pm_list%realization_base%output_option%tunit) // ').'
-      call printMsg(this%option)
+      call this%option%PrintMsg()
     endif
     this%option%time = this%timestepper%target_time
   endif
@@ -1021,7 +1021,7 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
     if (cur_pm%skip_restart) then
       this%option%io_buffer = 'Due to sequential nature of binary files, &
         &skipping restart for binary formatted files is not allowed.'
-      call PrintErrMsg(this%option)
+      call this%option%PrintErrMsg()
     endif
     call cur_pm%RestartBinary(viewer)
     cur_pm => cur_pm%next
@@ -1041,7 +1041,7 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
     write(this%option%io_buffer, &
           '("      Seconds to read from restart file: ", f10.2)') &
       tend-tstart
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call PetscLogEventEnd(logging%event_restart,ierr);CHKERRQ(ierr)
   endif
     
@@ -1076,13 +1076,13 @@ subroutine PMCBaseGetHeader(this,header)
       this%pm_list%realization_base%output_option%times_per_h5_file) then
     write(string,*) header%times_per_h5_file
     this%option%io_buffer = 'From checkpoint file: times_per_h5_file ' // trim(string)
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     write(string,*) this%pm_list%realization_base%output_option%times_per_h5_file
     this%option%io_buffer = 'From inputdeck      : times_per_h5_file ' // trim(string)
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     this%option%io_buffer = 'times_per_h5_file specified in inputdeck does not ' // &
       'match that stored in checkpoint file. Correct the inputdeck.'
-    call printErrMsg(this%option)
+    call this%option%PrintErrMsg()
   endif
 
   this%pm_list%realization_base%output_option%times_per_h5_file = &
@@ -1177,7 +1177,7 @@ recursive subroutine PMCBaseCheckpointHDF5(this,h5_chk_grp_id,append_name)
     write(this%option%io_buffer, &
           '("      Seconds to write to checkpoint file: ", f10.2)') &
       tend-tstart
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call PetscLogEventEnd(logging%event_checkpoint,ierr);CHKERRQ(ierr)
     call PetscLogStagePop(ierr);CHKERRQ(ierr)
   endif
@@ -1231,7 +1231,7 @@ recursive subroutine PMCBaseRestartHDF5(this,h5_chk_grp_id)
   if (this%is_master) then
     this%option%io_buffer = 'Restarting with checkpoint file "' // &
       trim(this%option%restart_filename) // '".'
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call PetscLogEventBegin(logging%event_restart, ierr);CHKERRQ(ierr)
     call PetscTime(tstart,ierr);CHKERRQ(ierr)
 
@@ -1272,7 +1272,7 @@ recursive subroutine PMCBaseRestartHDF5(this,h5_chk_grp_id)
     else if (skip_restart) then
         this%option%io_buffer = 'Restarted simulations that SKIP_RESTART on &
           &checkpointed process models must restart at time 0.'
-        call PrintErrMsg(this%option)
+        call this%option%PrintErrMsg()
     endif
 
     ! Point cur_waypoint to the correct waypoint.
@@ -1293,7 +1293,7 @@ recursive subroutine PMCBaseRestartHDF5(this,h5_chk_grp_id)
         &is at or beyond the end of checkpointed simulation (' // &
         trim(adjustl(this%option%io_buffer)) // &
         trim(this%pm_list%realization_base%output_option%tunit) // ').'
-      call printErrMsg(this%option)
+      call this%option%PrintErrMsg()
     endif
     this%option%time = this%timestepper%target_time
   endif
@@ -1327,7 +1327,7 @@ recursive subroutine PMCBaseRestartHDF5(this,h5_chk_grp_id)
     write(this%option%io_buffer, &
           '("      Seconds to read from restart file: ", f10.2)') &
       tend-tstart
-    call printMsg(this%option)
+    call this%option%PrintMsg()
     call PetscLogEventEnd(logging%event_restart,ierr);CHKERRQ(ierr)
   endif
 
@@ -1352,7 +1352,7 @@ subroutine PMCBaseSetHeaderHDF5(this, h5_chk_grp_id, option)
 
   class(pmc_base_type) :: this
   integer(HID_T) :: h5_chk_grp_id
-  type(option_type) :: option
+  class(option_type) :: option
   
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
@@ -1418,7 +1418,7 @@ subroutine PMCBaseGetHeaderHDF5(this, h5_chk_grp_id, option)
 
   class(pmc_base_type) :: this
   integer(HID_T) :: h5_chk_grp_id
-  type(option_type) :: option
+  class(option_type) :: option
 
   integer(HSIZE_T), pointer :: dims(:)
   integer(HSIZE_T), pointer :: start(:)
@@ -1541,11 +1541,11 @@ recursive subroutine PMCBaseCheckNullPM(this,option)
   implicit none
   
   class(pmc_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   if (.not.associated(this%pm_list)) then
     option%io_buffer = 'Null PM in PMC "' // trim(this%name) // '".'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   if (associated(this%peer)) then
@@ -1632,7 +1632,7 @@ subroutine SetOption(this, option)
   implicit none
   
   class(pmc_base_type) :: this
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   if (associated(option)) this%option => option
 
@@ -1691,7 +1691,7 @@ recursive subroutine PMCBaseDestroy(this)
   class(pmc_base_type) :: this
   
 #ifdef DEBUG
-  call printMsg(this%option,'PMC%Destroy()')
+  call this%option%PrintMsg('PMC%Destroy()')
 #endif
   
   if (associated(this%child)) then

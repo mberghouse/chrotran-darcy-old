@@ -81,7 +81,7 @@ function OutputFilenameID(output_option,option)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
 
   character(len=MAXWORDLENGTH) :: OutputFilenameID
@@ -98,7 +98,7 @@ function OutputFilenameID(output_option,option)
     write(OutputFilenameID,'(i5)') output_option%plot_number  
   else
     option%io_buffer = 'Plot number exceeds current maximum of 10^5.'
-    call PrintErrMsgToDev(option,'ask for a higher maximum')
+    call option%PrintErrMsgToDev('ask for a higher maximum')
   endif 
   
   OutputFilenameID = adjustl(OutputFilenameID)
@@ -119,7 +119,7 @@ function OutputFilename(output_option,option,suffix,optional_string)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
   character(len=*) :: suffix
   character(len=*) :: optional_string
@@ -204,7 +204,7 @@ subroutine OutputConvertArrayToNatural(indices,array,local_size,global_size,opti
   PetscInt :: local_size, global_size
   PetscInt :: indices(:)
   PetscReal, pointer :: array(:)
-  type(option_type) :: option
+  class(option_type) :: option
   
   Vec :: natural_vec
   PetscInt, allocatable :: indices_zero_based(:)
@@ -449,7 +449,7 @@ subroutine OutputGetVertexCoordinates(grid,vec,direction,option)
   type(grid_type) :: grid
   Vec :: vec
   PetscInt :: direction
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscInt :: ivertex
   PetscReal, pointer :: vec_ptr(:)
@@ -905,7 +905,7 @@ subroutine OutputGetFaceVelUGrid(realization_base)
 
   class(realization_base_type) :: realization_base
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(grid_unstructured_type),pointer :: ugrid
@@ -1204,7 +1204,7 @@ subroutine OutputGetFaceFlowrateUGrid(realization_base)
 
   class(realization_base_type) :: realization_base
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(grid_unstructured_type),pointer :: ugrid
@@ -1428,7 +1428,7 @@ subroutine OutputGetExplicitIDsFlowrates(realization_base,count,vec_proc, &
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(grid_unstructured_type),pointer :: ugrid
@@ -1582,7 +1582,7 @@ subroutine OutputGetExplicitFlowrates(realization_base,count,vec_proc, &
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(grid_unstructured_type),pointer :: ugrid
@@ -1670,7 +1670,7 @@ subroutine OutputGetExplicitAuxVars(realization_base,count,vec_proc,density)
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(grid_unstructured_type),pointer :: ugrid
@@ -1775,7 +1775,7 @@ subroutine OutputGetExplicitCellInfo(realization_base,num_cells,ids,sat,por, &
   implicit none
 
   class(realization_base_type) :: realization_base
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(grid_unstructured_type),pointer :: ugrid
@@ -1851,7 +1851,7 @@ subroutine OutputCollectVelocityOrFlux(realization_base, iphase, direction, &
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(grid_structured_type), pointer :: structured_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(dm_ptr_type), pointer :: dm_ptr
 
   PetscInt :: local_id, ghosted_id
@@ -1987,7 +1987,7 @@ subroutine OutputCollectVelocityOrFlux(realization_base, iphase, direction, &
       if (ghosted_id <= 0) then
         option%io_buffer = 'Negative ghosted id in OutputFluxVelocities&
           &TecplotBlk while adding boundary values.'
-        call PrintErrMsgByRankToDev(option,'')
+        call option%PrintErrMsgByRankToDev('')
       endif
       ! I don't know why one would do this, but it is possible that a 
       ! boundary condition could be applied to an interior face shared

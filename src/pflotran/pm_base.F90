@@ -16,7 +16,7 @@ module PM_Base_class
   type, public :: pm_base_type
     character(len=MAXWORDLENGTH) :: name
     character(len=MAXWORDLENGTH) :: header
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     type(output_option_type), pointer :: output_option
     Vec :: solution_vec
     Vec :: residual_vec
@@ -104,7 +104,7 @@ subroutine PMBaseRead(this,input)
   use Input_Aux_module
   implicit none
   class(pm_base_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   print *, 'Must extend PMBaseRead for: ' // trim(this%name)
   stop
 end subroutine PMBaseRead
@@ -117,12 +117,12 @@ subroutine PMBaseReadSelectCase(this,input,keyword,found,error_string,option)
 
   implicit none
   class(pm_base_type) :: this
-  type(input_type) :: input
+  class(input_type) :: input
 
   character(len=MAXWORDLENGTH) :: keyword
   PetscBool :: found
   character(len=MAXSTRINGLENGTH) :: error_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   found = PETSC_TRUE
   select case(trim(keyword))

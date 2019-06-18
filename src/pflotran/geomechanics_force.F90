@@ -72,7 +72,7 @@ subroutine GeomechForceSetupPatch(geomech_realization)
   implicit none
 
   class(realization_geomech_type) :: geomech_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch
 
   PetscInt :: i
@@ -258,7 +258,7 @@ subroutine GeomechanicsForceInitialGuess(geomech_realization)
   
   class(realization_geomech_type) :: geomech_realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_field_type), pointer :: field
   type(geomech_patch_type), pointer :: patch
   type(geomech_coupler_type), pointer :: boundary_condition
@@ -355,7 +355,7 @@ subroutine GeomechForceUpdateAuxVars(geomech_realization)
 
   class(realization_geomech_type) :: geomech_realization
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_patch_type), pointer :: patch
   type(geomech_grid_type), pointer :: grid
   type(geomech_field_type), pointer :: geomech_field
@@ -438,7 +438,7 @@ subroutine GeomechForceResidual(snes,xx,r,geomech_realization,ierr)
   
   type(geomech_discretization_type), pointer :: geomech_discretization
   type(geomech_field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   
   field => geomech_realization%geomech_field
   geomech_discretization => geomech_realization%geomech_discretization
@@ -507,7 +507,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
   type(geomech_field_type), pointer :: field
   type(geomech_grid_type), pointer :: grid
   type(geomech_global_auxvar_type), pointer :: geomech_global_aux_vars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(gm_region_type), pointer :: region
   type(geomech_coupler_type), pointer :: boundary_condition
   type(geomech_parameter_type), pointer :: GeomechParam
@@ -688,7 +688,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
            ! do nothing
           case(NEUMANN_BC)
             option%io_buffer = 'Neumann BC for displacement not available.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       endif
       
@@ -702,7 +702,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
            ! do nothing
           case(NEUMANN_BC)
             option%io_buffer = 'Neumann BC for displacement not available.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       endif
       
@@ -716,7 +716,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
            ! do nothing
           case(NEUMANN_BC)
             option%io_buffer = 'Neumann BC for displacement not available.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       endif
       
@@ -754,7 +754,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
            ! do nothing
           case(NEUMANN_BC)
             option%io_buffer = 'Neumann BC for force not available.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       endif
       
@@ -770,7 +770,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
            ! do nothing
           case(NEUMANN_BC)
             option%io_buffer = 'Neumann BC for force not available.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
 
         end select
       endif
@@ -787,7 +787,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
            ! do nothing
           case(NEUMANN_BC)
             option%io_buffer = 'Neumann BC for force not available.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
         end select
       endif
  
@@ -822,7 +822,7 @@ subroutine GeomechForceLocalElemResidual(size_elenodes,local_coordinates, &
   use Utility_module
   
   type(shapefunction_type) :: shapefunction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal, allocatable :: local_coordinates(:,:)
   PetscReal, allocatable :: B(:,:), Kmat(:,:)
@@ -896,7 +896,7 @@ subroutine GeomechForceLocalElemResidual(size_elenodes,local_coordinates, &
     if (detJ_map <= 0.d0) then
       option%io_buffer = 'GEOMECHANICS: Determinant of J_map has' // &
                          ' to be positive!' 
-      call printErrMsg(option)        
+      call option%PrintErrMsg()
     endif
     ! Find the inverse of J_map
     ! Set identity matrix
@@ -975,7 +975,7 @@ subroutine GeomechForceLocalElemError(size_elenodes,local_coordinates, &
   use Utility_module
   
   type(shapefunction_type) :: shapefunction
-  type(option_type) :: option
+  class(option_type) :: option
 
   
   PetscReal, allocatable :: local_coordinates(:,:)
@@ -1031,7 +1031,7 @@ subroutine GeomechForceLocalElemError(size_elenodes,local_coordinates, &
     if (detJ_map <= 0.d0) then
       option%io_buffer = 'GEOMECHANICS: Determinant of J_map has' // &
                          ' to be positive!' 
-      call printErrMsg(option)        
+      call option%PrintErrMsg()
     endif
     ! Find the inverse of J_map
     ! Set identity matrix
@@ -1128,7 +1128,7 @@ subroutine GeomechForceLocalElemJacobian(size_elenodes,local_coordinates, &
   use Utility_module
   
   type(shapefunction_type) :: shapefunction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal, allocatable :: local_coordinates(:,:)
   PetscReal, allocatable :: B(:,:), Kmat(:,:)
@@ -1184,7 +1184,7 @@ subroutine GeomechForceLocalElemJacobian(size_elenodes,local_coordinates, &
     if (detJ_map <= 0.d0) then
       option%io_buffer = 'GEOMECHANICS: Determinant of J_map has' // &
                          ' to be positive!' 
-      call printErrMsg(option)        
+      call option%PrintErrMsg()
     endif
     ! Find the inverse of J_map
     ! Set identity matrix
@@ -1259,7 +1259,7 @@ subroutine GeomechGetBodyForce(load_type,lambda,mu,coord,bf,option)
 
   use Option_module
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: load_type
   PetscReal :: lambda, mu, den_rock
@@ -1315,7 +1315,7 @@ subroutine GeomechForceJacobian(snes,xx,A,B,geomech_realization,ierr)
   MatType :: mat_type
   PetscViewer :: viewer
   type(geomech_grid_type),  pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscReal :: norm
   
   option => geomech_realization%option
@@ -1343,13 +1343,13 @@ subroutine GeomechForceJacobian(snes,xx,A,B,geomech_realization,ierr)
     option => geomech_realization%option
     call MatNorm(J,NORM_1,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("1 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_FROBENIUS,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("2 norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
     call MatNorm(J,NORM_INFINITY,norm,ierr);CHKERRQ(ierr)
     write(option%io_buffer,'("inf norm: ",es11.4)') norm
-    call printMsg(option) 
+    call option%PrintMsg()
   endif
 
 end subroutine GeomechForceJacobian
@@ -1422,7 +1422,7 @@ subroutine GeomechForceJacobianLinearPart(A,geomech_realization)
   type(geomech_field_type), pointer :: field
   type(geomech_grid_type), pointer :: grid
   type(geomech_global_auxvar_type), pointer :: geomech_global_aux_vars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(gm_region_type), pointer :: region
   type(geomech_coupler_type), pointer :: boundary_condition
   type(geomech_parameter_type), pointer :: GeomechParam
@@ -1633,7 +1633,7 @@ subroutine GeomechUpdateFromSubsurf(realization,geomech_realization)
   class(realization_geomech_type) :: geomech_realization
   type(grid_type), pointer :: grid
   type(geomech_grid_type), pointer :: geomech_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(geomech_field_type), pointer :: geomech_field
   type(gmdm_ptr_type), pointer :: dm_ptr
@@ -1745,7 +1745,7 @@ subroutine GeomechUpdateSubsurfFromGeomech(realization,geomech_realization)
   class(realization_geomech_type) :: geomech_realization
   type(grid_type), pointer :: grid
   type(geomech_grid_type), pointer :: geomech_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(field_type), pointer :: field
   type(geomech_field_type), pointer :: geomech_field
   type(gmdm_ptr_type), pointer :: dm_ptr
@@ -1824,7 +1824,7 @@ subroutine GeomechCreateGeomechSubsurfVec(realization,geomech_realization)
 
   type(grid_type), pointer :: grid
   type(geomech_grid_type), pointer :: geomech_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_field_type), pointer :: geomech_field
   
   PetscErrorCode :: ierr
@@ -1871,7 +1871,7 @@ subroutine GeomechCreateSubsurfStressStrainVec(realization,geomech_realization)
 
   type(grid_type), pointer :: grid
   type(geomech_grid_type), pointer :: geomech_grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(geomech_field_type), pointer :: geomech_field
   
   PetscErrorCode :: ierr
@@ -1948,7 +1948,7 @@ subroutine GeomechForceStressStrain(geomech_realization)
   type(geomech_field_type), pointer :: field
   type(geomech_grid_type), pointer :: grid
   type(geomech_global_auxvar_type), pointer :: geomech_global_aux_vars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(gm_region_type), pointer :: region
   type(geomech_coupler_type), pointer :: boundary_condition
   type(geomech_parameter_type), pointer :: GeomechParam
@@ -2126,7 +2126,7 @@ subroutine GeomechForceLocalElemStressStrain(size_elenodes,local_coordinates, &
   use Utility_module
   
   type(shapefunction_type) :: shapefunction
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal, allocatable :: local_coordinates(:,:)
   PetscReal, allocatable :: B(:,:), Kmat(:,:)

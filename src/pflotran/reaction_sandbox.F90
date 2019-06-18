@@ -52,7 +52,7 @@ subroutine RSandboxInit(option)
   ! 
   use Option_module
   implicit none
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (associated(rxn_sandbox_list)) then
     call RSandboxDestroy()
@@ -78,7 +78,7 @@ subroutine RSandboxSetup(reaction,option)
   implicit none
   
   type(reaction_type) :: reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   class(reaction_sandbox_base_type), pointer :: cur_sandbox  
 
@@ -109,8 +109,8 @@ subroutine RSandboxRead1(input,option)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   call RSandboxRead(rxn_sandbox_list,input,option)
 
@@ -135,8 +135,8 @@ subroutine RSandboxRead2(local_sandbox_list,input,option)
   implicit none
   
   class(reaction_sandbox_base_type), pointer :: local_sandbox_list  
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
@@ -145,11 +145,11 @@ subroutine RSandboxRead2(local_sandbox_list,input,option)
   nullify(new_sandbox)
   do 
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','CHEMISTRY,REACTION_SANDBOX')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CHEMISTRY,REACTION_SANDBOX')
     call StringToUpper(word)   
 
     select case(trim(word))
@@ -203,7 +203,7 @@ subroutine RSandboxAuxiliaryPlotVariables(list,reaction,option)
   implicit none
 
   type(output_variable_list_type), pointer :: list
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   
   class(reaction_sandbox_base_type), pointer :: cur_reaction
@@ -234,8 +234,8 @@ subroutine RSandboxSkipInput(input,option)
   
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   class(reaction_sandbox_base_type), pointer :: dummy_list
   
@@ -264,7 +264,7 @@ subroutine RSandbox(Residual,Jacobian,compute_derivative,rt_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   PetscBool :: compute_derivative
   PetscReal :: Residual(reaction%ncomp)
@@ -305,7 +305,7 @@ subroutine RSandboxUpdateKineticState(rt_auxvar,global_auxvar, &
   
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   type(reaction_type) :: reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar

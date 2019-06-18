@@ -86,7 +86,7 @@ subroutine OutputSurface(surf_realization,realization,snapshot_plot_flag, &
   character(len=MAXSTRINGLENGTH) :: string
   PetscErrorCode :: ierr
   PetscLogDouble :: tstart, tend
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   option => surf_realization%option
 
@@ -186,7 +186,7 @@ subroutine OutputTecplotFEQUAD(surf_realization,realization)
   character(len=MAXSTRINGLENGTH) :: tmp_global_prefix
   character(len=MAXWORDLENGTH) :: word
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(discretization_type), pointer :: discretization
   type(surface_field_type), pointer :: surf_field
   type(patch_type), pointer :: patch 
@@ -216,7 +216,7 @@ subroutine OutputTecplotFEQUAD(surf_realization,realization)
     
   if (option%myrank == option%io_rank) then
     option%io_buffer = '--> write tecplot output file: ' // trim(filename)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=filename,action="write")
     call OutputTecplotHeader(OUTPUT_UNIT,surf_realization,icolumn)
   endif
@@ -285,7 +285,7 @@ subroutine OutputTecplotHeader(fid,surf_realization,icolumn)
   character(len=MAXSTRINGLENGTH) :: string, string2
   character(len=MAXWORDLENGTH) :: word
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(output_option_type), pointer :: output_option
   PetscInt :: variable_count
@@ -347,7 +347,7 @@ subroutine OutputWriteTecplotZoneHeader(fid,surf_realization,variable_count, &
   
   character(len=MAXSTRINGLENGTH) :: string, string2, string3
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   
   grid => surf_realization%patch%grid
@@ -426,7 +426,7 @@ subroutine WriteTecplotUGridElements(fid, &
   class(realization_surface_type) :: surf_realization
 
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   Vec :: global_cconn_vec
   type(ugdm_type), pointer :: ugdm_element
@@ -509,7 +509,7 @@ subroutine WriteTecplotUGridVertices(fid,surf_realization)
   class(realization_surface_type) :: surf_realization 
   
   type(grid_type), pointer :: grid
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch 
   PetscReal, pointer :: vec_ptr(:)
   Vec :: global_vertex_vec
@@ -565,7 +565,7 @@ subroutine OutputHydrograph(surf_realization)
   implicit none
   
   class(realization_surface_type) :: surf_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(patch_type), pointer :: patch
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_type), pointer :: cur_connection_set
@@ -718,7 +718,7 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
   type(grid_type), pointer :: subsurf_grid
   type(grid_type), pointer :: surf_grid
   type(discretization_type), pointer :: surf_discretization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(surface_field_type), pointer :: surf_field
   type(patch_type), pointer :: patch
   type(output_option_type), pointer :: output_option
@@ -825,7 +825,7 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
   else
     option%io_buffer = '--> appending to hdf5 output file: ' // trim(filename)
   endif
-  call printMsg(option)
+  call option%PrintMsg()
 
   if (first) then
     ! create a group for the coordinates data set
@@ -837,7 +837,7 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
 
   if (option%myrank == option%io_rank) then
     option%io_buffer = '--> write xmf output file: ' // trim(xmf_filename)
-    call printMsg(option)
+    call option%PrintMsg()
     open(unit=OUTPUT_UNIT,file=xmf_filename,action="write")
     call OutputXMFHeader(OUTPUT_UNIT, &
                          option%time/output_option%tconv, &
@@ -985,7 +985,7 @@ subroutine WriteHDF5CoordinatesUGridXDMF(surf_realization,realization, &
   
   class(realization_surface_type) :: surf_realization
   class(realization_subsurface_type) :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   integer(HID_T) :: file_id
   integer(HID_T) :: data_type
@@ -1523,7 +1523,7 @@ subroutine OutputSurfaceAvegVars(surf_realization,realization)
   class(realization_surface_type) :: surf_realization
   class(realization_subsurface_type) :: realization
 
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   type(output_variable_type), pointer :: cur_variable
   type(surface_field_type), pointer :: surf_field
@@ -1613,7 +1613,7 @@ subroutine OutputSurfaceAvegVars(surf_realization,realization)
       call PetscLogEventEnd(logging%event_output_hdf5,ierr);CHKERRQ(ierr)
       call PetscTime(tend,ierr);CHKERRQ(ierr)
       write(option%io_buffer,'(f10.2," Seconds to write HDF5 file.")') tend-tstart
-      call printMsg(option)
+      call option%PrintMsg()
     endif
 
     ! Reset the vectors to zero
@@ -1644,8 +1644,8 @@ subroutine OutputSurfaceVariableRead(input,option,output_variable_list)
 
   implicit none
 
-  type(option_type) :: option
-  type(input_type), pointer :: input
+  class(option_type) :: option
+  class(input_type), pointer :: input
   type(output_variable_list_type), pointer :: output_variable_list
   
   character(len=MAXWORDLENGTH) :: word
@@ -1654,11 +1654,11 @@ subroutine OutputSurfaceVariableRead(input,option,output_variable_list)
 
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','VARIABLES')
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','VARIABLES')
     call StringToUpper(word)
     
     select case(trim(word))
@@ -1704,7 +1704,7 @@ function OutputSurfaceHDF5FilenameID(output_option,option,var_list_type)
   
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(output_option_type) :: output_option
   PetscInt :: var_list_type
 
@@ -1734,7 +1734,7 @@ function OutputSurfaceHDF5FilenameID(output_option,option,var_list_type)
     write(OutputSurfaceHDF5FilenameID,'(i5)') file_number
   else
     option%io_buffer = 'Plot number exceeds current maximum of 10^5.'
-    call PrintErrMsgToDev(option,'ask for a higher maximum')
+    call option%PrintErrMsgToDev('ask for a higher maximum')
   endif 
   
   OutputSurfaceHDF5FilenameID = adjustl(OutputSurfaceHDF5FilenameID)
@@ -1772,7 +1772,7 @@ subroutine OutputSurfaceGetFlowrates(surf_realization)
   implicit none
 
   class(realization_surface_type) :: surf_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
@@ -1981,7 +1981,7 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
   implicit none
 
   class(realization_surface_type) :: surf_realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   PetscInt :: var_list_type  
 
   integer(HID_T) :: file_id
@@ -2059,7 +2059,7 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
       if (output_option%print_hdf5_mass_flowrate.and.output_option%print_hdf5_energy_flowrate) ndof = 2
     case default
       option%io_buffer='FLOWRATE output not supported in this mode'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
   end select
 
   call VecGetLocalSize(surf_field%flowrate_inst,local_size,ierr);CHKERRQ(ierr)
@@ -2102,7 +2102,7 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
         endif
       case default
         option%io_buffer='FLOWRATE output not implemented in this mode.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
     end select
 
     if (var_list_type==AVERAGED_VARS) string = 'Aveg_' // trim(string) // CHAR(0)

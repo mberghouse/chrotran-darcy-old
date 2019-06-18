@@ -37,8 +37,8 @@ subroutine SolidSolutionReadFromInputFile(solid_solution_list,input, &
   implicit none
   
   type(solid_solution_type), pointer :: solid_solution_list
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
@@ -52,7 +52,7 @@ subroutine SolidSolutionReadFromInputFile(solid_solution_list,input, &
   nullify(prev_solid_solution)
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
 
     ! name of solid solution
@@ -64,15 +64,15 @@ subroutine SolidSolutionReadFromInputFile(solid_solution_list,input, &
       solid_solution_list => solid_solution
     endif
     
-    call InputReadWord(input,option,solid_solution%name,PETSC_TRUE)  
-    call InputErrorMsg(input,option,'Solid Solution Name', &
+    call input%ReadWord(option,solid_solution%name,PETSC_TRUE)
+    call input%ErrorMsg(option,'Solid Solution Name', &
                        'CHEMISTRY,SOLID_SOLUTIONS')
 
     stoich_solid_count = 0
     stoich_solid_names = ''
     do
       call InputReadPflotranString(input,option)
-      if (InputError(input)) exit
+      if (input%Error()) exit
       if (InputCheckExit(input,option)) exit
       
       stoich_solid_count = stoich_solid_count + 1
@@ -83,12 +83,12 @@ subroutine SolidSolutionReadFromInputFile(solid_solution_list,input, &
           trim(adjustl(string)) // ').  ' // &
           'Increase variable "max_stoich_solid_names" in ' // &
           'SolidSolutionReadFromInputFile.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
-      call InputReadWord(input,option, &
+      call input%ReadWord(option, &
                          stoich_solid_names(stoich_solid_count), &
                          PETSC_TRUE)  
-      call InputErrorMsg(input,option,'Stoichiometric Solid Name', &
+      call input%ErrorMsg(option,'Stoichiometric Solid Name', &
                          'CHEMISTRY,SOLID_SOLUTIONS')
     enddo
     
@@ -101,20 +101,20 @@ subroutine SolidSolutionReadFromInputFile(solid_solution_list,input, &
 
 #if 0
     string = input%buf
-    call InputReadWord(input,option,card,PETSC_TRUE)  
-    call InputErrorMsg(input,option,'keyword','CHEMISTRY,SOLID_SOLUTIONS')
+    call input%ReadWord(option,card,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CHEMISTRY,SOLID_SOLUTIONS')
     call StringToUpper(card)
     select case(card)
       case('DATABASE')
         call InputReadNChars(string, &
                              solid_solution_rxn%database_filename, &
                              MAXSTRINGLENGTH,PETSC_TRUE,input%ierr)  
-        call InputErrorMsg(input,option,'keyword', &
+        call input%ErrorMsg(option,'keyword', &
                            'CHEMISTRY,SOLID_SOLUTIONS,DATABASE FILENAME')        
       case default
         solid_solution => SolidSolutionCreate()
-        call InputReadWord(input,option,solid_solution%name,PETSC_TRUE)  
-        call InputErrorMsg(input,option,'keyword','CHEMISTRY,SOLID_SOLUTIONS')   
+        call input%ReadWord(option,solid_solution%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword','CHEMISTRY,SOLID_SOLUTIONS')
         if (.not.associated(solid_solution_rxn%list)) then
           solid_solution_rxn%list => solid_solution
         endif
@@ -148,7 +148,7 @@ subroutine SolidSolutionLinkNamesToIDs(solid_solution_list, &
   
   type(solid_solution_type), pointer :: solid_solution_list
   type(mineral_type), pointer :: mineral_reaction
-  type(option_type) :: option
+  class(option_type) :: option
   
   type(solid_solution_type), pointer :: cur_solid_soln
   PetscInt :: istoich_solid
@@ -194,13 +194,13 @@ subroutine SolidSolutionReadFromDatabase(solid_solution_rxn,option)
   implicit none
   
   type(solid_solution_rxn_type) :: solid_solution_rxn
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXWORDLENGTH) :: name  
   character(len=MAXWORDLENGTH) :: card
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   type(solid_solution_type), pointer :: solid_solution, prev_solid_solution
   type(stoichiometric_solid_type), pointer :: stoich_solid, prev_stoich_solid
   type(mineral_rxn_type), pointer :: mineral, prev_end_member
@@ -209,16 +209,16 @@ subroutine SolidSolutionReadFromDatabase(solid_solution_rxn,option)
            
   if (len_trim(solid_solution_rxn%database_filename) < 2) then
     option%io_buffer = 'Database filename not included in input deck.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   input => InputCreate(IUNIT_TEMP,solid_solution_rxn%database_filename,option)
 
   do ! loop over every entry in the database
     call InputReadPflotranString(input,option)
-    call InputReadStringErrorMsg(input,option,'SolidSolutionReadFromDatabase')
+    call input%ReadStringErrorMsg(option,'SolidSolutionReadFromDatabase')
 
-    call InputReadWord(input,option,card,PETSC_TRUE)  
-    call InputErrorMsg(input,option,'keyword','CHEMISTRY,SOLID_SOLUTIONS')
+    call input%ReadWord(option,card,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','CHEMISTRY,SOLID_SOLUTIONS')
     call StringToUpper(card)
 
     select case(card)
@@ -227,11 +227,11 @@ subroutine SolidSolutionReadFromDatabase(solid_solution_rxn,option)
         if (solid_solution_rxn%num_dbase_temperatures == 0) then
           option%io_buffer = 'Temperatures must be defined prior to ' // &
                              'reading solid solution.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
       
-        call InputReadWord(input,option,name,PETSC_TRUE)
-        call InputErrorMsg(input,option,'SOLID_SOLUTION Name', &
+        call input%ReadWord(option,name,PETSC_TRUE)
+        call input%ErrorMsg(option,'SOLID_SOLUTION Name', &
                            'CHEMISTRY,SOLID_SOLUTIONS')
         solid_solution => solid_solution_rxn%list
         found = PETSC_FALSE
@@ -251,8 +251,8 @@ subroutine SolidSolutionReadFromDatabase(solid_solution_rxn,option)
         nullify(prev_end_member)
       case('STOICHIOMETRIC_SOLID','END_MEMBER')
         mineral => MineralRxnCreate()
-        call InputReadWord(input,option,mineral%name,PETSC_TRUE)  
-        call InputErrorMsg(input,option,'keyword','CHEMISTRY,MINERALS')    
+        call input%ReadWord(option,mineral%name,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword','CHEMISTRY,MINERALS')
         call MineralReadFromDatabase(mineral, &
                                    solid_solution_rxn%num_dbase_temperatures, &
                                    input,option)

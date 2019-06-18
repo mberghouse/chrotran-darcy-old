@@ -145,8 +145,8 @@ subroutine DatasetCommonHDF5Read(this,input,option)
   implicit none
   
   class(dataset_common_hdf5_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   character(len=MAXWORDLENGTH) :: keyword
   PetscBool :: found
@@ -158,8 +158,8 @@ subroutine DatasetCommonHDF5Read(this,input,option)
 
     if (InputCheckExit(input,option)) exit  
 
-    call InputReadWord(input,option,keyword,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword','DATASET')
+    call input%ReadWord(option,keyword,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword','DATASET')
     call StringToUpper(keyword)   
       
     call DatasetCommonHDF5ReadSelectCase(this,input,keyword,found,option)
@@ -194,27 +194,27 @@ subroutine DatasetCommonHDF5ReadSelectCase(this,input,keyword,found,option)
   implicit none
   
   class(dataset_common_hdf5_type) :: this
-  type(input_type) :: input
+  class(input_type) :: input
   character(len=MAXWORDLENGTH) :: keyword
   PetscBool :: found
-  type(option_type) :: option
+  class(option_type) :: option
 
   found = PETSC_TRUE
   select case(trim(keyword))
     case('NAME') 
-      call InputReadWord(input,option,this%name,PETSC_TRUE)
-      call InputErrorMsg(input,option,'name','DATASET')
+      call input%ReadWord(option,this%name,PETSC_TRUE)
+      call input%ErrorMsg(option,'name','DATASET')
     case('HDF5_DATASET_NAME') 
-      call InputReadWord(input,option,this%hdf5_dataset_name,PETSC_TRUE)
-      call InputErrorMsg(input,option,'hdf5_dataset_name','DATASET')
+      call input%ReadWord(option,this%hdf5_dataset_name,PETSC_TRUE)
+      call input%ErrorMsg(option,'hdf5_dataset_name','DATASET')
     case('FILENAME') 
-      call InputReadFilename(input,option,this%filename)
-      call InputErrorMsg(input,option,'name','DATASET')
+      call input%ReadFilename(option,this%filename)
+      call input%ErrorMsg(option,'name','DATASET')
     case('REALIZATION_DEPENDENT')
       this%realization_dependent = PETSC_TRUE
     case('MAX_BUFFER_SIZE') 
-      call InputReadInt(input,option,this%max_buffer_size)
-      call InputErrorMsg(input,option,'max_buffer_size','DATASET')
+      call input%ReadInt(option,this%max_buffer_size)
+      call input%ErrorMsg(option,'max_buffer_size','DATASET')
     case default
       found = PETSC_FALSE
   end select  
@@ -244,7 +244,7 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
   character(len=MAXSTRINGLENGTH) :: filename
   character(len=MAXWORDLENGTH) :: dataset_name
   type(time_storage_type), pointer :: time_storage
-  type(option_type) :: option
+  class(option_type) :: option
   
   integer(HID_T) :: file_id
   integer(HID_T) :: file_space_id
@@ -281,7 +281,7 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
     ! open the file
     call h5open_f(hdf5_err)
     option%io_buffer = 'Opening hdf5 file: ' // trim(filename)
-    call printMsg(option)
+    call option%PrintMsg()
   
     ! set read file access property
     call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
@@ -296,7 +296,7 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
 
     if (h5fopen_err == 0) then
       option%io_buffer = 'Opening hdf5 group: ' // trim(dataset_name)
-      call printMsg(option)
+      call option%PrintMsg()
       call HDF5GroupOpen(file_id,dataset_name,grp_id,option)
       attribute_name = "Time Units"
       call H5aexists_f(grp_id,attribute_name,attribute_exists,hdf5_err)
@@ -310,7 +310,7 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
         call h5aclose_f(attribute_id,hdf5_err)
       else
         option%io_buffer = 'Time Units assumed to be seconds.'
-        call printWrnMsg(option)
+        call option%PrintWrnMsg()
         time_units = 's'
       endif
 
@@ -321,7 +321,7 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
       if (group_exists) then
         !geh: Should check to see if "Times" dataset exists.
         option%io_buffer = 'Opening data set: ' // trim(string)
-        call printMsg(option)  
+        call option%PrintMsg()
         call h5dopen_f(grp_id,string,dataset_id,hdf5_err)
         call h5dget_space_f(dataset_id,file_space_id,hdf5_err)
         call h5sget_simple_extent_npoints_f(file_space_id,num_times,hdf5_err)
@@ -340,7 +340,7 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
                  option%mycomm,ierr)
   if (temp_int < 0) then ! actually h5fopen_err
     option%io_buffer = 'Error opening file: ' // trim(filename)
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   int_mpi = 1
@@ -375,10 +375,10 @@ subroutine DatasetCommonHDF5ReadTimes(filename,dataset_name,time_storage, &
     call h5sclose_f(file_space_id,hdf5_err)
     call h5dclose_f(dataset_id,hdf5_err)  
     option%io_buffer = 'Closing group: ' // trim(dataset_name)
-    call printMsg(option)  
+    call option%PrintMsg()
     call h5gclose_f(grp_id,hdf5_err)  
     option%io_buffer = 'Closing hdf5 file: ' // trim(filename)
-    call printMsg(option)  
+    call option%PrintMsg()
     call h5fclose_f(file_id,hdf5_err)
     call h5close_f(hdf5_err) 
     internal_units = 'sec'
@@ -424,7 +424,7 @@ function DatasetCommonHDF5Load(this,option)
   PetscBool :: DatasetCommonHDF5Load
 
   class(dataset_common_hdf5_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: read_due_to_time
   
@@ -484,7 +484,7 @@ function DatasetCommonHDF5IsCellIndexed(dataset,option)
   implicit none
   
   class(dataset_common_hdf5_type) :: dataset
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: DatasetCommonHDF5IsCellIndexed
   
@@ -510,7 +510,7 @@ function DatasetCommonHDF5GetPointer(dataset_list, dataset_name, &
   class(dataset_base_type), pointer :: dataset_list
   character(len=MAXWORDLENGTH) :: dataset_name
   character(len=MAXSTRINGLENGTH) :: debug_string
-  type(option_type) :: option
+  class(option_type) :: option
 
   class(dataset_common_hdf5_type), pointer :: DatasetCommonHDF5GetPointer
   
@@ -525,7 +525,7 @@ function DatasetCommonHDF5GetPointer(dataset_list, dataset_name, &
     class default
       option%io_buffer = 'Dataset "' // trim(dataset_name) // '" in "' // &
              trim(debug_string) // '" not of type Common HDF5.'
-      call printErrMsg(option)    
+      call option%PrintErrMsg()
   end select
 
 end function DatasetCommonHDF5GetPointer
@@ -571,7 +571,7 @@ subroutine DatasetCommonHDF5Print(this,option)
   implicit none
   
   class(dataset_common_hdf5_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
     
   if (len_trim(this%hdf5_dataset_name) > 0) then
     write(option%fid_out,'(10x,''HDF5 Dataset Name: '',a)') &

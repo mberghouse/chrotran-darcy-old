@@ -61,7 +61,7 @@ function SurfaceTHAuxCreate(option)
 
   implicit none
   
-  type(option_type) :: option
+  class(option_type) :: option
   type(Surface_TH_type), pointer :: SurfaceTHAuxCreate
   
   type(Surface_TH_type), pointer :: aux
@@ -99,7 +99,7 @@ subroutine SurfaceTHAuxVarInit(auxvar,option)
   implicit none
   
   type(Surface_TH_auxvar_type) :: auxvar
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscReal :: uninit_value
   uninit_value = UNINITIALIZED_DOUBLE
@@ -132,7 +132,7 @@ subroutine SurfaceTHAuxVarCopy(auxvar,auxvar2,option)
   implicit none
   
   type(Surface_TH_auxvar_type) :: auxvar, auxvar2
-  type(option_type) :: option
+  class(option_type) :: option
 
   auxvar2%h = auxvar%h
   auxvar2%u = auxvar%u
@@ -166,7 +166,7 @@ subroutine SurfaceTHAuxVarCompute(xx,auxvar,global_auxvar, &
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
   PetscReal :: xx(option%nflowdof)
   type(Surface_TH_auxvar_type) :: auxvar
   type(surface_global_auxvar_type) :: global_auxvar

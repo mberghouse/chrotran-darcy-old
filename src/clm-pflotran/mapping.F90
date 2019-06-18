@@ -289,10 +289,10 @@ contains
     ! argument
     type(mapping_type), pointer     :: map
     character(len=MAXSTRINGLENGTH)  :: map_filename
-    type(option_type), pointer      :: option
+    class(option_type), pointer      :: option
     
     ! local variables
-    type(input_type), pointer       :: input
+    class(input_type), pointer       :: input
     character(len=MAXSTRINGLENGTH)  :: card
     character(len=MAXSTRINGLENGTH)  :: string
     character(len=MAXWORDLENGTH)    :: word
@@ -326,39 +326,39 @@ contains
       ! Read first six entries in the mapping file.
       do nheader = 1, 6
         call InputReadPflotranString(input,option)
-        call InputReadWord(input,option,card,PETSC_TRUE)
+        call input%ReadWord(option,card,PETSC_TRUE)
         call StringToLower(card)
 
         select case (trim(card))
           case('clm_nlevsoi')
             hint = 'clm_nlevsoi'
-            call InputReadInt(input,option,map%clm_nlevsoi)
-            call InputErrorMsg(input,option,'CLM nlevsoi',hint)
+            call input%ReadInt(option,map%clm_nlevsoi)
+            call input%ErrorMsg(option,'CLM nlevsoi',hint)
           case('clm_nlevgrnd')
             hint = 'clm_nlevgrnd'
-            call InputReadInt(input,option,map%clm_nlevgrnd)
-            call InputErrorMsg(input,option,'CLM nlevgrnd',hint)
+            call input%ReadInt(option,map%clm_nlevgrnd)
+            call input%ErrorMsg(option,'CLM nlevgrnd',hint)
           case('clm_nlev_mapped')
             hint = 'clm_nlev_mapped'
-            call InputReadInt(input,option,map%clm_nlev_mapped)
-            call InputErrorMsg(input,option,'CLM nlev mapped',hint)
+            call input%ReadInt(option,map%clm_nlev_mapped)
+            call input%ErrorMsg(option,'CLM nlev mapped',hint)
           case('pflotran_nlev')
             hint = 'pflotran_nlev'
-            call InputReadInt(input,option,map%pflotran_nlev)
-            call InputErrorMsg(input,option,'PFLOTRAN nlev',hint)
+            call input%ReadInt(option,map%pflotran_nlev)
+            call input%ErrorMsg(option,'PFLOTRAN nlev',hint)
           case('pflotran_nlev_mapped')
             hint = 'pflotran_nlev_mapped'
-            call InputReadInt(input,option,map%pflotran_nlev_mapped)
-            call InputErrorMsg(input,option,'PFLOTRAN nlev mapped',hint)
+            call input%ReadInt(option,map%pflotran_nlev_mapped)
+            call input%ErrorMsg(option,'PFLOTRAN nlev mapped',hint)
           case('num_weights')
             hint = 'num_weights'
-            call InputReadInt(input,option,nwts)
-            call InputErrorMsg(input,option,'Number of weights',hint)
+            call input%ReadInt(option,nwts)
+            call input%ErrorMsg(option,'Number of weights',hint)
             write(*,*),'nwts = ',nwts
           case default
             option%io_buffer = 'Unrecognized keyword "' // trim(card) // &
               '" in explicit grid file.'
-            call printErrMsgByRank(option)
+            call option%PrintErrMsgByRank()
         end select
       enddo
       
@@ -378,34 +378,34 @@ contains
         ! Read the data
         do ii = 1,nread
           call InputReadPflotranString(input,option)
-          call InputReadInt(input,option,wts_row_tmp(ii))
-          call InputReadInt(input,option,wts_col_tmp(ii))
-          call InputReadDouble(input,option,wts_tmp(ii))
+          call input%ReadInt(option,wts_row_tmp(ii))
+          call input%ReadInt(option,wts_col_tmp(ii))
+          call input%ReadDouble(option,wts_tmp(ii))
           
           !Perform checks on the data read
           if(wts_row_tmp(ii) < 1) then
             write(*,string),'Row entry for ii = ',ii,' less than 1'
             option%io_buffer = string
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           
           if(wts_col_tmp(ii) < 1) then
             write(*,string),'Col entry for ii = ',ii,' less than 1'
             option%io_buffer = string
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           
           if((wts_tmp(ii) < 0.d0).or.(wts_tmp(ii) > 1.d0)) then
             write(*,string),'Invalid wt value for ii = ',ii
             option%io_buffer = string
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
           
           ! ensure that row values in the data are stored in ascending order
           if(wts_row_tmp(ii) < prev_row) then
             write(*,string),'Row value in the mapping data not store in ascending order: ii ',ii
             option%io_buffer = string
-            call printErrMsg(option) 
+            call option%PrintErrMsg()
           endif
           prev_row = wts_row_tmp(ii)
           
@@ -518,7 +518,7 @@ contains
     ! argument
     type(mapping_type), pointer :: map
     character(len=MAXSTRINGLENGTH) :: map_filename
-    type(option_type), pointer :: option
+    class(option_type), pointer :: option
     
     ! local
     PetscMPIInt       :: hdf5_err
@@ -572,7 +572,7 @@ contains
     ! Open group
     group_name = "/row"
     option%io_buffer = 'Opening group: ' // trim(group_name)
-    call printMsg(option)
+    call option%PrintMsg()
 
     ! Open dataset
     call h5dopen_f(file_id,"row",data_set_id,hdf5_err)
@@ -585,7 +585,7 @@ contains
     if (ndims /= 1) then
       option%io_buffer='Dimension of row dataset in ' // trim(map_filename) // &
             ' is not equal to 1.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
 
     ! Get dimensions of dataset
@@ -651,7 +651,7 @@ contains
     ! Open group
     group_name = "/col"
     option%io_buffer = 'Opening group: ' // trim(group_name)
-    call printMsg(option)
+    call option%PrintMsg()
 
     ! Open dataset
     call h5dopen_f(file_id,"col",data_set_id,hdf5_err)
@@ -664,7 +664,7 @@ contains
     if (ndims /= 1) then
       option%io_buffer='Dimension of row dataset in ' // trim(map_filename) // &
             ' is not equal to 1.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
 
     ! Get dimensions of dataset
@@ -722,7 +722,7 @@ contains
     ! Open group
     group_name = "/S"
     option%io_buffer = 'Opening group: ' // trim(group_name)
-    call printMsg(option)
+    call option%PrintMsg()
 
     ! Open dataset
     call h5dopen_f(file_id,"S",data_set_id,hdf5_err)
@@ -735,7 +735,7 @@ contains
     if (ndims /= 1) then
       option%io_buffer='Dimension of row dataset in ' // trim(map_filename) // &
             ' is not equal to 1.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
 
     ! Get dimensions of dataset

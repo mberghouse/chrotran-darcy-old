@@ -198,7 +198,7 @@ subroutine TimestepperBaseInitializeRun(this,option)
   implicit none
 
   class(timestepper_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   call this%PrintInfo(option)
   option%time = this%target_time
@@ -231,11 +231,11 @@ subroutine TimestepperBaseRead(this,input,option)
   implicit none
 
   class(timestepper_base_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   
   option%io_buffer = 'TimestepperBaseRead not supported.  Requires extension.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine TimestepperBaseRead
 
@@ -259,8 +259,8 @@ subroutine TimestepperBaseProcessKeyword(this,input,option,keyword)
   
   class(timestepper_base_type) :: this
   character(len=MAXWORDLENGTH) :: keyword
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
 
   character(len=MAXSTRINGLENGTH) :: error_string
 
@@ -269,38 +269,38 @@ subroutine TimestepperBaseProcessKeyword(this,input,option,keyword)
   select case(trim(keyword))
 
     case('NUM_STEPS_AFTER_TS_CUT')
-      call InputReadInt(input,option,this%constant_time_step_threshold)
-      call InputErrorMsg(input,option,'num_constant_time_steps_after_ts_cut', &
+      call input%ReadInt(option,this%constant_time_step_threshold)
+      call input%ErrorMsg(option,'num_constant_time_steps_after_ts_cut', &
                          error_string)
     case('MAX_STEPS','MAXIMUM_NUMBER_OF_TIMESTEPS')
-      call InputReadInt(input,option,this%max_time_step)
-      call InputErrorMsg(input,option,'max_time_step',error_string)
+      call input%ReadInt(option,this%max_time_step)
+      call input%ErrorMsg(option,'max_time_step',error_string)
     case('MAX_TS_CUTS','MAXIMUM_CONSECUTIVE_TS_CUTS')
-      call InputReadInt(input,option,this%max_time_step_cuts)
-      call InputErrorMsg(input,option,'max_time_step_cuts',error_string)
+      call input%ReadInt(option,this%max_time_step_cuts)
+      call input%ErrorMsg(option,'max_time_step_cuts',error_string)
     case('MAX_NUM_CONTIGUOUS_REVERTS')
-      call InputReadInt(input,option,this%max_num_contig_revert)
-      call InputErrorMsg(input,option,'max_num_contig_reverts',error_string)
+      call input%ReadInt(option,this%max_num_contig_revert)
+      call input%ErrorMsg(option,'max_num_contig_reverts',error_string)
     case('MINIMUM_TIMESTEP_SIZE','TIMESTEP_MINIMUM_SIZE')
-      call InputReadDouble(input,option,this%dt_min)
-      call InputErrorMsg(input,option,keyword,error_string)
-      call InputReadAndConvertUnits(input,this%dt_min,'sec', &
+      call input%ReadDouble(option,this%dt_min)
+      call input%ErrorMsg(option,keyword,error_string)
+      call input%ReadAndConvertUnits(this%dt_min,'sec', &
                                     trim(error_string)//','//keyword,option)
     case('TIMESTEP_REDUCTION_FACTOR')
-      call InputReadDouble(input,option,this%time_step_reduction_factor)
-      call InputErrorMsg(input,option,'timestep reduction factor',error_string)
+      call input%ReadDouble(option,this%time_step_reduction_factor)
+      call input%ErrorMsg(option,'timestep reduction factor',error_string)
     case('TIMESTEP_MAXIMUM_GROWTH_FACTOR')
-      call InputReadDouble(input,option,this%time_step_max_growth_factor)
-      call InputErrorMsg(input,option,'timestep maximum growth factor', &
+      call input%ReadDouble(option,this%time_step_max_growth_factor)
+      call input%ErrorMsg(option,'timestep maximum growth factor', &
                          error_string)
     case('TIMESTEP_OVERSTEP_REL_TOLERANCE')
-      call InputReadDouble(input,option,this%time_step_tolerance)
-      call InputErrorMsg(input,option,'timestep overstep tolerance', &
+      call input%ReadDouble(option,this%time_step_tolerance)
+      call input%ErrorMsg(option,'timestep overstep tolerance', &
                          error_string)
     case('INITIALIZE_TO_STEADY_STATE')
       this%init_to_steady_state = PETSC_TRUE
-      call InputReadDouble(input,option,this%steady_state_rel_tol)
-      call InputErrorMsg(input,option,'steady state convergence relative &
+      call input%ReadDouble(option,this%steady_state_rel_tol)
+      call input%ErrorMsg(option,'steady state convergence relative &
                          &tolerance',error_string)
     case('RUN_AS_STEADY_STATE')
       this%run_as_steady_state = PETSC_TRUE
@@ -313,7 +313,7 @@ subroutine TimestepperBaseProcessKeyword(this,input,option,keyword)
          'PRESSURE_CHANGE_LIMIT','TEMPERATURE_CHANGE_LIMIT')
       option%io_buffer = 'Keyword "' // trim(keyword) // '" has been &
         &deprecated in TIMESTEPPER and moved to the FLOW PM OPTIONS block.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     case default
       call InputKeywordUnrecognized(keyword,error_string,option)
   end select
@@ -339,7 +339,7 @@ subroutine TimestepperBaseUpdateDT(this,process_model)
   class(pm_base_type) :: process_model
   
   process_model%option%io_buffer = 'TimestepperBaseStepDT must be extended.'
-  call printErrMsg(process_model%option)
+  call process_model%option%PrintErrMsg()
 
 end subroutine TimestepperBaseUpdateDT
 
@@ -364,7 +364,7 @@ subroutine TimestepperBaseSetTargetTime(this,sync_time,option,stop_flag, &
 
   class(timestepper_base_type) :: this
   PetscReal :: sync_time
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: stop_flag
   PetscBool :: snapshot_plot_flag
   PetscBool :: observation_plot_flag
@@ -390,7 +390,7 @@ subroutine TimestepperBaseSetTargetTime(this,sync_time,option,stop_flag, &
 !geh: for debugging
 #ifdef DEBUG
   option%io_buffer = 'TimestepperBaseSetTargetTime()'
-  call printMsg(option)
+  call option%PrintMsg()
 #endif
   
   if (this%time_step_cut_flag) then
@@ -571,12 +571,12 @@ subroutine TimestepperBaseStepDT(this,process_model,stop_flag)
   class(pm_base_type) :: process_model
   PetscInt :: stop_flag
   
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   option => process_model%option
   
   option%io_buffer = 'TimestepperBaseStepDT must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
   
 end subroutine TimestepperBaseStepDT
 
@@ -596,7 +596,7 @@ subroutine TimestepperBasePrintInfo(this,option)
   implicit none
   
   class(timestepper_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: fids(2)
   character(len=MAXSTRINGLENGTH) :: strings(10)
@@ -663,10 +663,10 @@ subroutine TimestepperBaseCheckpointBinary(this,viewer,option)
 
   class(timestepper_base_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
   
   option%io_buffer = 'TimestepperBaseCheckpointBinary must be extended.'
-  call printErrMsg(option)  
+  call option%PrintErrMsg()
     
 end subroutine TimestepperBaseCheckpointBinary
 
@@ -686,10 +686,10 @@ subroutine TimestepperBaseCheckpointHDF5(this, h5_chk_grp_id, option)
   
   class(timestepper_base_type) :: this
   integer(HID_T) :: h5_chk_grp_id
-  type(option_type) :: option
+  class(option_type) :: option
 
   option%io_buffer = 'TimestepperBaseCheckpointHDF5 must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine TimestepperBaseCheckpointHDF5
 
@@ -709,10 +709,10 @@ subroutine TimestepperBaseRestartHDF5(this, h5_chk_grp_id, option)
 
   class(timestepper_base_type) :: this
   integer(HID_T) :: h5_chk_grp_id
-  type(option_type) :: option
+  class(option_type) :: option
 
   option%io_buffer = 'TimestepperBaseRestartHDF5 must be extended.'
-  call printErrMsg(option)
+  call option%PrintErrMsg()
 
 end subroutine TimestepperBaseRestartHDF5
 
@@ -813,10 +813,10 @@ subroutine TimestepperBaseRestartBinary(this,viewer,option)
 
   class(timestepper_base_type) :: this
   PetscViewer :: viewer
-  type(option_type) :: option
+  class(option_type) :: option
   
   option%io_buffer = 'TimestepperBaseRestartBinary must be extended.'
-  call printErrMsg(option)  
+  call option%PrintErrMsg()
     
 end subroutine TimestepperBaseRestartBinary
 
@@ -895,7 +895,7 @@ function TimestepperBaseWallClockStop(this,option)
   implicit none
 
   class(timestepper_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: TimestepperBaseWallclockStop
   PetscLogDouble :: current_time, average_step_time
@@ -953,12 +953,12 @@ recursive subroutine TimestepperBaseFinalizeRun(this,option)
   implicit none
   
   class(timestepper_base_type) :: this
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   
 #ifdef DEBUG
-  call printMsg(option,'TimestepperBaseFinalizeRun()')
+  call option%PrintMsg('TimestepperBaseFinalizeRun()')
 #endif
   
   if (OptionPrintToScreen(option)) then

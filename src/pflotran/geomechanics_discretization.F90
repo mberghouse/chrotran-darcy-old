@@ -108,7 +108,7 @@ subroutine GeomechDiscretizationCreateDMs(geomech_discretization,option)
   implicit none
   
   type(geomech_discretization_type) :: geomech_discretization
-  type(option_type) :: option
+  class(option_type) :: option
       
   PetscInt :: ndof
   PetscErrorCode :: ierr
@@ -154,7 +154,7 @@ subroutine GeomechDiscretizationCreateDM(geomech_discretization,dm_ptr, &
   
   type(geomech_discretization_type) :: geomech_discretization
   type(gmdm_ptr_type), pointer :: dm_ptr
-  type(option_type) :: option
+  class(option_type) :: option
   PetscInt :: ndof
   PetscErrorCode :: ierr
 
@@ -162,13 +162,13 @@ subroutine GeomechDiscretizationCreateDM(geomech_discretization,dm_ptr, &
     case(STRUCTURED_GRID)
       option%io_buffer = &
         'Geomechanics currently works only with unstructured grid.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     case(UNSTRUCTURED_GRID)
 #if !defined(PETSC_HAVE_PARMETIS)
             option%io_buffer = &
              'Must compile with Parmetis in order to use Geomechanics ' // &
              'unstructured grids.'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
 #endif
       call GMCreateGMDM(geomech_discretization%grid, &
                         dm_ptr%gmdm,ndof,option)
@@ -196,7 +196,7 @@ subroutine GeomechDiscretizationCreateVector(geomech_discretization, &
   implicit none
   
   type(geomech_discretization_type) :: geomech_discretization
-  type(option_type) :: option
+  class(option_type) :: option
   type(gmdm_ptr_type), pointer :: dm_ptr
   PetscInt :: dm_index
   Vec :: vector
@@ -287,7 +287,7 @@ subroutine GeomechDiscretizationCreateJacobian(geomech_discretization, &
   implicit none
 
   type(geomech_discretization_type) :: geomech_discretization
-  type(option_type) :: option
+  class(option_type) :: option
   type(gmdm_ptr_type), pointer :: dm_ptr
   PetscInt :: dm_index
   PetscErrorCode :: ierr

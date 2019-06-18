@@ -56,7 +56,7 @@ subroutine MultiSimulationInitialize(multisimulation,option)
   implicit none
 
   type(multi_simulation_type) :: multisimulation
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: i
   PetscInt :: offset, delta, remainder
@@ -66,7 +66,7 @@ subroutine MultiSimulationInitialize(multisimulation,option)
   PetscBool :: option_found
   PetscInt, pointer :: realization_ids_from_file(:)
   character(len=MAXSTRINGLENGTH) :: filename
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   PetscErrorCode :: ierr
   
   ! query user for number of communicator groups and realizations
@@ -87,7 +87,7 @@ subroutine MultiSimulationInitialize(multisimulation,option)
       option%io_buffer = '"-num_realizations <int>" must be specified ' // &
         'with an integer value matching the number of ids in ' // &
         '"-realization_ids_file <string>".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     allocate(realization_ids_from_file(multisimulation%num_realizations))
     realization_ids_from_file = 0
@@ -95,9 +95,9 @@ subroutine MultiSimulationInitialize(multisimulation,option)
       '# of realization ids read from file may be too few in StochasticInit()'
     do i = 1, multisimulation%num_realizations
       call InputReadPflotranString(input,option)
-      call InputReadStringErrorMsg(input,option,string)
-      call InputReadInt(input,option,realization_ids_from_file(i))
-      call InputErrorMsg(input,option,'realization id', &
+      call input%ReadStringErrorMsg(option,string)
+      call input%ReadInt(option,realization_ids_from_file(i))
+      call input%ErrorMsg(option,'realization id', &
                          'MultiSimulationInitialize')
     enddo
     call InputDestroy(input)
@@ -117,13 +117,13 @@ subroutine MultiSimulationInitialize(multisimulation,option)
   if (multisimulation%num_groups == 0) then
     option%io_buffer = 'Number of stochastic processor groups not ' // &
                        'initialized. Setting to 1.'
-    call printWrnMsg(option)
+    call option%PrintWrnMsg()
     multisimulation%num_groups = 1
   endif
   if (multisimulation%num_realizations == 0) then
     option%io_buffer = 'Number of stochastic realizations not ' // &
                        'initialized. Setting to 1.'
-    call printWrnMsg(option)
+    call option%PrintWrnMsg()
     multisimulation%num_realizations = 1
   endif
   if (multisimulation%num_groups > multisimulation%num_realizations) then
@@ -133,7 +133,7 @@ subroutine MultiSimulationInitialize(multisimulation,option)
     option%io_buffer = trim(option%io_buffer) // ') must be equal to &
          &or greater than number of processor groups (' // adjustl(string)
     option%io_buffer = trim(option%io_buffer) // ').'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
   
   call OptionCreateProcessorGroups(option,multisimulation%num_groups)
@@ -182,7 +182,7 @@ subroutine MultiSimulationIncrement(multisimulation,option)
   implicit none
   
   type(multi_simulation_type), pointer :: multisimulation
-  type(option_type) :: option
+  class(option_type) :: option
   
   character(len=MAXSTRINGLENGTH) :: string
   

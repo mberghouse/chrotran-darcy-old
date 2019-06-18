@@ -112,8 +112,8 @@ subroutine GeometryReadCoordinates(input,option,region_name,coordinates)
 
   implicit none
   
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: region_name
   type(point3d_type), pointer :: coordinates(:)
   
@@ -124,7 +124,7 @@ subroutine GeometryReadCoordinates(input,option,region_name,coordinates)
   icount = 0
   do
     call InputReadPflotranString(input,option)
-    call InputReadStringErrorMsg(input,option,'REGION')
+    call input%ReadStringErrorMsg(option,'REGION')
     if (InputCheckExit(input,option)) exit              
     icount = icount + 1
     if (icount > max_num_coordinates) then
@@ -134,7 +134,7 @@ subroutine GeometryReadCoordinates(input,option,region_name,coordinates)
       option%io_buffer = trim(option%io_buffer) // &
         ' Increase size of PetscInt, parameter :: max_num_coordinates ' // &
         ' in RegionReadCoordinates()'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     call GeometryReadCoordinate(input,option,temp_coordinates(icount),'REGION')
   enddo
@@ -162,17 +162,17 @@ subroutine GeometryReadCoordinate(input,option,coordinate,error_string)
 
   implicit none
   
-  type(input_type) :: input
-  type(option_type) :: option
+  class(input_type) :: input
+  class(option_type) :: option
   character(len=*) :: error_string
   type(point3d_type) :: coordinate
   
-  call InputReadDouble(input,option,coordinate%x) 
-  call InputErrorMsg(input,option,'x-coordinate',error_string)
-  call InputReadDouble(input,option,coordinate%y)
-  call InputErrorMsg(input,option,'y-coordinate',error_string)
-  call InputReadDouble(input,option,coordinate%z)
-  call InputErrorMsg(input,option,'z-coordinate',error_string)
+  call input%ReadDouble(option,coordinate%x)
+  call input%ErrorMsg(option,'x-coordinate',error_string)
+  call input%ReadDouble(option,coordinate%y)
+  call input%ErrorMsg(option,'y-coordinate',error_string)
+  call input%ReadDouble(option,coordinate%z)
+  call input%ErrorMsg(option,'z-coordinate',error_string)
 
 end subroutine GeometryReadCoordinate
 
@@ -193,7 +193,7 @@ function GeometryPointInPolygonalVolume(x,y,z,polygonal_volume,option)
   
   PetscReal :: x, y, z
   type(polygonal_volume_type) :: polygonal_volume
-  type(option_type) :: option
+  class(option_type) :: option
   
   PetscBool :: xy, xz, yz
   PetscBool :: GeometryPointInPolygonalVolume

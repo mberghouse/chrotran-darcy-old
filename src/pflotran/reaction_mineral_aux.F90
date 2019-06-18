@@ -372,7 +372,7 @@ function MineralConstraintCreate(mineral,option)
   implicit none
   
   type(mineral_type) :: mineral
-  type(option_type) :: option
+  class(option_type) :: option
   type(mineral_constraint_type), pointer :: MineralConstraintCreate
 
   type(mineral_constraint_type), pointer :: constraint  
@@ -508,7 +508,7 @@ function GetMineralIDFromName1(name,mineral,option)
   
   type(mineral_type) :: mineral
   character(len=MAXWORDLENGTH) :: name
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: GetMineralIDFromName1
 
@@ -536,7 +536,7 @@ function GetMineralIDFromName2(name,mineral,must_be_kinetic,throw_error, &
   character(len=MAXWORDLENGTH) :: name
   PetscBool :: must_be_kinetic
   PetscBool :: throw_error
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: GetMineralIDFromName2
   type(mineral_rxn_type), pointer :: cur_mineral
@@ -566,7 +566,7 @@ function GetMineralIDFromName2(name,mineral,must_be_kinetic,throw_error, &
   if (throw_error .and. GetMineralIDFromName2 <= 0) then
     option%io_buffer = 'Mineral "' // trim(name) // &
       '" not found among minerals in GetMineralIDFromName().'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end function GetMineralIDFromName2
@@ -590,7 +590,7 @@ function GetKineticMineralIDFromName(name,mineral,option)
   
   character(len=MAXWORDLENGTH) :: name
   type(mineral_type) :: mineral
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: GetKineticMineralIDFromName
 
@@ -600,7 +600,7 @@ function GetKineticMineralIDFromName(name,mineral,option)
   if (GetKineticMineralIDFromName <= 0) then
     option%io_buffer = 'Mineral "' // trim(name) // &
       '" not found among kinetic minerals in GetKineticMineralIDFromName().'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end function GetKineticMineralIDFromName

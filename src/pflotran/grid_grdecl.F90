@@ -330,8 +330,8 @@ subroutine UGrdEclExplicitRead(unstructured_grid, filename, option)
   type(grid_unstructured_type) :: unstructured_grid 
   type(unstructured_explicit_type), pointer :: explicit_grid
   character(len = MAXSTRINGLENGTH) :: filename
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscInt :: fileid, ierr
 
   ! Set the grid pointer
@@ -358,7 +358,7 @@ subroutine UGrdEclExplicitRead(unstructured_grid, filename, option)
     input%ierr = 1
     call MPI_Bcast(g_error_string, MAXSTRINGLENGTH, MPI_CHARACTER, &
                    option%io_rank, option%mycomm, ierr)
-    call InputErrorMsg(input, option, 'GRDECL file', g_error_string)
+    call input%ErrorMsg(option, 'GRDECL file', g_error_string)
   endif
 
   ! Destroy the input system
@@ -412,7 +412,7 @@ subroutine WriteStaticDataAndCleanup(write_ecl, eclipse_options, option)
 
   PetscBool, intent(in) :: write_ecl
   type(output_option_eclipse_type), pointer :: eclipse_options
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt  :: iw, nw, nctw, mcpw
 
@@ -769,8 +769,8 @@ subroutine GrdeclReader(input, option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   PetscBool, parameter :: dep_no  = PETSC_FALSE
   PetscBool, parameter :: dep_yes = PETSC_TRUE
@@ -797,12 +797,12 @@ subroutine GrdeclReader(input, option)
 
   do
 
-    call InputReadPflotranStringNotComment(input, option)
+    call InputReadPflotranStringNotComment(input,option)
     if (input%ierr /= 0) exit                   ! Detect eof and leave
 
   ! Keyword found
 
-    call InputReadWord(input, option, word, PETSC_TRUE)
+    call input%ReadWord(option, word, PETSC_TRUE)
     call CheckError(input, 'ECLGRD subkeyword', qerr);if ( qerr ) exit
     call StringToUpper(word)
 
@@ -958,8 +958,8 @@ subroutine ReadFaults(zkey, input, option, qerr)
 
   character(len = *), intent(in) :: zkey
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(inout) :: qerr
 
   PetscInt, parameter :: ma = 8
@@ -1021,8 +1021,8 @@ subroutine ReadMultflt(zkey, input, option, qerr)
   implicit none
 
   character(len = *), intent(in) :: zkey
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(inout) :: qerr
 
   PetscInt, parameter :: ma = 2
@@ -1145,8 +1145,8 @@ subroutine HandleOpKeyword(zkey, input, option, qerr)
   implicit none
 
   character(len=*), intent(in) :: zkey
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(inout) :: qerr
 
   PetscInt, parameter :: ma = 8
@@ -1477,7 +1477,7 @@ subroutine CheckError(input, zerr, qerr)
 
   implicit none
 
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
   character(len = *) :: zerr
   PetscBool, intent(inout) :: qerr
 
@@ -1904,7 +1904,7 @@ subroutine DistributeWells(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: iw, ik
   PetscMPIInt :: ibuf(12)
@@ -1991,7 +1991,7 @@ subroutine DistributeCells(explicit_grid, option)
   implicit none
 
   type(unstructured_explicit_type), pointer :: explicit_grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: ierr, ial, nal, nals, rem, ia, irank, narank, iabase
   PetscReal, pointer :: temp_real_array(:,:)
@@ -2089,7 +2089,7 @@ subroutine DistributeConnections(explicit_grid, option)
   implicit none
 
   type(unstructured_explicit_type), pointer :: explicit_grid
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: ierr, rem, irank, icbase, ic, icl, ncl, ncls, ncrank
   PetscReal, pointer :: temp_real_array(:,:)
@@ -2181,7 +2181,7 @@ subroutine DistributeCounts(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   call BroadcastInt(g_nxyz   , option)
   call BroadcastInt(g_na     , option)
@@ -2614,7 +2614,7 @@ subroutine DeallocatePoroPermArrays(option)
 
   implicit none
 
-  type(option_type) :: option
+  class(option_type) :: option
 
   if (option%myrank == option%io_rank) then
     call DeallocateArray(g_atog)
@@ -2730,7 +2730,7 @@ subroutine BroadcastInt(ival, option)
   implicit none
 
   PetscInt, intent(inout) :: ival
-  type(option_type) :: option
+  class(option_type) :: option
   PetscMPIInt :: int_mpi
   PetscInt    :: ierr
 
@@ -2756,7 +2756,7 @@ subroutine BroadcastIntN(ival, option)
   implicit none
 
   PetscMPIInt, intent(inout) :: ival(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt    :: n, ierr
   PetscMPIInt :: nmpi
@@ -2782,7 +2782,7 @@ subroutine BroadcastRealN(rval, option)
   implicit none
 
   PetscReal, intent(inout) :: rval(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt    :: n, ierr
   PetscMPIInt :: nmpi
@@ -2811,7 +2811,7 @@ subroutine GetLocalCount(ng, nl, nls, rem, option)
   PetscInt, intent(out) :: nl
   PetscInt, intent(out) :: nls
   PetscInt, intent(out) :: rem
-  type(option_type)     :: option
+  class(option_type)     :: option
 
   nl  = ng/option%mycommsize
   nls = nl
@@ -3229,8 +3229,8 @@ subroutine GetNextWord(word, exitTime, input, option)
 
   character(len = *), intent(out  ) :: word
   PetscBool, intent(out) :: exitTime
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len = MAXSTRINGLENGTH) :: line
   character(len = MAXWORDLENGTH  ) :: test
@@ -3284,7 +3284,7 @@ subroutine GetNextWord(word, exitTime, input, option)
         exit
       else
         ! If nothing read, read another line
-        call InputReadPflotranStringNotComment(input, option)
+        call InputReadPflotranStringNotComment(input,option)
         if (InputCheckExit(input, option)) exitTime = PETSC_FALSE
         g_column = 1
         line     = input%buf
@@ -3378,8 +3378,8 @@ subroutine ReadEGridArrI(a, keyword, input, option, is_nn, qerr)
 
   PetscInt, intent(inout) :: a(:)
   character(len = *) :: keyword
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(in) :: is_nn
   PetscBool, intent(inout) :: qerr
 
@@ -3448,8 +3448,8 @@ subroutine ReadEGridArrR(a, keyword, &
 
   PetscReal, intent(inout) :: a(:)
   character(len = *) :: keyword
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(in) :: is_dep
   PetscBool, intent(in) :: is_perm
   PetscBool, intent(in) :: is_nn
@@ -3542,8 +3542,8 @@ subroutine ReadECoordArray(a, input, option, qerr)
   implicit none
 
   PetscReal, intent(inout) :: a(:)
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(inout) :: qerr
   PetscBool, parameter :: nn_no = PETSC_FALSE
 
@@ -3576,8 +3576,8 @@ subroutine ReadEZcornArray(a, input, option, qerr)
   implicit none
 
   PetscReal, intent(inout) :: a(:)
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(inout) :: qerr
   PetscBool, parameter :: nn_no = PETSC_FALSE
 
@@ -3654,8 +3654,8 @@ subroutine ReadEvalues(a, n, keyword, section, input, option, is_nn, qerr)
   PetscInt , intent(in)    :: n
   character(len = *) :: keyword
   character(len = *) :: section
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(in) :: is_nn
   PetscBool, intent(inout) :: qerr
 
@@ -3677,7 +3677,7 @@ subroutine ReadEvalues(a, n, keyword, section, input, option, is_nn, qerr)
   ierr   = 0
   zmess = ' '
 
-  call InputReadPflotranStringNotComment(input, option)
+  call InputReadPflotranStringNotComment(input,option)
   if (InputCheckExit(input, option)) exittime = PETSC_TRUE
 
   if (.not. exittime) then
@@ -3714,7 +3714,7 @@ subroutine ReadEvalues(a, n, keyword, section, input, option, is_nn, qerr)
 
         read(word, *, iostat = ierr) dval
         if (ierr /= 0) then
-          call InputErrorMsg(input, option, keyword, section)
+          call input%ErrorMsg(option, keyword, section)
           ierr = 1
           exit
         else
@@ -3756,8 +3756,8 @@ subroutine ReadEstrings(zkey, a, n, input, option, qerr)
   character(len = MAXWORDLENGTH), intent(in) :: zkey
   character(len = MAXWORDLENGTH), intent(inout) :: a(:)
   PetscInt , intent(in)    :: n
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   PetscBool, intent(inout) :: qerr
 
   PetscInt  :: i, iostat, istar, nstack, m, nr, ierr
@@ -3777,7 +3777,7 @@ subroutine ReadEstrings(zkey, a, n, input, option, qerr)
   exittime = PETSC_FALSE
   nstack = 0
 
-  call InputReadPflotranStringNotComment(input, option)
+  call InputReadPflotranStringNotComment(input,option)
   if (InputCheckExit(input, option)) exittime = PETSC_TRUE
 
   if (.not. exittime) then
@@ -4062,7 +4062,7 @@ subroutine PermPoroExchangeAndSet(poro_p, permx_p, permy_p, permz_p, &
   PetscReal, pointer :: permz_p (:)
   PetscInt , pointer :: inatsend(:)
   PetscInt, intent(in) :: nlmax
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: irank, iorank, t_rank, ibp
   PetscInt :: ilt, ilo, ino
@@ -4210,7 +4210,7 @@ subroutine SatnumExchangeAndSet(satnum, inatsend, nlmax, nl2g, option)
   PetscInt , pointer :: inatsend(:)
   PetscInt, intent(in) :: nlmax
   PetscInt, intent(in) :: nl2g(:)
-  type(option_type) :: option
+  class(option_type) :: option
 
   PetscInt :: irank, iorank, t_rank
   PetscInt :: ilt, ilo, ino, igt
@@ -5162,15 +5162,15 @@ subroutine InputReadPflotranStringNotComment(input, option)
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
 
   character(len = MAXSTRINGLENGTH) :: word
 
   word = ' '
 
   do
-    call InputReadPflotranString(input, option)
+    call InputReadPflotranString(input,option)
     if (input%ierr /= 0) exit                   ! Detect eof and leave
     word = adjustl(input%buf)
     if (word(1:2) /= '--') exit

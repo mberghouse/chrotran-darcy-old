@@ -810,7 +810,7 @@ subroutine PMWFRead(this,input)
 ! input (input/output): pointer to input object
 ! ----------------------------------
   class(pm_waste_form_type) :: this
-  type(input_type), pointer :: input
+  class(input_type), pointer :: input
 !   class(simulation_subsurface_type) :: simulation
 ! ----------------------------------
   
@@ -825,7 +825,7 @@ subroutine PMWFRead(this,input)
 ! -------------------------------------------------------
   class(waste_form_base_type), pointer :: cur_waste_form
   class(wf_mechanism_base_type), pointer :: cur_mechanism
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
   PetscBool :: found
@@ -836,15 +836,15 @@ subroutine PMWFRead(this,input)
   error_string = 'WASTE_FORM_GENERAL'
 
   option%io_buffer = 'pflotran card:: ' // trim(error_string)
-  call printMsg(option)
+  call option%PrintMsg()
 
   do
     call InputReadPflotranString(input,option)
-    if (InputError(input)) exit
+    if (input%Error()) exit
     if (InputCheckExit(input,option)) exit
     
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    call InputErrorMsg(input,option,'keyword',error_string)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    call input%ErrorMsg(option,'keyword',error_string)
     call StringToUpper(word)
 
     found = PETSC_FALSE
@@ -904,7 +904,7 @@ subroutine PMWFRead(this,input)
       option%io_buffer = 'WASTE_FORM MECHANISM ' // &
                          trim(cur_waste_form%mech_name) // &
                          ' not found amoung given mechanism names.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     
     if (.not.cur_waste_form%mechanism%canister_degradation_model) then
@@ -914,7 +914,7 @@ subroutine PMWFRead(this,input)
           trim(cur_waste_form%mech_name) // ' does not have the canister &
           &degradation model turned on, but at least one of the waste forms &
           &assigned to this mechanism specifies a canister vitality rate.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       ! canister breach time specified, but can.deg. model is off:
       if (initialized(cur_waste_form%breach_time)) then
@@ -922,7 +922,7 @@ subroutine PMWFRead(this,input)
           trim(cur_waste_form%mech_name) // ' does not have the canister &
           &degradation model turned on, but at least one of the waste forms &
           &assigned to this mechanism specifies a canister breach time.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     endif
 
@@ -937,7 +937,7 @@ subroutine PMWFRead(this,input)
         &VITALITY_LOG10_STDEV, and VITALITY_UPPER_TRUNCATION within &
         &the WASTE_FORM MECHANISM ' // trim(cur_waste_form%mechanism%name) &
         // ' block should be specified, but not both.'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
     
     ! the canister degradation model is on, but there are problems with
@@ -954,7 +954,7 @@ subroutine PMWFRead(this,input)
           &-or- the VITALITY_LOG10_MEAN, VITALITY_LOG10_STDEV, and &
           &VITALITY_UPPER_TRUNCATION within the WASTE_FORM with MECHANISM ' // &
           trim(cur_waste_form%mechanism%name) // ' is missing.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       ! all parameters are given:
       if ( (initialized(cur_waste_form%mechanism%vitality_rate_mean) .or. &
@@ -968,7 +968,7 @@ subroutine PMWFRead(this,input)
           &VITALITY_UPPER_TRUNCATION within the WASTE_FORM with MECHANISM ' // &
           trim(cur_waste_form%mechanism%name) // ' should be specified, &
           &but not all.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       ! both breach time and can. deg. rate were given
       if (initialized(cur_waste_form%canister_vitality_rate) .and. &
@@ -977,7 +977,7 @@ subroutine PMWFRead(this,input)
           &CANISTER_BREACH_TIME within the WASTE_FORM block with &
           &WASTE_FORM MECHANISM ' // trim(cur_waste_form%mechanism%name) &
           // ' should be specified, but not both.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       ! both breach time and can. deg. distribution were given
       if ((initialized(cur_waste_form%mechanism%vitality_rate_mean) .or. &
@@ -991,7 +991,7 @@ subroutine PMWFRead(this,input)
           &VITALITY_UPPER_TRUNCATION within the WASTE_FORM with MECHANISM ' // &
           trim(cur_waste_form%mechanism%name) // ' should be specified, &
           &but not both.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     endif
     
@@ -1028,8 +1028,8 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
 ! found (input/output): Boolean helper
 ! ----------------------------------------------
   class(pm_waste_form_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
   PetscBool :: found
@@ -1069,8 +1069,8 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
   select case(trim(keyword))
   !-------------------------------------
     case('MECHANISM')
-      call InputReadWord(input,option,word,PETSC_TRUE)
-      call InputErrorMsg(input,option,'mechanism type',error_string)
+      call input%ReadWord(option,word,PETSC_TRUE)
+      call input%ErrorMsg(option,'mechanism type',error_string)
       num_errors = 0
       call StringToUpper(word)
       select case(trim(word))
@@ -1099,7 +1099,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
             &be defined and the ANL FMDM library must be linked to PFLOTRAN &
             &to employ the fuel matrix degradation model.'
           if (.not.bypass_warning_message) then
-            call printErrMsg(this%option)
+            call this%option%PrintErrMsg()
           endif
 #endif
           error_string = trim(error_string) // ' FMDM'
@@ -1114,46 +1114,46 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
         case default
           option%io_buffer = 'Unrecognized mechanism type &
                              &in the ' // trim(error_string) // ' block.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       !---------------------------------
       end select
       
       do
         call InputReadPflotranString(input,option)
-        if (InputError(input)) exit
+        if (input%Error()) exit
         if (InputCheckExit(input,option)) exit
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword',error_string)
         call StringToUpper(word)
         select case(trim(word))
         !--------------------------
           case('NAME')
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'mechanism name',error_string)
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'mechanism name',error_string)
             call StringToUpper(word)
             new_mechanism%name = trim(word)
         !--------------------------
           case('SPECIFIC_SURFACE_AREA')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'specific surface area', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'specific surface area', &
                                error_string)
-            call InputReadAndConvertUnits(input,double,'m^2/kg', &
+            call input%ReadAndConvertUnits(double,'m^2/kg', &
                             trim(error_string)//',specific surface area',option)
             select type(new_mechanism)
               class is(wf_mechanism_dsnf_type)
                 ! applies to dsnf & wipp types
                 option%io_buffer = 'ERROR: SPECIFIC_SURFACE_AREA cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
               class default
                 new_mechanism%specific_surface_area = double
             end select
         !--------------------------
           case('MATRIX_DENSITY')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'matrix density',error_string)
-            call InputReadAndConvertUnits(input,double,'kg/m^3', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'matrix density',error_string)
+            call input%ReadAndConvertUnits(double,'kg/m^3', &
                                    trim(error_string)//',matrix density',option)
             select type(new_mechanism)
               class default
@@ -1161,18 +1161,18 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
             end select
         !--------------------------
           case('SEED')
-            call InputReadInt(input,option,integer)
-            call InputErrorMsg(input,option,'seed',error_string)
+            call input%ReadInt(option,integer)
+            call input%ErrorMsg(option,'seed',error_string)
             select type(new_mechanism)
               class default
                 new_mechanism%seed = integer
             end select
         !--------------------------
           case('FRACTIONAL_DISSOLUTION_RATE_VI')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'fractional dissolution rate vi', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'fractional dissolution rate vi', &
                                error_string)
-            call InputReadAndConvertUnits(input,double,'unitless/sec', &
+            call input%ReadAndConvertUnits(double,'unitless/sec', &
                    trim(error_string)//',fractional dissolution rate vi',option)
             select type(new_mechanism)
               type is(wf_mechanism_custom_type)
@@ -1181,15 +1181,15 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: FRACTIONAL_DISSOLUTION_RATE_VI &
                            &cannot be specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('FRACTIONAL_DISSOLUTION_RATE')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'fractional dissolution rate', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'fractional dissolution rate', &
                                error_string)
-            call InputReadAndConvertUnits(input,double,'unitless/sec', &
+            call input%ReadAndConvertUnits(double,'unitless/sec', &
                       trim(error_string)//',fractional dissolution rate',option)
             select type(new_mechanism)
               type is(wf_mechanism_custom_type)
@@ -1197,14 +1197,14 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: FRACTIONAL_DISSOLUTION_RATE cannot &
                                    &be specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('DISSOLUTION_RATE')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'dissolution rate',error_string)
-            call InputReadAndConvertUnits(input,double,'kg/m^2-sec', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'dissolution rate',error_string)
+            call input%ReadAndConvertUnits(double,'kg/m^2-sec', &
                                  trim(error_string)//',dissolution_rate',option)
             select type(new_mechanism)
               type is(wf_mechanism_custom_type)
@@ -1212,15 +1212,15 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: DISSOLUTION_RATE cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('K0')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'K0 (intrinsic dissolution rate)', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'K0 (intrinsic dissolution rate)', &
                                error_string)
-            call InputReadAndConvertUnits(input,double,'kg/m^2-sec', &
+            call input%ReadAndConvertUnits(double,'kg/m^2-sec', &
                   trim(error_string)//',K0 (intrinsic dissolution rate)',option)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
@@ -1228,15 +1228,15 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: K0 (intrinsic dissolution rate) &
                                 &cannot be specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('K_LONG')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'K_LONG (dissolution rate)', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'K_LONG (dissolution rate)', &
                                error_string)
-            call InputReadAndConvertUnits(input,double,'kg/m^2-sec', &
+            call input%ReadAndConvertUnits(double,'kg/m^2-sec', &
                     trim(error_string)//',K_LONG (dissolution rate)',option)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
@@ -1244,13 +1244,13 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: K_LONG (dissolution rate) cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('NU')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'NU (pH dependence parameter)', &
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'NU (pH dependence parameter)', &
                                error_string)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
@@ -1258,15 +1258,15 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: NU (pH dependence parameter) cannot &
                                    &be specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('EA')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'EA (effective activation energy)',&
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'EA (effective activation energy)',&
                                error_string)
-            call InputReadAndConvertUnits(input,double,'J/mol', &
+            call input%ReadAndConvertUnits(double,'J/mol', &
                  trim(error_string)//',EA (effective activation energy)',option)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
@@ -1274,7 +1274,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: EA (effective activation energy) &
                                 &cannot be specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
@@ -1282,8 +1282,8 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
                 temp_buf = input%buf
-                call InputReadDouble(input,option,double)
-                if (InputError(input)) then
+                call input%ReadDouble(option,double)
+                if (input%Error()) then
                   word = adjustl(trim(temp_buf))
                   call StringToUpper(word)
                   if (trim(word) == 'AS_CALCULATED') then 
@@ -1292,7 +1292,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                     option%io_buffer = 'ERROR: Q value (ion activity product) &
                                      &was not provided, or Q instructions not &
                                      &understood for ' // trim(error_string)
-                    call printMsg(option)
+                    call option%PrintMsg()
                     num_errors = num_errors + 1
                   endif
                 endif
@@ -1304,13 +1304,13 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: Q (ion activity product) cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('K')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'K (equilibrium constant)',&
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'K (equilibrium constant)',&
                                error_string)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
@@ -1318,13 +1318,13 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: K (equilibrium constant) cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('V')
-            call InputReadDouble(input,option,double)
-            call InputErrorMsg(input,option,'V (exponent parameter)',&
+            call input%ReadDouble(option,double)
+            call input%ErrorMsg(option,'V (exponent parameter)',&
                                error_string)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
@@ -1332,7 +1332,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: V (exponent parameter) cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
@@ -1340,8 +1340,8 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
             select type(new_mechanism)
               type is(wf_mechanism_glass_type)
                 temp_buf = input%buf
-                call InputReadDouble(input,option,double)
-                if (InputError(input)) then
+                call input%ReadDouble(option,double)
+                if (input%Error()) then
                   word = adjustl(trim(temp_buf))
                   call StringToUpper(word)
                   if (trim(word) == 'AS_CALCULATED') then 
@@ -1350,7 +1350,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                     option%io_buffer = 'ERROR: PH value was not provided, or &
                                        &PH instructions not understood for ' &
                                        // trim(error_string) // '.'
-                    call printMsg(option)
+                    call option%PrintMsg()
                     num_errors = num_errors + 1
                   endif
                 endif
@@ -1362,7 +1362,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: PH cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
@@ -1380,32 +1380,32 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               class default
                 option%io_buffer = 'ERROR: KIENZLER_DISSOLUTION cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
           case('BURNUP')
             select type(new_mechanism)
               type is(wf_mechanism_fmdm_type)
-                call InputReadDouble(input,option,new_mechanism%burnup)
-                call InputErrorMsg(input,option,'burnup',error_string)
+                call input%ReadDouble(option,new_mechanism%burnup)
+                call input%ErrorMsg(option,'burnup',error_string)
 #ifndef FMDM_MODEL
                 ! if fmdm model is not on, then burnup is dissolution rate
-                call InputReadAndConvertUnits(input,new_mechanism%burnup, &
+                call input%ReadAndConvertUnits(new_mechanism%burnup, &
                                 'kg/m^2-sec',trim(error_string)//',burnup', &
                                 option)
                 option%io_buffer = 'Warning: FMDM is not linked, but an &
                                    &FMDM mechanism was defined. BURNUP &
                                    &will be used for fuel dissolution rate.'
-                call printMsg(option)
+                call option%PrintMsg()
 #else
                 option%io_buffer = 'FMDM is linked.'
-                call printMsg(option)
+                call option%PrintMsg()
 #endif
               class default
                 option%io_buffer = 'ERROR: BURNUP cannot be &
                                    &specified for ' // trim(error_string)
-                call printMsg(option)
+                call option%PrintMsg()
                 num_errors = num_errors + 1
             end select
         !--------------------------
@@ -1418,37 +1418,37 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                 option%io_buffer = 'More than 50 radionuclide species are &
                   &provided in the ' // trim(error_string) // &
                   ', SPECIES block.'
-                call PrintErrMsgToDev(option, &
+                call option%PrintErrMsgToDev(&
                                        'if reducing to less than 50 is not &
                                        &an option.')
               endif
               temp_species_array(k) = PMWFRadSpeciesCreate() 
               ! read species name
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'SPECIES name',error_string)
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'SPECIES name',error_string)
               temp_species_array(k)%name = trim(word)
               ! read species formula weight [g-species/mol-species]
-              call InputReadDouble(input,option,double)
-              call InputErrorMsg(input,option,'SPECIES formula weight', &
+              call input%ReadDouble(option,double)
+              call input%ErrorMsg(option,'SPECIES formula weight', &
                                  error_string)
               temp_species_array(k)%formula_weight = double
               ! read species decay constant [1/sec]
-              call InputReadDouble(input,option,double)
-              call InputErrorMsg(input,option,'SPECIES decay rate constant', &
+              call input%ReadDouble(option,double)
+              call input%ErrorMsg(option,'SPECIES decay rate constant', &
                                  error_string)
               temp_species_array(k)%decay_constant = double
               ! read species initial mass fraction [g-species/g-bulk]
-              call InputReadDouble(input,option,double)
-              call InputErrorMsg(input,option,'SPECIES initial mass fraction', &
+              call input%ReadDouble(option,double)
+              call input%ErrorMsg(option,'SPECIES initial mass fraction', &
                                  error_string)
               temp_species_array(k)%mass_fraction = double
               ! read species instant release fraction [-]
-              call InputReadDouble(input,option,double)
-              call InputErrorMsg(input,option,'SPECIES instant release &
+              call input%ReadDouble(option,double)
+              call input%ErrorMsg(option,'SPECIES instant release &
                                  &fraction',error_string)
               temp_species_array(k)%inst_release_fraction = double
               ! read species daughter
-              call InputReadWord(input,option,word,PETSC_TRUE)
+              call input%ReadWord(option,word,PETSC_TRUE)
               if (input%ierr == 0) then
                 temp_species_array(k)%daughter = trim(word)
               else
@@ -1460,7 +1460,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
               option%io_buffer = 'ERROR: At least one radionuclide species &
                                  &must be provided in the ' // &
                                  trim(error_string) // ', SPECIES block.'
-              call printMsg(option)
+              call option%PrintMsg()
               num_errors = num_errors + 1
             endif
             allocate(new_mechanism%rad_species_list(k))
@@ -1490,35 +1490,35 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
             do
               call InputReadPflotranString(input,option)
               if (InputCheckExit(input,option)) exit
-              call InputReadWord(input,option,word,PETSC_TRUE)
+              call input%ReadWord(option,word,PETSC_TRUE)
               call StringToUpper(word)
               select case(trim(word))
               case('VITALITY_LOG10_MEAN')
-                call InputReadDouble(input,option, &
+                call input%ReadDouble(option, &
                                      new_mechanism%vitality_rate_mean)
-                call InputErrorMsg(input,option,'canister vitality log-10 &
+                call input%ErrorMsg(option,'canister vitality log-10 &
                                    &mean value',error_string)
               case('VITALITY_LOG10_STDEV')
-                call InputReadDouble(input,option, &
+                call input%ReadDouble(option, &
                                      new_mechanism%vitality_rate_stdev)
-                call InputErrorMsg(input,option,'canister vitality log-10 &
+                call input%ErrorMsg(option,'canister vitality log-10 &
                                    &st. dev. value',error_string)
               case('VITALITY_UPPER_TRUNCATION')
-                call InputReadDouble(input,option, &
+                call input%ReadDouble(option, &
                                      new_mechanism%vitality_rate_trunc)
-                call InputErrorMsg(input,option,'canister vitality log-10 &
+                call input%ErrorMsg(option,'canister vitality log-10 &
                                    &upper truncation value',error_string)
               case('CANISTER_MATERIAL_CONSTANT')
-                call InputReadDouble(input,option, &
+                call input%ReadDouble(option, &
                                      new_mechanism%canister_material_constant)
-                call InputErrorMsg(input,option,'canister material constant', &
+                call input%ErrorMsg(option,'canister material constant', &
                                    error_string)
               case default
                 option%io_buffer = 'Keyword ' // trim(word) // &
                                    ' not recognized in the ' // &
                                    trim(error_string) // &
                                    ' CANISTER_DEGRADATION_MODEL block.'
-                call printErrMsg(option)
+                call option%PrintErrMsg()
               end select
             enddo
         !--------------------------
@@ -1532,7 +1532,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
       if (new_mechanism%name == '') then
         option%io_buffer = 'ERROR: NAME must be specified in ' // &
                            trim(error_string) // ' block.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
       select type(new_mechanism)
@@ -1541,7 +1541,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
             option%io_buffer = 'ERROR: SPECIFIC_SURFACE_AREA must be specified &
                                &in ' // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%k0)) then
@@ -1549,7 +1549,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%k_long)) then
@@ -1557,7 +1557,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%nu)) then
@@ -1565,7 +1565,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%Ea)) then
@@ -1573,7 +1573,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%Q)) then
@@ -1581,7 +1581,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%K)) then
@@ -1589,7 +1589,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%pH)) then
@@ -1597,7 +1597,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%v)) then
@@ -1605,7 +1605,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block, or choose &
                                &the KIENZLER_DISSOLUTION option.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
         type is(wf_mechanism_custom_type)
@@ -1617,7 +1617,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                &DISSOLUTION_RATE with SPECIFIC_SURFACE_AREA &
                                &must be specified in ' // trim(error_string) &
                                // ' ' // trim(new_mechanism%name) // ' block.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if ( (Initialized(new_mechanism%frac_dissolution_rate) .and. &
@@ -1630,7 +1630,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                // ' ' // trim(new_mechanism%name) // ' block. &
                                &Both types of dissolution rates cannot be &
                                &specified.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if ( (Initialized(new_mechanism%specific_surface_area) .and. &
@@ -1641,7 +1641,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                                &DISSOLUTION_RATE with SPECIFIC_SURFACE_AREA &
                                &must be specified in ' // trim(error_string) &
                                // ' ' // trim(new_mechanism%name) // ' block.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
         type is(wf_mechanism_fmdm_type)
@@ -1649,14 +1649,14 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
             option%io_buffer = 'ERROR: BURNUP must be specified in ' &
                                // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
           if (Uninitialized(new_mechanism%specific_surface_area)) then
             option%io_buffer = 'ERROR: SPECIFIC_SURFACE_AREA must be specified &
                                &in ' // trim(error_string) // ' ' // &
                                trim(new_mechanism%name) // ' block.'
-            call printMsg(option)
+            call option%PrintMsg()
             num_errors = num_errors + 1
           endif
       end select
@@ -1664,7 +1664,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
         option%io_buffer = 'ERROR: MATRIX_DENSITY must be specified in ' // &
                            trim(error_string) // ' ' // &
                            trim(new_mechanism%name) // ' block.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
 
@@ -1674,7 +1674,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                            &the ' // trim(error_string) // ' ' // &
                            trim(new_mechanism%name) // &
                            ', CANISTER_DEGRADATION_MODEL block.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
 
@@ -1682,7 +1682,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
         option%io_buffer = 'ERROR: At least one SPECIES must be specified in &
                            &the ' // trim(error_string) // ' ' // &
                            trim(new_mechanism%name) // ' block.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
 
@@ -1711,7 +1711,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the MECHANISM block. See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine PMWFReadMechanism
@@ -1746,8 +1746,8 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
 ! found (input/output): Boolean helper
 ! ----------------------------------------------
   class(pm_waste_form_type) :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: keyword
   character(len=MAXSTRINGLENGTH) :: error_string
   PetscBool :: found
@@ -1780,21 +1780,21 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
       new_waste_form => PMWFWasteFormCreate()
       do
         call InputReadPflotranString(input,option)
-        if (InputError(input)) exit
+        if (input%Error()) exit
         if (InputCheckExit(input,option)) exit
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword',error_string)
         call StringToUpper(word)
         select case(trim(word))
         !-----------------------------
           case('EXPOSURE_FACTOR')
-            call InputReadDouble(input,option,new_waste_form%exposure_factor)
-            call InputErrorMsg(input,option,'exposure factor',error_string)
+            call input%ReadDouble(option,new_waste_form%exposure_factor)
+            call input%ErrorMsg(option,'exposure factor',error_string)
         !-----------------------------
           case('VOLUME')
-            call InputReadDouble(input,option,new_waste_form%volume)
-            call InputErrorMsg(input,option,'volume',error_string)
-            call InputReadAndConvertUnits(input,new_waste_form%volume, &
+            call input%ReadDouble(option,new_waste_form%volume)
+            call input%ErrorMsg(option,'volume',error_string)
+            call input%ReadAndConvertUnits(new_waste_form%volume, &
                                           'm^3',trim(error_string)//',volume', &
                                           option)
             new_waste_form%init_volume = new_waste_form%volume
@@ -1804,70 +1804,70 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
                                         new_waste_form%coordinate,error_string)
         !-----------------------------
           case('REGION')
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'region assignment',error_string)
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'region assignment',error_string)
             new_waste_form%region_name = trim(word)
         !-----------------------------
           case('MECHANISM_NAME')
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option,'mechanism assignment',error_string)
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option,'mechanism assignment',error_string)
             call StringToUpper(word)
             new_waste_form%mech_name = trim(word)
         !-----------------------------
           case('CANISTER_VITALITY_RATE')
-            call InputReadDouble(input,option, &
+            call input%ReadDouble(option, &
                                  new_waste_form%canister_vitality_rate)
-            call InputErrorMsg(input,option,'canister vitality rate', &
+            call input%ErrorMsg(option,'canister vitality rate', &
                                error_string)
-            call InputReadAndConvertUnits(input, &
+            call input%ReadAndConvertUnits(&
                         new_waste_form%canister_vitality_rate,'unitless/sec', &
                         trim(error_string)//'canister vitality rate',option)
         !-----------------------------
           case('CANISTER_BREACH_TIME')
-            call InputReadDouble(input,option, &
+            call input%ReadDouble(option, &
                                  new_waste_form%breach_time)
-            call InputErrorMsg(input,option,'CANISTER_BREACH_TIME',error_string)
-            call InputReadAndConvertUnits(input,new_waste_form%breach_time, &
+            call input%ErrorMsg(option,'CANISTER_BREACH_TIME',error_string)
+            call input%ReadAndConvertUnits(new_waste_form%breach_time, &
                            'sec',trim(error_string)//',CANISTER_BREACH_TIME', &
                            option)
         !-----------------------------
           case('DECAY_START_TIME')
-            call InputReadDouble(input,option, &
+            call input%ReadDouble(option, &
                                  new_waste_form%decay_start_time)
-            call InputErrorMsg(input,option,'DECAY_START_TIME',error_string)
-            call InputReadAndConvertUnits(input, &
+            call input%ErrorMsg(option,'DECAY_START_TIME',error_string)
+            call input%ReadAndConvertUnits(&
                  new_waste_form%decay_start_time,'sec',trim(error_string)// &
                  ',DECAY_START_TIME',option)
         !-----------------------------    
           case('CRITICALITY')
             new_criticality => CriticalityCreate()
             do
-              call InputReadPflotranString(input, option)
-              if (InputError(input)) exit
+              call InputReadPflotranString(input,option)
+              if (input%Error()) exit
               if (InputCheckExit(input,option)) exit
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option,'keyword',error_string)
+              call input%ReadWord(option,word,PETSC_TRUE)
+              call input%ErrorMsg(option,'keyword',error_string)
               call StringToUpper(word)
               select case (trim(word))
                 case('MECH_NAME')
-                  call InputReadWord(input,option,word,PETSC_TRUE)
-                  call InputErrorMsg(input,option,'criticality mechanism assignment', &
+                  call input%ReadWord(option,word,PETSC_TRUE)
+                  call input%ErrorMsg(option,'criticality mechanism assignment', &
                                      error_string)
                   call StringToUpper(word)
                   new_criticality%crit_event%mech_name= trim(word)
                 case('CRIT_START')
-                  call InputReadDouble(input,option,new_criticality% &
+                  call input%ReadDouble(option,new_criticality% &
                                        crit_event%crit_start)
-                  call InputErrorMsg(input,option,'CRIT_START',error_string)
-                  call InputReadAndConvertUnits(input,new_criticality% &
+                  call input%ErrorMsg(option,'CRIT_START',error_string)
+                  call input%ReadAndConvertUnits(new_criticality% &
                            crit_event%crit_start,'sec', &
                            trim(error_string)//',CRIT_START', &
                            option)
                 case('CRIT_END')
-                  call InputReadDouble(input,option,new_criticality% &
+                  call input%ReadDouble(option,new_criticality% &
                                        crit_event%crit_end)
-                  call InputErrorMsg(input,option,'CRIT_END',error_string)
-                  call InputReadAndConvertUnits(input,new_criticality% &
+                  call input%ErrorMsg(option,'CRIT_END',error_string)
+                  call input%ReadAndConvertUnits(new_criticality% &
                            crit_event%crit_end,'sec', &
                            trim(error_string)//',CRIT_END', &
                            option)
@@ -1900,27 +1900,27 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
       if (Uninitialized(new_waste_form%volume)) then
         option%io_buffer = 'ERROR: VOLUME must be specified for all &
                            &waste forms.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
       if (Uninitialized(new_waste_form%coordinate%z) .and. &
           (len(trim(new_waste_form%region_name)) == 0)) then
         option%io_buffer = 'ERROR: Either COORDINATE or REGION must be &
                            &specified for all waste forms.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
       if (Initialized(new_waste_form%coordinate%z) .and. &
           (len(trim(new_waste_form%region_name)) > 0)) then
         option%io_buffer = 'ERROR: Either COORDINATE or REGION must be &
                            &specified for all waste forms, but not both.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
       if (new_waste_form%mech_name == '') then
         option%io_buffer = 'ERROR: MECHANISM_NAME must be specified for &
                            &all waste forms.'
-        call printMsg(option)
+        call option%PrintMsg()
         num_errors = num_errors + 1
       endif
       !note: do not throw error if EXPOSURE_FACTOR isn't specified (default = 1)
@@ -1949,7 +1949,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
   if (.not.associated(this%waste_form_list)) then
     option%io_buffer = 'ERROR: At least one WASTE_FORM must be specified &
                        &in the WASTE_FORM_GENERAL block.'
-    call printMsg(option)
+    call option%PrintMsg()
     num_errors = num_errors + 1
   endif
   
@@ -1957,7 +1957,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
     write(option%io_buffer,*) num_errors
     option%io_buffer = trim(adjustl(option%io_buffer)) // ' errors in &
                        &the WASTE_FORM_GENERAL,WASTE_FORM block(s). See above.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
 end subroutine PMWFReadWasteForm
@@ -2008,7 +2008,7 @@ subroutine PMWFAssociateRegion(this,region_list)
   type(region_type), pointer :: new_region
   class(waste_form_base_type), pointer :: cur_waste_form
   type(criticality_type), pointer :: cur_criticality
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   character(len=MAXWORDLENGTH) :: word1, word2
   PetscReal :: x, y, z
@@ -2051,7 +2051,7 @@ subroutine PMWFAssociateRegion(this,region_list)
         case default
           option%io_buffer = 'Only STRUCTURED_GRID and &
                     &IMPLICIT_UNSTRUCTURED_GRID types supported in PMWasteForm.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
       end select
       ! create the region only if the current process owns the waste form
       if (local_id(1) > 0) then
@@ -2089,7 +2089,7 @@ subroutine PMWFAssociateRegion(this,region_list)
       if (.not.associated(cur_waste_form%region)) then
         option%io_buffer = 'WASTE_FORM REGION ' // &
                            trim(cur_waste_form%region_name) // ' not found.'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
     endif
     !
@@ -2250,7 +2250,7 @@ subroutine PMWFSetup(this)
 ! newcomm_size: [-] size of new MPI communicator number
 ! ranks(:): array of size(mycommsize) used to find local waste form objects
 ! -------------------------------------------------------  
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(reaction_type), pointer :: reaction
   character(len=MAXWORDLENGTH) :: species_name
   character(len=MAXWORDLENGTH), pointer :: names(:)
@@ -2390,7 +2390,7 @@ subroutine PMWFSetup(this)
                                &defined as a species and/or the card&
                                &USE_FULL_GEOCHEMISTRY is not specified in the &
                                &CHEMISTRY block - (MECHANISM GLASS).'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           else
             cur_mechanism%h_ion_id = &
                     this%realization%reaction%species_idx%h_ion_id                                
@@ -2434,7 +2434,7 @@ subroutine PMWFSetup(this)
                     option%io_buffer = 'Q may not be calculated when SiO2(aq) &
                               &is not defined as a primary or secondary &
                               &species - (MECHANISM GLASS).'
-                    call printErrMsg(option)
+                    call option%PrintErrMsg()
                   endif
                 enddo
               endif
@@ -2445,7 +2445,7 @@ subroutine PMWFSetup(this)
                                &defined as a species and/or the card &
                                &USE_FULL_GEOCHEMISTRY is not specified in the &
                                &CHEMISTRY block - (MECHANISM GLASS).'
-            call printErrMsg(option)
+            call option%PrintErrMsg()
           endif
         endif
     end select
@@ -2673,7 +2673,7 @@ subroutine PMWFInitializeTimestep(this)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
   type(field_type), pointer :: field
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(grid_type), pointer :: grid
   type(criticality_type), pointer :: cur_criticality
   PetscReal :: dV
@@ -2859,11 +2859,11 @@ subroutine PMWFInitializeTimestep(this)
         if (num_species > dataset%dims(1)) then
           option%io_buffer = 'Number of species in dataset is less than ' // &
                        'the number specified in Waste Form Process Model.' 
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         elseif (num_species < dataset%dims(1)) then
           option%io_buffer = 'Number of species in dataset is greater than ' //&
                          'the number specified in Waste Form Process Model.'
-          call printErrMsg(option)
+          call option%PrintErrMsg()
         endif
         j=1
         t_low = times(j)
@@ -3619,7 +3619,7 @@ subroutine WFMechFMDMDissolution(this,waste_form,pm,ierr)
   PetscReal :: Usource
   PetscReal :: avg_temp_global
   type(global_auxvar_type), pointer :: global_auxvars(:)
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
  !========================================================
   
   grid => pm%realization%patch%grid
@@ -3855,7 +3855,7 @@ subroutine PMWFOutput(this)
 ! fid: [-] file id number
 ! i: [-] looping index integer
 ! ------------------------------------------------------
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
   type(output_option_type), pointer :: output_option
   class(waste_form_base_type), pointer :: cur_waste_form
   type(grid_type), pointer :: grid
@@ -3917,7 +3917,7 @@ function PMWFOutputFilename(option)
 ! ================
 ! option (input): pointer to option object 
 ! ------------------------------------  
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 ! ------------------------------------
 
 ! LOCAL VARIABLES:
@@ -5012,8 +5012,8 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
   implicit none
 
   type(criticality_mediator_type), pointer :: this
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: keyword, internal_units
   character(len=MAXSTRINGLENGTH) :: error_string,temp_string
 
@@ -5029,24 +5029,24 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
       allocate(new_crit_mech)
       new_crit_mech => CriticalityMechCreate()
       do
-        call InputReadPflotranString(input, option)
-        if (InputError(input)) exit
+        call InputReadPflotranString(input,option)
+        if (input%Error()) exit
         if (InputCheckExit(input,option)) exit
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,'keyword',error_string)
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,'keyword',error_string)
         call StringToUpper(word)
         select case (trim(word))
           case('NAME')
-            call InputReadWord(input,option,word,PETSC_TRUE)
-            call InputErrorMsg(input,option, &
+            call input%ReadWord(option,word,PETSC_TRUE)
+            call input%ErrorMsg(option, &
                   'criticality mechanism assignment',error_string)
             call StringToUpper(word)
             new_crit_mech%mech_name = trim(word)
           case('HEAT_OF_CRITICALITY')
-            call InputReadDouble(input,option,new_crit_mech%crit_heat)
-            call InputErrorMsg(input,option,'HEAT_OF_CRITICALITY',error_string)
+            call input%ReadDouble(option,new_crit_mech%crit_heat)
+            call input%ErrorMsg(option,'HEAT_OF_CRITICALITY',error_string)
           case('DECAY_HEAT')
-            call InputReadWord(input,option,word,PETSC_TRUE)
+            call input%ReadWord(option,word,PETSC_TRUE)
             select case (trim(word))
               case('TOTAL')
                 new_crit_mech%heat_source_cond = 1
@@ -5057,13 +5057,13 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
             end select
             do
               call InputReadPflotranString(input,option)
-              if (InputError(input)) exit
+              if (input%Error()) exit
               if (InputCheckExit(input,option)) exit
-              call InputReadWord(input,option,word,PETSC_FALSE)
+              call input%ReadWord(option,word,PETSC_FALSE)
               select case(trim(word))
                 case('DATASET')
                   internal_units = 'MW'
-                  call InputReadFilename(input,option,new_crit_mech% &
+                  call input%ReadFilename(option,new_crit_mech% &
                           heat_dataset_name)
                   call DatasetAsciiReadFile(new_crit_mech%heat_dataset, &
                           new_crit_mech%heat_dataset_name,temp_string, &
@@ -5075,13 +5075,13 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
           case('INVENTORY')
             do
               call InputReadPflotranString(input,option)
-              if (InputError(input)) exit
+              if (input%Error()) exit
               if (InputCheckExit(input,option)) exit
-              call InputReadWord(input,option,word,PETSC_FALSE)
+              call input%ReadWord(option,word,PETSC_FALSE)
               select case(trim(word))
                 case('DATASET')
                   internal_units = 'g/g'
-                  call InputReadFilename(input,option,new_crit_mech% &
+                  call input%ReadFilename(option,new_crit_mech% &
                           rad_dataset_name)
                   call DatasetAsciiReadFile(new_crit_mech%rad_dataset, &
                           new_crit_mech%rad_dataset_name,temp_string, &
@@ -5174,7 +5174,7 @@ subroutine CriticalityInitializeRun(this, realization, option)
 
   type(criticality_mediator_type), pointer :: this
   class(realization_subsurface_type), pointer :: realization
-  type(option_type), pointer :: option
+  class(option_type), pointer :: option
 
   type(criticality_type), pointer :: cur_criticality
   PetscInt :: vec_size, i, j
@@ -5336,8 +5336,8 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
 
   implicit none
 
-  type(input_type), pointer :: input
-  type(option_type) :: option
+  class(input_type), pointer :: input
+  class(option_type) :: option
   character(len=MAXWORDLENGTH) :: keyword
   class(dataset_base_type), pointer :: dataset_base
   character(len=*) :: data_external_units
@@ -5367,7 +5367,7 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
     option%io_buffer = 'Dataset associated with ' // trim(keyword) // &
       ' in the input file is already associated with a different dataset &
       &type.  Check for duplicate definitions of ' // trim(keyword) // '.'
-    call printErrMsg(option)
+    call option%PrintErrMsg()
   endif
 
   filename = ''
@@ -5378,8 +5378,8 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
 
   input%ierr = 0
   string2 = trim(input%buf)
-  call InputReadWord(input,option,word,PETSC_TRUE)
-  call InputErrorMsg(input,option,'file or value','CONDITION')
+  call input%ReadWord(option,word,PETSC_TRUE)
+  call input%ErrorMsg(option,'file or value','CONDITION')
   call StringToLower(word)
   length = len_trim(word)
   if (StringStartsWithAlpha(word)) then
@@ -5387,24 +5387,24 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
         StringCompare(word,'file',FOUR_INTEGER)) then
       input%err_buf2 = trim(keyword) // ', FILE'
       input%err_buf = 'keyword'
-      call InputReadFilename(input,option,string2)
+      call input%ReadFilename(option,string2)
       if (input%ierr == 0) then
         filename = string2
       else
         option%io_buffer = 'The ability to read realization dependent &
           &datasets outside the DATASET block is no longer supported'
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
 
       if (len_trim(filename) < 2) then
         option%io_buffer = 'No filename listed under Flow_Condition: ' // &
                            trim(keyword)
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       endif
       if (index(filename,'.h5') > 0) then
         write(option%io_buffer,'("Reading of HDF5 datasets for flow ", &
                                  &"conditions not currently supported.")')
-        call printErrMsg(option)
+        call option%PrintErrMsg()
       else
         i = index(filename,'.',PETSC_TRUE)
         if (i > 2) then
@@ -5419,10 +5419,10 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
       endif
 
     else if (StringCompare(word,'dataset')) then
-      call InputReadWord(input,option,word,PETSC_TRUE)
+      call input%ReadWord(option,word,PETSC_TRUE)
       input%err_buf2 = trim(keyword) // ', DATASET'
       input%err_buf = 'dataset name'
-      call InputErrorMsg(input,option)
+      call input%ErrorMsg(option)
       call DatasetDestroy(dataset_base)
       dataset_base => DatasetBaseCreate()
       dataset_base%name = word
@@ -5434,7 +5434,7 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
       option%io_buffer = 'Keyword "' // trim(word) // &
         '" not recognized in when reading condition values for "' // &
         trim(keyword) // '".'
-      call printErrMsg(option)
+      call option%PrintErrMsg()
     endif
   else
     input%buf = trim(string2)
@@ -5444,24 +5444,24 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
 #if 0
     allocate(dataset_ascii%rarray(dataset_ascii%array_width))
     do icol=1,dataset_ascii%array_width
-      call InputReadDouble(input,option,dataset_ascii%rarray(icol))
+      call input%ReadDouble(option,dataset_ascii%rarray(icol))
       write(input%err_buf,'(a,i2)') trim(keyword) // &
                                     ' dataset_values, icol = ', icol
       input%err_buf2 = 'CONDITION'
-      call InputErrorMsg(input,option)
+      call input%ErrorMsg(option)
     enddo
     string2 = input%buf
-    call InputReadWord(input,option,word,PETSC_TRUE)
-    if (InputError(input)) then
-      call InputCheckMandatoryUnits(input,option)
+    call input%ReadWord(option,word,PETSC_TRUE)
+    if (input%Error()) then
+      call input%CheckMandatoryUnits(option)
       word = trim(keyword) // ' UNITS'
-      call InputDefaultMsg(input,option,word)
+      call input%DefaultMsg(option,word)
     else
       input%buf = string2
       units = ''
       do icol=1,dataset_ascii%array_width
-        call InputReadWord(input,option,word,PETSC_TRUE)
-        call InputErrorMsg(input,option,keyword,'CONDITION')
+        call input%ReadWord(option,word,PETSC_TRUE)
+        call input%ErrorMsg(option,keyword,'CONDITION')
         dataset_ascii%rarray(icol) = UnitsConvertToInternal(word, &
                                      internal_unit_strings(icol),option) * &
                                      dataset_ascii%rarray(icol)
