@@ -466,6 +466,7 @@ subroutine THAuxVarComputeNoFreezing(x,auxvar,global_auxvar, &
  !                                  material_auxvar%permeability(perm_xx_index), &
  !                                  option)
     dpw_dp = 0.d0
+    dkr_dp = dkr_dsat1 * ds_dp
   else
     iphase = 1
     auxvar%pc = 0.d0
@@ -535,7 +536,7 @@ subroutine THAuxVarComputeNoFreezing(x,auxvar,global_auxvar, &
 !geh: contribution of dvis_dpsat is now added in EOSWaterViscosity
 !  auxvar%dkvr_dt = -kr/(visl*visl)*(dvis_dt+dvis_dpsat*dpsat_dt)
   auxvar%dkvr_dt = -kr/(visl*visl)*dvis_dt
-  auxvar%dkvr_dp = -kr/(visl*visl)*dvis_dp !dkr_dp/visl - kr/(visl*visl)*dvis_dp
+  auxvar%dkvr_dp = dkr_dp/visl - kr/(visl*visl)*dvis_dp
   if (iphase < 3) then !kludge since pw is constant in the unsat zone
     auxvar%dh_dp = hw_dp
     auxvar%du_dp = hw_dp - (dpw_dp/dw_mol-pw/(dw_mol*dw_mol)*dw_dp)*option%scale
