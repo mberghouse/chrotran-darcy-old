@@ -98,9 +98,9 @@ subroutine CondControlAssignFlowInitCond(realization)
   patch => realization%patch
 
   ! to catch uninitialized grid cells.  see VecMin check at bottom.
-  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
-  iphase_loc_p = UNINITIALIZED_DOUBLE
-  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  iphase_loc_p = UNINITIALIZED_DOUBLE
+!  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
 
   cur_patch => realization%patch_list%first
   do
@@ -113,7 +113,7 @@ subroutine CondControlAssignFlowInitCond(realization)
       case(WF_MODE)
 
         call VecGetArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+ !       call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
 
         xx_p = UNINITIALIZED_DOUBLE
 
@@ -180,7 +180,8 @@ subroutine CondControlAssignFlowInitCond(realization)
               ibegin = iend-option%nflowdof+1
               if (cur_patch%imat(ghosted_id) <= 0) then
                 xx_p(ibegin:iend) = 0.d0
-                iphase_loc_p(ghosted_id) = 0
+  !              iphase_loc_p(ghosted_id) = 0
+                cur_patch%aux%Global%auxvars(ghosted_id)%istate=0
                 cycle
               endif
               ! decrement ibegin to give a local offset of 0
@@ -193,7 +194,7 @@ subroutine CondControlAssignFlowInitCond(realization)
                 xx_p(ibegin+WIPPFLO_GAS_SATURATION_DOF) = &
                   general%gas_saturation%dataset%rarray(1)
               endif
-              iphase_loc_p(ghosted_id) = initial_condition%flow_condition%iphase
+   !           iphase_loc_p(ghosted_id) = initial_condition%flow_condition%iphase
               cur_patch%aux%Global%auxvars(ghosted_id)%istate = &
                 initial_condition%flow_condition%iphase
             enddo
@@ -205,7 +206,8 @@ subroutine CondControlAssignFlowInitCond(realization)
                 iend = local_id*option%nflowdof
                 ibegin = iend-option%nflowdof+1
                 xx_p(ibegin:iend) = 0.d0
-                iphase_loc_p(ghosted_id) = 0
+   !             iphase_loc_p(ghosted_id) = 0
+                cur_patch%aux%Global%auxvars(ghosted_id)%istate=0
                 cycle
               endif
               offset = (local_id-1)*option%nflowdof
@@ -217,7 +219,7 @@ subroutine CondControlAssignFlowInitCond(realization)
                     initial_condition%flow_aux_mapping( &
                       wf_dof_to_primary_variable(idof)),iconn)
               enddo
-              iphase_loc_p(ghosted_id) = istate
+ !             iphase_loc_p(ghosted_id) = istate
               cur_patch%aux%Global%auxvars(ghosted_id)%istate = istate
             enddo
           endif
@@ -225,13 +227,13 @@ subroutine CondControlAssignFlowInitCond(realization)
         enddo
 
         call VecRestoreArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
-                                ierr);CHKERRQ(ierr)
+ !       call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
+!                                ierr);CHKERRQ(ierr)
       
       case(G_MODE) ! general phase mode
 
         call VecGetArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+ !       call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
       
         xx_p = UNINITIALIZED_DOUBLE
       
@@ -310,8 +312,9 @@ subroutine CondControlAssignFlowInitCond(realization)
               iend = local_id*option%nflowdof
               ibegin = iend-option%nflowdof+1
               if (cur_patch%imat(ghosted_id) <= 0) then
-                xx_p(ibegin:iend) = 0.d0
-                iphase_loc_p(ghosted_id) = 0
+                 xx_p(ibegin:iend) = 0.d0
+                 cur_patch%aux%Global%auxvars(ghosted_id)%istate=0
+!                 iphase_loc_p(ghosted_id) = 0
                 cycle
               endif
               ! decrement ibegin to give a local offset of 0
@@ -355,7 +358,7 @@ subroutine CondControlAssignFlowInitCond(realization)
                   xx_p(ibegin+GENERAL_ENERGY_DOF) = &
                     general%temperature%dataset%rarray(1)
               end select
-              iphase_loc_p(ghosted_id) = initial_condition%flow_condition%iphase
+!              iphase_loc_p(ghosted_id) = initial_condition%flow_condition%iphase
               cur_patch%aux%Global%auxvars(ghosted_id)%istate = &
                 initial_condition%flow_condition%iphase
             enddo
@@ -367,7 +370,8 @@ subroutine CondControlAssignFlowInitCond(realization)
                 iend = local_id*option%nflowdof
                 ibegin = iend-option%nflowdof+1
                 xx_p(ibegin:iend) = 0.d0
-                iphase_loc_p(ghosted_id) = 0
+                cur_patch%aux%Global%auxvars(ghosted_id)%istate=0
+ !               iphase_loc_p(ghosted_id) = 0
                 cycle
               endif
               offset = (local_id-1)*option%nflowdof
@@ -388,13 +392,13 @@ subroutine CondControlAssignFlowInitCond(realization)
                 endif
               enddo
               if (general_hydrate_flag .and. istate > 3) then
-                iphase_loc_p(ghosted_id) = TWO_PHASE_STATE
+!                iphase_loc_p(ghosted_id) = TWO_PHASE_STATE
                 cur_patch%aux%Global%auxvars(ghosted_id)% &
                         istate = TWO_PHASE_STATE
                 cur_patch%aux%Global%auxvars(ghosted_id)% &
                         hstate = istate
               else
-                iphase_loc_p(ghosted_id) = istate
+!                iphase_loc_p(ghosted_id) = istate
                 cur_patch%aux%Global%auxvars(ghosted_id)%istate = istate
               endif
             enddo
@@ -403,13 +407,13 @@ subroutine CondControlAssignFlowInitCond(realization)
         enddo
      
         call VecRestoreArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
-                                ierr);CHKERRQ(ierr)
+ !       call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
+ !                               ierr);CHKERRQ(ierr)
 
       case(TOIL_IMS_MODE)
 
         call VecGetArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!        call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
       
         xx_p = UNINITIALIZED_DOUBLE
       
@@ -461,7 +465,8 @@ subroutine CondControlAssignFlowInitCond(realization)
               ibegin = iend-option%nflowdof+1
               if (cur_patch%imat(ghosted_id) <= 0) then
                 xx_p(ibegin:iend) = 0.d0
-                iphase_loc_p(ghosted_id) = 0
+                !                iphase_loc_p(ghosted_id) = 0
+                cur_patch%aux%Global%auxvars(ghosted_id)%istate = 0
                 cycle
               endif
               ! decrement ibegin to give a local offset of 0
@@ -475,9 +480,9 @@ subroutine CondControlAssignFlowInitCond(realization)
                  toil_ims%temperature%dataset%rarray(1)
               ! iphase not required  
               ! assign 0 to pass internal routine test at the end
-              iphase_loc_p(ghosted_id) = 0
+  !            iphase_loc_p(ghosted_id) = 0
               !iphase_loc_p(ghosted_id) = initial_condition%flow_condition%iphase
-              !cur_patch%aux%Global%auxvars(ghosted_id)%istate = &
+              cur_patch%aux%Global%auxvars(ghosted_id)%istate = 0
               !  initial_condition%flow_condition%iphase
             enddo
           else ! if initial condition values defined in flow_aux_real_var
@@ -490,7 +495,8 @@ subroutine CondControlAssignFlowInitCond(realization)
                 xx_p(ibegin:iend) = 0.d0
                 ! iphase not required 
                 ! assign 0 to pass internal routine test at the end
-                iphase_loc_p(ghosted_id) = 0
+  !              iphase_loc_p(ghosted_id) = 0
+                cur_patch%aux%Global%auxvars(ghosted_id)%istate = 0
                 cycle
               endif
               offset = (local_id-1)*option%nflowdof
@@ -505,22 +511,22 @@ subroutine CondControlAssignFlowInitCond(realization)
               enddo
               ! iphase not required 
               ! assign 0 to pass internal routine test at the end
-              iphase_loc_p(ghosted_id) = 0 
+             ! iphase_loc_p(ghosted_id) = 0 
               !iphase_loc_p(ghosted_id) = istate
-              !cur_patch%aux%Global%auxvars(ghosted_id)%istate = istate
+              cur_patch%aux%Global%auxvars(ghosted_id)%istate = istate
             enddo
           endif
           initial_condition => initial_condition%next
         enddo
      
         call VecRestoreArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
-                                ierr);CHKERRQ(ierr)
+ !       call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
+!                                ierr);CHKERRQ(ierr)
 
       case(TOWG_MODE)
 
         call VecGetArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!        call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
       
         xx_p = UNINITIALIZED_DOUBLE
       
@@ -622,7 +628,8 @@ subroutine CondControlAssignFlowInitCond(realization)
             do icell=1,initial_condition%region%num_cells
               local_id = initial_condition%region%cell_ids(icell)
               ghosted_id = grid%nL2G(local_id)
-              iphase_loc_p(ghosted_id) = 0 ! Set to pass validity check at end of routine
+ !             iphase_loc_p(ghosted_id) = 0 ! Set to pass validity check at end of routine
+!???              cur_patch%aux%Global%auxvars(ghosted_id)%istate = 0
               iend = local_id*option%nflowdof
               ibegin = iend-option%nflowdof+1
               if (cur_patch%imat(ghosted_id) <= 0) then
@@ -695,7 +702,8 @@ subroutine CondControlAssignFlowInitCond(realization)
             do iconn=1,initial_condition%connection_set%num_connections
               local_id = initial_condition%connection_set%id_dn(iconn)
               ghosted_id = grid%nL2G(local_id)
-              iphase_loc_p(ghosted_id) = 0 ! Set to pass validity check at end of routine
+!              iphase_loc_p(ghosted_id) = 0 ! Set to pass validity check at end of routine
+ !             cur_patch%aux%Global%auxvars(ghosted_id)%istate = 0
               if (cur_patch%imat(ghosted_id) <= 0) then
                 iend = local_id*option%nflowdof
                 ibegin = iend-option%nflowdof+1
@@ -719,13 +727,13 @@ subroutine CondControlAssignFlowInitCond(realization)
         enddo
      
         call VecRestoreArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
-                                ierr);CHKERRQ(ierr)
+!        call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, &
+!                                ierr);CHKERRQ(ierr)
 
       case default
         ! assign initial conditions values to domain
         call VecGetArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
-        call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+ !       call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
       
         xx_p = UNINITIALIZED_DOUBLE
       
@@ -777,7 +785,8 @@ subroutine CondControlAssignFlowInitCond(realization)
             ibegin = iend-option%nflowdof+1
             if (cur_patch%imat(ghosted_id) <= 0) then
               xx_p(ibegin:iend) = 0.d0
-              iphase_loc_p(ghosted_id) = 0
+!              iphase_loc_p(ghosted_id) = 0
+              cur_patch%aux%Global%auxvars(ghosted_id)%istate = 0
               cycle
             endif
             if (associated(initial_condition%flow_aux_real_var)) then
@@ -797,12 +806,13 @@ subroutine CondControlAssignFlowInitCond(realization)
               enddo
             endif
             ! TODO(geh): phase out field%iphas_loc
-            iphase_loc_p(ghosted_id) = &
-              initial_condition%flow_condition%iphase
-            if (option%iflowmode == G_MODE) then
-              cur_patch%aux%Global%auxvars(ghosted_id)%istate = &
-                int(iphase_loc_p(ghosted_id))
-            endif
+ !           iphase_loc_p(ghosted_id) = &
+ !                initial_condition%flow_condition%iphase
+            cur_patch%aux%Global%auxvars(ghosted_id)%istate = initial_condition%flow_condition%iphase
+ !           if (option%iflowmode == G_MODE) then
+ !             cur_patch%aux%Global%auxvars(ghosted_id)%istate = &
+ !               int(iphase_loc_p(ghosted_id))
+ !           endif
           enddo
           initial_condition => initial_condition%next
         enddo
@@ -825,8 +835,8 @@ subroutine CondControlAssignFlowInitCond(realization)
                                    field%flow_xx_loc,NFLOWDOF)  
 
   call VecCopy(field%flow_xx, field%flow_yy, ierr);CHKERRQ(ierr)
-  call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
-                                  field%iphas_loc,ONEDOF)  
+!  call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
+!                                  field%iphas_loc,ONEDOF)  
   call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
                                   field%iphas_old_loc,ONEDOF)
 
@@ -835,11 +845,13 @@ subroutine CondControlAssignFlowInitCond(realization)
   call DiscretizationLocalToGlobal(discretization,field%iphas_loc,field%work, &
                                    ONEDOF)
   call VecMin(field%work,PETSC_NULL_INTEGER,tempreal,ierr);CHKERRQ(ierr)
-  if (tempreal < 0.d0) then
+!  if (tempreal < 0.d0) then
 !    print *, tempreal
-    option%io_buffer = 'Uninitialized cells in domain.'
-    call PrintErrMsg(option)
-  endif
+!    option%io_buffer = 'Uninitialized cells in domain.'
+!    call PrintErrMsg(option)
+
+!CHANGE THIS WHEN DONE TESTING!!!!!!!!!!!!!
+ !  endif
 
 end subroutine CondControlAssignFlowInitCond
 
@@ -938,7 +950,7 @@ subroutine CondControlAssignTranInitCond(realization)
     call VecGetArrayF90(field%tran_xx,xx_p,ierr);CHKERRQ(ierr)
     select case(option%iflowmode)
       case(MPH_MODE,FLASH2_MODE)
-        call VecGetArrayReadF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+  !      call VecGetArrayReadF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
         call VecGetArrayF90(field%flow_xx,flow_xx_p, ierr);CHKERRQ(ierr)
     end select
       
@@ -1145,7 +1157,8 @@ subroutine CondControlAssignTranInitCond(realization)
           ! solution.
           select case(option%iflowmode)
             case(MPH_MODE,FLASH2_MODE)
-              if (int(iphase_loc_p(ghosted_id)) == 1) then
+       !        if (int(iphase_loc_p(ghosted_id)) == 1) then
+              if (int(cur_patch%aux%Global%auxvars(ghosted_id)%istate)==1) then
                 tempreal = &
                   RCO2MoleFraction(rt_auxvars(ghosted_id), &
                                    global_auxvars(ghosted_id),reaction,option)
@@ -1258,7 +1271,7 @@ subroutine CondControlAssignTranInitCond(realization)
     call VecRestoreArrayF90(field%tran_xx,xx_p, ierr);CHKERRQ(ierr)
     select case(option%iflowmode)
       case(MPH_MODE,FLASH2_MODE)
-        call VecRestoreArrayReadF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+ !       call VecRestoreArrayReadF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
         call VecRestoreArrayF90(field%flow_xx,flow_xx_p, ierr);CHKERRQ(ierr)
     end select
 

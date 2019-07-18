@@ -382,8 +382,8 @@ subroutine CheckpointFlowProcessModelBinary(viewer,realization)
     select case(option%iflowmode)
       case(MPH_MODE,TH_MODE,TH_TS_MODE,RICHARDS_MODE,RICHARDS_TS_MODE,IMS_MODE,MIS_MODE, &
            FLASH2_MODE,TOIL_IMS_MODE)
-        call DiscretizationLocalToGlobal(realization%discretization, &
-                                         field%iphas_loc,global_vec,ONEDOF)
+! ???        call DiscretizationLocalToGlobal(realization%discretization, &
+!                                         field%iphas_loc,global_vec,ONEDOF)
         call VecView(global_vec, viewer, ierr);CHKERRQ(ierr)
       case(G_MODE,TOWG_MODE)
         call GlobalGetAuxVarVecLoc(realization,field%work_loc, &

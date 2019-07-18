@@ -9,7 +9,7 @@ module Global_Aux_module
   private 
 
   type, public :: global_auxvar_type
-    PetscInt :: istate, hstate
+    PetscInt :: istate, hstate, istate_old
     PetscReal :: temp
     PetscReal, pointer :: pres(:)
     PetscReal, pointer :: pres_store(:,:)

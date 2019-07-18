@@ -995,9 +995,9 @@ subroutine PMTOilImsCheckpointBinary(this,viewer)
   PetscViewer :: viewer
  
   ! currently doing this but it is not needed 
-  call GlobalGetAuxVarVecLoc(this%realization, &
-                             this%realization%field%iphas_loc, &
-                             STATE,ZERO_INTEGER)
+!  call GlobalGetAuxVarVecLoc(this%realization, &
+!                             this%realization%field%iphas_loc, &
+!                             STATE,ZERO_INTEGER)
   call PMSubsurfaceFlowCheckpointBinary(this,viewer)
   
 end subroutine PMTOilImsCheckpointBinary
@@ -1023,9 +1023,9 @@ subroutine PMTOilImsRestartBinary(this,viewer)
   
   call PMSubsurfaceFlowRestartBinary(this,viewer)
   ! currently doing this but it is not needed for TOIL_IMS
-  call GlobalSetAuxVarVecLoc(this%realization, &
-                             this%realization%field%iphas_loc, &
-                             STATE,ZERO_INTEGER)
+!  call GlobalSetAuxVarVecLoc(this%realization, &
+!                             this%realization%field%iphas_loc, &
+!                             STATE,ZERO_INTEGER)
   
 end subroutine PMTOilImsRestartBinary
 

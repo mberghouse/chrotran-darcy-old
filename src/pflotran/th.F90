@@ -718,7 +718,7 @@ subroutine THUpdateAuxVarsPatch(realization)
 
   call VecGetArrayF90(field%flow_xx_loc,xx_loc_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
   do ghosted_id = 1, grid%ngmax
@@ -727,7 +727,8 @@ subroutine THUpdateAuxVarsPatch(realization)
     if (patch%imat(ghosted_id) <= 0) cycle
     iend = ghosted_id*option%nflowdof
     istart = iend-option%nflowdof+1
-    iphase = int(iphase_loc_p(ghosted_id))
+!    iphase = int(iphase_loc_p(ghosted_id))
+    iphase = int(global_auxvars(ghosted_id)%istate)
     ithrm = int(ithrm_loc_p(ghosted_id))
 
     if (option%use_th_freezing) then
@@ -748,7 +749,8 @@ subroutine THUpdateAuxVarsPatch(realization)
             grid%nG2A(ghosted_id),option)
     endif
 
-    iphase_loc_p(ghosted_id) = iphase
+!    iphase_loc_p(ghosted_id) = iphase
+    global_auxvars(ghosted_id)%istate=iphase
   enddo
 
   boundary_condition => patch%boundary_condition_list%first
@@ -779,7 +781,8 @@ subroutine THUpdateAuxVarsPatch(realization)
              HET_DIRICHLET_BC,HET_SEEPAGE_BC,HET_CONDUCTANCE_BC)
           iphasebc = boundary_condition%flow_aux_int_var(1,iconn)
         case(NEUMANN_BC,ZERO_GRADIENT_BC)
-          iphasebc=int(iphase_loc_p(ghosted_id))                               
+ !          iphasebc=int(iphase_loc_p(ghosted_id))
+          iphasebc=int(global_auxvars(ghosted_id)%istate)
       end select
 
       if (option%use_th_freezing) then
@@ -819,7 +822,8 @@ subroutine THUpdateAuxVarsPatch(realization)
 
       iend = ghosted_id*option%nflowdof
       istart = iend-option%nflowdof+1
-      iphase = int(iphase_loc_p(ghosted_id))
+ !     iphase = int(iphase_loc_p(ghosted_id))
+      iphase = int(global_auxvars(ghosted_id)%istate)
 
       select case(source_sink%flow_condition%itype(TH_TEMPERATURE_DOF))
         case (HET_DIRICHLET_BC)
@@ -866,7 +870,7 @@ subroutine THUpdateAuxVarsPatch(realization)
 
   call VecRestoreArrayF90(field%flow_xx_loc,xx_loc_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
   patch%aux%TH%auxvars_up_to_date = PETSC_TRUE
@@ -1098,7 +1102,7 @@ subroutine THUpdateFixedAccumPatch(realization)
 
   call VecGetArrayReadF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
   call VecGetArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
@@ -1112,7 +1116,8 @@ subroutine THUpdateFixedAccumPatch(realization)
 
     iend = local_id*option%nflowdof
     istart = iend-option%nflowdof+1
-    iphase = int(iphase_loc_p(ghosted_id))
+ !   iphase = int(iphase_loc_p(ghosted_id))
+    iphase = int(global_auxvars(ghosted_id)%istate)
     ithrm = int(ithrm_loc_p(ghosted_id))
 
     if (option%use_th_freezing) then
@@ -1138,7 +1143,8 @@ subroutine THUpdateFixedAccumPatch(realization)
       vol_frac_prim = TH_sec_heat_vars(local_id)%epsilon
     endif
     
-    iphase_loc_p(ghosted_id) = iphase
+ !   iphase_loc_p(ghosted_id) = iphase
+    global_auxvars(ghosted_id)%istate = iphase
     call THAccumulation(TH_auxvars(ghosted_id),global_auxvars(ghosted_id), &
                         material_auxvars(ghosted_id), &
                         TH_parameter%dencpr(int(ithrm_loc_p(ghosted_id))), &
@@ -1147,7 +1153,7 @@ subroutine THUpdateFixedAccumPatch(realization)
 
   call VecRestoreArrayReadF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
   call VecRestoreArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
@@ -3846,8 +3852,8 @@ subroutine THUpdateLocalVecs(xx,realization,ierr)
    ! Communication -----------------------------------------
   ! These 3 must be called before THUpdateAuxVars()
   call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,NFLOWDOF)
-  call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
-                                  field%iphas_loc,ONEDOF)
+ ! call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
+ !                                 field%iphas_loc,ONEDOF)
   call DiscretizationLocalToLocal(discretization,field%icap_loc, &
                                   field%icap_loc,ONEDOF)
 
@@ -6593,7 +6599,7 @@ subroutine THComputeCoeffsForSurfFlux(realization)
   global_auxvars => patch%aux%Global%auxvars
   global_auxvars_bc => patch%aux%Global%auxvars_bc
 
-  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%flow_yy, xx_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
@@ -6618,7 +6624,8 @@ subroutine THComputeCoeffsForSurfFlux(realization)
         sum_connection = sum_connection + 1
         local_id       = cur_connection_set%id_dn(iconn)
         ghosted_id     = grid%nL2G(local_id)
-        iphase         = int(iphase_loc_p(ghosted_id))
+!        iphase         = int(iphase_loc_p(ghosted_id))
+        iphase=int(global_auxvars(ghosted_id)%istate)
 
         ! Step-1: Find P_max/P_min for cubic polynomial approximation
 
@@ -6750,7 +6757,7 @@ subroutine THComputeCoeffsForSurfFlux(realization)
 
   enddo
 
-  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+!  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%flow_yy, xx_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
