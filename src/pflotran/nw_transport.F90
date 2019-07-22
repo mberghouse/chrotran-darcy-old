@@ -1104,6 +1104,8 @@ subroutine NWTResidualRx(nwt_auxvar,material_auxvar,nw_trans,Res)
     
     species => species%next
   enddo
+
+  Res = Res * vol
                     
 end subroutine NWTResidualRx
 
