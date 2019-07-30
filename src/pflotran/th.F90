@@ -685,7 +685,7 @@ subroutine THUpdateAuxVarsPatch(realization)
 
   PetscInt :: ghosted_id, local_id, istart, iend, sum_connection, idof, iconn
   PetscInt :: iphasebc, iphase
-  PetscReal, pointer :: xx_loc_p(:), icap_loc_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_loc_p(:), icap_loc_p(:)
   PetscReal :: xxbc(realization%option%nflowdof)
   PetscReal, pointer :: xx(:)
   PetscReal :: tsrc1
@@ -1082,7 +1082,7 @@ subroutine THUpdateFixedAccumPatch(realization)
   class(material_auxvar_type), pointer :: material_auxvars(:)
 
   PetscInt :: ghosted_id, local_id, istart, iend, iphase
-  PetscReal, pointer :: xx_p(:), icap_loc_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_p(:), icap_loc_p(:)
   PetscReal, pointer :: ithrm_loc_p(:), accum_p(:)
   PetscReal :: vol_frac_prim
   PetscInt :: ithrm
@@ -5012,7 +5012,7 @@ subroutine THJacobianBoundaryConn(A,realization,ierr)
   PetscInt :: ip1, ip2 
 
   PetscReal, pointer :: xx_loc_p(:)
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:), ithrm_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:), ithrm_loc_p(:)
   PetscInt :: icap,iphas,icap_up,icap_dn
   PetscInt :: ii, jj
   PetscReal :: dw_kg,dw_mol,enth_src_co2,enth_src_h2o,rho
@@ -5346,7 +5346,7 @@ subroutine THJacobianSourceSink(A,realization,ierr)
   PetscInt :: ip1, ip2 
 
   PetscReal, pointer :: xx_loc_p(:)
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:), ithrm_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:), ithrm_loc_p(:)
   PetscInt :: icap,iphas,icap_up,icap_dn
   PetscInt :: ii, jj
   PetscReal :: dw_kg,dw_mol,enth_src_co2,enth_src_h2o,rho
@@ -6575,7 +6575,6 @@ subroutine THComputeCoeffsForSurfFlux(realization)
   PetscReal :: P_max_pert,P_min_pert,temp_pert
   PetscReal :: perm_dn
   PetscReal :: area
-  PetscReal, pointer :: iphase_loc_p(:)
   PetscReal :: coeff_for_cubic_approx_pert(4)
   PetscReal :: range_for_linear_approx_pert(4)
   PetscReal :: slope_1, slope_2

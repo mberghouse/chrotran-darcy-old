@@ -619,7 +619,7 @@ subroutine MPhaseUpdateReasonPatch(reason,realization)
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
   type(option_type), pointer :: option 
-  PetscReal, pointer :: xx_p(:),iphase_loc_p(:), yy_p(:) 
+  PetscReal, pointer :: xx_p(:), yy_p(:) 
   PetscInt :: n,n0,re
   PetscInt :: re0, iipha
   PetscErrorCode :: ierr
@@ -893,7 +893,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
 
   PetscInt :: ghosted_id, local_id, istart, iend, sum_connection, idof, iconn
   PetscInt :: iphase
-  PetscReal, pointer :: xx_loc_p(:), icap_loc_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_loc_p(:), icap_loc_p(:)
   PetscReal :: xxbc(realization%option%nflowdof)
   PetscErrorCode :: ierr
   PetscReal :: xphi, ynacl, mnacl
@@ -1292,7 +1292,7 @@ subroutine MphaseUpdateFixedAccumPatch(realization)
   class(material_auxvar_type), pointer :: material_auxvars(:)  
   
   PetscInt :: ghosted_id, local_id, istart, iend !, iphase
-  PetscReal, pointer :: xx_p(:), icap_loc_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_p(:), icap_loc_p(:)
   PetscReal, pointer :: ithrm_loc_p(:), accum_p(:)
                           
   PetscErrorCode :: ierr
@@ -2178,7 +2178,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
   Vec, intent(in) :: xx
   PetscInt :: icri,ichange 
 
-  PetscReal, pointer :: xx_p(:), yy_p(:),iphase_loc_p(:)
+  PetscReal, pointer :: xx_p(:), yy_p(:)
   PetscReal :: den(realization%option%nphase)
   PetscInt :: ipr
   PetscInt :: iipha 
@@ -2520,7 +2520,7 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
 
   PetscReal, pointer :: r_p(:), xx_loc_p(:), xx_p(:), yy_p(:)
 
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:), ithrm_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:), ithrm_loc_p(:)
 
   PetscInt :: iphase
   PetscInt :: icap_up, icap_dn, ithrm_up, ithrm_dn
@@ -3247,7 +3247,7 @@ subroutine MphaseJacobianPatch(snes,xx,A,B,realization,ierr)
   PetscInt :: ip1, ip2 
 
   PetscReal, pointer :: xx_loc_p(:)
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:), ithrm_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:), ithrm_loc_p(:)
   PetscInt :: icap,iphas,iphas_up,iphas_dn,icap_up,icap_dn
   PetscInt :: ii, jj
   PetscReal :: dw_kg,dw_mol,enth_src_co2,enth_src_h2o,rho
@@ -3878,7 +3878,7 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
   type(field_type), pointer :: field
   type(option_type), pointer :: option 
   PetscErrorCode :: ierr
-  PetscReal, pointer :: xx_p(:), yy_p(:),  iphase_loc_p(:),  iphase_old_loc_p(:) 
+  PetscReal, pointer :: xx_p(:), yy_p(:) 
   PetscInt :: local_id, ghosted_id, n0 
   PetscReal :: cmp
   

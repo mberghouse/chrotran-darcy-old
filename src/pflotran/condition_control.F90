@@ -63,7 +63,7 @@ subroutine CondControlAssignFlowInitCond(realization)
   
   PetscInt :: icell, iconn, idof, iface
   PetscInt :: local_id, ghosted_id, iend, ibegin
-  PetscReal, pointer :: xx_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_p(:)
   PetscErrorCode :: ierr
   
   character(len=MAXSTRINGLENGTH) :: string
@@ -923,7 +923,6 @@ subroutine CondControlAssignTranInitCond(realization)
   PetscReal :: ave_num_iterations
   PetscReal :: tempreal
   PetscInt :: prev_equilibrated_ghosted_id
-  PetscReal, pointer :: iphase_loc_p(:)
   PetscReal, pointer :: flow_xx_p(:)
   PetscLogDouble :: tstart, tend
   
@@ -1875,7 +1874,7 @@ subroutine CondControlAssignFlowInitCondSurface(surf_realization)
   
   PetscInt :: icell, iconn, idof, iface
   PetscInt :: local_id, ghosted_id, iend, ibegin
-  PetscReal, pointer :: xx_p(:)!, iphase_loc_p(:)
+  PetscReal, pointer :: xx_p(:)
   PetscErrorCode :: ierr
   
   PetscReal :: temperature, p_sat

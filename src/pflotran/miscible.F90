@@ -551,7 +551,7 @@ subroutine MiscibleUpdateAuxVarsPatch(realization)
 
   PetscInt :: ghosted_id, local_id, istart, iend, sum_connection, idof, iconn
   PetscInt :: iphasebc, iphase
-  PetscReal, pointer :: xx_loc_p(:), icap_loc_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_loc_p(:), icap_loc_p(:)
   PetscReal :: xxbc(realization%option%nflowdof)
   PetscReal :: mnacl, ynacl, xphi
   PetscErrorCode :: ierr
@@ -781,7 +781,7 @@ subroutine MiscibleUpdateFixedAccumPatch(realization)
   type(global_auxvar_type), pointer :: global_auxvars(:)
 
   PetscInt :: ghosted_id, local_id, istart, iend, iphase
-  PetscReal, pointer :: xx_p(:), icap_loc_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_p(:), icap_loc_p(:)
   PetscReal, pointer :: porosity_loc_p(:), tortuosity_loc_p(:), volume_p(:), &
                         ithrm_loc_p(:), accum_p(:)
                           
@@ -1437,7 +1437,7 @@ subroutine MiscibleResidualPatch1(snes,xx,r,realization,ierr)
                perm_xx_loc_p(:), perm_yy_loc_p(:), perm_zz_loc_p(:)
                           
                
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:), ithrm_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:), ithrm_loc_p(:)
 
   PetscInt :: iphase
   PetscInt :: icap_up, icap_dn, ithrm_up, ithrm_dn
@@ -1727,7 +1727,7 @@ subroutine MiscibleResidualPatch0(snes,xx,r,realization,ierr)
                perm_xx_loc_p(:), perm_yy_loc_p(:), perm_zz_loc_p(:)
                           
                
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:)
 
   PetscReal :: dw_kg, dw_mol,dddt,dddp
   PetscReal :: rho, fg, dfgdp, dfgdt, eng, dhdt, dhdp, visc, dvdt, dvdp, xphi
@@ -2238,7 +2238,7 @@ subroutine MiscibleJacobianPatch1(snes,xx,A,B,realization,ierr)
   PetscReal, pointer :: porosity_loc_p(:), volume_p(:), &
                           xx_loc_p(:), tortuosity_loc_p(:),&
                           perm_xx_loc_p(:), perm_yy_loc_p(:), perm_zz_loc_p(:)
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:), ithrm_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:), ithrm_loc_p(:)
   PetscInt :: icap,iphas,iphas_up,iphas_dn,icap_up,icap_dn
   PetscInt :: ii, jj
   PetscReal :: dw_kg,dw_mol,enth_src_co2,enth_src_h2o,rho
@@ -2633,7 +2633,7 @@ subroutine MiscibleJacobianPatch2(snes,xx,A,B,realization,ierr)
   PetscReal, pointer :: porosity_loc_p(:), volume_p(:), &
                           xx_loc_p(:), tortuosity_loc_p(:),&
                           perm_xx_loc_p(:), perm_yy_loc_p(:), perm_zz_loc_p(:)
-  PetscReal, pointer :: iphase_loc_p(:), icap_loc_p(:), ithrm_loc_p(:)
+  PetscReal, pointer :: icap_loc_p(:), ithrm_loc_p(:)
   PetscInt :: icap,iphas,iphas_up,iphas_dn,icap_up,icap_dn
   PetscInt :: ii, jj
   PetscReal :: dw_kg,dw_mol,enth_src_co2,enth_src_h2o,rho

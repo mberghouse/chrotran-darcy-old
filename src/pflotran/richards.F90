@@ -1065,7 +1065,7 @@ subroutine RichardsUpdateFixedAccumPatch(realization)
 
   PetscInt :: ghosted_id, local_id
   PetscInt :: numfaces, jface, ghost_face_id, j, region_id
-  PetscReal, pointer :: xx_p(:), iphase_loc_p(:)
+  PetscReal, pointer :: xx_p(:)
   PetscReal, pointer :: accum_p(:)
   PetscReal :: Res(1)
   PetscErrorCode :: ierr
