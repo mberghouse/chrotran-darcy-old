@@ -104,6 +104,7 @@ subroutine GlobalAuxVarInit(auxvar,option)
   PetscInt :: nphase
   
   auxvar%istate = 0
+!  auxvar%istate_old = 0
   auxvar%hstate = 0
   auxvar%temp = 0.d0
   auxvar%istatechng = PETSC_FALSE

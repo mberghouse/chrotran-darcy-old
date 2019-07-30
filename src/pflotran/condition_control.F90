@@ -837,14 +837,14 @@ subroutine CondControlAssignFlowInitCond(realization)
   call VecCopy(field%flow_xx, field%flow_yy, ierr);CHKERRQ(ierr)
 !  call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
 !                                  field%iphas_loc,ONEDOF)  
-  call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
-                                  field%iphas_old_loc,ONEDOF)
+!  call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
+!                                  field%iphas_old_loc,ONEDOF)
 
   ! cannot perform VecMin on local vector as the ghosted corner values are not
   ! updated during the local to local update.
-  call DiscretizationLocalToGlobal(discretization,field%iphas_loc,field%work, &
-                                   ONEDOF)
-  call VecMin(field%work,PETSC_NULL_INTEGER,tempreal,ierr);CHKERRQ(ierr)
+!  call DiscretizationLocalToGlobal(discretization,field%iphas_loc,field%work, &
+!                                   ONEDOF)
+!  call VecMin(field%work,PETSC_NULL_INTEGER,tempreal,ierr);CHKERRQ(ierr)
 !  if (tempreal < 0.d0) then
 !    print *, tempreal
 !    option%io_buffer = 'Uninitialized cells in domain.'

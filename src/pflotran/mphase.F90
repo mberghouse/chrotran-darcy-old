@@ -60,9 +60,9 @@ subroutine MphaseTimeCut(realization)
   option => realization%option
   field => realization%field
 
-  call VecCopy(field%iphas_old_loc,field%iphas_loc,ierr);CHKERRQ(ierr)
+!  call VecCopy(field%iphas_old_loc,field%iphas_loc,ierr);CHKERRQ(ierr)
   
- ! realization%patch%aux%global%auxvars
+   realization%patch%aux%global%auxvars%istate=realization%patch%aux%global%auxvars%istate_old
 
 end subroutine MphaseTimeCut
 
@@ -1123,12 +1123,14 @@ subroutine MphaseUpdateSolution(realization)
   
   field => realization%field
   
-  call VecCopy(field%iphas_loc,field%iphas_old_loc,ierr);CHKERRQ(ierr)
+!  call VecCopy(field%iphas_loc,field%iphas_old_loc,ierr);CHKERRQ(ierr)
   
 ! call VecCopy(realization%field%flow_xx,realization%field%flow_yy,ierr)
 ! call VecCopy(realization%field%iphas_loc,realization%field%iphas_old_loc,ierr)
 
   cur_patch => realization%patch_list%first
+
+  cur_patch%aux%global%auxvars%istate_old=cur_patch%aux%global%auxvars%istate
   do 
     if (.not.associated(cur_patch)) exit
     realization%patch => cur_patch
@@ -3893,8 +3895,8 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
   call VecGetArrayReadF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%flow_yy,yy_p, ierr);CHKERRQ(ierr)
 !  call VecGetArrayF90(field%iphas_loc,iphase_loc_p, ierr);CHKERRQ(ierr)
-  call VecGetArrayF90(field%iphas_old_loc,iphase_old_loc_p,  &
-                      ierr);CHKERRQ(ierr)
+!  call VecGetArrayF90(field%iphas_old_loc,iphase_old_loc_p,  &
+!                      ierr);CHKERRQ(ierr)
 
   do local_id =1, grid%nlmax
     ghosted_id = grid%nL2G(local_id)
@@ -3903,7 +3905,8 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
      endif
     n0 = (local_id-1)*option%nflowdof 
  !   if (int(iphase_loc_p(ghosted_id)) == int(iphase_old_loc_p(ghosted_id)))then
-    if (int(patch%aux%global%auxvars(ghosted_id)%istate) == int(iphase_old_loc_p(ghosted_id))) then
+!     if (int(patch%aux%global%auxvars(ghosted_id)%istate) == int(iphase_old_loc_p(ghosted_id))) then
+     if (int(patch%aux%global%auxvars(ghosted_id)%istate) == int(patch%aux%global%auxvars(ghosted_id)%istate_old)) then  
        cmp=dabs(xx_p(n0+3)-yy_p(n0+3))
  !      if (int(iphase_loc_p(ghosted_id))==1 .or.int(iphase_loc_p(ghosted_id))==2)then
        if (int(patch%aux%global%auxvars(ghosted_id)%istate) == int(patch%aux%global%auxvars(ghosted_id)%istate)) then
@@ -3919,8 +3922,8 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
   call VecRestoreArrayReadF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%flow_yy,yy_p, ierr);CHKERRQ(ierr)
 !  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, ierr);CHKERRQ(ierr)
-  call VecRestoreArrayF90(field%iphas_old_loc,iphase_old_loc_p,  &
-                          ierr);CHKERRQ(ierr)
+!  call VecRestoreArrayF90(field%iphas_old_loc,iphase_old_loc_p,  &
+!                          ierr);CHKERRQ(ierr)
 
 
   
