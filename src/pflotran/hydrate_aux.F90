@@ -555,7 +555,6 @@ subroutine HydrateAuxVarCompute(x,hyd_auxvar,global_auxvar,material_auxvar, &
 
   use Option_module
   use Global_Aux_module
-  use General_Aux_module
   use EOS_Water_module
   use EOS_Gas_module
   use Characteristic_Curves_module
@@ -568,7 +567,6 @@ subroutine HydrateAuxVarCompute(x,hyd_auxvar,global_auxvar,material_auxvar, &
   PetscReal :: x(option%nflowdof)
   type(hydrate_auxvar_type) :: hyd_auxvar
   type(global_auxvar_type) :: global_auxvar
-  type(general_auxvar_type) :: general_auxvar
   class(material_auxvar_type) :: material_auxvar
   PetscInt :: natural_id
 
@@ -1460,7 +1458,6 @@ subroutine HydrateAuxVarUpdateState(x,hyd_auxvar,global_auxvar, &
 
   use Option_module
   use Global_Aux_module
-  use General_Aux_module
   use EOS_Water_module
   use Characteristic_Curves_module
   use Material_Aux_class
@@ -1472,7 +1469,6 @@ subroutine HydrateAuxVarUpdateState(x,hyd_auxvar,global_auxvar, &
   class(characteristic_curves_type) :: characteristic_curves
   type(hydrate_auxvar_type) :: hyd_auxvar
   type(global_auxvar_type) :: global_auxvar
-  type(general_auxvar_type) :: general_auxvar
   class(material_auxvar_type) :: material_auxvar
 
   PetscReal, parameter :: epsilon = 0.d0
