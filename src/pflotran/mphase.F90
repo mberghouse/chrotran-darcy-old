@@ -60,7 +60,7 @@ subroutine MphaseTimeCut(realization)
   option => realization%option
   field => realization%field
 
-!  call VecCopy(field%iphas_old_loc,field%iphas_loc,ierr);CHKERRQ(ierr)
+
   
    realization%patch%aux%global%auxvars%istate=realization%patch%aux%global%auxvars%istate_old
 
@@ -642,7 +642,7 @@ subroutine MPhaseUpdateReasonPatch(reason,realization)
         if (patch%imat(grid%nL2G(n)) <= 0) cycle
       endif
       n0 = (n-1)*option%nflowdof
- !     iipha = int(iphase_loc_p(grid%nL2G(n)))
+
       iipha = int(patch%aux%global%auxvars(grid%nL2G(n))%istate)
   
 ! ******** Too huge change in pressure ****************     
@@ -704,7 +704,7 @@ subroutine MPhaseUpdateReasonPatch(reason,realization)
 !   if (re <= 0) print *,'Sat or Con out of Region at: ',n,iipha,xx_p(n0+1:n0+3)
     call VecRestoreArrayReadF90(field%flow_xx, xx_p, ierr);CHKERRQ(ierr)
     call VecRestoreArrayF90(field%flow_yy, yy_p, ierr);CHKERRQ(ierr)
-!    call VecRestoreArrayF90(field%iphas_loc, iphase_loc_p, ierr);CHKERRQ(ierr)
+
 
 ! endif
   ! print *,' update reason', grid%myrank, re,n,grid%nlmax
@@ -913,7 +913,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
   
   call VecGetArrayF90(field%flow_xx_loc,xx_loc_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-!  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+
 
   do ghosted_id = 1, grid%ngmax
     if (grid%nG2L(ghosted_id) < 0) cycle ! bypass ghosted corner cells
@@ -923,7 +923,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
     endif
     iend = ghosted_id*option%nflowdof
     istart = iend-option%nflowdof+1
-    iphase = int(global_auxvars(ghosted_id)%istate)  ! (iphase_loc_p(ghosted_id))
+    iphase = int(global_auxvars(ghosted_id)%istate) 
     if (.not. associated(patch%saturation_function_array(int(icap_loc_p(ghosted_id)))%ptr))then
       print *, 'error!!! saturation function not allocated', ghosted_id,icap_loc_p(ghosted_id)
     endif
@@ -969,7 +969,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
     else
       print *,'Not associated global for mph'
     endif
-  !  iphase_loc_p(ghosted_id) = iphase
+
     global_auxvars(ghosted_id)%istate=iphase
   enddo
   
@@ -999,7 +999,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
           case(NEUMANN_BC, ZERO_GRADIENT_BC)
           ! solve for pb from Darcy's law given qb /= 0
             xxbc(idof) = xx_loc_p((ghosted_id-1)*option%nflowdof+idof)
-!            iphase = int(iphase_loc_p(ghosted_id))
+
             iphase=int(global_auxvars(ghosted_id)%istate)
         end select
       enddo
@@ -1008,7 +1008,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
         case(DIRICHLET_BC,SEEPAGE_BC,HYDROSTATIC_BC)
           iphase = boundary_condition%flow_aux_int_var(1,iconn)
         case(NEUMANN_BC,ZERO_GRADIENT_BC)
-!           iphase = int(iphase_loc_p(ghosted_id))
+
            iphase = int(global_auxvars(ghosted_id)%istate)
       end select
 	  
@@ -1071,7 +1071,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
 
   call VecRestoreArrayF90(field%flow_xx_loc,xx_loc_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-!  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
+
   
   patch%aux%Mphase%auxvars_up_to_date = PETSC_TRUE
 
@@ -1314,7 +1314,6 @@ subroutine MphaseUpdateFixedAccumPatch(realization)
       
   call VecGetArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-!  call VecGetArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
   call VecGetArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
@@ -1356,7 +1355,6 @@ subroutine MphaseUpdateFixedAccumPatch(realization)
 
   call VecRestoreArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%icap_loc,icap_loc_p,ierr);CHKERRQ(ierr)
-!  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%ithrm_loc,ithrm_loc_p,ierr);CHKERRQ(ierr)
 
   call VecRestoreArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
@@ -2093,8 +2091,7 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
   discretization => realization%discretization
   patch => realization%patch
  
-!  call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,NFLOWDOF)
-!  call DiscretizationLocalToLocal(discretization,field%iphas_loc,field%iphas_loc,ONEDOF)
+
  ! check initial guess -----------------------------------------------
   ierr = MphaseInitGuessCheck(realization)
   if (ierr<0)then
@@ -2120,7 +2117,7 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
   ! Communication -----------------------------------------
   ! These 3 must be called before MphaseUpdateAuxVars()
   call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,NFLOWDOF)
-!  call DiscretizationLocalToLocal(discretization,field%iphas_loc,field%iphas_loc,ONEDOF)
+
   call DiscretizationLocalToLocal(discretization,field%icap_loc,field%icap_loc,ONEDOF)
 
   call MaterialGetAuxVarVecLoc(patch%aux%Material,field%work_loc, &
@@ -2234,7 +2231,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
   call VecGetArrayF90(xx, xx_p, ierr);CHKERRQ(ierr)
   call VecLockPush(xx,ierr); CHKERRQ(ierr)
   call VecGetArrayF90(field%flow_yy, yy_p, ierr);CHKERRQ(ierr)
-!  call VecGetArrayF90(field%iphas_loc, iphase_loc_p,ierr);CHKERRQ(ierr)
+
   
   ichange = 0   
   do local_id = 1,grid%nlmax
@@ -2244,7 +2241,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
     endif
     ipr=0 
     dof_offset=(local_id-1)* option%nflowdof
- !   iipha=int(iphase_loc_p(ghosted_id))
+
     iipha=int(global_auxvars(ghosted_id)%istate)
     p = xx_p(dof_offset+1)
     t = xx_p(dof_offset+2)
@@ -2367,7 +2364,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
        &      '' Xco2eq='',1pe11.4,'' sg='',1pe11.4)') &
               option%myrank,local_id,xx_p(dof_offset+1:dof_offset+3),xco2eq,sg
 
-!              iphase_loc_p(ghosted_id) = 3 ! Liq -> 2ph
+               ! Liq -> 2ph
               global_auxvars(ghosted_id)%istate=3
 !             write(*,'(''Rachford-Rice: '','' z1, z2='', &
 !       &     1p2e12.4,'' xeq='',1pe12.4,'' xg='',1pe12.4, &
@@ -2399,7 +2396,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
        &    '' p= '',1pe10.4,'' T= '',1pe10.4,'' Xg= '',1pe11.4,'' Ps/P='', 1pe11.4)') &
             option%myrank,local_id,xx_p(dof_offset+1:dof_offset+3),wat_sat_x
 
-!            iphase_loc_p(ghosted_id) = 3 ! Gas -> 2ph
+         ! Gas -> 2ph
             global_auxvars(ghosted_id)%istate =3
             xx_p(dof_offset+3) = 1.D0-formeps
 !            xx_p(dof_offset+3) = 1.D0
@@ -2428,7 +2425,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
        &  '' p='',1pe10.4,'' T='',1pe10.4,'' sg='',1pe11.4)') &
             option%myrank,local_id,xx_p(dof_offset+1:dof_offset+3)
 
-!            iphase_loc_p(ghosted_id) = 2 ! 2ph -> Gas
+              ! 2ph -> Gas
             global_auxvars(ghosted_id)%istate=2
 !           xx_p(dof_offset+3) = 1.D0 - 1.D-8
             xx_p(dof_offset+3) = 1.D0
@@ -2440,7 +2437,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
       &     '' T='',1pe10.4,'' sg ='',1pe11.4,'' Xco2eq='',1pe11.4)')  &
             option%myrank,local_id, xx_p(dof_offset+1:dof_offset+3),xmol(2)
 
-!            iphase_loc_p(ghosted_id) = 1 ! 2ph -> Liq
+ ! 2ph -> Liq
             global_auxvars(ghosted_id)%istate=1
             ichange = 1
             tmp = xmol(2) * 0.99
@@ -2478,7 +2475,6 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
 
   call VecRestoreArrayReadF90(xx, xx_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%flow_yy, yy_p, ierr);CHKERRQ(ierr)
-!  call VecRestoreArrayF90(field%iphas_loc, iphase_loc_p,ierr);CHKERRQ(ierr)
 
 end subroutine MphaseVarSwitchPatch
 
@@ -2605,10 +2601,10 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
   call VecGetArrayF90(r, r_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
  
-! call VecGetArrayF90(field%flow_yy,yy_p,ierr)
+
   call VecGetArrayF90(field%ithrm_loc, ithrm_loc_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%icap_loc, icap_loc_p, ierr);CHKERRQ(ierr)
-!  call VecGetArrayF90(field%iphas_loc, iphase_loc_p, ierr);CHKERRQ(ierr)
+
  
 
   vol_frac_prim = 1.d0
@@ -2622,7 +2618,7 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
     endif
         
     istart = (ng-1) * option%nflowdof + 1; iend = istart - 1 + option%nflowdof
-!    iphase = int(iphase_loc_p(ng))
+
     iphase = int(global_auxvars(ng)%istate)
     ghosted_id = ng
     call MphaseAuxVarCompute_Ninc(xx_loc_p(istart:iend),auxvars(ng)%auxvar_elem(0), &
@@ -2909,11 +2905,11 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
           case(ZERO_GRADIENT_BC)
           ! solve for pb from Darcy's law given qb /= 0
             xxbc(idof) = xx_loc_p((ghosted_id-1)*option%nflowdof+idof)
- !           iphase = int(iphase_loc_p(ghosted_id))
+
             iphase=int(global_auxvars(ghosted_id)%istate)
           case(NEUMANN_BC)  
             xxbc(idof) = xx_loc_p((ghosted_id-1)*option%nflowdof+idof)
-            !            iphase = int(iphase_loc_p(ghosted_id))
+
             iphase=int(global_auxvars(ghosted_id)%istate)
         end select
       enddo
@@ -2922,7 +2918,7 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
         case(DIRICHLET_BC,SEEPAGE_BC,HYDROSTATIC_BC)
           iphase = boundary_condition%flow_aux_int_var(1,iconn)
         case(NEUMANN_BC,ZERO_GRADIENT_BC)
-!           iphase=int(iphase_loc_p(ghosted_id))
+
           iphase=int(global_auxvars(ghosted_id)%istate)
       end select
  
@@ -3124,7 +3120,7 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
   call VecRestoreArrayF90(field%flow_accum, accum_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%ithrm_loc, ithrm_loc_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%icap_loc, icap_loc_p, ierr);CHKERRQ(ierr)
-!  call VecRestoreArrayF90(field%iphas_loc, iphase_loc_p, ierr);CHKERRQ(ierr)
+
 
   if (realization%debug%vecview_residual) then
     string = 'MPHresidual'
@@ -3520,7 +3516,7 @@ subroutine MphaseJacobianPatch(snes,xx,A,B,realization,ierr)
       case(DIRICHLET_BC,HYDROSTATIC_BC,SEEPAGE_BC)
         iphasebc = boundary_condition%flow_aux_int_var(1,iconn)
       case(ZERO_GRADIENT_BC)
- !        iphasebc=int(iphase_loc_p(ghosted_id))
+
         iphasebc=int(global_auxvars(ghosted_id)%istate)
       end select
       if (boundary_condition%flow_condition%itype(MPH_PRESSURE_DOF) /= NEUMANN_BC) then
@@ -3659,8 +3655,8 @@ subroutine MphaseJacobianPatch(snes,xx,A,B,realization,ierr)
       call material_auxvars(ghosted_id_dn)%PermeabilityTensorToScalar( &
                             cur_connection_set%dist(:,iconn),perm_dn)
     
-      iphas_up = int(global_auxvars(ghosted_id_up)%istate) !int(iphase_loc_p(ghosted_id_up))
-      iphas_dn = int(global_auxvars(ghosted_id_dn)%istate)  !int(iphase_loc_p(ghosted_id_dn))
+      iphas_up = int(global_auxvars(ghosted_id_up)%istate) 
+      iphas_dn = int(global_auxvars(ghosted_id_dn)%istate)  
 
       ithrm_up = int(ithrm_loc_p(ghosted_id_up))
       ithrm_dn = int(ithrm_loc_p(ghosted_id_dn))
@@ -3894,9 +3890,7 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
 
   call VecGetArrayReadF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecGetArrayF90(field%flow_yy,yy_p, ierr);CHKERRQ(ierr)
-!  call VecGetArrayF90(field%iphas_loc,iphase_loc_p, ierr);CHKERRQ(ierr)
-!  call VecGetArrayF90(field%iphas_old_loc,iphase_old_loc_p,  &
-!                      ierr);CHKERRQ(ierr)
+
 
   do local_id =1, grid%nlmax
     ghosted_id = grid%nL2G(local_id)
@@ -3904,15 +3898,14 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
         if (patch%imat(ghosted_id) <= 0) cycle
      endif
     n0 = (local_id-1)*option%nflowdof 
- !   if (int(iphase_loc_p(ghosted_id)) == int(iphase_old_loc_p(ghosted_id)))then
-!     if (int(patch%aux%global%auxvars(ghosted_id)%istate) == int(iphase_old_loc_p(ghosted_id))) then
+
      if (int(patch%aux%global%auxvars(ghosted_id)%istate) == int(patch%aux%global%auxvars(ghosted_id)%istate_old)) then  
        cmp=dabs(xx_p(n0+3)-yy_p(n0+3))
- !      if (int(iphase_loc_p(ghosted_id))==1 .or.int(iphase_loc_p(ghosted_id))==2)then
+
        if (int(patch%aux%global%auxvars(ghosted_id)%istate) == int(patch%aux%global%auxvars(ghosted_id)%istate)) then
           if (max_c<cmp) max_c = cmp
        endif
-  !     if (int(iphase_loc_p(ghosted_id))==3)then
+
        if (int(patch%aux%global%auxvars(ghosted_id)%istate)==3) then
          if (max_s<cmp) max_s=cmp
       endif
@@ -3921,9 +3914,7 @@ subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
 
   call VecRestoreArrayReadF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%flow_yy,yy_p, ierr);CHKERRQ(ierr)
-!  call VecRestoreArrayF90(field%iphas_loc,iphase_loc_p, ierr);CHKERRQ(ierr)
-!  call VecRestoreArrayF90(field%iphas_old_loc,iphase_old_loc_p,  &
-!                          ierr);CHKERRQ(ierr)
+
 
 
   
