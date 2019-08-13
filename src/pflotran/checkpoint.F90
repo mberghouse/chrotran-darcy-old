@@ -480,12 +480,7 @@ subroutine RestartFlowProcessModelBinary(viewer,realization)
     select case(option%iflowmode)
       case(MPH_MODE,TH_MODE,TH_TS_MODE,RICHARDS_MODE,RICHARDS_TS_MODE,IMS_MODE,MIS_MODE, &
            FLASH2_MODE,TOIL_IMS_MODE)
- !       call VecLoad(global_vec,viewer,ierr);CHKERRQ(ierr)
- !       call DiscretizationGlobalToLocal(discretization,global_vec, &
-!                                         field%iphas_loc,ONEDOF)
- !       call VecCopy(field%iphas_loc,field%iphas_old_loc,ierr);CHKERRQ(ierr)
- !       call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
- !                                       field%iphas_old_loc,ONEDOF)
+
         if (option%iflowmode == TOIL_IMS_MODE) then
           !iphase value not needed - leave it as initialised
           ! consider to remove iphase for all ims modes
@@ -1273,11 +1268,7 @@ subroutine RestartFlowProcessModelHDF5(pm_grp_id, realization)
              pm_grp_id, H5T_NATIVE_DOUBLE)
         call DiscretizationNaturalToGlobal(discretization, natural_vec, &
                                            global_vec, ONEDOF)
-!        call DiscretizationGlobalToLocal(realization%discretization, &
-!                                         global_vec, field%iphas_loc, ONEDOF)
-!        call VecCopy(field%iphas_loc,field%iphas_old_loc,ierr);CHKERRQ(ierr)
-!        call DiscretizationLocalToLocal(discretization,field%iphas_loc, &
-!                                        field%iphas_old_loc,ONEDOF)
+
         if (option%iflowmode == MPH_MODE) then
         ! set vardof vec in mphase
         endif

@@ -107,8 +107,8 @@ function FieldCreate()
   field%tortuosity0 = PETSC_NULL_VEC
   field%ithrm_loc = PETSC_NULL_VEC
   field%icap_loc = PETSC_NULL_VEC
-!  field%iphas_loc = PETSC_NULL_VEC
-!  field%iphas_old_loc = PETSC_NULL_VEC
+
+
 
   field%perm0_xx = PETSC_NULL_VEC
   field%perm0_yy = PETSC_NULL_VEC
@@ -213,12 +213,7 @@ subroutine FieldDestroy(field)
   if (field%icap_loc /= PETSC_NULL_VEC) then
     call VecDestroy(field%icap_loc,ierr);CHKERRQ(ierr)
   endif
-!  if (field%iphas_loc /= PETSC_NULL_VEC) then
-!    call VecDestroy(field%iphas_loc,ierr);CHKERRQ(ierr)
-!  endif
-!  if (field%iphas_old_loc /= PETSC_NULL_VEC) then
-!    call VecDestroy(field%iphas_old_loc,ierr);CHKERRQ(ierr)
-!  endif
+
 
   if (field%perm0_xx /= PETSC_NULL_VEC) then
     call VecDestroy(field%perm0_xx,ierr);CHKERRQ(ierr)

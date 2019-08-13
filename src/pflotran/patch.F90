@@ -6000,11 +6000,10 @@ subroutine PatchGetVariable1(patch,field,reaction,nw_trans,option, &
             &not supported for current flow mode.'
       end select
     case(PHASE)
-!      call VecGetArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
-      do local_id=1,grid%nlmax
+
         vec_ptr(local_id) = patch%aux%global%auxvars(grid%nL2G(local_id))%istate !    v ec_ptr2(grid%nL2G(local_id))
-      enddo
-!      call VecRestoreArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
+!      enddo
+
     case(MATERIAL_ID)
       do local_id=1,grid%nlmax
         vec_ptr(local_id) = &
@@ -7122,9 +7121,9 @@ function PatchGetVariableValueAtCell(patch,field,reaction,nw_trans,option, &
             &not supported for current flow mode.'
       end select
     case(PHASE)
-!      call VecGetArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
+
       value = patch%aux%global%auxvars(ghosted_id)%istate    !   vec_ptr2(ghosted_id)
-!      call VecRestoreArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
+
     case(MATERIAL_ID)
       value = patch%imat_internal_to_external(abs(patch%imat(ghosted_id)))
     case(FRACTURE)
@@ -8089,17 +8088,16 @@ subroutine PatchSetVariable(patch,field,option,vec,vec_format,ivar,isubvar)
       call PrintErrMsg(option)
     case(PHASE)
       if (vec_format == GLOBAL) then
-!        call VecGetArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
+
         do local_id=1,grid%nlmax
-!           vec_ptr2(grid%nL2G(local_id))
+
            patch%aux%Global%auxvars(grid%nL2G(local_id))%istate= vec_ptr(local_id)
         enddo
-!        call VecRestoreArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
+
       else if (vec_format == LOCAL) then
-!        call VecGetArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
-!         vec_ptr2(1:grid%ngmax)
+
          patch%aux%Global%auxvars(1:grid%ngmax)%istate= vec_ptr(1:grid%ngmax)
-!        call VecRestoreArrayF90(field%iphas_loc,vec_ptr2,ierr);CHKERRQ(ierr)
+
       endif
     case(MATERIAL_ID)
       !geh: this would require the creation of a permanent mapping between
