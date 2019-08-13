@@ -2790,13 +2790,14 @@ subroutine FlowConditionHydrateRead(condition,input,option)
         ! gas phase condition
         condition%iphase = G_STATE
       endif
-      if (associated(hydrate%gas_pressure) .and. &
+      if ((associated(hydrate%gas_pressure) .or. &
+          associated(hydrate%liquid_pressure)) .and. &
           associated(hydrate%hydrate_saturation)) then
         condition%iphase = HA_STATE
       endif
     endif
     if (condition%iphase == NULL_STATE) then
-      option%io_buffer = 'General Phase non-rate/flux condition contains &
+      option%io_buffer = 'Hydrate non-rate/flux condition contains &
         &an unsupported combination of primary dependent variables.'
       call printErrMsg(option)
     endif

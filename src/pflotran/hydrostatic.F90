@@ -156,11 +156,13 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
         temperature_gradient(1:3) = &
           condition%hydrate%temperature%gradient%rarray(1:3)
       endif
-      concentration_at_datum = &
-        condition%hydrate%mole_fraction%dataset%rarray(1)
-      if (associated(condition%hydrate%mole_fraction%gradient)) then
-        concentration_gradient(1:3) = &
-        condition%hydrate%mole_fraction%gradient%rarray(1:3)
+      if (associated(condition%hydrate%mole_fraction)) then
+        concentration_at_datum = &
+          condition%hydrate%mole_fraction%dataset%rarray(1)
+        if (associated(condition%hydrate%mole_fraction%gradient)) then
+          concentration_gradient(1:3) = &
+          condition%hydrate%mole_fraction%gradient%rarray(1:3)
+        endif
       endif
       pressure_at_datum = &
         condition%hydrate%liquid_pressure%dataset%rarray(1)
@@ -174,8 +176,13 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
           condition%hydrate%liquid_pressure%gradient%rarray(1:3)
       endif
       ! for liquid state
-      coupler%flow_aux_mapping(HYDRATE_LIQUID_PRESSURE_INDEX) = 1
-      coupler%flow_aux_mapping(HYDRATE_LIQ_MOLE_FRACTION_INDEX) = 2
+      if (condition%iphase == L_STATE) then
+        coupler%flow_aux_mapping(HYDRATE_LIQUID_PRESSURE_INDEX) = 1
+        coupler%flow_aux_mapping(HYDRATE_LIQ_MOLE_FRACTION_INDEX) = 2
+      elseif (condition%iphase == HA_STATE) then
+        coupler%flow_aux_mapping(HYDRATE_GAS_PRESSURE_INDEX) = 1
+        coupler%flow_aux_mapping(HYDRATE_HYD_SATURATION_INDEX) = 2
+      endif
       coupler%flow_aux_mapping(HYDRATE_TEMPERATURE_INDEX) = 3
       ! for two-phase state
       coupler%flow_aux_mapping(HYDRATE_GAS_PRESSURE_INDEX) = 1
@@ -632,12 +639,14 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
         coupler%flow_aux_real_var(3,iconn) = &
           temperature
         ! switch to two-phase if liquid pressure drops below gas pressure
-        if (pressure < gas_pressure) then
+        if (coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,iconn)==L_STATE .and.&
+            pressure < gas_pressure) then
           ! we hijack the air pressure entry, storing capillary pressure there
           coupler%flow_aux_real_var(1,iconn) = gas_pressure
           coupler%flow_aux_real_var(2,iconn) = gas_pressure - pressure
           coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,iconn) = GA_STATE
-        else
+        elseif (coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,iconn) == &
+                L_STATE) then
           coupler%flow_aux_real_var(2,iconn) = concentration_at_datum
           coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,iconn) = L_STATE
         endif

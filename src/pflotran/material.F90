@@ -95,6 +95,10 @@ module Material_module
     PetscBool :: secondary_continuum_log_spacing
     PetscReal :: secondary_continuum_outer_spacing
     PetscReal :: secondary_continuum_area_scaling
+ 
+    PetscReal :: pore_size
+    class(dataset_base_type), pointer :: pore_size_dataset
+   
     type(material_property_type), pointer :: next
   end type material_property_type
   
@@ -219,6 +223,10 @@ function MaterialPropertyCreate()
   material_property%secondary_continuum_log_spacing = PETSC_FALSE
   material_property%secondary_continuum_outer_spacing = 1.d-3
   material_property%secondary_continuum_area_scaling = 1.d0
+  
+  material_property%pore_size = -999.d0
+  nullify(material_property%pore_size_dataset)
+
   nullify(material_property%next)
   MaterialPropertyCreate => material_property
 
@@ -736,7 +744,10 @@ subroutine MaterialPropertyRead(material_property,input,option)
                      'MATERIAL_PROPERTY,SECONDARY_CONTINUUM',option)
           end select
         enddo
-
+      case('PORE_SIZE')
+        call DatasetReadDoubleOrDataset(input,material_property%pore_size, &
+                                        material_property%pore_size_dataset, &
+                                        'pore_size','MATERIAL_PROPERTY',option)
       case default
         call InputKeywordUnrecognized(keyword,'MATERIAL_PROPERTY',option)
     end select 
@@ -1473,6 +1484,9 @@ subroutine MaterialAssignPropertyToAux(material_auxvar,material_property, &
         material_property%soil_reference_pressure
     endif
   endif
+
+  material_auxvar%pore_size = material_property%pore_size
+
 !  if (soil_heat_capacity_index > 0) then
 !    material_auxvar%soil_properties(soil_heat_capacity_index) = &
 !      material_property%specific_heat

@@ -502,8 +502,13 @@ subroutine CondControlAssignFlowInitCond(realization)
                   xx_p(ibegin+HYDRATE_ENERGY_DOF) = &
                     hydrate%temperature%dataset%rarray(1)
                 case(HA_STATE) !MAN testing HA_STATE (7)
-                  xx_p(ibegin+HYDRATE_GAS_PRESSURE_DOF) = &
-                    hydrate%gas_pressure%dataset%rarray(1)
+                  if (associated(hydrate%gas_pressure)) then
+                    xx_p(ibegin+HYDRATE_GAS_PRESSURE_DOF) = &
+                      hydrate%gas_pressure%dataset%rarray(1)
+                  else
+                    xx_p(ibegin+HYDRATE_GAS_PRESSURE_DOF) = &
+                      hydrate%liquid_pressure%dataset%rarray(1)
+                  endif
                   xx_p(ibegin+HYDRATE_GAS_SATURATION_DOF) = &
                     hydrate%hydrate_saturation%dataset%rarray(1)
                   xx_p(ibegin+HYDRATE_ENERGY_DOF) = &
