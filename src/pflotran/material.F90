@@ -97,6 +97,8 @@ module Material_module
     PetscReal :: secondary_continuum_area_scaling
  
     PetscReal :: pore_size
+    PetscReal :: srl
+    PetscReal :: srg
     class(dataset_base_type), pointer :: pore_size_dataset
    
     type(material_property_type), pointer :: next
@@ -225,6 +227,8 @@ function MaterialPropertyCreate()
   material_property%secondary_continuum_area_scaling = 1.d0
   
   material_property%pore_size = -999.d0
+  material_property%srl = 0.d0
+  material_property%srg = 0.d0
   nullify(material_property%pore_size_dataset)
 
   nullify(material_property%next)
@@ -748,6 +752,14 @@ subroutine MaterialPropertyRead(material_property,input,option)
         call DatasetReadDoubleOrDataset(input,material_property%pore_size, &
                                         material_property%pore_size_dataset, &
                                         'pore_size','MATERIAL_PROPERTY',option)
+      case('SRG')
+        call InputReadDouble(input,option,material_property%srg)
+        call InputErrorMsg(input,option,'srg', &
+                           'MATERIAL_PROPERTY') 
+      case('SRL')
+        call InputReadDouble(input,option,material_property%srl)
+        call InputErrorMsg(input,option,'srl', &
+                           'MATERIAL_PROPERTY')
       case default
         call InputKeywordUnrecognized(keyword,'MATERIAL_PROPERTY',option)
     end select 
@@ -1486,6 +1498,8 @@ subroutine MaterialAssignPropertyToAux(material_auxvar,material_property, &
   endif
 
   material_auxvar%pore_size = material_property%pore_size
+  material_auxvar%srg = material_property%srg
+  material_auxvar%srl = material_property%srl
 
 !  if (soil_heat_capacity_index > 0) then
 !    material_auxvar%soil_properties(soil_heat_capacity_index) = &

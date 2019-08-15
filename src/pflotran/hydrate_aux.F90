@@ -148,6 +148,7 @@ module Hydrate_Aux_module
     PetscReal, pointer :: mobility(:) ! relative perm / kinematic viscosity
     PetscReal :: effective_porosity ! factors in compressibility
     PetscReal :: perm_base
+    PetscReal :: v_sed
     PetscReal :: pert
     PetscBool :: istatechng
     type(hydrate_derivative_auxvar_type), pointer :: d
@@ -389,6 +390,7 @@ subroutine HydrateAuxVarInit(auxvar,allocate_derivative,option)
   auxvar%temp = 0.d0
   auxvar%effective_porosity = 0.d0
   auxvar%perm_base = -999.9d0
+  auxvar%v_sed = 0.d0
   auxvar%pert = 0.d0
   auxvar%istatechng = PETSC_FALSE
   
@@ -511,6 +513,7 @@ subroutine HydrateAuxVarCopy(auxvar,auxvar2,option)
   auxvar2%kr = auxvar%kr
   auxvar2%effective_porosity = auxvar%effective_porosity
   auxvar2%perm_base = auxvar%perm_base
+  auxvar2%v_sed = auxvar%v_sed
   auxvar2%pert = auxvar%pert
 
 end subroutine HydrateAuxVarCopy

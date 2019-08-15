@@ -56,6 +56,8 @@ module Material_Aux_class
     PetscReal, pointer :: geomechanics_subsurface_prop(:)
     PetscInt :: creep_closure_id
     PetscReal :: pore_size
+    PetscReal :: srl
+    PetscReal :: srg
 
 !    procedure(SaturationFunction), nopass, pointer :: SaturationFunction
   contains
@@ -192,6 +194,8 @@ subroutine MaterialAuxVarInit(auxvar,option)
   nullify(auxvar%fracture)
   auxvar%creep_closure_id = 1
   auxvar%pore_size = -999.d0
+  auxvar%srg = 0.d0
+  auxvar%srl = 0.d0
   
   if (max_material_index > 0) then
     allocate(auxvar%soil_properties(max_material_index))
@@ -238,7 +242,9 @@ subroutine MaterialAuxVarCopy(auxvar,auxvar2,option)
   endif
   auxvar2%creep_closure_id = auxvar%creep_closure_id
   auxvar2%pore_size = auxvar%pore_size
-  
+  auxvar2%srl = auxvar%srl
+  auxvar2%srg = auxvar%srg 
+ 
 end subroutine MaterialAuxVarCopy
 
 ! ************************************************************************** !

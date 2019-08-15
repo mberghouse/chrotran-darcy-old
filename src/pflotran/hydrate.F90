@@ -1381,6 +1381,7 @@ subroutine HydrateResidual(snes,xx,r,realization,ierr)
                        cur_connection_set%area(iconn), &
                        cur_connection_set%dist(:,iconn), &
                        patch%flow_upwind_direction(:,iconn), &
+                       patch%methanogenesis, &
                        hydrate_parameter,option,v_darcy,Res, &
                        Jac_dummy,Jac_dummy, &
                        hydrate_analytical_derivatives, &
@@ -1446,6 +1447,7 @@ subroutine HydrateResidual(snes,xx,r,realization,ierr)
                      cur_connection_set%area(iconn), &
                      cur_connection_set%dist(:,iconn), &
                      patch%flow_upwind_direction_bc(:,iconn), &
+                     patch%methanogenesis, &
                      hydrate_parameter,option, &
                      v_darcy,Res,Jac_dummy, &
                      hydrate_analytical_derivatives, &
@@ -1749,6 +1751,7 @@ subroutine HydrateJacobian(snes,xx,A,B,realization,ierr)
                      cur_connection_set%area(iconn), &
                      cur_connection_set%dist(:,iconn), &
                      patch%flow_upwind_direction(:,iconn), &
+                     patch%methanogenesis, &
                      hydrate_parameter,option,&
                      Jup,Jdn)
       if (local_id_up > 0) then
@@ -1816,6 +1819,7 @@ subroutine HydrateJacobian(snes,xx,A,B,realization,ierr)
                       cur_connection_set%area(iconn), &
                       cur_connection_set%dist(:,iconn), &
                       patch%flow_upwind_direction_bc(:,iconn), &
+                      patch%methanogenesis, &
                       hydrate_parameter,option, &
                       Jdn)
 
