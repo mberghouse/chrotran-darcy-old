@@ -972,7 +972,8 @@ subroutine OutputTecplotPoint(realization_base)
   endif
   
 1000 format(es13.6,1x)
-1001 format(i4,1x)
+1001 format(es13.6e3,1x)
+1002 format(i4,1x)
 1009 format('')
 
   do local_id = 1, grid%nlmax
@@ -990,9 +991,13 @@ subroutine OutputTecplotPoint(realization_base)
                                            cur_variable%isubvar, &
                                            cur_variable%isubsubvar)
       if (cur_variable%iformat == 0) then
-        write(OUTPUT_UNIT,1000,advance='no') value
+        if (dabs(value) >= 1.d-99) then
+          write(OUTPUT_UNIT,1000,advance='no') value
+        else
+          write(OUTPUT_UNIT,1001,advance='no') value
+        endif
       else
-        write(OUTPUT_UNIT,1001,advance='no') int(value)
+        write(OUTPUT_UNIT,1002,advance='no') int(value)
       endif
       cur_variable => cur_variable%next
     enddo
