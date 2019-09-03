@@ -810,6 +810,10 @@ subroutine OutputWriteToHeader(fid,variable_string,units_string, &
   !geh: Shift to left.  Cannot perform on same string since len=*
   variable_string_adj = adjustl(variable_string_adj)
   units_string_adj = adjustl(units_string_adj)
+  ! ensure that there are always units, even if none '-'
+  if (len_trim(units_string_adj) == 0) then
+    units_string_adj = '-'
+  endif
   cell_string_adj = adjustl(cell_string_adj)
 
   if (icolumn > 0) then
@@ -821,8 +825,8 @@ subroutine OutputWriteToHeader(fid,variable_string,units_string, &
   endif
 
   !geh: this is all to remove the lousy spaces
-  len_units = len_trim(units_string)
-  len_cell_string = len_trim(cell_string)
+  len_units = len_trim(units_string_adj)
+  len_cell_string = len_trim(cell_string_adj)
   if (len_units > 0 .and. len_cell_string > 0) then
     write(string,'('',"'',a,a,'' ['',a,''] '',a,''"'')') trim(column_string), &
           trim(variable_string_adj), trim(units_string_adj), &
