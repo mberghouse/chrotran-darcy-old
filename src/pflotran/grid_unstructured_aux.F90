@@ -74,6 +74,7 @@ module Grid_Unstructured_Aux_module
     type(point3d_type), pointer :: cell_centroids(:)
     PetscInt, pointer :: connections(:,:)
     PetscReal, pointer :: face_areas(:)
+    PetscReal, pointer :: face_perms(:)
     type(point3d_type), pointer :: face_centroids(:)
     PetscInt :: num_cells_global  ! Number of cells in the entire domain
     PetscInt :: num_elems
@@ -303,6 +304,7 @@ function UGridExplicitCreate()
   nullify(explicit_grid%cell_centroids)
   nullify(explicit_grid%connections)
   nullify(explicit_grid%face_areas)
+  nullify(explicit_grid%face_perms)
   nullify(explicit_grid%face_centroids)
   nullify(explicit_grid%cell_vertices)
   nullify(explicit_grid%vertex_coordinates)
@@ -2190,6 +2192,7 @@ subroutine UGridExplicitDestroy(explicit_grid)
   nullify(explicit_grid%cell_centroids)
   call DeallocateArray(explicit_grid%connections)
   call DeallocateArray(explicit_grid%face_areas)
+  call DeallocateArray(explicit_grid%face_perms)
   if (associated(explicit_grid%face_centroids)) &
     deallocate(explicit_grid%face_centroids)
   nullify(explicit_grid%face_centroids)

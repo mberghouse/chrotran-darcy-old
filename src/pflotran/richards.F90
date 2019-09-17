@@ -1448,6 +1448,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
   PetscInt :: icap_dn
   PetscInt :: iconn
   PetscInt :: sum_connection
+  PetscReal :: face_perm
 
   PetscReal :: Res(realization%option%nflowdof)
   PetscReal :: v_darcy
@@ -1490,6 +1491,11 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
 
       icap_up = patch%sat_func_id(ghosted_id_up)
       icap_dn = patch%sat_func_id(ghosted_id_dn)
+      
+      if (option%explicit_face_perms) then
+      	face_perm = cur_connection_set%perms(iconn)
+        option%face_perm_val = face_perm
+      endif
 
       call RichardsFlux(rich_auxvars(ghosted_id_up), &
                       global_auxvars(ghosted_id_up), &
@@ -2176,6 +2182,7 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
   PetscInt :: ghosted_id_up, ghosted_id_dn
   PetscInt :: region_id_up, region_id_dn
   PetscInt :: istart_up, istart_dn, istart
+  PetscReal :: face_perm
 
   PetscReal :: Jup(realization%option%nflowdof,realization%option%nflowdof), &
                Jdn(realization%option%nflowdof,realization%option%nflowdof)
@@ -2250,6 +2257,11 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
 
       icap_up = patch%sat_func_id(ghosted_id_up)
       icap_dn = patch%sat_func_id(ghosted_id_dn)
+      
+      if (option%explicit_face_perms) then
+        face_perm = cur_connection_set%perms(iconn)
+        option%face_perm_val = face_perm
+      endif
 
       call RichardsFluxDerivative(rich_auxvars(ghosted_id_up), &
                      global_auxvars(ghosted_id_up), &

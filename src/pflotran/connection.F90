@@ -26,6 +26,7 @@ module Connection_module
     PetscReal, pointer :: area(:)      ! list of areas of faces normal to distance vectors
     PetscReal, pointer :: cntr(:,:)    ! coordinates (1:3, num_connections) of the mass center of the face
     PetscInt, pointer :: face_id(:)    ! list of ids of faces (in local order)
+    PetscReal, pointer :: perms(:)
     type(connection_set_type), pointer :: next
   end type connection_set_type
 
@@ -85,6 +86,7 @@ function ConnectionCreate(num_connections,connection_itype)
   nullify(connection%dist)
   nullify(connection%intercp)
   nullify(connection%area)
+  nullify(connection%perms)
   nullify(connection%cntr)
   select case(connection_itype)
     case(INTERNAL_CONNECTION_TYPE)
@@ -100,6 +102,8 @@ function ConnectionCreate(num_connections,connection_itype)
       connection%dist = 0.d0
       connection%intercp = 0.d0
       connection%area = 0.d0
+      allocate(connection%perms(num_connections))
+      connection%perms = 0.d0
     case(BOUNDARY_CONNECTION_TYPE)
       allocate(connection%id_dn(num_connections))
       allocate(connection%dist(-1:3,num_connections))

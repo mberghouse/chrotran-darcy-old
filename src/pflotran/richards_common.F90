@@ -230,6 +230,10 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   
   Dq = (perm_up * perm_dn)/(dd_up*perm_dn + dd_dn*perm_up)
   
+  if (option%explicit_face_perms) then
+    Dq = option%face_perm_val/(dd_up + dd_dn)
+  endif
+    
 ! Flow term
   if (rich_auxvar_up%kvr > eps .or. &
       rich_auxvar_dn%kvr > eps) then
@@ -385,6 +389,10 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
   call material_auxvar_dn%PermeabilityTensorToScalar(dist,perm_dn)
 
   Dq = (perm_up * perm_dn)/(dd_up*perm_dn + dd_dn*perm_up)
+  
+  if (option%explicit_face_perms) then
+    Dq = option%face_perm_val/(dd_up + dd_dn)
+  endif
   
 ! Flow term
   if (rich_auxvar_up%kvr > eps .or. &

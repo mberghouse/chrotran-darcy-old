@@ -221,6 +221,10 @@ module Option_module
     PetscReal :: inline_surface_Mannings_coeff
     character(len=MAXSTRINGLENGTH) :: inline_surface_region_name
     
+    ! explicit grid face perms
+    PetscBool :: explicit_face_perms
+    PetscReal :: face_perm_val
+    
 
   end type option_type
 
@@ -396,7 +400,7 @@ subroutine OptionInitAll(option)
 
   option%rel_perm_aveg = UPWIND
   option%first_step_after_restart = PETSC_FALSE
-
+  
 
   call OptionInitRealization(option)
 
@@ -595,6 +599,7 @@ subroutine OptionInitRealization(option)
   option%inline_surface_Mannings_coeff = 0.02d0
   option%inline_surface_region_name    = ""
   
+  option%explicit_face_perms = PETSC_FALSE
 
 end subroutine OptionInitRealization
 

@@ -1912,6 +1912,11 @@ subroutine SubsurfaceReadRequiredCards(simulation,input)
 ! Read in select required cards
 !.........................................................................
 
+  string = "EXPLICIT_FACE_PERMS"
+  call InputFindStringInFile(input,option,string,PETSC_FALSE,found)
+  if( found ) then
+    option%explicit_face_perms = PETSC_TRUE
+  endif
 !  Search for 'WELL_DATA' section and read well locations if found
 
   string = "WELL_DATA"
@@ -2677,6 +2682,10 @@ subroutine SubsurfaceReadInput(simulation,input)
 
       case('DFN')
         grid%unstructured_grid%grid_type = TWO_DIM_GRID
+        
+!......................
+
+      case('EXPLICIT_FACE_PERMS')
 
 !......................
 

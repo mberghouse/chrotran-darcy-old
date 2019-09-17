@@ -250,7 +250,11 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
   allocate(explicit_grid%connections(2,num_connections_local))
   explicit_grid%connections = 0
   allocate(explicit_grid%face_areas(num_connections_local))
-  explicit_grid%face_areas = 0    
+  explicit_grid%face_areas = 0 
+  if (option%explicit_face_perms) then
+    allocate(explicit_grid%face_perms(num_connections_local))
+    explicit_grid%face_perms = 0
+  endif
   allocate(explicit_grid%face_centroids(num_connections_local))
   do iconn = 1, num_connections_local
     explicit_grid%face_centroids(iconn)%x = 0.d0
@@ -262,7 +266,11 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
   ! to other ranks
   call OptionSetBlocking(option,PETSC_FALSE)
   if (option%myrank == option%io_rank) then
-    allocate(temp_real_array(6,num_connections_local_save+1))
+    if (option%explicit_face_perms) then
+      allocate(temp_real_array(7,num_connections_local_save+1))
+    else
+      allocate(temp_real_array(6,num_connections_local_save+1))
+    endif
     ! read for other processors
     do irank = 0, option%mycommsize-1
       temp_real_array = UNINITIALIZED_DOUBLE
@@ -285,6 +293,10 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
         call InputErrorMsg(input,option,'face z coordinate',hint)
         call InputReadDouble(input,option,temp_real_array(6,iconn))
         call InputErrorMsg(input,option,'face area',hint)
+        if (option%explicit_face_perms) then
+          call InputReadDouble(input,option,temp_real_array(7,iconn))
+          call InputErrorMsg(input,option,'face perm',hint)
+        endif
       enddo
 
       ! if the cells reside on io_rank
@@ -301,6 +313,9 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
           explicit_grid%face_centroids(iconn)%y = temp_real_array(4,iconn)
           explicit_grid%face_centroids(iconn)%z = temp_real_array(5,iconn)
           explicit_grid%face_areas(iconn) = temp_real_array(6,iconn)
+          if (option%explicit_face_perms) then
+            explicit_grid%face_perms(iconn) = temp_real_array(7,iconn)
+          endif
         enddo
       else
         ! otherwise communicate to other ranks
@@ -311,7 +326,12 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
                  trim(adjustl(word))
         print *, trim(string)
 #endif
-        int_mpi = num_to_read*6
+        if (option%explicit_face_perms) then
+          int_mpi = num_to_read*7
+        else
+          int_mpi = num_to_read*6
+        endif
+        
         call MPI_Send(temp_real_array,int_mpi,MPI_DOUBLE_PRECISION,irank, &
                       num_to_read,option%mycomm,ierr)
       endif
@@ -325,8 +345,17 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
               trim(adjustl(word))
     print *, trim(string)
 #endif
-    allocate(temp_real_array(6,num_connections_local))
-    int_mpi = num_connections_local*6
+    if (option%explicit_face_perms) then
+      allocate(temp_real_array(7,num_connections_local))
+    else
+      allocate(temp_real_array(6,num_connections_local))
+    endif
+    
+    if (option%explicit_face_perms) then
+      int_mpi = num_connections_local*7
+    else
+      int_mpi = num_connections_local*6
+    endif
     call MPI_Recv(temp_real_array,int_mpi, &
                   MPI_DOUBLE_PRECISION,option%io_rank, &
                   MPI_ANY_TAG,option%mycomm,status_mpi,ierr)
@@ -337,6 +366,9 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
       explicit_grid%face_centroids(iconn)%y = temp_real_array(4,iconn)
       explicit_grid%face_centroids(iconn)%z = temp_real_array(5,iconn)
       explicit_grid%face_areas(iconn) = temp_real_array(6,iconn)
+      if (option%explicit_face_perms) then
+        explicit_grid%face_perms(iconn) = temp_real_array(7,iconn)
+      endif
     enddo
     
   endif
@@ -867,7 +899,11 @@ subroutine UGridExplicitDecompose(ugrid,option)
   call VecDestroy(cells_old,ierr);CHKERRQ(ierr)
 
   ! set up connections
-  connection_stride = 8
+  if (option%explicit_face_perms) then 
+    connection_stride = 9
+  else
+    connection_stride = 8
+  endif
   ! create strided vector with the old connection distribution
   call VecCreate(option%mycomm,connections_old,ierr);CHKERRQ(ierr)
   call VecSetSizes(connections_old, &
@@ -884,8 +920,14 @@ subroutine UGridExplicitDecompose(ugrid,option)
     vec_ptr(offset+4) = explicit_grid%face_centroids(iconn)%y
     vec_ptr(offset+5) = explicit_grid%face_centroids(iconn)%z
     vec_ptr(offset+6) = explicit_grid%face_areas(iconn)
-    vec_ptr(offset+7) = 1.d0 ! flag for local connections
-    vec_ptr(offset+8) = -888.d0
+    if (option%explicit_face_perms) then
+      vec_ptr(offset+7) = explicit_grid%face_perms(iconn)
+      vec_ptr(offset+8) = 1.d0 ! flag for local connections
+      vec_ptr(offset+9) = -888.d0
+    else
+      vec_ptr(offset+7) = 1.d0 ! flag for local connections
+      vec_ptr(offset+8) = -888.d0
+    endif
   enddo
   call VecRestoreArrayF90(connections_old,vec_ptr,ierr);CHKERRQ(ierr)
 
@@ -1174,7 +1216,11 @@ subroutine UGridExplicitDecompose(ugrid,option)
   call VecGetArrayF90(connections_local,vec_ptr,ierr);CHKERRQ(ierr)
   do iconn = 1, num_connections_local
     offset = connection_stride*(iconn-1)
-    if (vec_ptr(offset+7) > 0.1d0) count = count + 1
+    if (option%explicit_face_perms) then
+      if (vec_ptr(offset+8) > 0.1d0) count = count + 1
+    else
+      if (vec_ptr(offset+7) > 0.1d0) count = count + 1
+    endif
   enddo
   call VecRestoreArrayF90(connections_local,vec_ptr,ierr);CHKERRQ(ierr)
 
@@ -1182,6 +1228,10 @@ subroutine UGridExplicitDecompose(ugrid,option)
   explicit_grid%connections = 0
   allocate(explicit_grid%face_areas(count))
   explicit_grid%face_areas = 0    
+  if (option%explicit_face_perms) then
+    allocate(explicit_grid%face_areas(count))
+    explicit_grid%face_perms = 0
+  endif
   allocate(explicit_grid%face_centroids(count))
   do iconn = 1, count
     explicit_grid%face_centroids(iconn)%x = 0.d0
@@ -1192,14 +1242,27 @@ subroutine UGridExplicitDecompose(ugrid,option)
   count = 0
   do iconn = 1, num_connections_local
     offset = connection_stride*(iconn-1)
-    if (vec_ptr(offset+7) > 0.1d0) then
-      count = count + 1
-      explicit_grid%connections(1,count) = int(vec_ptr(offset+1))
-      explicit_grid%connections(2,count) = int(vec_ptr(offset+2))
-      explicit_grid%face_centroids(count)%x = vec_ptr(offset+3)
-      explicit_grid%face_centroids(count)%y = vec_ptr(offset+4)
-      explicit_grid%face_centroids(count)%z = vec_ptr(offset+5)
-      explicit_grid%face_areas(count) = vec_ptr(offset+6)
+    if (option%explicit_face_perms) then
+      if (vec_ptr(offset+8) > 0.1d0) then
+        count = count + 1
+        explicit_grid%connections(1,count) = int(vec_ptr(offset+1))
+        explicit_grid%connections(2,count) = int(vec_ptr(offset+2))
+        explicit_grid%face_centroids(count)%x = vec_ptr(offset+3)
+        explicit_grid%face_centroids(count)%y = vec_ptr(offset+4)
+        explicit_grid%face_centroids(count)%z = vec_ptr(offset+5)
+        explicit_grid%face_areas(count) = vec_ptr(offset+6)
+        explicit_grid%face_perms(count) = vec_ptr(offset+7)
+      endif
+    else
+      if (vec_ptr(offset+7) > 0.1d0) then
+        count = count + 1
+        explicit_grid%connections(1,count) = int(vec_ptr(offset+1))
+        explicit_grid%connections(2,count) = int(vec_ptr(offset+2))
+        explicit_grid%face_centroids(count)%x = vec_ptr(offset+3)
+        explicit_grid%face_centroids(count)%y = vec_ptr(offset+4)
+        explicit_grid%face_centroids(count)%z = vec_ptr(offset+5)
+        explicit_grid%face_areas(count) = vec_ptr(offset+6)
+      endif
     endif
   enddo
   call VecRestoreArrayF90(connections_local,vec_ptr,ierr);CHKERRQ(ierr)
@@ -1210,12 +1273,23 @@ subroutine UGridExplicitDecompose(ugrid,option)
   string = 'connections_local_raw' // trim(adjustl(string)) // '.out'
   open(unit=86,file=trim(string))
   do iconn = 1, num_connections_local
-    write(86,'(2i5,4f7.3)') explicit_grid%connections(1,iconn), &
+    if (option%explicit_face_perms) then
+        write(86,'(2i5,5f7.3)') explicit_grid%connections(1,iconn), &
+                explicit_grid%connections(2,iconn), &
+                explicit_grid%face_centroids(iconn)%x, &
+                explicit_grid%face_centroids(iconn)%y, &
+                explicit_grid%face_centroids(iconn)%z, &
+                explicit_grid%face_areas(iconn), &
+                explicit_grid%face_perms(iconn)
+                
+    else
+        write(86,'(2i5,4f7.3)') explicit_grid%connections(1,iconn), &
                 explicit_grid%connections(2,iconn), &
                 explicit_grid%face_centroids(iconn)%x, &
                 explicit_grid%face_centroids(iconn)%y, &
                 explicit_grid%face_centroids(iconn)%z, &
                 explicit_grid%face_areas(iconn)
+    endif
   enddo
   close(86)
 #endif     
@@ -1324,6 +1398,9 @@ function UGridExplicitSetInternConnect(explicit_grid,upwind_fraction_method, &
                             upwind_fraction_method, &
                             connections%dist(:,iconn),error,option)
     connections%area(iconn) = explicit_grid%face_areas(iconn)
+    if (option%explicit_face_perms) then
+    	connections%perms(iconn) = explicit_grid%face_perms(iconn)
+    endif
   enddo
   if (error) then
     option%io_buffer = 'Errors in UGridExplicitSetInternConnect(). &
