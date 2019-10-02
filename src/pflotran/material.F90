@@ -59,6 +59,8 @@ module Material_module
     class(geomechanics_subsurface_properties_type), pointer :: &
          geomechanics_subsurface_properties
 
+    PetscInt :: material_flag
+
     ! ice properties
     PetscReal :: thermal_conductivity_frozen
     PetscReal :: alpha_fr
@@ -736,6 +738,17 @@ subroutine MaterialPropertyRead(material_property,input,option)
                      'MATERIAL_PROPERTY,SECONDARY_CONTINUUM',option)
           end select
         enddo
+
+      case('MATERIAL_PROPERTY_FLAG')
+        call InputReadWord(input,option,word,PETSC_TRUE)
+        call InputErrorMsg(input,option,'keyword', &
+                             'MATERIAL_PROPERTY,MATERIAL_PROPERTY_FLAG')
+        select case(trim(word))
+          case('DRZ')
+            material_property%material_flag = DRZ_INT
+          case('BUFFER')
+            material_property%material_flag = BUFFER_INT
+        end select
 
       case default
         call InputKeywordUnrecognized(keyword,'MATERIAL_PROPERTY',option)
@@ -1473,6 +1486,9 @@ subroutine MaterialAssignPropertyToAux(material_auxvar,material_property, &
         material_property%soil_reference_pressure
     endif
   endif
+
+  material_auxvar%material_flag = material_property%material_flag
+
 !  if (soil_heat_capacity_index > 0) then
 !    material_auxvar%soil_properties(soil_heat_capacity_index) = &
 !      material_property%specific_heat
