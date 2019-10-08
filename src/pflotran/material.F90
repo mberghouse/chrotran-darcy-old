@@ -59,7 +59,13 @@ module Material_module
     class(geomechanics_subsurface_properties_type), pointer :: &
          geomechanics_subsurface_properties
 
+    !MAN: for DRZ permeability evolution
     PetscInt :: material_flag
+    PetscReal :: bulk_mod
+    PetscReal :: swelling_coeff
+    PetscReal :: fracture_compressibility
+    PetscReal :: initial_saturation
+    PetscReal :: initial_permeability
 
     ! ice properties
     PetscReal :: thermal_conductivity_frozen
@@ -194,6 +200,14 @@ function MaterialPropertyCreate()
   nullify(material_property%soil_reference_pressure_dataset)
 !  material_property%compressibility_dataset_name = ''
   nullify(material_property%compressibility_dataset)
+
+  !MAN: for DRZ permeability evolution
+  material_property%material_flag = 0
+  material_property%bulk_mod = 0.d0
+  material_property%swelling_coeff = 0.d0
+  material_property%fracture_compressibility = 0.d0
+  material_property%initial_saturation = 0.d0
+  material_property%initial_permeability = 0.d0
 
   material_property%thermal_conductivity_frozen = UNINITIALIZED_DOUBLE
   material_property%alpha_fr = 0.95d0
@@ -754,8 +768,32 @@ subroutine MaterialPropertyRead(material_property,input,option)
             material_property%material_flag = DRZ_INT
           case('BUFFER')
             material_property%material_flag = BUFFER_INT
+          case('HOST_ROCK')
+            material_property%material_flag = HR_INT
         end select
-
+      case('BULK_MODULUS')
+        call InputReadDouble(input,option, material_property%bulk_mod)
+        call InputErrorMsg(input,option,'bulk modulus', &
+                           'MATERIAL_PROPERTY')
+      case('SWELLING_COEFFICIENT')
+        call InputReadDouble(input,option, material_property%swelling_coeff)
+        call InputErrorMsg(input,option,'swelling coefficient', &
+                           'MATERIAL_PROPERTY')
+      case('FRACTURE_COMPRESSIBILITY')
+        call InputReadDouble(input,option, &
+                             material_property%fracture_compressibility)
+        call InputErrorMsg(input,option,'fracture compressibility', &
+                           'MATERIAL_PROPERTY')
+      case('INITIAL_SATURATION')
+        call InputReadDouble(input,option, &
+                             material_property%initial_saturation)
+        call InputErrorMsg(input,option,'initial saturation', &
+                           'MATERIAL_PROPERTY')
+      case('INITIAL_PERMEABILITY')
+        call InputReadDouble(input,option, &
+                             material_property%initial_permeability)
+        call InputErrorMsg(input,option,'initial permeability', &
+                           'MATERIAL_PROPERTY')
       case default
         call InputKeywordUnrecognized(input,keyword,'MATERIAL_PROPERTY',option)
     end select 
@@ -1494,7 +1532,14 @@ subroutine MaterialAssignPropertyToAux(material_auxvar,material_property, &
     endif
   endif
 
+  !MAN: For DRZ permeability evolution
   material_auxvar%material_flag = material_property%material_flag
+  material_auxvar%bulk_mod = material_property%bulk_mod
+  material_auxvar%swelling_coeff = material_property%swelling_coeff
+  material_auxvar%fracture_compressibility = &
+                          material_property%fracture_compressibility
+  material_auxvar%initial_permeability = material_property%initial_permeability
+  material_auxvar%initial_saturation = material_property%initial_saturation
 
 !  if (soil_heat_capacity_index > 0) then
 !    material_auxvar%soil_properties(soil_heat_capacity_index) = &

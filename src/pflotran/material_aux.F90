@@ -32,6 +32,10 @@ module Material_Aux_class
   PetscInt, parameter, public :: TENSOR_TO_SCALAR_FLOW = 2
   PetscInt, parameter, public :: TENSOR_TO_SCALAR_POTENTIAL = 3
 
+  PetscInt, parameter, public :: DRZ_INT = 1
+  PetscInt, parameter, public :: BUFFER_INT = 2
+  PetscInt, parameter, public :: HR_INT = 3
+
   ! flag to determine which model to use for tensor to scalar conversion 
   ! of permeability
   PetscInt :: perm_tens_to_scal_model = TENSOR_TO_SCALAR_LINEAR
@@ -41,6 +45,7 @@ module Material_Aux_class
   PetscInt, public :: soil_compressibility_index
   PetscInt, public :: soil_reference_pressure_index
   PetscInt, public :: max_material_index
+
   
   type, public :: material_auxvar_type
     PetscInt :: id
@@ -60,6 +65,14 @@ module Material_Aux_class
     type(fracture_auxvar_type), pointer :: fracture
     PetscReal, pointer :: geomechanics_subsurface_prop(:)
     PetscInt :: creep_closure_id
+
+    !MAN: for DRZ permeability evolution
+    PetscInt :: material_flag
+    PetscReal :: bulk_mod
+    PetscReal :: swelling_coeff
+    PetscReal :: fracture_compressibility
+    PetscReal :: initial_permeability
+    PetscReal :: initial_saturation
 
 !    procedure(SaturationFunction), nopass, pointer :: SaturationFunction
   contains
@@ -116,7 +129,9 @@ module Material_Aux_class
             MaterialCompressSoilPoroExp, &
             MaterialCompressSoilLeijnse, &
             MaterialCompressSoilLinear, &
-            MaterialCompressSoilQuadratic
+            MaterialCompressSoilQuadratic, &
+            MaterialFractureCompress, &
+            MaterialSwell
   
   public :: MaterialAuxCreate, &
             MaterialAuxVarInit, &
@@ -198,7 +213,12 @@ subroutine MaterialAuxVarInit(auxvar,option)
   nullify(auxvar%sat_func_prop)
   nullify(auxvar%fracture)
   auxvar%creep_closure_id = 1
-  
+ 
+  auxvar%material_flag = -999
+  auxvar%bulk_mod = 0.d0
+  auxvar%swelling_coeff = 0.d0
+  auxvar%fracture_compressibility = 0.d0
+ 
   if (max_material_index > 0) then
     allocate(auxvar%soil_properties(max_material_index))
     ! initialize these to zero for now
@@ -244,7 +264,12 @@ subroutine MaterialAuxVarCopy(auxvar,auxvar2,option)
     auxvar2%soil_properties = auxvar%soil_properties
   endif
   auxvar2%creep_closure_id = auxvar%creep_closure_id
-  
+
+  auxvar2%material_flag = auxvar%material_flag 
+  auxvar2%bulk_mod = auxvar%bulk_mod
+  auxvar2%swelling_coeff = auxvar%swelling_coeff
+  auxvar2%fracture_compressibility = auxvar%fracture_compressibility
+
 end subroutine MaterialAuxVarCopy
 
 ! ************************************************************************** !
@@ -744,6 +769,53 @@ subroutine MaterialCompressSoilQuadratic(auxvar,pressure, &
           ( 1.0 + compress_factor) * compressibility  
   
 end subroutine MaterialCompressSoilQuadratic
+
+! ************************************************************************** !
+
+subroutine MaterialFractureCompress(perm_init,cf,sigma,perm)
+  !
+  ! Computes permeability change due to fracture compression
+  ! Author: Michael Nole
+  ! Date: 10/02/19
+  !
+
+  implicit none
+
+  PetscReal, intent(in) :: perm_init
+  PetscReal, intent(in) :: cf
+  PetscReal, intent(in) :: sigma
+  PetscReal, pointer :: perm(:)
+
+  !Chen et al., 2015
+  
+  perm(:) = perm_init * exp(-3.d0 * cf * sigma/1.d6)
+
+
+end subroutine MaterialFractureCompress
+
+! ************************************************************************** !
+subroutine MaterialSwell(sat_init,sat,bulk_mod,swelling_coeff,swelling_stress)
+  !
+  ! Computes swelling stress change due to change in liquid saturation
+  ! Author: Michael Nole
+  ! Date: 10/02/19
+  !
+
+  implicit none
+
+  PetscReal, intent(in) :: sat_init
+  PetscReal, intent(in) :: sat
+  PetscReal, intent(in) :: bulk_mod
+  PetscReal, intent(in) :: swelling_coeff
+  PetscReal, intent(out) :: swelling_stress
+
+  swelling_stress = 0.d0
+
+  if (sat < sat_init) return
+
+  swelling_stress = 3.d0 * bulk_mod * (sat - sat_init) * swelling_coeff
+
+end subroutine MaterialSwell
 
 ! ************************************************************************** !
 

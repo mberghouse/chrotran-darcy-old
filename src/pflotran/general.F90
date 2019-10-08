@@ -687,6 +687,11 @@ subroutine GeneralUpdateAuxVars(realization,update_state,update_state_bc)
   PetscReal :: xxbc(realization%option%nflowdof), & 
                xxss(realization%option%nflowdof)
   PetscReal :: cell_pressure,qsrc_vol(2),scale
+
+  PetscReal :: swelling_stress,poroelastic_stress,thermal_stress
+  PetscReal :: alpha, alpha_t,nu,youngs_mod,dP,dT
+  PetscInt :: j
+
 !#define DEBUG_AUXVARS
 #ifdef DEBUG_AUXVARS
   character(len=MAXWORDLENGTH) :: word
@@ -753,6 +758,58 @@ subroutine GeneralUpdateAuxVars(realization,update_state,update_state_bc)
                               PETSC_TRUE,option)
 #endif
   enddo
+
+  !MAN: For DRZ perm evolution, just working in serial
+  if (GENERAL_UPDATE_DRZ_PERM) then
+    alpha = 1.d0
+    alpha_t = 1.d-5
+    youngs_mod = 24.d6
+    nu = 0.3d0
+    general_avg_buffer_stress = 0.d0
+    thermal_stress = 0.d0
+    poroelastic_stress = 0.d0
+    i = 0
+    j = 0
+    do ghosted_id = 1, grid%ngmax
+      if (material_auxvars(ghosted_id)%material_flag == BUFFER_INT) then
+        call MaterialSwell(material_auxvars(ghosted_id)%initial_saturation,&
+                 gen_auxvars(ZERO_INTEGER,ghosted_id)%sat(ONE_INTEGER), &
+                 material_auxvars(ghosted_id)%bulk_mod,&
+                 material_auxvars(ghosted_id)%swelling_coeff, &
+                 swelling_stress)
+        general_avg_buffer_stress = general_avg_buffer_stress + &
+                         swelling_stress
+        i = i+1
+      !elseif (material_auxvars(ghosted_id)%material_flag == DRZ_INT) then
+      !  if (gen_auxvars(ZERO_INTEGER,ghosted_id)%p_init == &
+      !                                UNINITIALIZED_DOUBLE) then
+      !    gen_auxvars(ZERO_INTEGER,ghosted_id)%p_init = &
+      !          gen_auxvars(ZERO_INTEGER,ghosted_id)%pres(ONE_INTEGER)
+      !  endif
+      !  if (gen_auxvars(ZERO_INTEGER,ghosted_id)%t_init == &
+      !                                UNINITIALIZED_DOUBLE) then
+      !    gen_auxvars(ZERO_INTEGER,ghosted_id)%t_init = &
+      !                 gen_auxvars(ZERO_INTEGER,ghosted_id)%temp
+      !  endif
+      !  dP = gen_auxvars(ZERO_INTEGER,ghosted_id)%pres(ONE_INTEGER) - &
+      !                   gen_auxvars(ZERO_INTEGER,ghosted_id)%p_init
+      !  dT = gen_auxvars(ZERO_INTEGER,ghosted_id)%temp - &
+      !                   gen_auxvars(ZERO_INTEGER,ghosted_id)%t_init
+      !  poroelastic_stress = poroelastic_stress + &
+      !                       alpha*(1.d0-2.d0*nu)/(1.d0-nu)*dP
+      !  thermal_stress = thermal_stress + alpha_t*youngs_mod/(1.d0-nu)*dT
+      !  j = j+1
+      endif
+    enddo
+    if (i > 0) then
+      general_avg_buffer_stress = general_avg_buffer_stress / i 
+      if (j > 0) then
+        general_avg_buffer_stress = general_avg_buffer_stress - &
+                                  poroelastic_stress/j + &
+                                  thermal_stress/j
+      endif
+    endif
+  endif
 
   boundary_condition => patch%boundary_condition_list%first
   sum_connection = 0    

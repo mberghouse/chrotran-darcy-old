@@ -39,6 +39,12 @@ module General_Aux_module
   PetscBool, public :: general_force_iteration = PETSC_FALSE
   PetscBool, public :: gen_chk_max_dpl_liq_state_only = PETSC_FALSE
 
+  !MAN: DRZ permeability evolution
+  PetscBool, public :: GENERAL_UPDATE_DRZ_PERM = PETSC_FALSE
+  PetscReal, public :: general_avg_buffer_stress = 0.d0
+  PetscReal, public :: general_t_init = UNINITIALIZED_DOUBLE
+  PetscReal, public :: general_p_init = UNINITIALIZED_DOUBLE
+
   ! debugging
   PetscInt, public :: general_ni_count
   PetscInt, public :: general_ts_cut_count
@@ -119,6 +125,8 @@ module General_Aux_module
     PetscReal :: effective_porosity ! factors in compressibility
     PetscReal :: pert
 !    PetscReal, pointer :: dmobility_dp(:)
+    PetscReal :: p_init
+    PetscReal :: t_init
     type(general_derivative_auxvar_type), pointer :: d
   end type general_auxvar_type
 
@@ -314,7 +322,10 @@ subroutine GeneralAuxVarInit(auxvar,allocate_derivative,option)
   auxvar%temp = 0.d0
   auxvar%effective_porosity = 0.d0
   auxvar%pert = 0.d0
-  
+
+  auxvar%p_init = UNINITIALIZED_DOUBLE
+  auxvar%t_init = UNINITIALIZED_DOUBLE 
+ 
   allocate(auxvar%pres(option%nphase+FOUR_INTEGER))
   auxvar%pres = 0.d0
   allocate(auxvar%sat(option%nphase))
@@ -434,6 +445,9 @@ subroutine GeneralAuxVarCopy(auxvar,auxvar2,option)
   auxvar2%kr = auxvar%kr
   auxvar2%effective_porosity = auxvar%effective_porosity
   auxvar2%pert = auxvar%pert
+
+  auxvar2%p_init = auxvar%p_init
+  auxvar2%t_init = auxvar%t_init
 
 end subroutine GeneralAuxVarCopy
 
@@ -959,6 +973,18 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
     if (option%iflag /= GENERAL_UPDATE_FOR_DERIVATIVE) then
       material_auxvar%porosity = gen_auxvar%effective_porosity
     endif
+    
+    ! MAN: coupling DRZ permeability with buffer swelling pressure via 
+    ! water saturation in the buffer for nearfield modeling integration.
+    if (GENERAL_UPDATE_DRZ_PERM .and. material_auxvar%material_flag > 0.d0) then
+      if (material_auxvar%material_flag == DRZ_INT) then
+        call MaterialFractureCompress(material_auxvar%initial_permeability,&
+             material_auxvar%fracture_compressibility, &
+             general_avg_buffer_stress,material_auxvar%permeability)
+      endif
+    endif 
+
+
   endif
   if (associated(gen_auxvar%d)) then
     gen_auxvar%d%por_p = dpor_dp

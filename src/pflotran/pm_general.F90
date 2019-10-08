@@ -212,6 +212,8 @@ subroutine PMGeneralRead(this,input)
     if (found) cycle
     
     select case(trim(keyword))
+      case('UPDATE_DRZ_PERM')
+        GENERAL_UPDATE_DRZ_PERM = PETSC_TRUE
       !man: phase change
       case('MAX_NEWTON_ITERATIONS')
         call InputReadDouble(input,option,tempreal)
