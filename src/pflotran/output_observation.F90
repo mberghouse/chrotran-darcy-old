@@ -1258,16 +1258,16 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
   PetscInt :: iconn, sum_connection
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: direction, iphase
-  PetscReal :: area
-  PetscReal :: sum_velocity(1:3), sum_area(1:3), velocity(1:3)
+  PetscReal :: area, volume, sum_volume
+  PetscReal :: sum_volume_vec(3), volume_vec(3)
   
   option => realization_base%option
   patch => realization_base%patch
   grid => patch%grid
   field => realization_base%field
 
-  sum_velocity = 0.d0
-  sum_area = 0.d0
+  sum_volume_vec = 0.d0
+  sum_volume = 0.d0
 ! iphase = 1
 
   ! interior velocities  
@@ -1281,15 +1281,11 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
       local_id_up = grid%nG2L(cur_connection_set%id_up(iconn)) ! = zero for ghost nodes
       local_id_dn = grid%nG2L(cur_connection_set%id_dn(iconn)) ! = zero for ghost nodes
       if (local_id_up == local_id .or. local_id_dn == local_id) then
-        do direction=1,3        
-          area = cur_connection_set%area(iconn)* &
-                 !geh: no dabs() here
-                 cur_connection_set%dist(direction,iconn)
-          sum_velocity(direction) = sum_velocity(direction) + &
-                                    patch%internal_velocities(iphase,sum_connection)* &
-                                    area
-          sum_area(direction) = sum_area(direction) + dabs(area)
-        enddo
+        area = cur_connection_set%area(iconn)
+        volume = patch%internal_velocities(iphase,sum_connection)*area
+        volume_vec = volume*cur_connection_set%dist(:,iconn) 
+        sum_volume_vec(:) = sum_volume_vec(:) + volume_vec
+        sum_volume = sum_volume + dabs(volume)
       endif
     enddo
     cur_connection_set => cur_connection_set%next
@@ -1304,27 +1300,18 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
     do iconn = 1, cur_connection_set%num_connections
       sum_connection = sum_connection + 1
       if (cur_connection_set%id_dn(iconn) == local_id) then
-        do direction=1,3        
-          area = cur_connection_set%area(iconn)* &
-                 !geh: no dabs() here
-                 cur_connection_set%dist(direction,iconn)
-          sum_velocity(direction) = sum_velocity(direction) + &
-                                    patch%boundary_velocities(iphase,sum_connection)* &
-                                    area
-          sum_area(direction) = sum_area(direction) + dabs(area)
-        enddo
+        area = cur_connection_set%area(iconn)
+        volume = patch%boundary_velocities(iphase,sum_connection)*area
+        volume_vec = volume*cur_connection_set%dist(:,iconn) 
+        sum_volume_vec(:) = sum_volume_vec(:) + volume_vec
+        sum_volume = sum_volume + dabs(volume)
       endif
     enddo
     boundary_condition => boundary_condition%next
   enddo
 
-  velocity = 0.d0
-  do direction = 1,3
-    if (abs(sum_area(direction)) > 1.d-40) &
-      velocity(direction) = sum_velocity(direction)/sum_area(direction)
-  enddo
-
-  GetVelocityAtCell = velocity  
+  GetVelocityAtCell = 0.d0
+  if (sum_volume > 0.d0) GetVelocityAtCell(:) = sum_volume_vec(:)/sum_volume
 
 end function GetVelocityAtCell
 
@@ -1428,6 +1415,9 @@ function GetVelocityAtCoord(fid,realization_base,local_id,x,y,z,iphase)
   sum_velocity = 0.d0
   sum_weight = 0.d0
 ! iphase = 1
+
+  print *, 'GetVelocityAtCoord must be refactored for rotated grids'
+  stop
 
   ghosted_id = grid%nL2G(local_id)
   

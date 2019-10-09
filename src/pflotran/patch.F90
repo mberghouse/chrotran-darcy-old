@@ -9536,8 +9536,8 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
   PetscInt :: sum_connection, iconn, num_connections
-  PetscReal, allocatable :: sum_area(:,:), sum_velocity(:,:)
-  PetscReal :: area(3), velocity(3)
+  PetscReal, allocatable :: sum_volume(:), sum_volume_vec(:,:)
+  PetscReal :: area, volume, volume_vec(3)
   PetscInt :: ghosted_id_up, ghosted_id_dn
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: local_id
@@ -9545,10 +9545,10 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
 
   grid => patch%grid
 
-  allocate(sum_velocity(3,grid%nlmax))
-  allocate(sum_area(3,grid%nlmax))
-  sum_velocity(:,:) = 0.d0
-  sum_area(:,:) = 0.d0
+  allocate(sum_volume_vec(3,grid%nlmax))
+  allocate(sum_volume(grid%nlmax))
+  sum_volume_vec(:,:) = 0.d0
+  sum_volume(:) = 0.d0
 
   ! interior velocities
   connection_set_list => grid%internal_connection_set_list
@@ -9563,16 +9563,18 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
       local_id_up = grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
       local_id_dn = grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
       ! velocities are stored as the downwind face of the upwind cell
-      area = cur_connection_set%area(iconn)* &
-             cur_connection_set%dist(1:3,iconn)
-      velocity = patch%internal_velocities(iphase,sum_connection)*area
+      area = cur_connection_set%area(iconn)
+      volume = patch%internal_velocities(iphase,sum_connection)*area
+      volume_vec = volume*cur_connection_set%dist(1:3,iconn)
       if (local_id_up > 0) then
-        sum_velocity(:,local_id_up) = sum_velocity(:,local_id_up) + velocity
-        sum_area(:,local_id_up) = sum_area(:,local_id_up) + dabs(area)
+        sum_volume_vec(:,local_id_up) = &
+          sum_volume_vec(:,local_id_up) + volume_vec
+        sum_volume(local_id_up) = sum_volume(local_id_up) + dabs(volume)
       endif
       if (local_id_dn > 0) then
-        sum_velocity(:,local_id_dn) = sum_velocity(:,local_id_dn) + velocity
-        sum_area(:,local_id_dn) = sum_area(:,local_id_dn) + dabs(area)
+        sum_volume_vec(:,local_id_dn) = &
+          sum_volume_vec(:,local_id_dn) + volume_vec
+        sum_volume(local_id_dn) = sum_volume(local_id_dn) + dabs(volume)
       endif
     enddo
     cur_connection_set => cur_connection_set%next
@@ -9587,29 +9589,27 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
     do iconn = 1, cur_connection_set%num_connections
       sum_connection = sum_connection + 1
       local_id = cur_connection_set%id_dn(iconn)
-      area = cur_connection_set%area(iconn)* &
-             cur_connection_set%dist(1:3,iconn)
-      velocity = patch%boundary_velocities(iphase,sum_connection)*area
-      sum_velocity(:,local_id) = sum_velocity(:,local_id) + velocity
-      sum_area(:,local_id) = sum_area(:,local_id) + dabs(area)
+      area = cur_connection_set%area(iconn)
+      volume = patch%boundary_velocities(iphase,sum_connection)*area
+      volume_vec = volume*cur_connection_set%dist(1:3,iconn)
+      sum_volume_vec(:,local_id) = sum_volume_vec(:,local_id) + volume_vec
+      sum_volume(local_id) = sum_volume(local_id) + dabs(volume)
     enddo
     boundary_condition => boundary_condition%next
   enddo
 
   ! divide by total area
   do local_id=1,grid%nlmax
-    do i=1,3
-      if (sum_area(i,local_id) > 0.d0) then
-        velocities(i,local_id) = sum_velocity(i,local_id) / &
-                                 sum_area(i,local_id)
-      else
-        velocities(i,local_id) = 0.d0
-      endif
-    enddo
+    if (sum_volume(local_id) > 0.d0) then
+      velocities(:,local_id) = sum_volume_vec(:,local_id) / &
+                               sum_volume(local_id)
+    else
+      velocities(:,local_id) = 0.d0
+    endif
   enddo
 
-  deallocate(sum_velocity)
-  deallocate(sum_area)
+  deallocate(sum_volume_vec)
+  deallocate(sum_volume)
 
 end subroutine PatchGetCellCenteredVelocities
 
