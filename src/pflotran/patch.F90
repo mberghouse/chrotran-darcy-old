@@ -9536,8 +9536,8 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
   PetscInt :: sum_connection, iconn, num_connections
-  PetscReal, allocatable :: sum_volume(:), sum_volume_vec(:,:)
-  PetscReal :: area, volume, volume_vec(3)
+  PetscReal, allocatable :: sum_weight(:), sum_weighted_velocity(:,:)
+  PetscReal :: area, weight, weighted_velocity(3), velocity
   PetscInt :: ghosted_id_up, ghosted_id_dn
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: local_id
@@ -9545,10 +9545,10 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
 
   grid => patch%grid
 
-  allocate(sum_volume_vec(3,grid%nlmax))
-  allocate(sum_volume(grid%nlmax))
-  sum_volume_vec(:,:) = 0.d0
-  sum_volume(:) = 0.d0
+  allocate(sum_weighted_velocity(3,grid%nlmax))
+  allocate(sum_weight(grid%nlmax))
+  sum_weighted_velocity(:,:) = 0.d0
+  sum_weight(:) = 0.d0
 
   ! interior velocities
   connection_set_list => grid%internal_connection_set_list
@@ -9563,18 +9563,19 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
       local_id_up = grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
       local_id_dn = grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
       ! velocities are stored as the downwind face of the upwind cell
+      velocity = patch%internal_velocities(iphase,sum_connection)
       area = cur_connection_set%area(iconn)
-      volume = patch%internal_velocities(iphase,sum_connection)*area
-      volume_vec = volume*cur_connection_set%dist(1:3,iconn)
+      weight = dabs(velocity)*area
+      weighted_velocity = weight*velocity*cur_connection_set%dist(1:3,iconn)
       if (local_id_up > 0) then
-        sum_volume_vec(:,local_id_up) = &
-          sum_volume_vec(:,local_id_up) + volume_vec
-        sum_volume(local_id_up) = sum_volume(local_id_up) + dabs(volume)
+        sum_weighted_velocity(:,local_id_up) = &
+          sum_weighted_velocity(:,local_id_up) + weighted_velocity
+        sum_weight(local_id_up) = sum_weight(local_id_up) + weight
       endif
       if (local_id_dn > 0) then
-        sum_volume_vec(:,local_id_dn) = &
-          sum_volume_vec(:,local_id_dn) + volume_vec
-        sum_volume(local_id_dn) = sum_volume(local_id_dn) + dabs(volume)
+        sum_weighted_velocity(:,local_id_dn) = &
+          sum_weighted_velocity(:,local_id_dn) + weighted_velocity
+        sum_weight(local_id_dn) = sum_weight(local_id_dn) + weight
       endif
     enddo
     cur_connection_set => cur_connection_set%next
@@ -9589,27 +9590,29 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
     do iconn = 1, cur_connection_set%num_connections
       sum_connection = sum_connection + 1
       local_id = cur_connection_set%id_dn(iconn)
+      velocity = patch%boundary_velocities(iphase,sum_connection)
       area = cur_connection_set%area(iconn)
-      volume = patch%boundary_velocities(iphase,sum_connection)*area
-      volume_vec = volume*cur_connection_set%dist(1:3,iconn)
-      sum_volume_vec(:,local_id) = sum_volume_vec(:,local_id) + volume_vec
-      sum_volume(local_id) = sum_volume(local_id) + dabs(volume)
+      weight = dabs(velocity)*area
+      weighted_velocity = weight*velocity*cur_connection_set%dist(1:3,iconn)
+      sum_weighted_velocity(:,local_id) = &
+        sum_weighted_velocity(:,local_id) + weighted_velocity
+      sum_weight(local_id) = sum_weight(local_id) + weight
     enddo
     boundary_condition => boundary_condition%next
   enddo
 
   ! divide by total area
   do local_id=1,grid%nlmax
-    if (sum_volume(local_id) > 0.d0) then
-      velocities(:,local_id) = sum_volume_vec(:,local_id) / &
-                               sum_volume(local_id)
+    if (sum_weight(local_id) > 0.d0) then
+      velocities(:,local_id) = sum_weighted_velocity(:,local_id) / &
+                               sum_weight(local_id)
     else
       velocities(:,local_id) = 0.d0
     endif
   enddo
 
-  deallocate(sum_volume_vec)
-  deallocate(sum_volume)
+  deallocate(sum_weighted_velocity)
+  deallocate(sum_weight)
 
 end subroutine PatchGetCellCenteredVelocities
 
