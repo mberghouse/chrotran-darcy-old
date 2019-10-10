@@ -9523,6 +9523,7 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   !
   use Connection_module
   use Coupler_module
+  use Geometry_module
 
   implicit none
 
@@ -9536,19 +9537,22 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
   PetscInt :: sum_connection, iconn, num_connections
-  PetscReal, allocatable :: sum_area(:,:), sum_velocity(:,:)
+  PetscReal, allocatable :: sum_weight(:,:), sum_velocity(:,:)
   PetscReal :: area(3), velocity(3)
   PetscInt :: ghosted_id_up, ghosted_id_dn
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: local_id
   PetscInt :: i
+  PetscReal, pointer :: dist(:,:)
+  PetscReal :: centroid_up(3), centroid_dn(3), centroid_face(3)
+  PetscReal :: weight_up(3), weight_dn(3)
 
   grid => patch%grid
 
   allocate(sum_velocity(3,grid%nlmax))
-  allocate(sum_area(3,grid%nlmax))
+  allocate(sum_weight(3,grid%nlmax))
   sum_velocity(:,:) = 0.d0
-  sum_area(:,:) = 0.d0
+  sum_weight(:,:) = 0.d0
 
   ! interior velocities
   connection_set_list => grid%internal_connection_set_list
@@ -9556,23 +9560,35 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   sum_connection = 0
   do
     if (.not.associated(cur_connection_set)) exit
+    dist => cur_connection_set%dist
     do iconn = 1, cur_connection_set%num_connections
       sum_connection = sum_connection + 1
       ghosted_id_up = cur_connection_set%id_up(iconn)
       ghosted_id_dn = cur_connection_set%id_dn(iconn)
       local_id_up = grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
       local_id_dn = grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
-      ! velocities are stored as the downwind face of the upwind cell
-      area = cur_connection_set%area(iconn)* &
-             cur_connection_set%dist(1:3,iconn)
-      velocity = patch%internal_velocities(iphase,sum_connection)*area
+      centroid_up(1) = grid%x(ghosted_id_up)
+      centroid_up(2) = grid%y(ghosted_id_up)
+      centroid_up(3) = grid%z(ghosted_id_up)
+      centroid_dn(1) = grid%x(ghosted_id_dn)
+      centroid_dn(2) = grid%y(ghosted_id_dn)
+      centroid_dn(3) = grid%z(ghosted_id_dn)
+      centroid_face = centroid_dn-dist(-1,iconn)*dist(0,iconn)*dist(1:3,iconn)
+      weight_up = abs(dist(1:3,iconn))/ &
+                  GeomDistanceBetweenPoints(centroid_up,centroid_face)
+      weight_dn = abs(dist(1:3,iconn))/ &
+                  GeomDistanceBetweenPoints(centroid_dn,centroid_face)
+      velocity = patch%internal_velocities(iphase,sum_connection)* &
+                 dist(1:3,iconn)
       if (local_id_up > 0) then
-        sum_velocity(:,local_id_up) = sum_velocity(:,local_id_up) + velocity
-        sum_area(:,local_id_up) = sum_area(:,local_id_up) + dabs(area)
+        sum_velocity(:,local_id_up) = sum_velocity(:,local_id_up) + &
+                                      weight_up*velocity
+        sum_weight(:,local_id_up) = sum_weight(:,local_id_up) + weight_up
       endif
       if (local_id_dn > 0) then
-        sum_velocity(:,local_id_dn) = sum_velocity(:,local_id_dn) + velocity
-        sum_area(:,local_id_dn) = sum_area(:,local_id_dn) + dabs(area)
+        sum_velocity(:,local_id_dn) = sum_velocity(:,local_id_dn) + &
+                                      weight_dn*velocity
+        sum_weight(:,local_id_dn) = sum_weight(:,local_id_dn) + weight_dn
       endif
     enddo
     cur_connection_set => cur_connection_set%next
@@ -9584,24 +9600,33 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   do
     if (.not.associated(boundary_condition)) exit
     cur_connection_set => boundary_condition%connection_set
+    dist => cur_connection_set%dist
     do iconn = 1, cur_connection_set%num_connections
       sum_connection = sum_connection + 1
-      local_id = cur_connection_set%id_dn(iconn)
-      area = cur_connection_set%area(iconn)* &
-             cur_connection_set%dist(1:3,iconn)
-      velocity = patch%boundary_velocities(iphase,sum_connection)*area
-      sum_velocity(:,local_id) = sum_velocity(:,local_id) + velocity
-      sum_area(:,local_id) = sum_area(:,local_id) + dabs(area)
+      local_id_dn = cur_connection_set%id_dn(iconn)
+      ghosted_id_dn = grid%nL2G(local_id_dn)
+      centroid_dn(1) = grid%x(ghosted_id_dn)
+      centroid_dn(2) = grid%y(ghosted_id_dn)
+      centroid_dn(3) = grid%z(ghosted_id_dn)
+      ! fraction_upwind = 0; thus, distance is all downwind
+      centroid_face = centroid_dn-dist(0,iconn)*dist(1:3,iconn)
+      weight_dn = abs(dist(1:3,iconn))/ &
+                  GeomDistanceBetweenPoints(centroid_dn,centroid_face)
+      velocity = patch%boundary_velocities(iphase,sum_connection)* &
+                 dist(1:3,iconn)
+      sum_velocity(:,local_id_dn) = sum_velocity(:,local_id_dn) + &
+                                    weight_dn*velocity
+      sum_weight(:,local_id_dn) = sum_weight(:,local_id_dn) + weight_dn
     enddo
     boundary_condition => boundary_condition%next
   enddo
 
-  ! divide by total area
+  ! divide by total weight
   do local_id=1,grid%nlmax
     do i=1,3
-      if (sum_area(i,local_id) > 0.d0) then
+      if (sum_weight(i,local_id) > 0.d0) then
         velocities(i,local_id) = sum_velocity(i,local_id) / &
-                                 sum_area(i,local_id)
+                                 sum_weight(i,local_id)
       else
         velocities(i,local_id) = 0.d0
       endif
@@ -9609,7 +9634,7 @@ subroutine PatchGetCellCenteredVelocities(patch,iphase,velocities)
   enddo
 
   deallocate(sum_velocity)
-  deallocate(sum_area)
+  deallocate(sum_weight)
 
 end subroutine PatchGetCellCenteredVelocities
 

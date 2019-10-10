@@ -53,6 +53,12 @@ module Geometry_module
     module procedure GeometryProjectPointOntoPlane2
   end interface GeometryProjectPointOntoPlane
   
+  interface GeomDistanceBetweenPoints
+    module procedure GeomDistanceBetweenPoints1
+    module procedure GeomDistanceBetweenPoints2
+    module procedure GeomDistanceBetweenPoints3
+  end interface GeomDistanceBetweenPoints
+  
   public :: GeometryCreatePolygonalVolume, &
             GeometryReadCoordinates, &
             GeometryReadCoordinate, &
@@ -66,7 +72,8 @@ module Geometry_module
             GeometryGetPlaneIntercept, &
             GeometryGetPlaneZIntercept, &
             GeomGetPlaneGradientinXandY, &
-            GeomComputeDistanceFromPlane
+            GeomComputeDistanceFromPlane, &
+            GeomDistanceBetweenPoints
 !           12345678901234567890123456789012
 contains
 
@@ -725,5 +732,74 @@ function GeomComputeDistanceFromPlane2(plane,x,y,z)
     sqrt(plane%A*plane%A+plane%B*plane%B+plane%C*plane%C)
   
 end function GeomComputeDistanceFromPlane2
+
+! ************************************************************************** !
+
+function GeomDistanceBetweenPoints1(point1,point2)
+  ! 
+  ! Calculates the distance between two points
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/10/19
+  ! 
+  implicit none
+  
+  type(point3d_type) :: point1
+  type(point3d_type) :: point2
+  
+  PetscReal :: GeomDistanceBetweenPoints1
+
+  GeomDistanceBetweenPoints1 = &
+    GeomDistanceBetweenPoints(point1%x,point1%y,point1%y, &
+                              point2%x,point2%y,point2%z)
+  
+end function GeomDistanceBetweenPoints1
+
+! ************************************************************************** !
+
+function GeomDistanceBetweenPoints2(pt1,pt2)
+  ! 
+  ! Calculates the distance between two points
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/10/19
+  ! 
+  implicit none
+  
+  PetscReal :: pt1(3)
+  PetscReal :: pt2(3)
+  
+  PetscReal :: GeomDistanceBetweenPoints2
+
+  GeomDistanceBetweenPoints2 = &
+    GeomDistanceBetweenPoints(pt1(1),pt1(2),pt1(3),pt2(1),pt2(2),pt2(3))
+  
+end function GeomDistanceBetweenPoints2
+
+! ************************************************************************** !
+
+function GeomDistanceBetweenPoints3(x1,y1,z1,x2,y2,z2)
+  ! 
+  ! Calculates the distance between two points
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/10/19
+  ! 
+  implicit none
+  
+  PetscReal :: x1, y1, z1
+  PetscReal :: x2, y2, z2
+  
+  PetscReal :: GeomDistanceBetweenPoints3
+
+  PetscReal :: dx, dy, dz
+
+  dx = x2-x1
+  dy = y2-y1
+  dz = z2-z1
+
+  GeomDistanceBetweenPoints3 = sqrt(dx*dx+dy*dy+dz*dz)
+  
+end function GeomDistanceBetweenPoints3
 
 end module Geometry_module
