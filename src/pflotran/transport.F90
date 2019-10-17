@@ -1,7 +1,8 @@
 module Transport_module
 
-#include "petsc/finclude/petscsnes.h"
-  use petscsnes
+#include "petsc/finclude/petscsys.h"
+  use petscsys
+
   use Reactive_Transport_Aux_module
   use Global_Aux_module
   use Material_Aux_class
@@ -80,7 +81,7 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
                cell_centered_velocity_dn(3,2)
   PetscReal :: dist(-1:3)
   PetscReal :: qdarcy(*)
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   PetscReal :: harmonic_tran_coefs_over_dist(rt_parameter%naqcomp, &
                                              rt_parameter%nphase)
   
@@ -284,7 +285,7 @@ subroutine TDispersionBC(ibndtype, &
   PetscReal :: cell_centered_velocity_dn(3,2)
   PetscReal :: dist_dn(-1:3)
   PetscReal :: qdarcy(*)
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   PetscReal :: tran_coefs_over_dist(rt_parameter%naqcomp, &
                                              rt_parameter%nphase)
   
@@ -422,7 +423,7 @@ subroutine TFlux(rt_parameter, &
 
   implicit none
   
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   type(option_type) :: option
@@ -497,7 +498,7 @@ subroutine TFlux_CD(rt_parameter, &
 
   implicit none
   
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   type(option_type) :: option
@@ -583,7 +584,7 @@ subroutine TFluxDerivative(rt_parameter, &
 
   implicit none
   
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   type(option_type) :: option
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
@@ -680,7 +681,7 @@ subroutine TFluxDerivative_CD(rt_parameter, &
 
   implicit none
   
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   type(option_type) :: option
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
@@ -809,7 +810,7 @@ subroutine TFluxCoef(rt_parameter, &
 
   implicit none
   
-  type(reactive_transport_param_type) :: rt_parameter  
+  class(reactive_transport_param_type) :: rt_parameter  
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   type(option_type) :: option
   PetscReal :: area
@@ -885,7 +886,7 @@ subroutine TFluxCoef_CD(rt_parameter, &
 
   implicit none
   
-  type(reactive_transport_param_type) :: rt_parameter  
+  class(reactive_transport_param_type) :: rt_parameter  
   type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
   type(option_type) :: option
   PetscReal :: area
@@ -973,7 +974,7 @@ subroutine TSrcSinkCoef(rt_parameter,global_auxvar,qsrc, &
 
   implicit none
 
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   type(global_auxvar_type) :: global_auxvar
   PetscReal :: qsrc(2)
   PetscInt :: tran_src_sink_type
@@ -1036,7 +1037,7 @@ subroutine TFluxTVD(rt_parameter,velocity,area,dist, &
 
   implicit none
   
-  type(reactive_transport_param_type) :: rt_parameter
+  class(reactive_transport_param_type) :: rt_parameter
   PetscReal :: velocity(:), area
   type(reactive_transport_auxvar_type) :: rt_auxvar_up, rt_auxvar_dn
   PetscReal, pointer :: total_up2(:,:), total_dn2(:,:)

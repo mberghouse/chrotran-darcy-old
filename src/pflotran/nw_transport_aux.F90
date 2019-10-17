@@ -1,18 +1,13 @@
 module NW_Transport_Aux_module
 
-  ! this module cannot depend on any other modules besides Option_module
-  ! and Matrix_Block_Aux_module
-  ! At this point I am violating this rule.
-  use Matrix_Block_Aux_module
+#include "petsc/finclude/petscsys.h"
+  use petscsys
 
   use PFLOTRAN_Constants_module
-  use petscsys
 
   implicit none
   
   private 
-
-#include "petsc/finclude/petscsys.h"
 
   PetscReal, public :: nwt_itol_scaled_res = UNINITIALIZED_DOUBLE
   PetscReal, public :: nwt_itol_rel_update = UNINITIALIZED_DOUBLE
@@ -161,9 +156,6 @@ function NWTAuxCreate()
   ! Author: Jenn Frederick
   ! Date: 03/11/2019
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
-
   implicit none
   
   type(nw_transport_type), pointer :: NWTAuxCreate

@@ -436,8 +436,8 @@ nw_transport.o : condition.o connection.o coupler.o debug.o discretization.o \
                  option.o output_aux.o pflotran_constants.o \
                  realization_subsurface.o string.o transport_constraint_nwt.o \
                  utility.o
-nw_transport_aux.o : input_aux.o matrix_block_aux.o option.o output_aux.o \
-                     pflotran_constants.o string.o utility.o variables.o
+nw_transport_aux.o : input_aux.o option.o output_aux.o pflotran_constants.o \
+                     string.o utility.o variables.o
 nw_transport_equilibrium.o : global_aux.o material_aux.o nw_transport_aux.o \
                              option.o pflotran_constants.o \
                              transport_constraint_nwt.o
@@ -842,7 +842,7 @@ reactive_transport.o : co2_span_wagner.o co2eos.o condition.o connection.o \
                        transport_constraint_rt.o
 reactive_transport_aux.o : matrix_block_aux.o option.o pflotran_constants.o \
                            reaction_aux.o reaction_surf_complex_aux.o \
-                           utility.o
+                           transport_aux.o utility.o
 realization_base.o : communicator_base.o data_mediator.o data_mediator_base.o \
                      debug.o discretization.o field.o input_aux.o \
                      nw_transport_aux.o option.o output_aux.o patch.o \
@@ -1030,6 +1030,7 @@ towg.o : auxvars_flow.o auxvars_towg.o condition.o connection.o coupler.o \
          saturation_function.o utility.o variables.o well_data.o well_solver.o
 transport.o : connection.o global_aux.o material_aux.o matrix_block_aux.o \
               option.o pflotran_constants.o reactive_transport_aux.o
+transport_aux.o : pflotran_constants.o
 transport_constraint.o : option.o pflotran_constants.o string.o \
                          transport_constraint_base.o \
                          transport_constraint_nwt.o transport_constraint_rt.o

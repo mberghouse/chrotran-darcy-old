@@ -222,7 +222,7 @@ subroutine PMRTSetup(this)
   
   class(pm_rt_type) :: this
 
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
 
 #ifdef PM_RT_DEBUG  
   call PrintMsg(this%option,'PMRT%Setup()')

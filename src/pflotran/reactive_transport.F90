@@ -134,7 +134,7 @@ subroutine RTSetup(realization)
   type(tran_constraint_rt_type), pointer :: sec_tran_constraint
   class(material_auxvar_type), pointer :: material_auxvars(:)
   type(material_property_type), pointer :: cur_material_property
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   type(generic_parameter_type), pointer :: cur_generic_parameter
 
   character(len=MAXWORDLENGTH) :: word
@@ -1024,7 +1024,7 @@ subroutine RTUpdateTransportCoefs(realization)
   type(patch_type), pointer :: patch
   type(grid_type), pointer :: grid
   type(field_type), pointer :: field
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   PetscInt :: local_id, ghosted_id, ghosted_face_id, id
   
   type(coupler_type), pointer :: boundary_condition
@@ -1338,7 +1338,7 @@ subroutine RTCalculateRHS_t1(realization)
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
   type(coupler_type), pointer :: source_sink
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   PetscInt :: sum_connection, iconn  
   PetscReal :: qsrc(2)
   PetscInt :: offset, istartcoll, iendcoll, istartall, iendall, icomp, ieqgas
@@ -1571,7 +1571,7 @@ subroutine RTCalculateTransportMatrix(realization,T)
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
   type(coupler_type), pointer :: source_sink
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   PetscInt :: sum_connection, iconn
   PetscReal :: coef
   PetscReal :: coef_up(2), coef_dn(2)
@@ -2009,7 +2009,7 @@ subroutine RTComputeBCMassBalanceOS(realization)
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   type(reactive_transport_auxvar_type), pointer :: rt_auxvar_out
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_bc(:)
@@ -2366,7 +2366,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:), rt_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars(:), global_auxvars_bc(:) 
   
@@ -2674,7 +2674,7 @@ subroutine RTResidualNonFlux(snes,xx,r,realization,ierr)
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   type(reactive_transport_auxvar_type), pointer :: rt_auxvar_out
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_ss(:)
@@ -3234,7 +3234,7 @@ subroutine RTJacobianFlux(snes,xx,A,B,realization,ierr)
   type(option_type), pointer :: option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   type(reaction_type), pointer :: reaction
       
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:), rt_auxvars_bc(:)
@@ -3500,7 +3500,7 @@ subroutine RTJacobianNonFlux(snes,xx,A,B,realization,ierr)
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   type(reaction_type), pointer :: reaction
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   PetscInt :: tran_pc
     
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:), rt_auxvars_bc(:)
@@ -4700,7 +4700,7 @@ subroutine RTExplicitAdvection(realization)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars(:), global_auxvars_bc(:)
-  type(reactive_transport_param_type), pointer :: rt_parameter
+  class(reactive_transport_param_type), pointer :: rt_parameter
   class(material_auxvar_type), pointer :: material_auxvars(:)
   
   type(coupler_type), pointer :: boundary_condition, source_sink

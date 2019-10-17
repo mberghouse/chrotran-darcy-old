@@ -1,16 +1,16 @@
 module Reactive_Transport_Aux_module
 
-  ! this module cannot depend on any other modules besides Option_module
-  ! and Matrix_Block_Aux_module
-  use Matrix_Block_Aux_module
+#include "petsc/finclude/petscsys.h"
+  use petscsys
 
   use PFLOTRAN_Constants_module
+  use Matrix_Block_Aux_module
+  use Transport_Aux_module
 
   implicit none
   
   private 
 
-#include "petsc/finclude/petscsys.h"
 
   PetscReal, public :: rt_itol_scaled_res = UNINITIALIZED_DOUBLE
   PetscReal, public :: rt_itol_rel_update = UNINITIALIZED_DOUBLE
@@ -73,7 +73,8 @@ module Reactive_Transport_Aux_module
     
   end type reactive_transport_auxvar_type
 
-  type, public :: reactive_transport_param_type
+  type, public, extends(transport_param_base_type) :: &
+                                            reactive_transport_param_type
     PetscInt :: nphase
     PetscInt :: ncomp
     PetscInt :: naqcomp
@@ -128,7 +129,7 @@ module Reactive_Transport_Aux_module
     PetscInt, pointer :: zero_rows_local(:), zero_rows_local_ghosted(:)
     PetscInt :: n_zero_rows
     PetscBool :: inactive_cells_exist
-    type(reactive_transport_param_type), pointer :: rt_parameter
+    class(reactive_transport_param_type), pointer :: rt_parameter
     type(reactive_transport_auxvar_type), pointer :: auxvars(:)
     type(reactive_transport_auxvar_type), pointer :: auxvars_bc(:)
     type(reactive_transport_auxvar_type), pointer :: auxvars_ss(:)
@@ -154,9 +155,6 @@ function RTAuxCreate(naqcomp,nphase)
   ! Author: Glenn Hammond
   ! Date: 02/14/08
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
-
   use Option_module
 
   implicit none
@@ -179,35 +177,7 @@ function RTAuxCreate(naqcomp,nphase)
   nullify(aux%zero_rows_local_ghosted) ! ids of zero rows in ghosted numbering
   aux%inactive_cells_exist = PETSC_FALSE
 
-  allocate(aux%rt_parameter)
-  aux%rt_parameter%naqcomp = naqcomp
-  aux%rt_parameter%nphase = nphase
-  allocate(aux%rt_parameter%diffusion_coefficient(naqcomp,nphase))
-  allocate(aux%rt_parameter%diffusion_activation_energy(naqcomp,nphase))
-  aux%rt_parameter%diffusion_coefficient = 1.d-9
-  aux%rt_parameter%diffusion_activation_energy = 0.d0
-  aux%rt_parameter%ncomp = 0
-  aux%rt_parameter%nimcomp = 0
-  aux%rt_parameter%ngas = 0
-  aux%rt_parameter%ncoll = 0
-  aux%rt_parameter%ncollcomp = 0
-  aux%rt_parameter%offset_aqueous = 0
-  aux%rt_parameter%offset_colloid = 0
-  aux%rt_parameter%offset_collcomp = 0
-  aux%rt_parameter%offset_immobile = 0
-  aux%rt_parameter%offset_auxiliary = 0
-  nullify(aux%rt_parameter%pri_spec_to_coll_spec)
-  nullify(aux%rt_parameter%coll_spec_to_pri_spec)
-  aux%rt_parameter%calculate_transverse_dispersion = PETSC_FALSE
-  aux%rt_parameter%temperature_dependent_diffusion = PETSC_FALSE
-#ifdef OS_STATISTICS
-  aux%rt_parameter%newton_call_count = 0
-  aux%rt_parameter%sum_newton_call_count = 0.d0
-  aux%rt_parameter%newton_iterations = 0
-  aux%rt_parameter%sum_newton_iterations = 0.d0
-  aux%rt_parameter%max_newton_iterations = 0
-  aux%rt_parameter%overall_max_newton_iterations = 0
-#endif  
+  aux%rt_parameter => TransportParameterRTCreate(naqcomp,nphase)
 
   RTAuxCreate => aux
   
@@ -404,6 +374,59 @@ subroutine RTAuxVarInit(auxvar,reaction,option)
 
 end subroutine RTAuxVarInit
 
+! ************************************************************************** !
+
+function TransportParameterRTCreate(naqcomp,nphase)
+  ! 
+  ! Creates and initializes an reactive_transport_param_type
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/17/19
+  ! 
+  implicit none
+
+  PetscInt :: naqcomp
+  PetscInt :: nphase
+
+  class(reactive_transport_param_type), pointer :: TransportParameterRTCreate
+
+  class(reactive_transport_param_type), pointer :: rt_parameter
+
+  allocate(rt_parameter)
+  call TransportAuxInit(rt_parameter)
+  rt_parameter%naqcomp = naqcomp
+  rt_parameter%nphase = nphase
+  allocate(rt_parameter%diffusion_coefficient(naqcomp,nphase))
+  allocate(rt_parameter%diffusion_activation_energy(naqcomp,nphase))
+  rt_parameter%diffusion_coefficient = 1.d-9
+  rt_parameter%diffusion_activation_energy = 0.d0
+  rt_parameter%ncomp = 0
+  rt_parameter%nimcomp = 0
+  rt_parameter%ngas = 0
+  rt_parameter%ncoll = 0
+  rt_parameter%ncollcomp = 0
+  rt_parameter%offset_aqueous = 0
+  rt_parameter%offset_colloid = 0
+  rt_parameter%offset_collcomp = 0
+  rt_parameter%offset_immobile = 0
+  rt_parameter%offset_auxiliary = 0
+  nullify(rt_parameter%pri_spec_to_coll_spec)
+  nullify(rt_parameter%coll_spec_to_pri_spec)
+  rt_parameter%calculate_transverse_dispersion = PETSC_FALSE
+  rt_parameter%temperature_dependent_diffusion = PETSC_FALSE
+#ifdef OS_STATISTICS
+  rt_parameter%newton_call_count = 0
+  rt_parameter%sum_newton_call_count = 0.d0
+  rt_parameter%newton_iterations = 0
+  rt_parameter%sum_newton_iterations = 0.d0
+  rt_parameter%max_newton_iterations = 0
+  rt_parameter%overall_max_newton_iterations = 0
+#endif  
+
+  TransportParameterRTCreate => rt_parameter
+
+end function TransportParameterRTCreate
+  
 ! ************************************************************************** !
 
 subroutine RTAuxVarCopy(auxvar,auxvar2,option)
@@ -668,6 +691,35 @@ end subroutine RTAuxVarStrip
 
 ! ************************************************************************** !
 
+subroutine TransportParameterRTDestroy(rt_parameter)
+  ! 
+  ! Deallocates a reactive transport auxiliary object
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 02/14/08
+  ! 
+  use Utility_module, only: DeallocateArray
+  
+  implicit none
+
+  class(reactive_transport_param_type), pointer :: rt_parameter
+
+  if (.not.associated(rt_parameter)) return
+
+  call TransportAuxStrip(rt_parameter)
+
+  call DeallocateArray(rt_parameter%diffusion_coefficient)
+  call DeallocateArray(rt_parameter%diffusion_activation_energy)
+  call DeallocateArray(rt_parameter%pri_spec_to_coll_spec)
+  call DeallocateArray(rt_parameter%coll_spec_to_pri_spec)
+
+  deallocate(rt_parameter)
+  nullify(rt_parameter)
+
+  end subroutine TransportParameterRTDestroy
+
+! ************************************************************************** !
+
 subroutine RTAuxDestroy(aux)
   ! 
   ! Deallocates a reactive transport auxiliary object
@@ -691,14 +743,7 @@ subroutine RTAuxDestroy(aux)
   call DeallocateArray(aux%zero_rows_local)
   call DeallocateArray(aux%zero_rows_local_ghosted)
 
-  if (associated(aux%rt_parameter)) then
-    call DeallocateArray(aux%rt_parameter%diffusion_coefficient)
-    call DeallocateArray(aux%rt_parameter%diffusion_activation_energy)
-    call DeallocateArray(aux%rt_parameter%pri_spec_to_coll_spec)
-    call DeallocateArray(aux%rt_parameter%coll_spec_to_pri_spec)
-    deallocate(aux%rt_parameter)
-  endif
-  nullify(aux%rt_parameter)
+  call TransportParameterRTDestroy(aux%rt_parameter)
 
   deallocate(aux)
   nullify(aux)
