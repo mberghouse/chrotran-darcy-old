@@ -1293,9 +1293,11 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
         select case (realization_base%discretization%grid%itype)
           case (EXPLICIT_UNSTRUCTURED_GRID)
              call OutputHDF5UGridXDMFExplicit(realization_base, &
-                  INSTANTANEOUS_VARS)
+                        INSTANTANEOUS_VARS, &
+                        realization_base%output_option%hdf5_plot_file)
           case (IMPLICIT_UNSTRUCTURED_GRID)
-            call OutputHDF5UGridXDMF(realization_base,INSTANTANEOUS_VARS)
+            call OutputHDF5UGridXDMF(realization_base,INSTANTANEOUS_VARS, &
+                               realization_base%output_option%hdf5_plot_file)
           case (POLYHEDRA_UNSTRUCTURED_GRID)
             call PrintErrMsg(option,'Add code for HDF5 output for &
                                     &Polyhedra mesh')
@@ -2399,7 +2401,8 @@ subroutine OutputAvegVars(realization_base)
       ! There is a possibility to output average-flowrates, thus
       ! call output subroutine depending on mesh type
       if (realization_base%discretization%itype == UNSTRUCTURED_GRID) then
-        call OutputHDF5UGridXDMF(realization_base,AVERAGED_VARS)
+        call OutputHDF5UGridXDMF(realization_base,AVERAGED_VARS, &
+                                 realization_base%output_option%hdf5_plot_file)
       else
       !  call OutputHDF5(realization_base,AVERAGED_VARS)
       endif
@@ -2444,7 +2447,8 @@ subroutine OutputAvegVars(realization_base)
       call PetscTime(tstart,ierr);CHKERRQ(ierr)
       call PetscLogEventBegin(logging%event_output_hdf5,ierr);CHKERRQ(ierr)
       if (realization_base%discretization%itype == UNSTRUCTURED_GRID) then
-        call OutputHDF5UGridXDMF(realization_base,AVERAGED_VARS)
+        call OutputHDF5UGridXDMF(realization_base,AVERAGED_VARS, &
+                                 realization_base%output_option%hdf5_plot_file)
       else
         call OutputHDF5(realization_base,AVERAGED_VARS, &
                         realization_base%output_option%hdf5_plot_file)

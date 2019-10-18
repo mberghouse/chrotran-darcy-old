@@ -37,7 +37,6 @@ module Output_Aux_module
     PetscBool :: print_final_massbal
   
     PetscBool :: print_hdf5
-    PetscBool :: extend_hdf5_time_format
     PetscBool :: print_hdf5_vel_cent
     PetscBool :: print_hdf5_vel_face
     PetscBool :: print_single_h5_file
@@ -223,7 +222,6 @@ function OutputOptionCreate()
   
   allocate(output_option)
   output_option%print_hdf5 = PETSC_FALSE
-  output_option%extend_hdf5_time_format = PETSC_FALSE
   output_option%print_hdf5_vel_cent = PETSC_FALSE
   output_option%print_hdf5_vel_face = PETSC_FALSE
   output_option%print_single_h5_file = PETSC_TRUE
@@ -326,8 +324,6 @@ function OutputOptionDuplicate(output_option)
   allocate(output_option2)
 
   output_option2%print_hdf5 = output_option%print_hdf5
-  output_option2%extend_hdf5_time_format = &
-    output_option%extend_hdf5_time_format
   output_option2%print_hdf5_vel_cent = output_option%print_hdf5_vel_cent
   output_option2%print_hdf5_vel_face = output_option%print_hdf5_vel_face
   output_option2%print_single_h5_file = output_option%print_single_h5_file

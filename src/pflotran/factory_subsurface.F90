@@ -3495,7 +3495,12 @@ subroutine SubsurfaceReadInput(simulation,input)
               call InputErrorMsg(input,option,'HDF5_WRITE_GROUP_SIZE', &
                                  'Group size')
             case('EXTEND_HDF5_TIME_FORMAT')
-              output_option%extend_hdf5_time_format = PETSC_TRUE
+              option%io_buffer = 'EXTEND_HDF5_TIME_FORMAT has been &
+                &deprecated. Please refactor scripts to use the double &
+                &precision "Time (s)" attribute associated with the plot &
+                &group. It is far more accurate as the time is full precision &
+                &in seconds.'
+              call PrintErrMsg(option)
             case default
               call InputKeywordUnrecognized(input,word,'OUTPUT',option)
           end select
