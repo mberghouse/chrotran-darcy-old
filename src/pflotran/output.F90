@@ -1301,7 +1301,8 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
                                     &Polyhedra mesh')
         end select
       else
-        call OutputHDF5(realization_base,INSTANTANEOUS_VARS)
+        call OutputHDF5(realization_base,INSTANTANEOUS_VARS, &
+                        realization_base%output_option%hdf5_plot_file)
       endif      
       call PetscLogEventEnd(logging%event_output_hdf5,ierr);CHKERRQ(ierr)
       call PetscTime(tend,ierr);CHKERRQ(ierr)
@@ -2445,7 +2446,8 @@ subroutine OutputAvegVars(realization_base)
       if (realization_base%discretization%itype == UNSTRUCTURED_GRID) then
         call OutputHDF5UGridXDMF(realization_base,AVERAGED_VARS)
       else
-        call OutputHDF5(realization_base,AVERAGED_VARS)
+        call OutputHDF5(realization_base,AVERAGED_VARS, &
+                        realization_base%output_option%hdf5_plot_file)
       endif      
       call PetscLogEventEnd(logging%event_output_hdf5,ierr);CHKERRQ(ierr)
       call PetscTime(tend,ierr);CHKERRQ(ierr)

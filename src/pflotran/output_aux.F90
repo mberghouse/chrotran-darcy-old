@@ -102,8 +102,14 @@ module Output_Aux_module
     ! Note this is not a Eclipse-file-only option
     PetscBool :: write_masses = PETSC_FALSE
     type(output_option_eclipse_type), pointer :: eclipse_options =>null()
+    
+    type(output_hdf5_type), pointer :: hdf5_plot_file
 
   end type output_option_type
+  
+  type, public :: output_hdf5_type
+    PetscBool :: first_write
+  end type output_hdf5_type
   
   type, public :: output_variable_list_type
     type(output_variable_type), pointer :: first
@@ -276,10 +282,28 @@ function OutputOptionCreate()
   output_option%tunit = ''
   
   output_option%print_hydrograph = PETSC_FALSE
+  
+  output_option%hdf5_plot_file => OutputHDF5Create()
 
   OutputOptionCreate => output_option
   
 end function OutputOptionCreate
+
+! ************************************************************************** !
+
+function OutputHDF5Create()
+  ! 
+  ! Initializes module variables for HDF5 output
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/18/19
+  ! 
+  type(output_hdf5_type), pointer :: OutputHDF5Create
+  
+  allocate(OutputHDF5Create)
+  OutputHDF5Create%first_write = PETSC_TRUE
+
+end function OutputHDF5Create
 
 ! ************************************************************************** !
 
@@ -1130,6 +1154,27 @@ end subroutine DestroyOutputOptionEclipse
 
 ! ************************************************************************** !
 
+subroutine OutputHDF5Destroy(output_hdf5)
+  !
+  ! Deletes the Eclipse output option block
+  !
+  ! Author: Dave Ponting
+  ! Date: 01/29/07
+  !
+
+  implicit none
+
+  type(output_hdf5_type), pointer :: output_hdf5
+
+  if (.not.associated(output_hdf5)) return
+  
+  deallocate(output_hdf5)
+  nullify(output_hdf5)
+
+end subroutine OutputHDF5Destroy
+
+! ************************************************************************** !
+
 subroutine OutputOptionDestroy(output_option)
   ! 
   ! Deallocates an output option
@@ -1162,6 +1207,8 @@ subroutine OutputOptionDestroy(output_option)
   call OutputMassBalRegDestroy(output_option%mass_balance_region_list)
 
   call DestroyOutputOptionEclipse(output_option%eclipse_options)
+  
+  call OutputHDF5Destroy(output_option%hdf5_plot_file)
     
   deallocate(output_option)
   nullify(output_option)

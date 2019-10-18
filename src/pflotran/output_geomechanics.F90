@@ -6,6 +6,7 @@ module Output_Geomechanics_module
   use Output_Tecplot_module
   use Output_Common_module
   use Output_HDF5_module
+  use Output_HDF5_Aux_module
   use PFLOTRAN_Constants_module
   use Utility_module, only : Equal
   
