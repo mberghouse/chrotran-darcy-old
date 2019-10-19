@@ -208,6 +208,7 @@ io_obj = \
 	${common_src}output_common.o \
 	${common_src}output_ekg.o \
 	${common_src}output_hdf5.o \
+	${common_src}output_hdf5_aux.o \
 	${common_src}output_observation.o \
 	${common_src}output_surface.o \
 	${common_src}output_tecplot.o \

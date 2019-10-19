@@ -146,7 +146,8 @@ subroutine OutputHDF5(realization_base,var_list_type,h5file)
     call OutputHDF5WriteStructCoord(realization_base,file_id)
   endif
   
-  group_name = OutputHDF5GetGroupName_Time(option,output_option)
+  group_name = OutputHDF5GetGroupName_Time(option,output_option, &
+                                           var_list_type,PETSC_FALSE)
   call OutputHDF5OpenGroup(file_id,grp_id,group_name)
 
   ! write group attributes
@@ -422,7 +423,8 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type,h5file)
                          filename_header,PETSC_TRUE)
   endif
 
-  group_name = OutputHDF5GetGroupName_Time(option,output_option)
+  group_name = OutputHDF5GetGroupName_Time(option,output_option, &
+                                           var_list_type,PETSC_TRUE)
   call OutputHDF5OpenGroup(file_id,grp_id,group_name)
   
   ! write group attributes
@@ -814,10 +816,8 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type,h5file)
                        domain_filename_header,include_cell_centers)
   endif
 
-  group_name = OutputHDF5GetGroupName_Time(option,output_option)
-  if (len_trim(output_option%plot_name) > 2) then
-    group_name = trim(group_name) // ' ' // output_option%plot_name
-  endif
+  group_name = OutputHDF5GetGroupName_Time(option,output_option, &
+                                           var_list_type,PETSC_TRUE)
   call OutputHDF5OpenGroup(file_id,grp_id,group_name)
   
   ! write group attributes

@@ -54,17 +54,14 @@ subroutine OutputHDF5GetH5Filename(option, output_option, h5file, &
   PetscBool :: first
   PetscErrorCode :: ierr
 
-  character(len=MAXSTRINGLENGTH) :: string,string2,string3
+  character(len=MAXSTRINGLENGTH) :: string,string2
 
   filename = 'Uninitialized.h5'
   select case (var_list_type)
     case (INSTANTANEOUS_VARS)
       string2=''
-      write(string3,'(i4)') output_option%plot_number
     case (AVERAGED_VARS)
       string2='-aveg'
-      write(string3,'(i4)') &
-        int(option%time/output_option%periodic_snap_output_time_incr)
   end select
 
   if (output_option%print_single_h5_file) then
@@ -82,7 +79,8 @@ subroutine OutputHDF5GetH5Filename(option, output_option, h5file, &
           first = PETSC_FALSE
         endif
       case (AVERAGED_VARS)
-        if (Equal(mod((option%time-output_option%periodic_snap_output_time_incr)/ &
+        if (Equal(mod((option%time- &
+                       output_option%periodic_snap_output_time_incr)/ &
              output_option%periodic_snap_output_time_incr, &
              dble(output_option%times_per_h5_file)),0.d0)) then
           first = PETSC_TRUE
@@ -303,7 +301,8 @@ end subroutine OutputHDF5WriteStructCoord
 
 ! ************************************************************************** !
 
-function OutputHDF5GetGroupName_Time(option,output_option)
+function OutputHDF5GetGroupName_Time(option,output_option,var_list_type, &
+                                     unstructured)
   ! 
   ! Returns a the group name, which is the formatted time (in the simulation)
   ! 
@@ -314,16 +313,38 @@ function OutputHDF5GetGroupName_Time(option,output_option)
   
   type(option_type) :: option
   type(output_option_type) :: output_option
+  PetscInt :: var_list_type
+  PetscBool :: unstructured
 
   character(len=MAXSTRINGLENGTH) :: OutputHDF5GetGroupName_Time
 
   character(len=MAXSTRINGLENGTH) :: string
+  character(len=MAXWORDLENGTH) :: word
   
-    ! create a group for the data set
-  write(string,'(''Time:'',es13.5,x,a1)') &
-        option%time/output_option%tconv,output_option%tunit
+
+  ! create a group for the data set
+  if (unstructured) then
+    write(string,'(''Time'',es13.5,x,a1)') &
+          option%time/output_option%tconv,output_option%tunit
+  else
+    write(string,'(''Time:'',es13.5,x,a1)') &
+          option%time/output_option%tconv,output_option%tunit
+  endif
+
   if (len_trim(output_option%plot_name) > 2) then
     string = trim(string) // ' ' // output_option%plot_name
+  endif
+
+  if (unstructured) then
+    word = ''
+    select case (var_list_type)
+      case (INSTANTANEOUS_VARS)
+        write(word,'(i4)') output_option%plot_number
+      case (AVERAGED_VARS)
+        write(word,'(i4)') &
+          int(option%time/output_option%periodic_snap_output_time_incr)
+    end select
+    string = trim(word) // ' ' // trim(string)
   endif
   
   OutputHDF5GetGroupName_Time = string
