@@ -45,6 +45,7 @@ module PMC_Base_class
     procedure, public :: CastToBase => PMCCastToBase
     procedure, public :: SetTimestepper => PMCBaseSetTimestepper
     procedure, public :: SetupSolvers => PMCBaseSetupSolvers
+    procedure, public :: Flex => PMCBaseFlex
     procedure, public :: RunToTime => PMCBaseRunToTime
     procedure, public :: Checkpoint => PMCBaseCheckpoint
     procedure, public :: CheckpointBinary => PMCBaseCheckpointBinary
@@ -82,8 +83,6 @@ module PMC_Base_class
 
   interface PetscBagGetData
     subroutine PetscBagGetData(bag,header,ierr)
-#include "petsc/finclude/petscsys.h"
-      use petscsys
       import :: pmc_base_header_type
       implicit none
       PetscBag :: bag
@@ -416,6 +415,61 @@ end subroutine InitializeRun
 
 ! ************************************************************************** !
 
+recursive subroutine PMCBaseFlex(this)
+  ! 
+  ! Flexes the residual function for all process models.
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/28/19
+  ! 
+  use Timestepper_Base_class
+
+  implicit none
+  
+  class(pmc_base_type), target :: this
+
+  class(pm_base_type), pointer :: cur_pm
+
+  PetscBool :: print_snapshot
+  PetscBool :: print_observation
+  PetscBool :: print_mass_balance
+  character(len=MAXSTRINGLENGTH) :: string
+
+  cur_pm => this%pm_list
+  do
+    if (.not.associated(cur_pm)) exit
+    call cur_pm%Flex()
+    cur_pm => cur_pm%next
+  enddo
+
+  ! Run underlying process model couplers
+  if (associated(this%child)) then
+    call this%child%Flex()
+  endif
+
+  ! Run neighboring process model couplers
+  if (associated(this%peer)) then
+    call this%peer%Flex()
+  endif
+
+  ! only print output for process models of depth 0
+  if (associated(this%Output)) then
+    string = this%pm_list%realization_base%output_option%plot_name
+    this%pm_list%realization_base%output_option%plot_name = 'flex'
+    print_snapshot = PETSC_TRUE
+    print_observation = this%pm_list%realization_base% &
+                          output_option%print_observation
+    print_mass_balance = this%pm_list%realization_base% &
+                           option%compute_mass_balance_new
+    call this%Output(this%pm_list%realization_base, &
+                     print_snapshot,print_observation,print_mass_balance)
+    this%pm_list%realization_base%output_option%plot_name = trim(string)
+  endif
+    
+end subroutine PMCBaseFlex
+
+! ************************************************************************** !
+
 recursive subroutine PMCBaseRunToTime(this,sync_time,stop_flag)
   ! 
   ! Runs the actual simulation.
@@ -423,8 +477,6 @@ recursive subroutine PMCBaseRunToTime(this,sync_time,stop_flag)
   ! Author: Glenn Hammond
   ! Date: 03/18/13
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Timestepper_Base_class
   use Checkpoint_module
 
@@ -754,8 +806,6 @@ recursive subroutine PMCBaseCheckpoint(this,filename_append)
   ! Author: Glenn Hammond
   ! Date: 2/2/16
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use hdf5
   use Option_module
   
@@ -788,8 +838,6 @@ recursive subroutine PMCBaseCheckpointBinary(this,viewer,append_name)
   ! Date: 07/26/13
   ! 
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Logging_module
   use Checkpoint_module, only : CheckpointOpenFileForWriteBinary, &
                                 CheckPointWriteCompatibilityBinary
@@ -870,8 +918,6 @@ subroutine PMCBaseRegisterHeader(this,bag,header)
   ! Date: 12/02/13
   ! 
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
@@ -900,8 +946,6 @@ subroutine PMCBaseSetHeader(this,bag,header)
   ! Date: 12/02/13
   ! 
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
@@ -929,8 +973,6 @@ recursive subroutine PMCBaseRestartBinary(this,viewer)
   ! Author: Glenn Hammond
   ! Date: 07/26/13
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Logging_module
   use Checkpoint_module, only : CheckPointReadCompatibilityBinary
 
@@ -1057,8 +1099,6 @@ subroutine PMCBaseGetHeader(this,header)
   ! Date: 12/02/13
   ! 
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none

@@ -362,6 +362,8 @@ subroutine PFLOTRANReadSimulation(simulation,option)
       case('INPUT_RECORD_FILE')
         option%input_record = PETSC_TRUE
         call OpenAndWriteInputRecord(option)
+      case('FLEX_PROCESS_MODELS')
+        option%status = FLEX_PROCESS_MODELS
       case default
         call InputKeywordUnrecognized(input,word,'SIMULATION',option)            
     end select
@@ -373,7 +375,7 @@ subroutine PFLOTRANReadSimulation(simulation,option)
     option%io_buffer = 'No process models defined in SIMULATION block.'
     call PrintErrMsg(option)
   endif
-  
+
   if (option%print_ekg) then
     cur_pm => pm_master
     do
@@ -412,6 +414,12 @@ subroutine PFLOTRANReadSimulation(simulation,option)
     class is(simulation_geomechanics_type)
       call GeomechanicsInitialize(simulation)
   end select
+
+  if (option%status == FLEX_PROCESS_MODELS) then
+    pm_master%realization_base%output_option%print_initial_snap = PETSC_FALSE
+    pm_master%realization_base%output_option%print_initial_obs = PETSC_FALSE
+    pm_master%realization_base%output_option%print_initial_massbal = PETSC_FALSE
+  endif
   
 end subroutine PFLOTRANReadSimulation
 

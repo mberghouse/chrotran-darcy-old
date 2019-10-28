@@ -32,6 +32,7 @@ module Simulation_Base_class
     procedure, public :: InputRecord => SimulationInputRecord
     procedure, public :: JumpStart => SimulationBaseJumpStart
     procedure, public :: ExecuteRun
+    procedure, public :: Flex
     procedure, public :: RunToTime
     procedure, public :: FinalizeRun => SimulationBaseFinalizeRun
     procedure, public :: Strip => SimulationBaseStrip
@@ -111,9 +112,6 @@ subroutine SimulationBaseInitializeRun(this)
   ! Author: Glenn Hammond
   ! Date: 06/11/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Logging_module
   use Option_module
   use hdf5
@@ -301,6 +299,23 @@ end subroutine ExecuteRun
 
 ! ************************************************************************** !
 
+subroutine Flex(this)
+  ! 
+  ! Flexes (exercises the residual functions) for a simulation
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/28/18
+  ! 
+  implicit none
+
+  class(simulation_base_type) :: this
+  
+  call this%process_model_coupler_list%Flex()
+
+end subroutine Flex
+
+! ************************************************************************** !
+
 subroutine RunToTime(this,target_time)
   ! 
   ! Executes simulation
@@ -308,9 +323,6 @@ subroutine RunToTime(this,target_time)
   ! Author: Glenn Hammond
   ! Date: 06/11/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   use Simulation_Aux_module
 

@@ -73,6 +73,8 @@ program pflotran
 
     if (option%status == PROCEED) then
       call simulation%ExecuteRun()
+    else if (option%status == FLEX_PROCESS_MODELS) then
+      call simulation%Flex()
     endif
 
     call simulation%FinalizeRun()

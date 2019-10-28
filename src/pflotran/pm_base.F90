@@ -34,6 +34,7 @@ module PM_Base_class
     procedure, public :: InputRecord => PMBaseInputRecord
     procedure, public :: SetSolver => PMBaseSetSolver
     procedure, public :: FinalizeRun => PMBaseThisOnly
+    procedure, public :: Flex => PMBaseThisOnly
     procedure, public :: Residual => PMBaseResidual
     procedure, public :: Jacobian => PMBaseJacobian
     procedure, public :: UpdateTimestep => PMBaseUpdateTimestep

@@ -47,6 +47,7 @@ module PM_Subsurface_Flow_class
     procedure, public :: SetRealization => PMSubsurfaceFlowSetRealization
     procedure, public :: InitializeRun => PMSubsurfaceFlowInitializeRun
     procedure, public :: FinalizeRun => PMSubsurfaceFlowFinalizeRun
+    procedure, public :: Flex => PMSubsurfaceFlowFlex
 !    procedure, public :: InitializeTimestep => PMSubsurfaceFlowInitializeTimestep
     procedure, public :: FinalizeTimestep => PMSubsurfaceFlowFinalizeTimestep
     procedure, public :: PreSolve => PMSubsurfaceFlowPreSolve
@@ -789,6 +790,23 @@ PetscErrorCode :: ierr
   endif
 
 end subroutine PMSubsurfaceFlowInitializeTimestepB
+
+! ************************************************************************** !
+
+subroutine PMSubsurfaceFlowFlex(this)
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/28/19
+
+  class(pm_subsurface_flow_type) :: this
+
+  PetscErrorCode :: ierr
+
+  call this%InitializeTimestep()
+  call this%Residual(this%solver%snes,this%realization%field%flow_xx, &
+                     this%realization%field%flow_r,ierr)
+
+end subroutine PMSubsurfaceFlowFlex
 
 ! ************************************************************************** !
 

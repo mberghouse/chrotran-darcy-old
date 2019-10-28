@@ -40,6 +40,7 @@ module PM_RT_class
     procedure, public :: FinalizeRun => PMRTFinalizeRun
     procedure, public :: InitializeTimestep => PMRTInitializeTimestep
     procedure, public :: FinalizeTimestep => PMRTFinalizeTimestep
+    procedure, public :: Flex => PMRTFlex
     procedure, public :: Residual => PMRTResidual
     procedure, public :: Jacobian => PMRTJacobian
     procedure, public :: UpdateTimestep => PMRTUpdateTimestep
@@ -699,6 +700,23 @@ recursive subroutine PMRTFinalizeRun(this)
   endif  
   
 end subroutine PMRTFinalizeRun
+
+! ************************************************************************** !
+
+subroutine PMRTFlex(this)
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/28/19
+
+  class(pm_rt_type) :: this
+
+  PetscErrorCode :: ierr
+
+  call this%InitializeTimestep()
+  call this%Residual(this%solver%snes,this%realization%field%tran_xx, &
+                     this%realization%field%tran_r,ierr)
+
+end subroutine PMRTFlex
 
 ! ************************************************************************** !
 
