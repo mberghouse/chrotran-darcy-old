@@ -4,8 +4,8 @@ module Condition_module
   use petscsys
 
   use Global_Aux_module
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Dataset_Base_module
+  use Dataset_Ascii_module
   use Time_Storage_module
   use Lookup_Table_module
   use Transport_Constraint_Base_module
@@ -954,7 +954,7 @@ function FlowSubConditionCreate(ndof)
   ! Date: 02/04/08
   !
 
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
   use Option_module
 
   implicit none
@@ -4742,8 +4742,8 @@ subroutine ConditionReadValues(input,option,keyword,dataset_base, &
   use HDF5_Aux_module
   use Units_module
   use Dataset_module
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Dataset_Base_module
+  use Dataset_Ascii_module
   use hdf5
 
   implicit none
@@ -5582,7 +5582,7 @@ subroutine FlowCondInputRecord(flow_condition_list,option)
   ! Date: 04/19/2016
   !
   use Option_module
-  use Dataset_Base_class
+  use Dataset_Base_module
 
   implicit none
 
@@ -5639,7 +5639,7 @@ subroutine TranCondInputRecord(tran_condition_list,option)
   ! Date: 04/19/2016
   !
   use Option_module
-  use Dataset_Base_class
+  use Dataset_Base_module
   Use Transport_Constraint_module
   Use Transport_Constraint_RT_module
 
@@ -5854,7 +5854,7 @@ subroutine FlowConditionDestroy(condition)
   !
 
   use Dataset_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
   use Utility_module
 
   implicit none
@@ -6028,7 +6028,7 @@ subroutine FlowSubConditionDestroy(sub_condition)
   !
 
   use Dataset_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
 
   implicit none
 

@@ -1,9 +1,9 @@
-module PMC_Third_Party_class
+module PMC_Third_Party_module
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use PMC_Base_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use Realization_Subsurface_module
   use Option_module
 
   use PFLOTRAN_Constants_module
@@ -81,7 +81,7 @@ recursive subroutine PMCThirdPartyRunToTime(this,sync_time,stop_flag)
   ! Date: 07/02/13
   ! 
 
-  use Timestepper_Base_class, only : TS_CONTINUE, TS_STOP_FAILURE
+  use Timestepper_Base_module, only : TS_CONTINUE, TS_STOP_FAILURE
 
   implicit none
   
@@ -211,4 +211,4 @@ recursive subroutine PMCThirdPartyDestroy(this)
 
 end subroutine PMCThirdPartyDestroy
   
-end module PMC_Third_Party_class
+end module PMC_Third_Party_module

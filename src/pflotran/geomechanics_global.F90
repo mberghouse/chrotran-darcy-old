@@ -26,7 +26,7 @@ subroutine GeomechGlobalSetup(geomech_realization)
   ! Date: 06/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   
   implicit none
@@ -48,7 +48,7 @@ subroutine GeomechGlobalSetupPatch(geomech_realization)
   ! Date: 06/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Option_module
   use Geomechanics_Coupler_module
@@ -94,7 +94,7 @@ subroutine GeomechGlobalSetAuxVarScalar(geomech_realization,value,ivar)
   ! Date: 06/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
 
   implicit none
@@ -120,7 +120,7 @@ subroutine GeomechGlobalSetAuxVarScalarPatch(geomech_realization,value,ivar)
   ! Date: 06/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Option_module
   use Geomechanics_Patch_module
   use Variables_module, only : GEOMECH_DISP_X, &
@@ -174,7 +174,7 @@ subroutine GeomechGlobalSetAuxVarVecLoc(geomech_realization,vec_loc,ivar, &
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
 
   implicit none
@@ -204,7 +204,7 @@ subroutine GeomechGlobalSetAuxVarVecLocPatch(geomech_realization,vec_loc,ivar,&
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Geomechanics_Grid_Aux_module
   use Geomechanics_Grid_module
@@ -278,7 +278,7 @@ subroutine GeomechGlobalUpdateAuxVars(geomech_realization,time_level)
   ! Date: 06/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Field_module
   use Option_module
   use Geomechanics_Discretization_module

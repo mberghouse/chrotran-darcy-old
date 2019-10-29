@@ -1,11 +1,11 @@
-module Simulation_Surface_class
+module Simulation_Surface_module
 
-  use Simulation_Base_class
+  use Simulation_Base_module
   use Regression_module
   use Option_module
-  use PMC_Surface_class
-  use PMC_Base_class
-  use Realization_Surface_class
+  use PMC_Surface_module
+  use PMC_Base_module
+  use Realization_Surface_module
   use Waypoint_module
   use PFLOTRAN_Constants_module
 
@@ -169,7 +169,7 @@ subroutine SurfaceFinalizeRun(this)
   ! Date: 06/27/13
   ! 
 
-  use Timestepper_Base_class
+  use Timestepper_Base_module
 
   implicit none
   
@@ -237,4 +237,4 @@ subroutine SurfaceSimulationDestroy(simulation)
   
 end subroutine SurfaceSimulationDestroy
 
-end module Simulation_Surface_class
+end module Simulation_Surface_module

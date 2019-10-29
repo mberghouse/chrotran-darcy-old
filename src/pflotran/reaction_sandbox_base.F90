@@ -1,4 +1,4 @@
-module Reaction_Sandbox_Base_class
+module Reaction_Sandbox_Base_module
   
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -84,7 +84,7 @@ module Reaction_Sandbox_Base_class
       use Reaction_Aux_module
       use Reactive_Transport_Aux_module
       use Global_Aux_module
-      use Material_Aux_class
+      use Material_Aux_module
   
       import reaction_sandbox_base_type
     
@@ -189,7 +189,7 @@ contains
     use Reaction_Aux_module
     use Reactive_Transport_Aux_module
     use Global_Aux_module
-    use Material_Aux_class
+    use Material_Aux_module
   
     implicit none
   
@@ -214,7 +214,7 @@ contains
     use Reaction_Aux_module
     use Reactive_Transport_Aux_module
     use Global_Aux_module
-    use Material_Aux_class
+    use Material_Aux_module
   
     implicit none
   
@@ -238,4 +238,4 @@ contains
   end subroutine Base_Destroy  
 #endif
 
-end module Reaction_Sandbox_Base_class
+end module Reaction_Sandbox_Base_module

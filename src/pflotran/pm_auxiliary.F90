@@ -1,9 +1,9 @@
-module PM_Auxiliary_class
+module PM_Auxiliary_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PM_Base_class
-  use Realization_Subsurface_class
+  use PM_Base_module
+  use Realization_Subsurface_module
   use Communicator_Base_module
   
   use PFLOTRAN_Constants_module
@@ -454,4 +454,4 @@ subroutine PMAuxiliaryDestroy(this)
   
 end subroutine PMAuxiliaryDestroy
 
-end module PM_Auxiliary_class
+end module PM_Auxiliary_module

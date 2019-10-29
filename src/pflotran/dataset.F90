@@ -3,12 +3,12 @@ module Dataset_module
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Dataset_Base_class
-  use Dataset_Ascii_class
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Map_HDF5_class
-  use Dataset_Global_HDF5_class
+  use Dataset_Base_module
+  use Dataset_Ascii_module
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Map_HDF5_module
+  use Dataset_Global_HDF5_module
   
   use PFLOTRAN_Constants_module
 
@@ -318,8 +318,8 @@ subroutine DatasetFindInList(list,dataset_base,default_time_storage, &
   ! Date: 10/07/13
   ! 
 
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Dataset_Base_module
+  use Dataset_Ascii_module
   use Time_Storage_module
   use Option_module
 

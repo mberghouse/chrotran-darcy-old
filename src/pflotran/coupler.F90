@@ -340,8 +340,8 @@ subroutine CouplerComputeConnections(grid,option,coupler)
   use Option_module
   use Region_module
   use Grid_module
-  use Dataset_Base_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Base_module
+  use Dataset_Gridded_HDF5_module
   use Grid_Unstructured_Aux_module
   use Grid_Unstructured_Explicit_module, only : UGridExplicitSetBoundaryConnect, &
                                            UGridExplicitSetConnections

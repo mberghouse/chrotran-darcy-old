@@ -398,7 +398,7 @@ subroutine THAuxVarComputeNoFreezing(x,auxvar,global_auxvar, &
   use EOS_Water_module
   use Characteristic_Curves_module
   use Characteristic_Curves_Common_module  
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -623,7 +623,7 @@ subroutine THAuxVarComputeFreezing(x, auxvar, global_auxvar, &
   
   use EOS_Water_module
   use Saturation_Function_module  
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -922,7 +922,7 @@ subroutine THAuxVarCompute2ndOrderDeriv(TH_auxvar,global_auxvar, &
   
   use EOS_Water_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 

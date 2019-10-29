@@ -2,7 +2,7 @@ module Factory_Surf_Subsurf_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Simulation_Surf_Subsurf_class
+  use Simulation_Surf_Subsurf_module
 
   use PFLOTRAN_Constants_module
 
@@ -46,8 +46,8 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Simulation_Surface_class
-  use Simulation_Subsurface_class
+  use Simulation_Surface_module
+  use Simulation_Subsurface_module
   use Factory_Surface_module
   use Factory_Subsurface_module
   use Option_module
@@ -56,20 +56,20 @@ subroutine SurfSubsurfaceInitializePostPETSc(simulation)
   use Surface_Flow_module
   use Surface_TH_module
   use Simulation_Aux_module
-  use PMC_Base_class
-  use PMC_Surface_class
+  use PMC_Base_module
+  use PMC_Surface_module
   use PFLOTRAN_Constants_module
-  use PM_Base_class
+  use PM_Base_module
   use PM_Base_Pointer_module
-  use PM_Surface_class
-  use PM_Surface_Flow_class
-  use PM_Surface_TH_class
+  use PM_Surface_module
+  use PM_Surface_Flow_module
+  use PM_Surface_TH_module
   use Input_Aux_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use String_module
   use Waypoint_module
-  use Realization_Surface_class
-  use Timestepper_Surface_class
+  use Realization_Surface_module
+  use Timestepper_Surface_module
   use Logging_module
   use Output_Aux_module
   
@@ -321,10 +321,10 @@ subroutine SurfSubsurfaceReadFlowPM(input, option, pm)
   use Option_module
   use String_module
 
-  use PMC_Base_class
-  use PM_Base_class
-  use PM_Surface_Flow_class
-  use PM_Surface_TH_class
+  use PMC_Base_module
+  use PM_Base_module
+  use PM_Surface_Flow_module
+  use PM_Surface_TH_module
   use Init_Common_module
 
   implicit none
@@ -400,11 +400,11 @@ subroutine SurfSubsurfCreateSurfSubSurfVScats(realization, surf_realization, &
   use Grid_Unstructured_module
   use Grid_Unstructured_Aux_module
   use Grid_Unstructured_Cell_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Region_module
-  use Realization_Surface_class
+  use Realization_Surface_module
 
   implicit none
 
@@ -711,7 +711,7 @@ subroutine SurfSubsurfCreateSurfSubSurfVScat( &
   use String_module
   use Grid_Unstructured_module
   use Grid_Unstructured_Cell_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Surface_Field_module
@@ -719,7 +719,7 @@ subroutine SurfSubsurfCreateSurfSubSurfVScat( &
   use Discretization_module
   use Grid_Unstructured_Aux_module
   use DM_Kludge_module
-  use Realization_Surface_class
+  use Realization_Surface_module
 
   implicit none
 
@@ -865,7 +865,7 @@ subroutine SurfSubsurfCreateSubsurfVecs(subsurf_realization, option, &
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Coupler_module
   use Option_module
   use String_module
@@ -948,7 +948,7 @@ subroutine SurfSubsurfCreateSurfVecs(surf_realization,option,surf_head)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Option_module
 
   implicit none

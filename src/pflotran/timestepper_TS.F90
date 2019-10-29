@@ -1,8 +1,8 @@
-module Timestepper_TS_class
+module Timestepper_TS_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   use Solver_module
   use Waypoint_module
 
@@ -192,8 +192,8 @@ subroutine TimestepperTSStepDT(this,process_model,stop_flag)
 
 #include "petsc/finclude/petscts.h"
   use petscts
-  use PM_Base_class
-  use PM_Surface_Flow_class
+  use PM_Base_module
+  use PM_Surface_Flow_module
   use Option_module
   use Output_module, only : Output
   use Surface_Flow_module
@@ -585,7 +585,7 @@ subroutine TimestepperTSUpdateDT(this,process_model)
   ! Date: 06/19/18
   ! 
 
-  use PM_Base_class
+  use PM_Base_module
   
   implicit none
 
@@ -668,4 +668,4 @@ recursive subroutine TimestepperTSFinalizeRun(this,option)
   
 end subroutine TimestepperTSFinalizeRun
 
-end module Timestepper_TS_class
+end module Timestepper_TS_module

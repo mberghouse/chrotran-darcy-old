@@ -81,7 +81,7 @@ subroutine OutputObservation(realization_base)
   ! Date: 02/11/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   
   implicit none
@@ -115,7 +115,7 @@ subroutine OutputObservationTecplotColumnTXT(realization_base)
   ! Date: 02/11/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Option_module
@@ -295,7 +295,7 @@ subroutine WriteObservationHeaderForCell(fid,realization_base,region,icell, &
   ! Date: 02/11/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Output_Aux_module
@@ -348,7 +348,7 @@ subroutine WriteObservationHeaderForCoord(fid,realization_base,region, &
   ! Date: 04/11/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Patch_module
   use Region_module
@@ -390,7 +390,7 @@ subroutine WriteObservationHeader(fid,realization_base,cell_string, &
   ! Date: 10/27/11
   ! 
                                   
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
 
   implicit none
@@ -440,7 +440,7 @@ subroutine OutputObservationTecplotSecTXT(realization_base)
   ! Date: 04/08/13
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Option_module
@@ -615,7 +615,7 @@ subroutine WriteObservationHeaderForCellSec(fid,realization_base,region,icell, &
   ! Date: 04/08/13
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Output_Aux_module
@@ -669,7 +669,7 @@ subroutine WriteObservationHeaderForCoordSec(fid,realization_base,region, &
   ! Date: 04/08/13
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Patch_module
   use Region_module
@@ -711,7 +711,7 @@ subroutine WriteObservationHeaderSec(fid,realization_base,cell_string, &
   ! Date: 10/27/13
   ! 
                                      
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Reaction_Aux_module
 
@@ -816,7 +816,7 @@ subroutine WriteObservationHeaderForBC(fid,realization_base,coupler_name)
   ! Date: 12/18/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Reaction_Aux_module
 
@@ -869,7 +869,7 @@ subroutine WriteObservationDataForCell(fid,realization_base,local_id)
   ! Date: 02/11/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizGetVariableValueAtCell
   use Option_module
   use Grid_module
@@ -932,7 +932,7 @@ subroutine WriteObservationDataForCoord(fid,realization_base,region)
   ! Date: 04/11/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Region_module  
   use Grid_module
@@ -1055,7 +1055,7 @@ subroutine WriteObservationDataForBC(fid,realization_base,patch,connection_set)
   ! Date: 12/18/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Connection_module  
   use Patch_module
@@ -1154,7 +1154,7 @@ subroutine WriteVelocityAtCell(fid,realization_base,local_id)
   ! Date: 03/20/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
 
   implicit none
@@ -1193,7 +1193,7 @@ subroutine WriteVelocityAtCell2(fid,realization_base,local_id,velocities)
   ! Author: Glenn Hammond
   ! Date: 07/08/16
   ! 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
 
   implicit none
@@ -1232,7 +1232,7 @@ function GetVelocityAtCell(fid,realization_base,local_id,iphase)
   ! Date: 03/20/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Grid_module
   use Field_module
@@ -1339,7 +1339,7 @@ subroutine WriteVelocityAtCoord(fid,realization_base,region)
   ! Date: 03/20/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Region_module
   use Option_module
 
@@ -1387,7 +1387,7 @@ function GetVelocityAtCoord(fid,realization_base,local_id,x,y,z,iphase)
   ! Author: Glenn Hammond
   ! Date: 03/20/08
   ! 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Grid_module
   use Field_module
@@ -1529,7 +1529,7 @@ subroutine WriteObservationSecondaryDataAtCell(fid,realization_base,local_id,iva
   ! Date: 10/4/12
   ! 
 
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizGetVariableValueAtCell
   use Option_module
   use Grid_module
@@ -1633,8 +1633,8 @@ subroutine OutputIntegralFlux(realization_base)
   ! Date: 10/21/14
   ! 
 
-  use Realization_Subsurface_class, only : realization_subsurface_type
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Subsurface_module, only : realization_subsurface_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Grid_module
   use Patch_module
@@ -1928,8 +1928,8 @@ subroutine OutputMassBalance(realization_base)
   ! Date: 06/18/08
   ! 
 
-  use Realization_Subsurface_class, only : realization_subsurface_type
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Subsurface_module, only : realization_subsurface_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1955,10 +1955,10 @@ subroutine OutputMassBalance(realization_base)
   use Global_Aux_module
   use Reactive_Transport_Aux_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use General_Aux_module, only : general_fmw => fmw_comp
   use WIPP_Flow_Aux_module, only : wipp_flow_fmw => fmw_comp
-  use Well_Data_class
+  use Well_Data_module
 
   implicit none
 
@@ -3053,8 +3053,8 @@ subroutine OutputEclipseFiles(realization_base)
   ! Date: 01/10/19
   !
 
-  use Realization_Subsurface_class, only : realization_subsurface_type
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Subsurface_module, only : realization_subsurface_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -3062,7 +3062,7 @@ subroutine OutputEclipseFiles(realization_base)
   use Output_Aux_module
   use PM_TOWG_Aux_module, only: towg_miscibility_model
   use Grid_Grdecl_module, only : GetIsGrdecl
-  use Well_Data_class
+  use Well_Data_module
   use TOilIms_module, only : TOilImsComputeMassBalance
   use TOWG_module, only : TOWGComputeMassBalance
 
@@ -3214,8 +3214,8 @@ subroutine WriteWellHeaders(fid, icol, realization, &
   ! Author: Dave Ponting
   ! Date  : 09/15/18
 
-  use Realization_Subsurface_class
-  use Well_Data_class
+  use Realization_Subsurface_module
+  use Well_Data_module
   use Option_module
   use Output_Eclipse_module, only:WriteEclipseFilesSpec
 
@@ -3407,8 +3407,8 @@ subroutine WriteWellMassHeaders(fid, icol, realization, towg_miscibility_model)
   ! Author: Dave Ponting
   ! Date  : 09/15/18
 
-  use Realization_Subsurface_class
-  use Well_Data_class
+  use Realization_Subsurface_module
+  use Well_Data_module
 
   implicit none
 
@@ -3499,10 +3499,10 @@ subroutine WriteWellValues(fid, realization, towg_miscibility_model, &
   ! Author: Dave Ponting
   ! Date  : 09/15/18
 
-  use Realization_Subsurface_class
-  use Realization_Base_class, only : realization_base_type
-  use Well_Type_class
-  use Well_Data_class
+  use Realization_Subsurface_module
+  use Realization_Base_module, only : realization_base_type
+  use Well_Type_module
+  use Well_Data_module
   use Output_Eclipse_module, only:WriteEclipseFilesSumm
   use Option_module
   use EOS_Oil_module,  only : EOSOilGetSurfaceDensity
@@ -3820,9 +3820,9 @@ subroutine WriteWellMassValues(fid, realization, towg_miscibility_model)
   ! Author: Dave Ponting
   ! Date  : 09/15/18
 
-  use Realization_Subsurface_class
-  use Well_Type_class
-  use Well_Data_class
+  use Realization_Subsurface_module
+  use Well_Type_module
+  use Well_Data_module
 
   implicit none
 
@@ -4016,8 +4016,8 @@ subroutine WriteRestValues(realization, option)
   ! Author: Dave Ponting
   ! Date  : 12/15/18
 
-  use Realization_Subsurface_class
-  use Well_Data_class
+  use Realization_Subsurface_module
+  use Well_Data_module
   use Output_Eclipse_module, only:WriteEclipseFilesRest, GetMlmax
   use Option_module
   use Grid_module
@@ -4080,9 +4080,9 @@ subroutine OutputLineRept(realization_base, option)
   ! Author: Dave Ponting
   ! Date  : 01/15/19
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
 
@@ -4110,9 +4110,9 @@ subroutine WriteLineRept(realization, option)
   ! Author: Dave Ponting
   ! Date  : 01/15/19
 
-  use Realization_Subsurface_class
-  use Well_Type_class
-  use Well_Data_class
+  use Realization_Subsurface_module
+  use Well_Type_module
+  use Well_Data_module
   use Option_module
 
   implicit none
@@ -4243,7 +4243,7 @@ subroutine setupWellData(wname, wtype, wncmpl, &
   ! Author: Dave Ponting
   ! Date  : 01/15/19
 
-  use Well_Data_class
+  use Well_Data_module
 
   implicit none
 

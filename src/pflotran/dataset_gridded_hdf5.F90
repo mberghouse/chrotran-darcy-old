@@ -1,9 +1,9 @@
-module Dataset_Gridded_HDF5_class
+module Dataset_Gridded_HDF5_module
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Dataset_Common_HDF5_class
+  use Dataset_Common_HDF5_module
   
   use PFLOTRAN_Constants_module
 
@@ -76,7 +76,7 @@ subroutine DatasetGriddedHDF5Init(this)
   ! Date: 05/29/13
   ! 
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   
   implicit none
   
@@ -102,7 +102,7 @@ function DatasetGriddedHDF5Cast(this)
   ! Date: 08/29/13
   ! 
   
-  use Dataset_Base_class
+  use Dataset_Base_module
 
   implicit none
 
@@ -132,7 +132,7 @@ subroutine DatasetGriddedHDF5Load(this,option)
   
   use Option_module
   use Time_Storage_module
-  use Dataset_Base_class  
+  use Dataset_Base_module  
 
   implicit none
   
@@ -1182,4 +1182,4 @@ subroutine DatasetGriddedHDF5Destroy(this)
   
 end subroutine DatasetGriddedHDF5Destroy
 
-end module Dataset_Gridded_HDF5_class
+end module Dataset_Gridded_HDF5_module

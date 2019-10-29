@@ -1,9 +1,9 @@
-module PM_TOilIms_class
+module PM_TOilIms_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
   
   use PFLOTRAN_Constants_module
 
@@ -203,7 +203,7 @@ recursive subroutine PMTOilImsInitializeRun(this)
   ! Author: Paolo Orsini (OGS)
   ! Date: 10/23/15
 
-  use Realization_Base_class
+  use Realization_Base_module
   
   implicit none
   
@@ -326,8 +326,8 @@ subroutine PMTOilImsUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Date: 11/09/15
   ! Date modified : 08/08/16 
 
-  use Realization_Base_class, only : RealizationGetVariable
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Base_module, only : RealizationGetVariable
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
   use Field_module
   use Global_module, only : GlobalSetAuxVarVecLoc
   use Variables_module, only : LIQUID_SATURATION, OIL_SATURATION
@@ -464,7 +464,7 @@ subroutine PMTOilImsCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   ! Author: Paolo Orsini (OGS)
   ! Date: 11/09/15
   ! 
-  !use Realization_Subsurface_class
+  !use Realization_Subsurface_module
   use Grid_module
   !use TOilIms_Aux_module
   use PM_TOilIms_Aux_module
@@ -692,12 +692,12 @@ subroutine PMTOilImsCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   use PM_TOilIms_Aux_module
   use Grid_module
   use Option_module
-  !use Realization_Subsurface_class
+  !use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
   use Option_module
-  use Material_Aux_class  
+  use Material_Aux_module  
   !use Output_EKG_module
   
   implicit none
@@ -899,8 +899,8 @@ subroutine PMTOilImsMaxChange(this)
   ! Date: 11/09/15
   ! 
 
-  use Realization_Base_class
-  use Realization_Subsurface_class
+  use Realization_Base_module
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -1082,4 +1082,4 @@ end subroutine PMTOilImsDestroy
 
 ! ************************************************************************** !
 
-end module PM_TOilIms_class
+end module PM_TOilIms_module

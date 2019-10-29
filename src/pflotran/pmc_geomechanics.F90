@@ -1,10 +1,10 @@
-module PMC_Geomechanics_class
+module PMC_Geomechanics_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PMC_Base_class
-  use Realization_Subsurface_class
-  use Geomechanics_Realization_class
+  use PMC_Base_module
+  use Realization_Subsurface_module
+  use Geomechanics_Realization_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -90,9 +90,9 @@ subroutine PMCGeomechanicsSetupSolvers(this)
   use petscsnes
   use Convergence_module
   use Geomechanics_Discretization_module
-  use Timestepper_Base_class
-  use Timestepper_Steady_class
-  use PM_Base_class
+  use Timestepper_Base_module
+  use Timestepper_Steady_module
+  use PM_Base_module
   use PM_Base_Pointer_module
   use Option_module
   use Solver_module
@@ -225,9 +225,9 @@ recursive subroutine PMCGeomechanicsRunToTime(this,sync_time,stop_flag)
   ! Date: 01/01/14
   ! 
 
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   use Option_module
-  use PM_Base_class
+  use PM_Base_module
   use Output_Geomechanics_module
 
   implicit none
@@ -643,4 +643,4 @@ recursive subroutine PMCGeomechanicsDestroy(this)
 
 end subroutine PMCGeomechanicsDestroy
 
-end module PMC_Geomechanics_class
+end module PMC_Geomechanics_module

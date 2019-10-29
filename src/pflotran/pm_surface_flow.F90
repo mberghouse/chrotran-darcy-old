@@ -1,8 +1,8 @@
-module PM_Surface_Flow_class
+module PM_Surface_Flow_module
 #include "petsc/finclude/petscts.h"
   use petscts
-  use PM_Base_class
-  use PM_Surface_class
+  use PM_Base_module
+  use PM_Surface_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -347,4 +347,4 @@ subroutine PMSurfaceFlowDestroy(this)
 
 end subroutine PMSurfaceFlowDestroy
 
-end module PM_Surface_Flow_class
+end module PM_Surface_Flow_module

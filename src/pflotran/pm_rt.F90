@@ -1,13 +1,13 @@
-module PM_RT_class
+module PM_RT_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
 
-  use PM_Base_class
+  use PM_Base_module
 !geh: using Reactive_Transport_module here fails with gfortran (internal 
 !     compiler error)
 !  use Reactive_Transport_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Communicator_Base_module  
   use Option_module
   
@@ -214,8 +214,8 @@ subroutine PMRTSetup(this)
 
 #ifndef SIMPLIFY
   use Discretization_module
-  use Communicator_Structured_class
-  use Communicator_Unstructured_class
+  use Communicator_Structured_module
+  use Communicator_Unstructured_module
   use Grid_module 
 #endif  
   use Reactive_Transport_Aux_module, only : reactive_transport_param_type
@@ -277,7 +277,7 @@ subroutine PMRTSetRealization(this,realization)
   ! Date: 03/14/13
   ! 
 
-  use Realization_Subsurface_class  
+  use Realization_Subsurface_module  
 
   implicit none
   
@@ -317,7 +317,7 @@ recursive subroutine PMRTInitializeRun(this)
   use Reactive_Transport_module, only : RTUpdateAuxVars, &
                                         RTClearActivityCoefficients
   use Variables_module, only : POROSITY
-  use Material_Aux_class, only : POROSITY_BASE 
+  use Material_Aux_module, only : POROSITY_BASE 
   use Material_module, only : MaterialGetAuxVarVecLoc
 
   implicit none
@@ -528,7 +528,7 @@ subroutine PMRTFinalizeTimestep(this)
   use Reactive_Transport_module, only : RTMaxChange
   use Variables_module, only : POROSITY
   use Material_module, only : MaterialGetAuxVarVecLoc
-  use Material_Aux_class, only : POROSITY_BASE 
+  use Material_Aux_module, only : POROSITY_BASE 
   use Global_module
 
   implicit none
@@ -762,7 +762,7 @@ subroutine PMRTCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   ! Author: Glenn Hammond
   ! Date: 03/16/09
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Option_module
   use Reaction_Aux_module
@@ -870,7 +870,7 @@ subroutine PMRTCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   ! Author: Glenn Hammond
   ! Date: 03/04/14
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
@@ -1227,8 +1227,8 @@ subroutine PMRTCheckpointBinary(this,viewer)
   ! Date: 07/29/13
   ! 
   use Option_module
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Field_module
   use Discretization_module
   use Grid_module
@@ -1364,8 +1364,8 @@ subroutine PMRTRestartBinary(this,viewer)
   ! Date: 07/29/13
   ! 
   use Option_module
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Field_module
   use Discretization_module
   use Grid_module
@@ -1514,8 +1514,8 @@ subroutine PMRTCheckpointHDF5(this, pm_grp_id)
   ! 
 
   use Option_module
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Field_module
   use Discretization_module
   use Grid_module
@@ -1695,8 +1695,8 @@ subroutine PMRTRestartHDF5(this, pm_grp_id)
   ! 
 
   use Option_module
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Field_module
   use Discretization_module
   use Grid_module
@@ -1942,4 +1942,4 @@ subroutine PMRTDestroy(this)
 
 end subroutine PMRTDestroy
   
-end module PM_RT_class
+end module PM_RT_module

@@ -1392,7 +1392,7 @@ subroutine SF_Linear_CapillaryPressure(this,liquid_saturation, &
   ! Date: 11/14/14
   !
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   

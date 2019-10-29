@@ -1,9 +1,9 @@
-module PM_Surface_class
+module PM_Surface_module
 
 #include "petsc/finclude/petscts.h"
   use petscts
-  use PM_Base_class
-  use Realization_Surface_class
+  use PM_Base_module
+  use Realization_Surface_module
   use Communicator_Base_module
   use Option_module
   use PFLOTRAN_Constants_module
@@ -132,7 +132,7 @@ subroutine PMSurfaceSetup(this)
   ! 
 
   use Discretization_module
-  use Communicator_Unstructured_class
+  use Communicator_Unstructured_module
   use Grid_module
 
   implicit none
@@ -163,7 +163,7 @@ subroutine PMSurfaceSetRealization(this, surf_realization)
   ! Date: 04/22/14
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Grid_module
 
   implicit none
@@ -385,4 +385,4 @@ subroutine PMSurfaceDestroy(this)
 
 end subroutine PMSurfaceDestroy
 
-end module PM_Surface_class
+end module PM_Surface_module

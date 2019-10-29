@@ -1,4 +1,4 @@
-module PM_Waste_Form_class
+module PM_Waste_Form_module
 
 ! MODULE DESCRIPTION:
 ! ===========================================================================
@@ -13,13 +13,13 @@ module PM_Waste_Form_class
 #include "petsc/finclude/petscvec.h"
   use petscvec
 
-  use PM_Base_class
-  use Realization_Subsurface_class
+  use PM_Base_module
+  use Realization_Subsurface_module
   use Option_module
   use Geometry_module
-  use Data_Mediator_Vec_class
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Data_Mediator_Vec_module
+  use Dataset_Base_module
+  use Dataset_Ascii_module
   use Region_module
   use Checkpoint_module
  
@@ -1736,7 +1736,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
   use Reaction_Aux_module, only: GetPrimarySpeciesIDFromName
   use Option_module
   use Condition_module, only : ConditionReadValues
-  use Dataset_Ascii_class 
+  use Dataset_Ascii_module 
   use String_module
   use Units_module
   use Region_module
@@ -2135,7 +2135,7 @@ subroutine PMWFSetRegionScaling(this,waste_form)
   ! Date: 10/21/2016
   !
 
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_module
   use Utility_module
 
@@ -2195,7 +2195,7 @@ subroutine PMWFSetRealization(this,realization)
   ! Author: Glenn Hammond
   ! Date: 08/26/15
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
   
@@ -2500,7 +2500,7 @@ end subroutine PMWFSetup
   ! Author: Glenn Hammond
   ! Date: 08/25/15
   use Reaction_Aux_module
-  use Realization_Base_class
+  use Realization_Base_module
   
   implicit none
 
@@ -2616,13 +2616,13 @@ subroutine PMWFInitializeTimestep(this)
 
   use Utility_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Field_module
   use Option_module
   use Grid_module
   use Patch_module
   use Utility_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
   
   implicit none
   
@@ -3113,7 +3113,7 @@ subroutine PMWFSolve(this,time,ierr)
   ! must be the outer loop, in order for the vec_p(i) indexing to work.
   
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Reactive_Transport_Aux_module, only : rt_min_saturation
   use Grid_module
   
@@ -4090,7 +4090,7 @@ subroutine PMWFCheckpointHDF5(this,pm_grp_id)
   ! 
 
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use hdf5
   use HDF5_module, only : HDF5WriteDataSetFromVec
 
@@ -4242,7 +4242,7 @@ subroutine PMWFRestartHDF5(this,pm_grp_id)
   ! Date: 10/03/18
 
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use hdf5
   use HDF5_module, only : HDF5ReadDataSetInVec
 
@@ -4390,8 +4390,8 @@ subroutine PMWFCheckpointBinary(this, viewer)
 
   use petscvec
   use Option_module
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Field_module
   use Discretization_module
   use Grid_module
@@ -4542,7 +4542,7 @@ subroutine PMWFRestartBinary(this, viewer)
   ! Date: 10/09/18
 
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use hdf5
   use HDF5_module, only : HDF5ReadDataSetInVec
 
@@ -4895,7 +4895,7 @@ subroutine CriticalityMechInit(this)
   ! Author: Michael Nole
   ! Date: 11/01/18
 
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
 
   implicit none
 
@@ -5006,7 +5006,7 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
   use Input_Aux_module
   use Option_module
   use String_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
 
   implicit none
 
@@ -5169,8 +5169,8 @@ subroutine CriticalityInitializeRun(this, realization, option)
   ! Author: Michael Nole
   ! Date: 11/01/18
 
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Option_module
 
   implicit none
@@ -5270,7 +5270,7 @@ subroutine CriticalitySolve(this,realization,time,scaling_factor,ierr)
   !Author: Michael Nole
   !Date: 11/05/18
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
 
@@ -5331,8 +5331,8 @@ subroutine CritReadValues(input, option, keyword, dataset_base, &
   use HDF5_Aux_module
   use Units_module
   use Dataset_module
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Dataset_Base_module
+  use Dataset_Ascii_module
   use hdf5
 
   implicit none
@@ -5498,5 +5498,5 @@ end subroutine CriticalityStrip
 
 ! ************************************************************************** !
 
-end module PM_Waste_Form_class
+end module PM_Waste_Form_module
 

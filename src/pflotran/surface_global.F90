@@ -27,7 +27,7 @@ subroutine SurfaceGlobalSetup(surf_realization)
   ! Date: 03/07/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   
   implicit none
@@ -56,7 +56,7 @@ subroutine SurfaceGlobalSetupPatch(surf_realization)
   ! Date: 03/07/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Option_module
   use Coupler_module
@@ -153,7 +153,7 @@ subroutine SurfaceGlobalSetAuxVarScalar(surf_realization,value,ivar)
   ! Date: 03/07/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
 
   implicit none
@@ -178,7 +178,7 @@ end subroutine SurfaceGlobalSetAuxVarScalar
 
 subroutine SurfaceGlobalSetAuxVarScalarPatch(surf_realization,value,ivar)
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Option_module
   use Patch_module
   use Variables_module, only : SURFACE_LIQUID_HEAD, &
@@ -237,7 +237,7 @@ subroutine SurfaceGlobalSetAuxVarVecLoc(surf_realization,vec_loc,ivar,isubvar)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
 
   implicit none
@@ -271,7 +271,7 @@ subroutine SurfaceGlobalSetAuxVarVecLocPatch(surf_realization,vec_loc,ivar,isubv
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -340,7 +340,7 @@ subroutine SurfaceGlobalUpdateAuxVars(surf_realization,time_level)
   ! Date: 03/07/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_Field_module
   use Option_module
   use Discretization_module

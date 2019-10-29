@@ -1,4 +1,4 @@
-module PM_TH_TS_class
+module PM_TH_TS_module
 
 #include "petsc/finclude/petscts.h"
 #include "petsc/finclude/petscvec.h"
@@ -7,10 +7,10 @@ module PM_TH_TS_class
   use TH_module
   use TH_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
-  use PM_TH_class
+  use Material_Aux_module
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
+  use PM_TH_module
   
   use PFLOTRAN_Constants_module
 
@@ -106,7 +106,7 @@ subroutine PMTHTSUpdateAuxVarsPatch(realization)
   ! Date: 05/08/19
 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Grid_module
   use Patch_module
@@ -188,7 +188,7 @@ subroutine PMTHTSIFunction(this,ts,time,U,Udot,F,ierr)
   ! Author: Satish Karra
   ! Date: 05/08/19
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
 
@@ -237,13 +237,13 @@ subroutine IFunctionAccumulation(F,realization,ierr)
   ! Author: Satish Karra
   ! Date: 06/07/19
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Patch_module
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Field_module
 
   implicit none
@@ -368,7 +368,7 @@ subroutine PMTHTSIJacobian(this,ts,time,U,Udot,shift,A,B,ierr)
   ! Author: Satish Karra
   ! Date: 06/07/19
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Debug_module
@@ -429,13 +429,13 @@ subroutine IJacobianAccumulation(J,shift,realization,ierr)
   ! Author: Satish Karra
   ! Date: 06/07/19
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Patch_module
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Field_module
 
   implicit none
@@ -785,5 +785,5 @@ subroutine PMTHTSDestroy(this)
   
 end subroutine PMTHTSDestroy
 
-end module PM_TH_TS_class
+end module PM_TH_TS_module
 

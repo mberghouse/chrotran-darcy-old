@@ -1,8 +1,8 @@
-module Data_Mediator_Base_class
+module Data_Mediator_Base_module
 #include "petsc/finclude/petscvec.h"
   use petscvec
 
-  use Dataset_Global_HDF5_class
+  use Dataset_Global_HDF5_module
   
   use PFLOTRAN_Constants_module
 
@@ -105,4 +105,4 @@ recursive subroutine DataMediatorBaseStrip(this)
   
 end subroutine DataMediatorBaseStrip
 
-end module Data_Mediator_Base_class
+end module Data_Mediator_Base_module

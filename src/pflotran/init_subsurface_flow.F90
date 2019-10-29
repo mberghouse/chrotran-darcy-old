@@ -22,7 +22,7 @@ subroutine InitSubsurfFlowSetupRealization(realization)
   ! Author: Glenn Hammond
   ! Date: 12/04/14
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Init_Common_module
@@ -32,8 +32,8 @@ subroutine InitSubsurfFlowSetupRealization(realization)
   use Mphase_module
   use Immis_module
   use Miscible_module
-  use PM_Richards_TS_class
-  use PM_TH_TS_class
+  use PM_Richards_TS_module
+  use PM_TH_TS_module
   use Richards_module
   use TH_module
   use General_module
@@ -160,7 +160,7 @@ subroutine InitSubsurfFlowReadInitCond(realization,filename)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module

@@ -1,4 +1,4 @@
-module SrcSink_Sandbox_Mass_Rate_class
+module SrcSink_Sandbox_Mass_Rate_module
 
 ! Sandbox srcsink for mass rate source terms.  This source/sink is identical
 ! to the standard mass rate source/sink in PFLOTRAN, but is more for 
@@ -8,7 +8,7 @@ module SrcSink_Sandbox_Mass_Rate_class
   use petscsys
 
   use PFLOTRAN_Constants_module
-  use SrcSink_Sandbox_Base_class
+  use SrcSink_Sandbox_Base_module
   
   implicit none
   
@@ -173,7 +173,7 @@ subroutine MassRateSrcSink(this,Residual,Jacobian,compute_derivative, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -218,4 +218,4 @@ subroutine MassRateDestroy(this)
 
 end subroutine MassRateDestroy
 
-end module SrcSink_Sandbox_Mass_Rate_class
+end module SrcSink_Sandbox_Mass_Rate_module

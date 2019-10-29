@@ -1,4 +1,4 @@
-module Communicator_Structured_class
+module Communicator_Structured_module
 #include "petsc/finclude/petscdmda.h"
   use petscdmda
   use Communicator_Base_module
@@ -251,4 +251,4 @@ subroutine StructuredCommunicatorDestroy(this)
   
 end subroutine StructuredCommunicatorDestroy
 
-end module Communicator_Structured_class
+end module Communicator_Structured_module

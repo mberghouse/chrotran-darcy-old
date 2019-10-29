@@ -28,7 +28,7 @@ subroutine SubsurfInitMaterialProperties(realization)
   ! Author: Glenn Hammond
   ! Date: 10/07/14
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -49,13 +49,13 @@ subroutine SubsurfAllocMatPropDataStructs(realization)
   ! Author: Glenn Hammond
   ! Date: 10/07/14
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Material_module
   use Option_module
   use Discretization_module
   use Grid_module
   use Patch_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Fracture_module, only : FractureAuxVarInit
   
   implicit none
@@ -125,7 +125,7 @@ subroutine InitSubsurfAssignMatIDsToRegns(realization)
   ! Author: Glenn Hammond
   ! Date: 11/02/07
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Strata_module
   use Region_module
   use Option_module
@@ -133,7 +133,7 @@ subroutine InitSubsurfAssignMatIDsToRegns(realization)
   use Patch_module
   use Field_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -234,12 +234,12 @@ subroutine InitSubsurfAssignMatProperties(realization)
   ! Author: Glenn Hammond
   ! Date: 10/07/14
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Discretization_module
   use Field_module
   use Patch_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Material_module
   use Option_module
   use WIPP_module
@@ -599,7 +599,7 @@ subroutine SubsurfReadMaterialIDsFromFile(realization,realization_dependent, &
   ! Date: 1/03/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Grid_module
   use Option_module
@@ -694,7 +694,7 @@ subroutine SubsurfReadPermsFromFile(realization,material_property)
   ! Date: 01/19/09
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Grid_module
   use Option_module
@@ -704,7 +704,7 @@ subroutine SubsurfReadPermsFromFile(realization,material_property)
   use Input_Aux_module
   use Material_module
   use HDF5_module
-  use Dataset_Common_HDF5_class
+  use Dataset_Common_HDF5_module
   
   implicit none
 
@@ -842,7 +842,7 @@ subroutine SubsurfReadDatasetToVecWithMask(realization,dataset, &
   ! Author: Glenn Hammond
   ! Date: 01/19/2016
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Grid_module
   use Option_module
@@ -851,9 +851,9 @@ subroutine SubsurfReadDatasetToVecWithMask(realization,dataset, &
   use Input_Aux_module
   use Material_module
   use HDF5_module
-  use Dataset_Base_class
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Base_module
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
   
   implicit none
 
@@ -974,7 +974,7 @@ subroutine SubsurfAssignVolsToMatAuxVars(realization)
   ! Date: 01/13/14, 12/04/14
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Material_module
   use Discretization_module
@@ -1007,7 +1007,7 @@ subroutine SubsurfSandboxesSetup(realization)
   ! Author: Glenn Hammond
   ! Date: 05/06/14, 12/04/14
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use SrcSink_Sandbox_module
   
   class(realization_subsurface_type) :: realization
@@ -1026,7 +1026,7 @@ subroutine InitSubsurfaceSetupZeroArrays(realization)
   ! Author: Glenn Hammond
   ! Date: 03/11/16
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
 
   class(realization_subsurface_type) :: realization
@@ -1186,7 +1186,7 @@ subroutine InitSubsurfaceCreateZeroArray(patch,dof_is_active, &
   ! Author: Glenn Hammond
   ! Date: 12/13/07, 03/02/16
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module

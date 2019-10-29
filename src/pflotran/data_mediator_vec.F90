@@ -1,8 +1,8 @@
-module Data_Mediator_Vec_class
+module Data_Mediator_Vec_module
  
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Data_Mediator_Base_class
+  use Data_Mediator_Base_module
 
   implicit none
 
@@ -108,4 +108,4 @@ recursive subroutine DataMediatorVecStrip(this)
   
 end subroutine DataMediatorVecStrip
 
-end module Data_Mediator_Vec_class
+end module Data_Mediator_Vec_module

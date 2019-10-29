@@ -1,10 +1,10 @@
-module PM_WIPP_Flow_class
+module PM_WIPP_Flow_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
-  use PM_WIPP_SrcSink_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
+  use PM_WIPP_SrcSink_module
   
   use PFLOTRAN_Constants_module
 
@@ -525,13 +525,13 @@ recursive subroutine PMWIPPFloInitializeRun(this)
   ! Author: Glenn Hammond
   ! Date: 07/11/17
 
-  use Realization_Base_class
+  use Realization_Base_module
   use Patch_module
   use WIPP_Flow_module, only : WIPPFloUpdateAuxVars
   use WIPP_Flow_Aux_module
   use Input_Aux_module
-  use Dataset_Base_class
-  use Dataset_Common_HDF5_class
+  use Dataset_Base_module
+  use Dataset_Common_HDF5_module
   use Dataset_module
   use Field_module
   use Grid_module
@@ -968,8 +968,8 @@ subroutine PMWIPPFloUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Date: 07/11/17
   ! 
   use Option_module
-  use Realization_Base_class, only : RealizationGetVariable
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Base_module, only : RealizationGetVariable
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
   use Field_module
   use Global_module, only : GlobalSetAuxVarVecLoc
   use Variables_module, only : LIQUID_SATURATION, GAS_SATURATION
@@ -1223,7 +1223,7 @@ subroutine PMWIPPFloCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   ! Author: Glenn Hammond
   ! Date: 07/11/17
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -1263,12 +1263,12 @@ subroutine PMWIPPFloCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   ! 
   use Grid_module
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
   use Option_module
-  use Material_Aux_class  
+  use Material_Aux_module  
   use WIPP_Flow_Aux_module
   
   implicit none
@@ -1580,12 +1580,12 @@ subroutine PMWIPPFloCheckConvergence(this,snes,it,xnorm,unorm, &
   ! 
   use Grid_module
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
   use Option_module
-  use Material_Aux_class  
+  use Material_Aux_module  
   use WIPP_Flow_Aux_module
   use Convergence_module
 
@@ -2097,8 +2097,8 @@ subroutine PMWIPPFloMaxChange(this)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Base_class
-  use Realization_Subsurface_class
+  use Realization_Base_module
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -2320,4 +2320,4 @@ subroutine PMWIPPFloDestroy(this)
   
 end subroutine PMWIPPFloDestroy
   
-end module PM_WIPP_Flow_class
+end module PM_WIPP_Flow_module

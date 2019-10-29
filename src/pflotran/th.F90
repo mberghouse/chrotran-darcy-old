@@ -4,7 +4,7 @@ module TH_module
   use petscsnes
   use TH_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use PFLOTRAN_Constants_module
   use Utility_module, only : Equal
   
@@ -58,7 +58,7 @@ subroutine THTimeCut(realization)
   ! Date: 12/13/07
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
  
   implicit none
   
@@ -77,7 +77,7 @@ subroutine THSetup(realization)
   ! Date: 02/22/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Output_Aux_module
 
@@ -115,7 +115,7 @@ subroutine THSetupPatch(realization)
   ! Date: 02/22/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -412,7 +412,7 @@ subroutine THComputeMassBalance(realization, mass_balance)
   ! Date: 07/21/2010
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -443,12 +443,12 @@ subroutine THComputeMassBalancePatch(realization,mass_balance)
   ! Date: 07/21/2010
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class, only : material_auxvar_type, &
+  use Material_Aux_module, only : material_auxvar_type, &
                                  soil_compressibility_index, &
                                  MaterialCompressSoil
  
@@ -513,7 +513,7 @@ subroutine THZeroMassBalDeltaPatch(realization)
   ! Date: 12/13/11
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -566,7 +566,7 @@ subroutine THUpdateMassBalancePatch(realization)
   ! Date: 12/13/11
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -626,7 +626,7 @@ subroutine THUpdateAuxVars(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -654,7 +654,7 @@ subroutine THUpdateAuxVarsPatch(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -892,7 +892,7 @@ subroutine THInitializeTimestep(realization)
   ! Date: 02/20/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -912,7 +912,7 @@ subroutine THUpdateSolution(realization)
   ! Date: 02/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   
@@ -949,7 +949,7 @@ subroutine THUpdateSolutionPatch(realization)
   ! 
 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1032,7 +1032,7 @@ subroutine THUpdateFixedAccumulation(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -1060,7 +1060,7 @@ subroutine THUpdateFixedAccumPatch(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -1171,7 +1171,7 @@ subroutine THNumericalJacobianTest(xx,realization)
   ! Date: 12/13/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -1275,7 +1275,7 @@ subroutine THAccumDerivative(TH_auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Saturation_Function_module
-  use Material_Aux_class, only : material_auxvar_type, &
+  use Material_Aux_module, only : material_auxvar_type, &
                                  soil_compressibility_index, &
                                  MaterialCompressSoil
   use EOS_Water_module
@@ -1505,7 +1505,7 @@ subroutine THAccumulation(auxvar,global_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class, only : material_auxvar_type, &
+  use Material_Aux_module, only : material_auxvar_type, &
                                  soil_compressibility_index, &
                                  MaterialCompressSoil
   use EOS_Water_module
@@ -3701,7 +3701,7 @@ subroutine THResidual(snes,xx,r,realization,ierr)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Discretization_module
   use Field_module
@@ -3773,7 +3773,7 @@ subroutine THResidualPreliminaries(xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   
@@ -3816,13 +3816,13 @@ subroutine THUpdateLocalVecs(xx,realization,ierr)
   ! Date: 06/06/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Option_module
   use Logging_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module
   use Debug_module
 
@@ -3884,7 +3884,7 @@ subroutine THResidualInternalConn(r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -4086,7 +4086,7 @@ subroutine THResidualBoundaryConn(r,realization,ierr)
   ! 
   
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -4266,7 +4266,7 @@ subroutine THResidualAccumulation(r,realization,ierr)
   ! 
   
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -4399,7 +4399,7 @@ subroutine THResidualSourceSink(r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -4670,7 +4670,7 @@ subroutine THJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 12/10/07
   ! Refactored by Satish Karra, LANL 06/12/2019
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -4754,7 +4754,7 @@ subroutine THJacobianInternalConn(A,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
@@ -4985,7 +4985,7 @@ subroutine THJacobianBoundaryConn(A,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
@@ -5165,7 +5165,7 @@ subroutine THJacobianAccumulation(A,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
@@ -5321,7 +5321,7 @@ subroutine THJacobianSourceSink(A,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
@@ -5529,7 +5529,7 @@ subroutine THMaxChange(realization,dpmax,dtmpmax)
   ! Date: 01/15/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   
@@ -5568,7 +5568,7 @@ subroutine THResidualToMass(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Discretization_module
   use Field_module
@@ -5634,7 +5634,7 @@ function THGetTecplotHeader(realization,icolumn)
   ! Date: 02/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
 
@@ -5760,10 +5760,10 @@ subroutine THSetPlotVariables(realization,list)
   ! Date: 10/15/12
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Output_Aux_module
   use Variables_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
 
   implicit none
@@ -6175,7 +6175,7 @@ subroutine THUpdateSurfaceBC(realization)
   ! Date: 10/23/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -6430,7 +6430,7 @@ subroutine THUpdateSurfaceWaterFlag(realization)
   ! Date: 04/17/14
   !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -6510,7 +6510,7 @@ subroutine THComputeCoeffsForSurfFlux(realization)
   ! Date: 05/21/14
   !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -6521,7 +6521,7 @@ subroutine THComputeCoeffsForSurfFlux(realization)
   use Logging_module
   use String_module
   use EOS_Water_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
   use Saturation_Function_module
   use Characteristic_Curves_module
@@ -6778,7 +6778,7 @@ subroutine ComputeCoeffsForApprox(P_up, T_up, ithrm_up, &
 
   use EOS_Water_module
   use Field_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   use Characteristic_Curves_module
   use Saturation_Function_module

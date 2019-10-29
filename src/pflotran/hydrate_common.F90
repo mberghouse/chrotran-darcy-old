@@ -58,7 +58,7 @@ subroutine HydrateAccumulation(hyd_auxvar,global_auxvar,material_auxvar, &
   !
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -155,7 +155,7 @@ subroutine HydrateFlux(hyd_auxvar_up,global_auxvar_up, &
   ! Date: 07/23/19
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
   use Fracture_module
   use Klinkenberg_module
@@ -2163,7 +2163,7 @@ subroutine HydrateBCFlux(ibndtype,auxvar_mapping,auxvars, &
   ! Date: 07/23/19
   ! 
   use Option_module                              
-  use Material_Aux_class
+  use Material_Aux_module
   use Fracture_module
   use Klinkenberg_module
   use Upwind_Direction_module
@@ -3857,7 +3857,7 @@ subroutine HydrateAccumDerivative(hyd_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -3939,7 +3939,7 @@ subroutine HydrateFluxDerivative(hyd_auxvar_up,global_auxvar_up, &
   ! Date: 07/23/19
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
@@ -4133,7 +4133,7 @@ subroutine HydrateBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   ! 
 
   use Option_module 
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
@@ -4381,7 +4381,7 @@ subroutine HydrateAuxVarDiff(idof,hydrate_auxvar,global_auxvar, &
 
   use Option_module
   use Global_Aux_module
-  use Material_Aux_class  
+  use Material_Aux_module  
 
   implicit none
   

@@ -23,7 +23,7 @@ contains
 
 subroutine OutputVTK(realization_base)
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Grid_Structured_module
@@ -164,7 +164,7 @@ subroutine OutputVelocitiesVTK(realization_base)
   ! 
   ! Print velocities to Tecplot file in BLOCK format
   ! 
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizationGetVariable
   use Discretization_module
   use Grid_module
@@ -300,7 +300,7 @@ subroutine WriteVTKGrid(fid,realization_base)
   ! Writes a grid in VTK format
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Option_module
@@ -407,7 +407,7 @@ subroutine WriteVTKDataSetFromVec(fid,realization_base,dataset_name,vec,datatype
   ! of a VTK file
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
 
   implicit none
 
@@ -436,7 +436,7 @@ subroutine WriteVTKDataSet(fid,realization_base,dataset_name,array,datatype, &
   ! of a VTK file
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Patch_module

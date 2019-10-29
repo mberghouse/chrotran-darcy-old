@@ -559,7 +559,7 @@ subroutine HydrateAuxVarCompute(x,hyd_auxvar,global_auxvar,material_auxvar, &
   use EOS_Water_module
   use EOS_Gas_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -1460,7 +1460,7 @@ subroutine HydrateAuxVarUpdateState(x,hyd_auxvar,global_auxvar, &
   use Global_Aux_module
   use EOS_Water_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -2215,7 +2215,7 @@ subroutine HydrateAuxVarPerturb(hyd_auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -2632,7 +2632,7 @@ subroutine HydratePrintAuxVars(hydrate_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
 
   implicit none
@@ -2746,7 +2746,7 @@ subroutine HydrateOutputAuxVars1(hydrate_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
 
   implicit none

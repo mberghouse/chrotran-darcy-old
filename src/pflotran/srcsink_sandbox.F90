@@ -3,11 +3,11 @@ module SrcSink_Sandbox_module
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use SrcSink_Sandbox_Base_class
-  use SrcSink_Sandbox_WIPP_Gas_class
-  use SrcSink_Sandbox_Mass_Rate_class
-  use SrcSink_Sandbox_Downreg_class
-  use SrcSink_Sandbox_WIPP_Well_class
+  use SrcSink_Sandbox_Base_module
+  use SrcSink_Sandbox_WIPP_Gas_module
+  use SrcSink_Sandbox_Mass_Rate_module
+  use SrcSink_Sandbox_Downreg_module
+  use SrcSink_Sandbox_WIPP_Well_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -238,7 +238,7 @@ subroutine SSSandbox(residual,Jacobian,compute_derivative, &
   use petscmat
   use Option_module
   use Grid_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   
   implicit none
 

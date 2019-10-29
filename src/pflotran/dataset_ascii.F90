@@ -1,9 +1,9 @@
-module Dataset_Ascii_class
+module Dataset_Ascii_module
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   
   use PFLOTRAN_Constants_module
 
@@ -61,7 +61,7 @@ function DatasetAsciiCast(this)
   ! Date: 10/03/13
   ! 
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   
   implicit none
 
@@ -572,4 +572,4 @@ subroutine DatasetAsciiDestroy(this)
   
 end subroutine DatasetAsciiDestroy
 
-end module Dataset_Ascii_class
+end module Dataset_Ascii_module

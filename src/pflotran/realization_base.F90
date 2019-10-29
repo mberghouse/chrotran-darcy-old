@@ -1,4 +1,4 @@
-module Realization_Base_class
+module Realization_Base_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -12,7 +12,7 @@ module Realization_Base_class
   use Output_Aux_module
   use Field_module
   use Reaction_Base_module
-  use Data_Mediator_Base_class
+  use Data_Mediator_Base_module
   use Communicator_Base_module
   use Waypoint_module
 
@@ -291,4 +291,4 @@ subroutine RealizationBaseStrip(this)
 
 end subroutine RealizationBaseStrip
 
-end module Realization_Base_class
+end module Realization_Base_module

@@ -1,4 +1,4 @@
-module Timestepper_Base_class
+module Timestepper_Base_module
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -328,7 +328,7 @@ subroutine TimestepperBaseUpdateDT(this,process_model)
   ! Date: 03/20/13
   ! 
 
-  use PM_Base_class
+  use PM_Base_module
   use Option_module
   
   implicit none
@@ -556,7 +556,7 @@ subroutine TimestepperBaseStepDT(this,process_model,stop_flag)
   ! Date: 03/20/13
   ! 
 
-  use PM_Base_class
+  use PM_Base_module
   use Option_module
   use Output_module, only : Output
   
@@ -989,4 +989,4 @@ subroutine TimestepperBaseDestroy(this)
   
 end subroutine TimestepperBaseDestroy
 
-end module Timestepper_Base_class
+end module Timestepper_Base_module

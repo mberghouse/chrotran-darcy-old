@@ -1,9 +1,9 @@
-module Reaction_Sandbox_CLM_CN_class
+module Reaction_Sandbox_CLM_CN_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Reaction_Sandbox_Base_class
+  use Reaction_Sandbox_Base_module
   
   use Global_Aux_module
   use Reactive_Transport_Aux_module
@@ -485,7 +485,7 @@ subroutine CLM_CN_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
   ! 
   use Option_module
   use Reaction_Aux_module, only : reaction_rt_type
-  use Material_Aux_class, only : material_auxvar_type
+  use Material_Aux_module, only : material_auxvar_type
   
   implicit none
   
@@ -846,4 +846,4 @@ subroutine CLM_CN_Destroy(this)
   
 end subroutine CLM_CN_Destroy
 
-end module Reaction_Sandbox_CLM_CN_class
+end module Reaction_Sandbox_CLM_CN_module

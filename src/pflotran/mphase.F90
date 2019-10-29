@@ -43,7 +43,7 @@ subroutine MphaseTimeCut(realization)
   ! Date: 5/13/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Global_Aux_module
@@ -82,7 +82,7 @@ subroutine MphaseSetup(realization)
   ! Date: 5/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Output_Aux_module
    
@@ -116,7 +116,7 @@ subroutine MphaseSetupPatch(realization)
   ! Date: 5/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
@@ -328,7 +328,7 @@ subroutine MphaseComputeMassBalance(realization,mass_balance,mass_trapped)
   ! Date: 02/22/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -360,12 +360,12 @@ subroutine MphaseComputeMassBalancePatch(realization,mass_balance,mass_trapped)
   ! Date: 12/19/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
 ! use Saturation_Function_module
 ! use Mphase_pckr_module
  
@@ -459,7 +459,7 @@ subroutine MphaseZeroMassBalDeltaPatch(realization)
   ! Date: 12/19/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -513,7 +513,7 @@ subroutine MphaseUpdateMassBalancePatch(realization)
   ! Date: 12/19/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -574,7 +574,7 @@ function MphaseInitGuessCheck(realization)
   ! Date: 12/10/07
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   
@@ -613,7 +613,7 @@ subroutine MPhaseUpdateReasonPatch(reason,realization)
   ! Author: Chuan Lu
   ! Date: 12/10/07
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Field_module
   use Option_module
@@ -731,7 +731,7 @@ subroutine MPhaseUpdateReason(reason, realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   implicit none
 
@@ -778,7 +778,7 @@ end subroutine MPhaseUpdateReason
    
     use co2_span_wagner_module
      
-    use Realization_Subsurface_class
+    use Realization_Subsurface_module
     use Patch_module
     use Field_module
     use Grid_module
@@ -844,7 +844,7 @@ subroutine MphaseUpdateAuxVars(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -872,7 +872,7 @@ subroutine MphaseUpdateAuxVarsPatch(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Field_module
   use Option_module
@@ -1092,7 +1092,7 @@ subroutine MphaseInitializeTimestep(realization)
   ! Date: 02/20/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -1112,7 +1112,7 @@ subroutine MphaseUpdateSolution(realization)
   ! Date: 02/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Global_Aux_module
@@ -1165,7 +1165,7 @@ subroutine MphaseUpdateSolutionPatch(realization)
   ! Date: 08/23/11, 02/27/14
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1252,7 +1252,7 @@ subroutine MphaseUpdateFixedAccumulation(realization)
   ! Date: 05/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -1280,13 +1280,13 @@ subroutine MphaseUpdateFixedAccumPatch(realization)
   ! Date: 05/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
   use Grid_module
   use Secondary_Continuum_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -2065,7 +2065,7 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Discretization_module
   use Field_module
@@ -2158,7 +2158,7 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
   ! Date: 3/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -2487,7 +2487,7 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -2496,7 +2496,7 @@ subroutine MphaseResidualPatch(snes,xx,r,realization,ierr)
   use Debug_module
   use Secondary_Continuum_Aux_module
   use Secondary_Continuum_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -3138,7 +3138,7 @@ subroutine MphaseJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -3214,13 +3214,13 @@ subroutine MphaseJacobianPatch(snes,xx,A,B,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
   use Debug_module
   use Secondary_Continuum_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -3805,7 +3805,7 @@ subroutine MphaseMaxChange(realization,dpmax,dtmpmax,dsmax,dcmax)
   ! Date: 01/15/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Option_module
   use Field_module
@@ -3847,7 +3847,7 @@ end subroutine MphaseMaxChange
 
 subroutine MphaseMaxChangePatch(realization,  max_c, max_s)
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Patch_module
   use Field_module
@@ -3918,7 +3918,7 @@ function MphaseGetTecplotHeader(realization,icolumn)
   ! Date: 02/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
 
@@ -4388,7 +4388,7 @@ subroutine MphaseDestroy(realization)
   ! Date: 02/14/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
   

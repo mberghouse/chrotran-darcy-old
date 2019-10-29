@@ -34,9 +34,9 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
   use Region_module
   use Grid_Structured_module
   use Utility_module, only : DotProduct
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Common_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Common_HDF5_module
+  use Dataset_Ascii_module
   use String_module
   
   use General_Aux_module

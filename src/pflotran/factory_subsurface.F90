@@ -2,7 +2,7 @@ module Factory_Subsurface_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Simulation_Subsurface_class
+  use Simulation_Subsurface_module
 
   use PFLOTRAN_Constants_module
   use Utility_module, only : Equal
@@ -62,15 +62,15 @@ subroutine SubsurfaceInitializePostPetsc(simulation)
   !
 
   use Option_module
-  use PM_Subsurface_Flow_class
-  use PM_RT_class
-  use PM_NWT_class
-  use PM_Waste_Form_class
-  use PM_UFD_Decay_class
-  use PM_UFD_Biosphere_class
-  use PM_Auxiliary_class
-  use Realization_Subsurface_class
-  use Simulation_Subsurface_class
+  use PM_Subsurface_Flow_module
+  use PM_RT_module
+  use PM_NWT_module
+  use PM_Waste_Form_module
+  use PM_UFD_Decay_module
+  use PM_UFD_Biosphere_module
+  use PM_Auxiliary_module
+  use Realization_Subsurface_module
+  use Simulation_Subsurface_module
   use Waypoint_module
 
   implicit none
@@ -126,16 +126,16 @@ subroutine ExtractPMsFromPMList(simulation,pm_flow,pm_rt,pm_nwt,pm_waste_form,&
   ! Date: 06/05/18
   !
 
-  use PM_Subsurface_Flow_class
-  use PM_Base_class
-  use PM_RT_class
-  use PM_NWT_class
-  use PM_Waste_Form_class
-  use PM_UFD_Decay_class
-  use PM_UFD_Biosphere_class
-  use PM_Auxiliary_class
+  use PM_Subsurface_Flow_module
+  use PM_Base_module
+  use PM_RT_module
+  use PM_NWT_module
+  use PM_Waste_Form_module
+  use PM_UFD_Decay_module
+  use PM_UFD_Biosphere_module
+  use PM_Auxiliary_module
   use Option_module
-  use Simulation_Subsurface_class
+  use Simulation_Subsurface_module
 
   implicit none
 
@@ -208,14 +208,14 @@ subroutine SetupPMCLinkages(simulation,pm_flow,pm_rt,pm_nwt,pm_waste_form,&
   ! Date: 06/05/18
   !
 
-  use PM_Subsurface_Flow_class
-  use PM_RT_class
-  use PM_NWT_class
-  use PM_Waste_Form_class
-  use PM_UFD_Decay_class
-  use PM_UFD_Biosphere_class
-  use PM_Auxiliary_class
-  use Realization_Subsurface_class
+  use PM_Subsurface_Flow_module
+  use PM_RT_module
+  use PM_NWT_module
+  use PM_Waste_Form_module
+  use PM_UFD_Decay_module
+  use PM_UFD_Biosphere_module
+  use PM_Auxiliary_module
+  use Realization_Subsurface_module
   use Option_module
   use Input_Aux_module
 
@@ -282,9 +282,9 @@ subroutine AddPMCSubsurfaceFlow(simulation,pm_flow,pmc_name,realization,option)
   ! Date: 06/05/18
   !
 
-  use PM_Subsurface_Flow_class
-  use PMC_Subsurface_class
-  use Realization_Subsurface_class
+  use PM_Subsurface_Flow_module
+  use PMC_Subsurface_module
+  use Realization_Subsurface_module
   use Option_module
   use Logging_module
 
@@ -329,10 +329,10 @@ subroutine AddPMCSubsurfaceRT(simulation,pm_rt,pmc_name,realization,option)
   ! Date: 06/05/18
   !
 
-  use PMC_Base_class
-  use PM_RT_class
-  use PMC_Subsurface_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use PM_RT_module
+  use PMC_Subsurface_module
+  use Realization_Subsurface_module
   use Option_module
   use Logging_module
 
@@ -385,10 +385,10 @@ subroutine AddPMCSubsurfaceNWT(simulation,pm_nwt,pmc_name,realization,option)
   ! Date: 03/08/2019
   !
 
-  use PMC_Base_class
-  use PM_NWT_class
-  use PMC_Subsurface_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use PM_NWT_module
+  use PMC_Subsurface_module
+  use Realization_Subsurface_module
   use Option_module
   use Logging_module
 
@@ -442,10 +442,10 @@ subroutine AddPMCWasteForm(simulation,pm_waste_form,pmc_name,&
   ! Date: 06/05/18
   !
 
-  use PMC_Base_class
-  use PMC_Third_Party_class
-  use PM_Waste_Form_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use PMC_Third_Party_module
+  use PM_Waste_Form_module
+  use Realization_Subsurface_module
   use Option_module
   use Logging_module
   use Input_Aux_module
@@ -520,10 +520,10 @@ subroutine AddPMCUDFDecay(simulation,pm_ufd_decay,pmc_name,&
   ! Date: 06/05/18
   !
 
-  use PMC_Base_class
-  use PMC_Third_Party_class
-  use PM_UFD_Decay_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use PMC_Third_Party_module
+  use PM_UFD_Decay_module
+  use Realization_Subsurface_module
   use Option_module
   use Logging_module
   use Input_Aux_module
@@ -584,10 +584,10 @@ subroutine AddPMCUDFBiosphere(simulation,pm_ufd_biosphere,pmc_name,&
   ! Date: 06/05/18
   !
 
-  use PMC_Base_class
-  use PMC_Third_Party_class
-  use PM_UFD_Biosphere_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use PMC_Third_Party_module
+  use PM_UFD_Biosphere_module
+  use Realization_Subsurface_module
   use Option_module
   use Logging_module
   use Input_Aux_module
@@ -653,11 +653,11 @@ subroutine AddPMCAuxiliary(simulation,pm_auxiliary,pmc_name, &
   ! Date: 06/05/18
   !
 
-  use PMC_Base_class
-  use PM_Auxiliary_class
-  use PMC_Auxiliary_class
-  use PMC_Subsurface_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use PM_Auxiliary_module
+  use PMC_Auxiliary_module
+  use PMC_Subsurface_module
+  use Realization_Subsurface_module
   use Option_module
   use String_module
   use Logging_module
@@ -747,22 +747,22 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
   !
 
   use Option_module
-  use PM_Subsurface_Flow_class
-  use PM_Base_class
-  use PM_Flash2_class
-  use PM_General_class
-  use PM_Hydrate_class
-  use PM_WIPP_Flow_class
-  use PM_Immis_class
-  use PM_Miscible_class
-  use PM_Mphase_class
-  use PM_Richards_class
-  use PM_TH_class
-  use PM_TOilIms_class
-  use PM_TOWG_class
+  use PM_Subsurface_Flow_module
+  use PM_Base_module
+  use PM_Flash2_module
+  use PM_General_module
+  use PM_Hydrate_module
+  use PM_WIPP_Flow_module
+  use PM_Immis_module
+  use PM_Miscible_module
+  use PM_Mphase_module
+  use PM_Richards_module
+  use PM_TH_module
+  use PM_TOilIms_module
+  use PM_TOWG_module
   use PM_TOWG_Aux_module
-  use PM_Richards_TS_class
-  use PM_TH_TS_class
+  use PM_Richards_TS_module
+  use PM_TH_TS_module
   use General_Aux_module
 
   implicit none
@@ -986,22 +986,22 @@ subroutine SubsurfaceReadFlowPM(input,option,pm)
   use Option_module
   use String_module
 
-  use PMC_Base_class
+  use PMC_Base_module
 
-  use PM_Base_class
-  use PM_Flash2_class
-  use PM_General_class
-  use PM_Hydrate_class
-  use PM_WIPP_Flow_class
-  use PM_Immis_class
-  use PM_Miscible_class
-  use PM_Mphase_class
-  use PM_Richards_class
-  use PM_TH_class
-  use PM_TOilIms_class
-  use PM_TOWG_class
-  use PM_Richards_TS_class
-  use PM_TH_TS_class
+  use PM_Base_module
+  use PM_Flash2_module
+  use PM_General_module
+  use PM_Hydrate_module
+  use PM_WIPP_Flow_module
+  use PM_Immis_module
+  use PM_Miscible_module
+  use PM_Mphase_module
+  use PM_Richards_module
+  use PM_TH_module
+  use PM_TOilIms_module
+  use PM_TOWG_module
+  use PM_Richards_TS_module
+  use PM_TH_TS_module
   use Init_Common_module
   use General_module
 
@@ -1110,9 +1110,9 @@ subroutine SubsurfaceReadRTPM(input,option,pm)
   use Option_module
   use String_module
 
-  use PMC_Base_class
-  use PM_Base_class
-  use PM_RT_class
+  use PMC_Base_module
+  use PM_Base_module
+  use PM_RT_module
 
   use Init_Common_module
 
@@ -1146,9 +1146,9 @@ subroutine SubsurfaceReadNWTPM(input,option,pm)
   use Option_module
   use String_module
 
-  use PMC_Base_class
-  use PM_Base_class
-  use PM_NWT_class
+  use PMC_Base_module
+  use PM_Base_module
+  use PM_NWT_module
 
   use Init_Common_module
 
@@ -1182,8 +1182,8 @@ subroutine SubsurfaceReadWasteFormPM(input,option,pm)
   use Option_module
   use String_module
 
-  use PM_Base_class
-  use PM_Waste_Form_class
+  use PM_Base_module
+  use PM_Waste_Form_module
 
   implicit none
 
@@ -1251,8 +1251,8 @@ subroutine SubsurfaceReadUFDDecayPM(input,option,pm)
   use Option_module
   use String_module
 
-  use PM_Base_class
-  use PM_UFD_Decay_class
+  use PM_Base_module
+  use PM_UFD_Decay_module
 
   implicit none
 
@@ -1303,8 +1303,8 @@ subroutine SubsurfaceReadUFDBiospherePM(input,option,pm)
   use Option_module
   use String_module
 
-  use PM_Base_class
-  use PM_UFD_Biosphere_class
+  use PM_Base_module
+  use PM_UFD_Biosphere_module
 
   implicit none
 
@@ -1347,8 +1347,8 @@ subroutine SubsurfaceInitSimulation(simulation)
   !
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Discretization_module
   use Option_module
   use Output_module, only : Output
@@ -1361,14 +1361,14 @@ subroutine SubsurfaceInitSimulation(simulation)
   use Waypoint_module
   use Strata_module
   use Regression_module
-  use PMC_Subsurface_class
-  use PMC_Auxiliary_class
-  use PMC_Base_class
-  use PM_Base_class
+  use PMC_Subsurface_module
+  use PMC_Auxiliary_module
+  use PMC_Base_module
+  use PM_Base_module
   use PM_Base_Pointer_module
-  use PM_Subsurface_Flow_class
-  use PM_Auxiliary_class
-  use Timestepper_BE_class
+  use PM_Subsurface_Flow_module
+  use PM_Auxiliary_module
+  use Timestepper_BE_module
   use Waypoint_module
 
   implicit none
@@ -1503,20 +1503,20 @@ recursive subroutine SetUpPMApproach(pmc,simulation)
 !
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PMC_Base_class
-  use PMC_Subsurface_class
+  use PMC_Base_module
+  use PMC_Subsurface_module
   use PM_Base_Pointer_module
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
-  use PM_RT_class
-  use PM_NWT_class
-  use PM_Waste_Form_class
-  use PM_WIPP_SrcSink_class
-  use PM_UFD_Decay_class
-  use PM_UFD_Biosphere_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
+  use PM_RT_module
+  use PM_NWT_module
+  use PM_Waste_Form_module
+  use PM_WIPP_SrcSink_module
+  use PM_UFD_Decay_module
+  use PM_UFD_Biosphere_module
   use Option_module
-  use Simulation_Subsurface_class
-  use Realization_Subsurface_class
+  use Simulation_Subsurface_module
+  use Realization_Subsurface_module
 
   implicit none
 
@@ -1616,8 +1616,8 @@ subroutine SubsurfaceSetupRealization(simulation)
   ! Date: 12/04/14
   !
   use Init_Subsurface_module
-  use Simulation_Subsurface_class
-  use Realization_Subsurface_class
+  use Simulation_Subsurface_module
+  use Realization_Subsurface_module
   use Option_module
   use Logging_module
   use Waypoint_module
@@ -1735,7 +1735,7 @@ subroutine SetupWaypointList(simulation)
   ! 
 
   use Checkpoint_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Waypoint_module
 
@@ -1792,7 +1792,7 @@ subroutine SubsurfaceJumpStart(simulation)
   ! Date: 06/11/13
   !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Reactive_Transport_module, only : RTJumpStartKineticSorption
 
@@ -1845,10 +1845,10 @@ subroutine SubsurfaceReadRequiredCards(simulation,input)
   use Input_Aux_module
   use String_module
   use Patch_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use HDF5_Aux_module
 
-  use Simulation_Subsurface_class
+  use Simulation_Subsurface_module
   use General_module
   use Reaction_module
   use Reaction_Aux_module
@@ -2118,13 +2118,13 @@ subroutine SubsurfaceReadInput(simulation,input)
   use Saturation_Function_module
   use Characteristic_Curves_module
   use Creep_Closure_module
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Dataset_Base_module
+  use Dataset_Ascii_module
   use Dataset_module
-  use Dataset_Common_HDF5_class
+  use Dataset_Common_HDF5_module
   use Fluid_module
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Region_module
   use Condition_module
   use Transport_Constraint_Base_module
@@ -2151,7 +2151,7 @@ subroutine SubsurfaceReadInput(simulation,input)
   use Output_Aux_module
   use Output_module
   use Output_Tecplot_module
-  use Data_Mediator_Dataset_class
+  use Data_Mediator_Dataset_module
   use EOS_module
   use EOS_Water_module
   use SrcSink_Sandbox_module
@@ -2159,12 +2159,12 @@ subroutine SubsurfaceReadInput(simulation,input)
   use WIPP_module
   use Utility_module
   use Checkpoint_module
-  use Simulation_Subsurface_class
-  use PMC_Subsurface_class
-  use Timestepper_BE_class
-  use Timestepper_Steady_class
-  use Timestepper_TS_class
-  use Well_Data_class
+  use Simulation_Subsurface_module
+  use PMC_Subsurface_module
+  use Timestepper_BE_module
+  use Timestepper_Steady_module
+  use Timestepper_TS_module
+  use Well_Data_module
   use Hydrate_module
 
   use TH_Aux_module

@@ -4,7 +4,7 @@ module Timestepper_module
   use Waypoint_module 
   use Convergence_module 
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module
  
   use PFLOTRAN_Constants_module
@@ -822,7 +822,7 @@ subroutine StepperStepFlowDT(realization,stepper,failure)
 
   use Output_module, only : Output
   
-  use Realization_class
+  use Realization_module
   use Discretization_module
   use Option_module
   use Solver_module
@@ -1141,7 +1141,7 @@ subroutine FlowStepperStepToSteadyState(realization,stepper,failure)
   use Global_module
   use Output_module, only : Output
   
-  use Realization_class
+  use Realization_module
   use Discretization_module
   use Option_module
   use Solver_module
@@ -1305,7 +1305,7 @@ subroutine StepperStepFlowDT(realization,stepper,step_to_steady_state,failure)
 
   use Output_module, only : Output
   
-  use Realization_class
+  use Realization_module
   use Discretization_module
   use Option_module
   use Solver_module
@@ -1734,7 +1734,7 @@ subroutine StepperStepTransportDT_GI(realization,stepper, &
   use Reactive_Transport_module
   use Output_module, only : Output
   
-  use Realization_class
+  use Realization_module
   use Discretization_module
   use Option_module
   use Solver_module
@@ -2028,7 +2028,7 @@ subroutine StepperStepTransportDT_OS(realization,stepper, &
         RTCalculateTransportMatrix, RTReact, RTMaxChange, RTExplicitAdvection
   use Output_module, only : Output
   
-  use Realization_class
+  use Realization_module
   use Discretization_module
   use Option_module
   use Solver_module
@@ -2285,7 +2285,7 @@ subroutine StepperRunSteadyState(realization,flow_timestepper,tran_timestepper)
   ! Date: 03/10/09
   ! 
 
-  use Realization_class
+  use Realization_module
 
   use Option_module
   use Output_Aux_module
@@ -2437,7 +2437,7 @@ subroutine StepperSolveFlowSteadyState(realization,stepper,failure)
   use petscsnes
   use Global_module, only : GlobalUpdateAuxVars
   
-  use Realization_class
+  use Realization_module
   use Discretization_module
   use Option_module
   use Solver_module
@@ -2574,7 +2574,7 @@ subroutine StepperSolveTranSteadyState(realization,stepper,failure)
   
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use Realization_class
+  use Realization_module
   use Discretization_module
   use Option_module
   use Solver_module
@@ -2705,7 +2705,7 @@ subroutine StepperUpdateSolution(realization,update_kinetics)
 ! Author: Glenn Hammond
 ! Date: 02/19/08 
 !
-  use Realization_class
+  use Realization_module
   use Option_module
 
   implicit none
@@ -2740,7 +2740,7 @@ subroutine StepperUpdateFlowSolution(realization)
   use TH_module, only : THUpdateSolution
   use General_module, only : GeneralUpdateSolution
 
-  use Realization_class
+  use Realization_module
   use Option_module
 
   implicit none
@@ -2782,7 +2782,7 @@ subroutine StepperUpdateTransportSolution(realization,update_kinetics)
   ! Date: 02/19/08
   ! 
 
-  use Realization_class
+  use Realization_module
   use Reactive_Transport_module, only : RTUpdateEquilibriumState, &
                                         RTUpdateKineticState, &
                                         RTUpdateMassBalance
@@ -2819,7 +2819,7 @@ subroutine StepperJumpStart(realization)
   ! Date: 08/05/09
   ! 
 
-  use Realization_class
+  use Realization_module
   use Reactive_Transport_module, only : RTJumpStartKineticSorption
 
   implicit none
@@ -2848,7 +2848,7 @@ subroutine StepperUpdateFlowAuxVars(realization)
   use TH_module, only : THUpdateAuxVars
   use General_module, only : GeneralUpdateAuxVars
 
-  use Realization_class
+  use Realization_module
   use Option_module
 
   implicit none
@@ -2892,7 +2892,7 @@ subroutine StepperUpdateTranAuxVars(realization)
   ! 
   
   use Reactive_Transport_module, only : RTUpdateAuxVars
-  use Realization_class
+  use Realization_module
 
   implicit none
 
@@ -2914,7 +2914,7 @@ subroutine StepperSandbox(realization)
   ! 
   
   use Reactive_Transport_module, only : RTUpdateAuxVars
-  use Realization_class
+  use Realization_module
   use Patch_module
   use Grid_module
   use Field_module
@@ -3021,7 +3021,7 @@ subroutine StepperCheckpoint(realization,flow_timestepper,tran_timestepper,id, i
   ! Date: 03/07/08
   ! 
 
-  use Realization_class
+  use Realization_module
   use Checkpoint_module
   use Option_module
   use String_module, only : StringNull
@@ -3102,7 +3102,7 @@ subroutine TimestepperRestart(realization,flow_timestepper,tran_timestepper, &
   ! Date: 03/07/08
   ! 
 
-  use Realization_class
+  use Realization_module
   use Checkpoint_module
   use Option_module
 
@@ -3249,7 +3249,7 @@ subroutine TimestepperCheckCFLLimit(stepper,realization)
   ! Date: 01/17/11
   ! 
 
-  use Realization_class
+  use Realization_module
   
   implicit none
 

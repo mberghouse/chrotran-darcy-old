@@ -1,9 +1,9 @@
-module Reaction_Sandbox_PNNL_N_class
+module Reaction_Sandbox_PNNL_N_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Reaction_Sandbox_Base_class
+  use Reaction_Sandbox_Base_module
   
   use Global_Aux_module
   use Reactive_Transport_Aux_module
@@ -384,7 +384,7 @@ subroutine PNNL_NReact(this,Residual,Jacobian,compute_derivative, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -596,4 +596,4 @@ subroutine PNNL_NDestroy(this)
 
 end subroutine PNNL_NDestroy
 
-end module Reaction_Sandbox_PNNL_N_class
+end module Reaction_Sandbox_PNNL_N_module

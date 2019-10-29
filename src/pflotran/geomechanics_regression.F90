@@ -198,7 +198,7 @@ subroutine GeomechanicsRegressionCreateMapping(geomechanics_regression, &
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use Option_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Grid_Aux_module
   use Geomechanics_Discretization_module
   
@@ -505,8 +505,8 @@ subroutine GeomechanicsRegressionOutput(geomechanics_regression, &
   ! Date: 06/22/2016
   ! 
 
-  use Geomechanics_Realization_class
-  use Timestepper_Steady_class
+  use Geomechanics_Realization_module
+  use Timestepper_Steady_module
   use Option_module
   use Geomechanics_Discretization_module
   use Output_Geomechanics_module, only : OutputGeomechGetVarFromArray

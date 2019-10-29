@@ -123,14 +123,14 @@ subroutine HydrateSetup(realization)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
   use Connection_module
   use Grid_module
   use Fluid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Output_Aux_module
  
   implicit none
@@ -312,7 +312,7 @@ subroutine HydrateInitializeTimestep(realization)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Upwind_Direction_module
 
   
@@ -343,7 +343,7 @@ subroutine HydrateUpdateSolution(realization)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
@@ -394,7 +394,7 @@ subroutine HydrateTimeCut(realization)
   ! Author: Michael Nole
   ! Date: 07/23/19
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Patch_module
@@ -441,7 +441,7 @@ subroutine HydrateNumericalJacobianTest(xx,realization,B)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -563,12 +563,12 @@ subroutine HydrateComputeMassBalance(realization,mass_balance)
   ! Date: 07/23/19
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
  
   implicit none
   
@@ -631,7 +631,7 @@ subroutine HydrateZeroMassBalanceDelta(realization)
   ! Date: 07/23/19
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -672,7 +672,7 @@ subroutine HydrateUpdateMassBalance(realization)
   ! Date: 07/23/19
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -724,7 +724,7 @@ subroutine HydrateUpdateAuxVars(realization,update_state)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -732,7 +732,7 @@ subroutine HydrateUpdateAuxVars(realization,update_state)
   use Coupler_module
   use Connection_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use EOS_Water_module
   use Saturation_Function_module
   use Hydrate_Aux_module
@@ -1113,12 +1113,12 @@ subroutine HydrateUpdateFixedAccum(realization)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Hydrate_Aux_module
   use Hydrate_Common_module
 
@@ -1202,7 +1202,7 @@ subroutine HydrateResidual(snes,xx,r,realization,ierr)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
@@ -1212,7 +1212,7 @@ subroutine HydrateResidual(snes,xx,r,realization,ierr)
   use Grid_module
   use Coupler_module  
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module
   use Hydrate_Common_module
 
@@ -1591,7 +1591,7 @@ subroutine HydrateJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1599,7 +1599,7 @@ subroutine HydrateJacobian(snes,xx,A,B,realization,ierr)
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module
   use Hydrate_Aux_module
 
@@ -1948,7 +1948,7 @@ function HydrateGetTecplotHeader(realization,icolumn)
   ! Date: 07/23/19
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
     
@@ -2074,7 +2074,7 @@ subroutine HydrateSetPlotVariables(realization,list)
   ! Date: 07/23/19
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Output_Aux_module
   use Variables_module
     
@@ -2240,9 +2240,9 @@ subroutine HydrateSSSandbox(residual,Jacobian,compute_derivative, &
   use petscmat
   use Option_module
   use Grid_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   use SrcSink_Sandbox_module
-  use SrcSink_Sandbox_Base_class
+  use SrcSink_Sandbox_Base_module
   
   implicit none
 
@@ -2316,9 +2316,9 @@ end subroutine HydrateSSSandbox
 subroutine HydrateSSSandboxLoadAuxReal(srcsink,aux_real,hyd_auxvar,option)
 
   use Option_module
-  use SrcSink_Sandbox_Base_class
-  use SrcSink_Sandbox_WIPP_Gas_class
-  use SrcSink_Sandbox_WIPP_Well_class
+  use SrcSink_Sandbox_Base_module
+  use SrcSink_Sandbox_WIPP_Gas_module
+  use SrcSink_Sandbox_WIPP_Well_module
 
   implicit none
 
@@ -2369,7 +2369,7 @@ subroutine HydrateMapBCAuxVarsToGlobal(realization)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Coupler_module
@@ -2425,7 +2425,7 @@ subroutine HydrateDestroy(realization)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
 

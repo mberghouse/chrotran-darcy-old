@@ -1,9 +1,9 @@
-module Dataset_Map_HDF5_class
+module Dataset_Map_HDF5_module
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Dataset_Common_HDF5_class
+  use Dataset_Common_HDF5_module
   
   use PFLOTRAN_Constants_module
 
@@ -92,7 +92,7 @@ function DatasetMapHDF5Cast(this)
   ! Date: 05/03/13
   ! 
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   
   implicit none
 
@@ -182,7 +182,7 @@ subroutine DatasetMapHDF5Load(this,option)
   
   use Option_module
   use Time_Storage_module
-  use Dataset_Base_class
+  use Dataset_Base_module
 
   implicit none
   
@@ -641,4 +641,4 @@ subroutine DatasetMapHDF5Destroy(this)
   
 end subroutine DatasetMapHDF5Destroy
 
-end module Dataset_Map_HDF5_class
+end module Dataset_Map_HDF5_module

@@ -40,13 +40,13 @@ subroutine WIPPFloSetup(realization)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
   use Connection_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Output_Aux_module
   use Characteristic_Curves_module
   use WIPP_Characteristic_Curve_module
@@ -194,7 +194,7 @@ subroutine WIPPFloInitializeTimestep(realization)
   ! Author: Glenn Hammond
   ! Date: 07/11/17
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Upwind_Direction_module
   
   implicit none
@@ -219,7 +219,7 @@ subroutine WIPPFloUpdateSolution(realization)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -246,7 +246,7 @@ subroutine WIPPFloTimeCut(realization)
   ! Author: Glenn Hammond
   ! Date: 07/11/17
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
  
   implicit none
   
@@ -268,12 +268,12 @@ subroutine WIPPFloComputeMassBalance(realization,mass_balance)
   ! Date: 07/11/17
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
  
   implicit none
   
@@ -332,7 +332,7 @@ subroutine WIPPFloZeroMassBalanceDelta(realization)
   ! Date: 07/11/17
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -373,7 +373,7 @@ subroutine WIPPFloUpdateMassBalance(realization)
   ! Date: 07/11/17
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -425,7 +425,7 @@ subroutine WIPPFloUpdateAuxVars(realization)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -433,7 +433,7 @@ subroutine WIPPFloUpdateAuxVars(realization)
   use Coupler_module
   use Connection_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use General_Aux_module, only : ANY_STATE, TWO_PHASE_STATE
   
   implicit none
@@ -594,12 +594,12 @@ subroutine WIPPFloUpdateFixedAccum(realization)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -677,12 +677,12 @@ subroutine WIPPFloNumericalJacobianTest(xx,B,realization,pmwss_ptr)
   ! Date: 03/03/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
   use Field_module
-  use PM_WIPP_SrcSink_class
+  use PM_WIPP_SrcSink_module
 
   implicit none
 
@@ -832,7 +832,7 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
@@ -842,8 +842,8 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
   use Connection_module
   use Grid_module
   use Coupler_module
-  use Material_Aux_class
-  use PM_WIPP_SrcSink_class
+  use Material_Aux_module
+  use PM_WIPP_SrcSink_module
   use Upwind_Direction_module
 
   implicit none
@@ -1310,15 +1310,15 @@ subroutine WIPPFloJacobian(snes,xx,A,B,realization,pmwss_ptr,ierr)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
   use Connection_module
   use Coupler_module
   use Field_module
-  use Material_Aux_class
-  use PM_WIPP_SrcSink_class
+  use Material_Aux_module
+  use PM_WIPP_SrcSink_module
   use Upwind_Direction_module
   use Debug_module
 
@@ -1717,7 +1717,7 @@ subroutine WIPPFloSetPlotVariables(realization,list)
   ! Date: 07/11/17
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Output_Aux_module
   use Variables_module
     
@@ -1776,12 +1776,12 @@ subroutine WIPPFloCreepShutDown(realization)
   ! Author: Jennifer M. Frederick
   ! Date: 04/18/2018
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Option_module
   use WIPP_module
   use Creep_Closure_module
-  use Material_Aux_class, only: material_auxvar_type, MaterialAuxVarSetValue
+  use Material_Aux_module, only: material_auxvar_type, MaterialAuxVarSetValue
   use Variables_module, only : SOIL_REFERENCE_PRESSURE
   
   implicit none
@@ -1840,9 +1840,9 @@ subroutine WIPPFloSSSandbox(residual,Jacobian,compute_derivative, &
   use petscmat
   use Option_module
   use Grid_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   use SrcSink_Sandbox_module
-  use SrcSink_Sandbox_Base_class
+  use SrcSink_Sandbox_Base_module
   
   implicit none
 
@@ -1916,9 +1916,9 @@ end subroutine WIPPFloSSSandbox
 subroutine WIPPFloSSSandboxLoadAuxReal(srcsink,aux_real,wippflo_auxvar,option)
 
   use Option_module
-  use SrcSink_Sandbox_Base_class
-  use SrcSink_Sandbox_WIPP_Gas_class
-  use SrcSink_Sandbox_WIPP_Well_class
+  use SrcSink_Sandbox_Base_module
+  use SrcSink_Sandbox_WIPP_Gas_module
+  use SrcSink_Sandbox_WIPP_Well_module
 
   implicit none
 
@@ -1959,7 +1959,7 @@ subroutine WIPPFloMapBCAuxVarsToGlobal(realization)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Coupler_module
@@ -2013,7 +2013,7 @@ subroutine WIPPFloDestroy(realization)
   ! Date: 07/11/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
 
   implicit none

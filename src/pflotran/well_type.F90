@@ -1,4 +1,4 @@
-module Well_Type_class
+module Well_Type_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -55,4 +55,4 @@ module Well_Type_class
   PetscInt, parameter, public :: CONN_STATUS_OPEN  = 1
   PetscInt, parameter, public :: CONN_STATUS_CLOSE = 2
 
-end module Well_Type_class
+end module Well_Type_module

@@ -1,4 +1,4 @@
-module PM_Richards_TS_class
+module PM_Richards_TS_module
 
 #include "petsc/finclude/petscts.h"
 #include "petsc/finclude/petscvec.h"
@@ -8,10 +8,10 @@ module PM_Richards_TS_class
   use Richards_Aux_module
   use Richards_Common_module
   use Global_Aux_module
-  use Material_Aux_class
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
-  use PM_Richards_class
+  use Material_Aux_module
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
+  use PM_Richards_module
   
   use PFLOTRAN_Constants_module
 
@@ -81,7 +81,7 @@ subroutine PMRichardsTSUpdateAuxVarsPatch(realization)
   ! Author: Gautam Bisht
   ! Date: 06/07/18
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Grid_module
   use Patch_module
@@ -147,7 +147,7 @@ subroutine PMRichardsTSIFunction(this,ts,time,U,Udot,F,ierr)
   ! Author: Gautam Bisht
   ! Date: 06/07/18
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
 
@@ -194,13 +194,13 @@ subroutine IFunctionAccumulation(F,realization,ierr)
   ! Author: Gautam Bisht
   ! Date: 06/07/18
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Patch_module
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -276,7 +276,7 @@ subroutine PMRichardsTSIJacobian(this,ts,time,U,Udot,shift,A,B,ierr)
   ! Author: Gautam Bisht
   ! Date: 06/07/18
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
 
@@ -323,13 +323,13 @@ subroutine IJacobianAccumulation(J,shift,realization,ierr)
   ! Author: Gautam Bisht
   ! Date: 06/07/18
   !
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Patch_module
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -498,4 +498,4 @@ subroutine PMRichardsTSDestroy(this)
   
 end subroutine PMRichardsTSDestroy
 
-end module PM_Richards_TS_class
+end module PM_Richards_TS_module

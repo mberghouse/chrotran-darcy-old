@@ -60,18 +60,18 @@ subroutine PFLOTRANInitializePostPetsc(simulation,multisimulation,option)
 !
   use Option_module
   use Multi_Simulation_module
-  use Simulation_Base_class
-  use Simulation_Subsurface_class
-  use Simulation_Surface_class
-  use Simulation_Surf_Subsurf_class
-  use Simulation_Geomechanics_class
+  use Simulation_Base_module
+  use Simulation_Subsurface_module
+  use Simulation_Surface_module
+  use Simulation_Surf_Subsurf_module
+  use Simulation_Geomechanics_module
   use Output_Aux_module
   use Logging_module
   use EOS_module
-  use PM_Surface_class
-  use PM_Geomechanics_Force_class
-  use PM_Subsurface_Flow_class
-  use PM_RT_class
+  use PM_Surface_module
+  use PM_Geomechanics_Force_module
+  use PM_Subsurface_Flow_module
+  use PM_RT_module
   
   implicit none
   
@@ -160,16 +160,16 @@ subroutine PFLOTRANReadSimulation(simulation,option)
   use Input_Aux_module
   use String_module
   
-  use Simulation_Base_class
-  use Simulation_Subsurface_class
-  use Simulation_Surf_Subsurf_class
-  use Simulation_Geomechanics_class
-  use PM_Base_class
-  use PM_Surface_Flow_class
-  use PM_Surface_TH_class
-  use PM_Geomechanics_Force_class
-  use PM_Auxiliary_class
-  use PMC_Base_class
+  use Simulation_Base_module
+  use Simulation_Subsurface_module
+  use Simulation_Surf_Subsurf_module
+  use Simulation_Geomechanics_module
+  use PM_Base_module
+  use PM_Surface_Flow_module
+  use PM_Surface_TH_module
+  use PM_Geomechanics_Force_module
+  use PM_Auxiliary_module
+  use PMC_Base_module
   use Checkpoint_module
   use Output_Aux_module
   use Waypoint_module
@@ -425,7 +425,7 @@ recursive subroutine PFLOTRANSetupPMCHierarchy(input,option,pmc)
 !
   use Option_module
   use Input_Aux_module
-  use PMC_Base_class
+  use PMC_Base_module
   use String_module
   
   implicit none
@@ -474,8 +474,8 @@ recursive subroutine PFLOTRANLinkPMToPMC(input,option,pmc,pm)
   use Option_module
   use Input_Aux_module
   use String_module
-  use PM_Base_class
-  use PMC_Base_class
+  use PM_Base_module
+  use PMC_Base_module
   
   implicit none
   

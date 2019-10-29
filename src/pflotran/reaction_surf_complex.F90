@@ -7,7 +7,7 @@ module Reaction_Surface_Complexation_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   use PFLOTRAN_Constants_module
 
@@ -952,7 +952,7 @@ subroutine RKineticSurfCplx(Res,Jac,compute_derivative,rt_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   

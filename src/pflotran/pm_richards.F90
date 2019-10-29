@@ -1,9 +1,9 @@
-module PM_Richards_class
+module PM_Richards_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
   
   use PFLOTRAN_Constants_module
 
@@ -267,7 +267,7 @@ subroutine PMRichardsUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Author: Glenn Hammond
   ! Date: 03/14/13
   ! 
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
 
   implicit none
   
@@ -372,7 +372,7 @@ subroutine PMRichardsCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   ! Date: 03/14/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -502,7 +502,7 @@ subroutine PMRichardsCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   ! Date: 11/21/18
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -613,7 +613,7 @@ subroutine PMRichardsCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
   use Global_Aux_module
   use Grid_module
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
@@ -922,4 +922,4 @@ subroutine PMRichardsDestroy(this)
   
 end subroutine PMRichardsDestroy
   
-end module PM_Richards_class
+end module PM_Richards_module

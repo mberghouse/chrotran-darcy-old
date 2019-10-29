@@ -1,11 +1,11 @@
-module PM_Surface_TH_class
+module PM_Surface_TH_module
 
 #include "petsc/finclude/petscts.h"
   use petscts
-  use PM_Base_class
-  use PM_Surface_class
-  use Realization_Surface_class
-  use Realization_Subsurface_class
+  use PM_Base_module
+  use PM_Surface_module
+  use Realization_Surface_module
+  use Realization_Subsurface_module
   use Communicator_Base_module
   use Option_module
 
@@ -373,4 +373,4 @@ subroutine PMSurfaceTHDestroy(this)
 
 end subroutine PMSurfaceTHDestroy
 
-end module PM_Surface_TH_class
+end module PM_Surface_TH_module

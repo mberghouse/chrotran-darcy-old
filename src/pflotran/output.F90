@@ -85,7 +85,7 @@ subroutine OutputFileRead(input,realization,output_option, &
   use Input_Aux_module
   use Output_Aux_module
   use String_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Waypoint_module
   use Units_module
   use Utility_module
@@ -1249,7 +1249,7 @@ subroutine Output(realization_base,snapshot_plot_flag,observation_plot_flag, &
   ! Notes: Modified by Jenn Frederick, 2/23/2016
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   
   implicit none
@@ -1722,7 +1722,7 @@ subroutine ComputeFlowCellVelocityStats(realization_base)
   ! Date: 03/11/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Connection_module
@@ -1884,7 +1884,7 @@ subroutine ComputeFlowFluxVelocityStats(realization_base)
   ! 
 !geh - specifically, the flow velocities at the interfaces between cells
  
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Option_module
@@ -2017,7 +2017,7 @@ subroutine OutputPrintCouplers(realization_base,istep)
   ! Date: 11/02/11
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Coupler_module
   use Connection_module
   use Option_module
@@ -2145,7 +2145,7 @@ subroutine OutputPrintRegions(realization_base)
   ! Author: Glenn Hammond
   ! Date: 10/03/16
   ! 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Debug_module
   use Field_module
@@ -2201,7 +2201,7 @@ subroutine OutputPrintRegionsH5(realization_base)
   use petscvec
   use hdf5
   use HDF5_module
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Option_module
   use Field_module
@@ -2358,7 +2358,7 @@ subroutine OutputAvegVars(realization_base)
   ! Date: 01/10/13
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Output_Aux_module
   use Output_Common_module, only : OutputGetVariableArray  
@@ -2507,7 +2507,7 @@ subroutine OutputListEnsureVariablesExist(output_variable_list,option)
   ! Date: 03/02/17
   ! 
   use Option_module
-  use Material_Aux_class, only : soil_compressibility_index, &
+  use Material_Aux_module, only : soil_compressibility_index, &
                                  soil_reference_pressure_index
   use Variables_module
 

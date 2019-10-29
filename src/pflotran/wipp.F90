@@ -92,7 +92,7 @@ subroutine FractureAuxVarInit(auxvar)
   ! Date: 7/8/2015, 6/15/17
   !
 
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -114,7 +114,7 @@ subroutine FracturePropertytoAux(fracture_auxvar,fracture_property)
   ! Date: 7/8/2015
   !
 
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -224,7 +224,7 @@ subroutine FractureSetInitialPressure(fracture,initial_cell_pressure)
   !
   ! Sets the pressure referenced in fracture
   !
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -253,7 +253,7 @@ subroutine FracturePoroEvaluate(auxvar,pressure,compressed_porosity, &
   !
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -331,7 +331,7 @@ subroutine FracturePermScale(auxvar,liquid_pressure,effective_porosity, &
   !
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   

@@ -6,7 +6,7 @@ module Output_Common_module
   use Output_Aux_module
   
   !note: only realization_base_type can be used throughout this module.
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
 
   use PFLOTRAN_Constants_module
 
@@ -165,7 +165,7 @@ subroutine OutputGetVariableArray(realization_base,vec,variable)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Base_class, only : RealizationGetVariable
+  use Realization_Base_module, only : RealizationGetVariable
 
   implicit none
 
@@ -246,7 +246,7 @@ function OutputGetVariableAtCell(realization_base,ghosted_id,variable)
   ! Date: 02/11/08
   ! 
 
-  use Realization_Base_class, only : RealizGetVariableValueAtCell
+  use Realization_Base_module, only : RealizGetVariableValueAtCell
   use Grid_module
   use Option_module
 
@@ -275,7 +275,7 @@ function OutputGetVariableAtCoord(realization_base,variable,x,y,z, &
   ! Date: 02/11/08
   ! 
 
-  use Realization_Base_class, only : RealizGetVariableValueAtCell
+  use Realization_Base_module, only : RealizGetVariableValueAtCell
   use Grid_module
   use Option_module
 
@@ -888,7 +888,7 @@ subroutine OutputGetFaceVelUGrid(realization_base)
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use HDF5_module
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1202,7 +1202,7 @@ subroutine OutputGetFaceFlowrateUGrid(realization_base)
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use HDF5_module
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1432,7 +1432,7 @@ subroutine OutputGetExplicitIDsFlowrates(realization_base,count,vec_proc, &
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1586,7 +1586,7 @@ subroutine OutputGetExplicitFlowrates(realization_base,count,vec_proc, &
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1671,7 +1671,7 @@ subroutine OutputGetExplicitAuxVars(realization_base,count,vec_proc,density)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1681,7 +1681,7 @@ subroutine OutputGetExplicitAuxVars(realization_base,count,vec_proc,density)
   use Global_Aux_module
   use Richards_Aux_module
   use TH_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -1794,7 +1794,7 @@ subroutine OutputGetExplicitCellInfo(realization_base,num_cells,ids,sat,por, &
   ! 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1858,7 +1858,7 @@ subroutine OutputCollectVelocityOrFlux(realization_base, iphase, direction, &
   ! Author: Glenn Hammond
   ! Date: 03/26/18
   ! 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Patch_module
   use Grid_module

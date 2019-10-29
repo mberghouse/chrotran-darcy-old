@@ -1,12 +1,12 @@
-module PM_Subsurface_Flow_class
+module PM_Subsurface_Flow_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
 
-  use PM_Base_class
+  use PM_Base_module
 !geh: using Init_Subsurface_module here fails with gfortran (internal compiler error)
 !  use Init_Subsurface_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Communicator_Base_module
   use Option_module
   
@@ -296,8 +296,8 @@ subroutine PMSubsurfaceFlowSetup(this)
   ! Date: 04/21/14
 
   use Discretization_module
-  use Communicator_Structured_class
-  use Communicator_Unstructured_class
+  use Communicator_Structured_module
+  use Communicator_Unstructured_module
   use Grid_module
   use Characteristic_Curves_module
   use Characteristic_Curves_WIPP_module
@@ -365,7 +365,7 @@ subroutine PMSubsurfaceFlowSetRealization(this,realization)
   ! Author: Glenn Hammond
   ! Date: 04/21/14
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
 
   implicit none
@@ -393,9 +393,9 @@ recursive subroutine PMSubsurfaceFlowInitializeRun(this)
   use Condition_Control_module
   use Material_module
   use Variables_module, only : POROSITY
-  use Material_Aux_class, only : POROSITY_INITIAL, POROSITY_BASE, &
+  use Material_Aux_module, only : POROSITY_INITIAL, POROSITY_BASE, &
                                  POROSITY_CURRENT
-  use Well_Data_class
+  use Well_Data_module
 
   implicit none
   
@@ -471,17 +471,17 @@ subroutine PMSubsurfaceFlowSetSoilRefPres(realization)
   ! Author: Glenn Hammond
   ! Date: 07/06/16
   ! 
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use Patch_module
   use Discretization_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Material_module
   use HDF5_module
-  use Dataset_Base_class
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Base_module
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
   use Fracture_module
   use Variables_module, only : MAXIMUM_PRESSURE, LIQUID_PRESSURE, & 
                       SOIL_REFERENCE_PRESSURE 
@@ -608,10 +608,10 @@ subroutine InitialiseAllWells(this)
  ! Date  : 08/15/18
 
 
-  use Well_Data_class
+  use Well_Data_module
   use Well_Solver_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_Grdecl_module, only : UGrdEclWellCmplCleanup, GetIsGrdecl
 
   implicit none
@@ -692,7 +692,7 @@ subroutine PMSubsurfaceFlowInitializeTimestepA(this)
   use Variables_module, only : POROSITY, PERMEABILITY_X, &
                                PERMEABILITY_Y, PERMEABILITY_Z
   use Material_module
-  use Material_Aux_class, only : POROSITY_BASE, POROSITY_CURRENT
+  use Material_Aux_module, only : POROSITY_BASE, POROSITY_CURRENT
   
   implicit none
   
@@ -735,7 +735,7 @@ subroutine PMSubsurfaceFlowInitializeTimestepB(this)
   use Variables_module, only : POROSITY, PERMEABILITY_X, &
                                PERMEABILITY_Y, PERMEABILITY_Z
   use Material_module
-  use Material_Aux_class, only : POROSITY_CURRENT, POROSITY_BASE
+  use Material_Aux_module, only : POROSITY_CURRENT, POROSITY_BASE
   
   implicit none
   
@@ -898,7 +898,7 @@ subroutine PMSubsurfaceFlowTimeCut(this)
   ! Date: 04/21/14 
   use Material_module
   use Variables_module, only : POROSITY
-  use Material_Aux_class, only : POROSITY_BASE, POROSITY_CURRENT
+  use Material_Aux_module, only : POROSITY_BASE, POROSITY_CURRENT
   
   implicit none
   
@@ -937,7 +937,7 @@ subroutine PMSubsurfaceFlowTimeCutPostInit(this)
   ! Date: 08/23/17
   use Material_module
   use Variables_module, only : POROSITY
-  use Material_Aux_class, only : POROSITY_BASE
+  use Material_Aux_module, only : POROSITY_BASE
   
   implicit none
   
@@ -967,7 +967,7 @@ subroutine PMSubsurfaceFlowFinalizeTimestep(this)
   use Material_module
   use Global_module
   use Variables_module, only : POROSITY
-  use Material_Aux_class, only : POROSITY_CURRENT
+  use Material_Aux_module, only : POROSITY_CURRENT
 
   implicit none
   
@@ -1229,4 +1229,4 @@ subroutine PMSubsurfaceFlowDestroy(this)
   
 end subroutine PMSubsurfaceFlowDestroy
   
-end module PM_Subsurface_Flow_class
+end module PM_Subsurface_Flow_module

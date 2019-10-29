@@ -41,7 +41,7 @@ subroutine SurfaceTHSetup(surf_realization)
   ! Date: 02/28/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -134,7 +134,7 @@ subroutine SurfaceTHSetPlotVariables(list)
   ! Date: 02/28/13
   ! 
   
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Output_Aux_module
   use Variables_module
     
@@ -177,7 +177,7 @@ subroutine SurfaceTHRHSFunction(ts,t,xx,ff,surf_realization,ierr)
   use petscts
   use EOS_Water_module
   use Connection_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Discretization_module
   use Patch_module
   use Grid_module
@@ -465,7 +465,7 @@ subroutine SurfaceTHIFunction(ts,t,xx,xxdot,ff,surf_realization,ierr)
   use petscts
   use EOS_Water_module
   use Connection_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Discretization_module
   use Patch_module
   use Grid_module
@@ -509,7 +509,7 @@ subroutine SurfaceTHComputeMaxDt(surf_realization,max_allowable_dt)
 
   use EOS_Water_module
   use Connection_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1005,7 +1005,7 @@ subroutine SurfaceTHUpdateAuxVars(surf_realization)
   ! Date: 03/07/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Option_module
   use Surface_Field_module
@@ -1247,7 +1247,7 @@ subroutine SurfaceTHUpdateTemperature(surf_realization)
   ! Date: 06/25/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Option_module
   use Surface_Field_module
@@ -1355,11 +1355,11 @@ subroutine SurfaceTHUpdateSurfState(surf_realization)
   use Grid_module
   use Option_module
   use Patch_module
-  use Realization_Subsurface_class
-  use Realization_Base_class
+  use Realization_Subsurface_module
+  use Realization_Base_module
   use String_module
   use Surface_Field_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use EOS_Water_module
 
   implicit none
@@ -1525,7 +1525,7 @@ subroutine SurfaceTHImplicitAtmForcing(surf_realization)
   ! Date: 04/24/2014
   !
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Option_module
   use Surface_Field_module
@@ -1660,7 +1660,7 @@ subroutine SurfaceTHUpdateSolution(surf_realization)
   ! Date: 03/07/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_Field_module
 
   implicit none
@@ -1686,7 +1686,7 @@ subroutine SurfaceTHDestroy(surf_realization)
   ! Date: 02/14/08
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
 
   implicit none
   

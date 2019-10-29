@@ -1,12 +1,12 @@
-module PM_TH_class
+module PM_TH_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
 !geh: using TH_module here fails with gfortran (internal compiler error)
 !  use TH_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Communicator_Base_module
   use Option_module
   
@@ -274,8 +274,8 @@ subroutine PMTHSetup(this)
   ! 
 
   use Discretization_module
-  use Communicator_Structured_class
-  use Communicator_Unstructured_class
+  use Communicator_Structured_module
+  use Communicator_Unstructured_module
   use Grid_module 
 
   implicit none
@@ -371,7 +371,7 @@ subroutine PMTHUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Author: Gautam Bisht, LBNL
   ! Date: 03/90/13
   ! 
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
 
   implicit none
   
@@ -491,7 +491,7 @@ subroutine PMTHCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   ! Date: 03/90/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -642,7 +642,7 @@ subroutine PMTHCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   ! Date: 11/21/18
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -756,7 +756,7 @@ subroutine PMTHCheckConvergence(this,snes,it,xnorm,unorm,fnorm,reason,ierr)
   use Global_Aux_module
   use Grid_module
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
@@ -1078,4 +1078,4 @@ subroutine PMTHDestroy(this)
 
 end subroutine PMTHDestroy
 
-end module PM_TH_class
+end module PM_TH_module

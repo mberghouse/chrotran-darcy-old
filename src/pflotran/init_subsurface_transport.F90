@@ -22,7 +22,7 @@ subroutine InitSubsurfTranSetupRealization(realization)
   ! Author: Glenn Hammond
   ! Date: 12/04/14
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use NW_Transport_module
   use Reactive_Transport_module
@@ -61,7 +61,7 @@ subroutine InitFlowGlobalAuxVar(realization,option)
   ! Author: Glenn Hammond
   ! Date: 12/04/14
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module 
   use Global_module
   use Variables_module

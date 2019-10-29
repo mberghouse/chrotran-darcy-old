@@ -1,7 +1,7 @@
-module PMC_Subsurface_class
+module PMC_Subsurface_module
 
-  use PMC_Base_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use Realization_Subsurface_module
 
   use PFLOTRAN_Constants_module
 
@@ -65,7 +65,7 @@ subroutine PMCSubsurfaceInit(this)
   ! Date: 06/10/13
   ! 
   ! for some reason, Intel with VS want this explicitly specified.
-  use PMC_Base_class, only : PMCBaseInit
+  use PMC_Base_module, only : PMCBaseInit
   
   implicit none
   
@@ -89,8 +89,8 @@ subroutine PMCSubsurfaceSetupSolvers(this)
   ! Date: 06/22/18
   ! 
   use Option_module
-  use Timestepper_BE_class
-  use Timestepper_TS_class
+  use Timestepper_BE_module
+  use Timestepper_TS_module
 
   implicit none
 
@@ -124,27 +124,27 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   ! 
   use Convergence_module
   use Discretization_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use General_Aux_module
-  use PMC_Base_class
+  use PMC_Base_module
   use PM_Base_Pointer_module
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
-  use PM_General_class
-  use PM_WIPP_Flow_class
-  use PM_Richards_class
-  use PM_TH_class
-  use PM_RT_class
-  use PM_NWT_class
-  use PM_Waste_Form_class
-  use PM_UFD_Decay_class
-  use PM_TOilIms_class
-  use PM_TOWG_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
+  use PM_General_module
+  use PM_WIPP_Flow_module
+  use PM_Richards_module
+  use PM_TH_module
+  use PM_RT_module
+  use PM_NWT_module
+  use PM_Waste_Form_module
+  use PM_UFD_Decay_module
+  use PM_TOilIms_module
+  use PM_TOWG_module
   use Secondary_Continuum_module, only : SecondaryRTUpdateIterate  
   use Solver_module
-  use Timestepper_Base_class
-  use Timestepper_BE_class
+  use Timestepper_Base_module
+  use Timestepper_BE_module
 
   implicit none
 
@@ -570,14 +570,14 @@ subroutine PMCSubsurfaceSetupSolvers_TS(this)
   use Convergence_module
   use Discretization_module
   use Option_module
-  use PMC_Base_class
+  use PMC_Base_module
   use PM_Base_Pointer_module
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
-  use PM_Richards_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
+  use PM_Richards_module
   use Solver_module
-  use Timestepper_Base_class
-  use Timestepper_TS_class
+  use Timestepper_Base_module
+  use Timestepper_TS_module
 
   implicit none
 
@@ -731,8 +731,8 @@ subroutine PMCSubsurfaceGetAuxDataFromSurf(this)
   use Grid_module
   use Option_module
   use Patch_module
-!  use Realization_Base_class
-  use Realization_Subsurface_class
+!  use Realization_Base_module
+  use Realization_Subsurface_module
   use String_module
   use EOS_Water_module
 
@@ -982,13 +982,13 @@ subroutine PMCSubsurfaceSetAuxDataForSurf(this)
 
   use Grid_module
   use String_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Coupler_module
   use Field_module
   use Connection_module
-  use Realization_Base_class
+  use Realization_Base_module
   use EOS_Water_module
 
   implicit none
@@ -1104,9 +1104,9 @@ subroutine PMCSubsurfaceGetAuxDataFromGeomech(this)
   use Field_module
   use Grid_module
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use PFLOTRAN_Constants_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Material_module
   use Variables_module, only : POROSITY
 
@@ -1186,10 +1186,10 @@ subroutine PMCSubsurfaceSetAuxDataForGeomech(this)
   ! Date: 01/04/14
 
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
-  use Material_Aux_class
+  use Material_Aux_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -1341,7 +1341,7 @@ subroutine CPRWorkersCreate(pm, solver, option)
   ! Date: Oct 2017 - March 2018
   ! 
 
-  use PM_Subsurface_Flow_class
+  use PM_Subsurface_Flow_module
   use Solver_module
   use Option_module
   use Discretization_module
@@ -1442,4 +1442,4 @@ end subroutine PMCSubsurfaceDestroy
 
 ! ************************************************************************** !
   
-end module PMC_Subsurface_class
+end module PMC_Subsurface_module

@@ -1,10 +1,10 @@
-module Timestepper_Steady_class
+module Timestepper_Steady_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
  
-  use Timestepper_BE_class
-  use Timestepper_Base_class
+  use Timestepper_BE_module
+  use Timestepper_Base_module
   use Convergence_module
   use Solver_module
   use Waypoint_module
@@ -226,7 +226,7 @@ subroutine TimestepperSteadyUpdateDT(this,process_model)
   ! Date: 01/01/14, 04/07/2015
   ! 
 
-  use PM_Base_class
+  use PM_Base_module
   use Option_module
   
   implicit none
@@ -249,9 +249,9 @@ subroutine TimestepperSteadyStepDT(this, process_model, stop_flag)
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
+  use PM_Base_module
   use Option_module
-  use PM_Geomechanics_Force_class
+  use PM_Geomechanics_Force_module
   use Output_module, only : Output
 
   use Solver_module
@@ -398,4 +398,4 @@ subroutine TimestepperSteadyInputRecord(this)
 
 end subroutine TimestepperSteadyInputRecord
 
-end module Timestepper_Steady_class
+end module Timestepper_Steady_module

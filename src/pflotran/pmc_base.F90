@@ -1,10 +1,10 @@
 ! Process Model Coupler Base class
-module PMC_Base_class
+module PMC_Base_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys  
-  use PM_Base_class
-  use Timestepper_Base_class
+  use PM_Base_module
+  use Timestepper_Base_module
   use Option_module
   use Output_Aux_module
   use Waypoint_module
@@ -173,7 +173,7 @@ recursive subroutine PMCBaseInputRecord(this)
   ! Date: 03/21/2016
   ! 
 
-  use PM_Base_class
+  use PM_Base_module
   
   implicit none
   
@@ -225,7 +225,7 @@ recursive subroutine PMCBaseSetChildPeerPtr(pmcA,relationship_to,pmcB, &
   ! Date: 02/15/2017
   ! 
 
-  use PM_Base_class
+  use PM_Base_module
   use Option_module
   
   implicit none
@@ -357,7 +357,7 @@ subroutine PMCBaseSetTimestepper(this,timestepper)
   ! Date: 03/18/13
   ! 
 
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   
   implicit none
   
@@ -421,7 +421,7 @@ recursive subroutine PMCBaseRunToTime(this,sync_time,stop_flag)
   ! Author: Glenn Hammond
   ! Date: 03/18/13
   ! 
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   use Checkpoint_module
 
   implicit none
@@ -1697,4 +1697,4 @@ recursive subroutine PMCBaseDestroy(this)
   
 end subroutine PMCBaseDestroy
   
-end module PMC_Base_class
+end module PMC_Base_module

@@ -1012,7 +1012,7 @@ end subroutine SFOWGBaseVerify
 subroutine SFOWGBaseTest(this,cc_name,option)
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -1158,7 +1158,7 @@ end subroutine SFXWBaseVerify
 subroutine SFXWBaseTest(this,cc_name,option)
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -1819,7 +1819,7 @@ end subroutine SFOGBaseVerify
 subroutine SFOGBaseTest(this,cc_name,option)
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 

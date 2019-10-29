@@ -1,9 +1,9 @@
-module PM_Geomechanics_Force_class
+module PM_Geomechanics_Force_module
 
 #include "petsc/finclude/petscts.h"
   use petscts
-  use PM_Base_class
-  use Geomechanics_Realization_class
+  use PM_Base_module
+  use Geomechanics_Realization_module
   use Communicator_Base_module
   use Option_module
   use PFLOTRAN_Constants_module
@@ -77,8 +77,8 @@ subroutine PMGeomechForceSetup(this)
   ! 
 
   use Geomechanics_Discretization_module
-  use Communicator_Structured_class
-  use Communicator_Unstructured_class
+  use Communicator_Structured_module
+  use Communicator_Unstructured_module
   use Grid_module
 
   implicit none
@@ -276,7 +276,7 @@ subroutine PMGeomechForceUpdateSolution(this)
                                         GeomechStoreInitialDisp, &
                                         GeomechForceUpdateAuxVars
   use Geomechanics_Condition_module
-  use Geomechanics_Realization_class, only : &
+  use Geomechanics_Realization_module, only : &
                                  GeomechRealizUpdateAllCouplerAuxVars
 
 
@@ -436,7 +436,7 @@ subroutine PMGeomechForceDestroy(this)
   ! Date: 12/31/13
   ! 
 
-  use Geomechanics_Realization_class, only : GeomechRealizDestroy
+  use Geomechanics_Realization_module, only : GeomechRealizDestroy
 
   implicit none
   
@@ -456,4 +456,4 @@ subroutine PMGeomechForceDestroy(this)
   
 end subroutine PMGeomechForceDestroy
 
-end module PM_Geomechanics_Force_class
+end module PM_Geomechanics_Force_module

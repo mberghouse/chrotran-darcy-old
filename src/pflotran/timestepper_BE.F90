@@ -1,10 +1,10 @@
-module Timestepper_BE_class
+module Timestepper_BE_module
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
   use Solver_module
   use Convergence_module
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   
   use PFLOTRAN_Constants_module
 
@@ -213,7 +213,7 @@ subroutine TimestepperBEUpdateDT(this,process_model)
   ! Date: 07/22/13
   ! 
 
-  use PM_Base_class
+  use PM_Base_module
   
   implicit none
 
@@ -270,7 +270,7 @@ subroutine TimestepperBEStepDT(this,process_model,stop_flag)
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
+  use PM_Base_module
   use Option_module
   use Output_module, only : Output, OutputFindNaNOrInfInVec
   use Output_EKG_module, only : IUNIT_EKG
@@ -1132,4 +1132,4 @@ subroutine TimestepperBEDestroy(this)
   
 end subroutine TimestepperBEDestroy
 
-end module Timestepper_BE_class
+end module Timestepper_BE_module

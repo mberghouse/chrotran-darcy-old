@@ -1,21 +1,21 @@
-module Realization_Subsurface_class
+module Realization_Subsurface_module
   
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
   use PFLOTRAN_Constants_module
-  use Realization_Base_class
+  use Realization_Base_module
   use Option_module
   use Input_Aux_module
   use Region_module
   use Condition_module
-  use Well_Data_class
+  use Well_Data_module
   use Transport_Constraint_Base_module
   use Transport_Constraint_module
   use Material_module
   use Saturation_Function_module
   use Characteristic_Curves_module
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Fluid_module
   use Patch_module
   use Reaction_Aux_module
@@ -90,7 +90,7 @@ private
             RealizationLimitDTByCFL
 
   !TODO(intel)
-  ! public from Realization_Base_class
+  ! public from Realization_Base_module
   !public :: RealizationGetVariable
 
 contains
@@ -189,8 +189,8 @@ subroutine RealizationCreateDiscretization(realization)
   use Grid_Unstructured_Cell_module
   use DM_Kludge_module
   use Variables_module, only : VOLUME
-  use Communicator_Structured_class, only : StructuredCommunicatorCreate
-  use Communicator_Unstructured_class, only : UnstructuredCommunicatorCreate
+  use Communicator_Structured_module, only : StructuredCommunicatorCreate
+  use Communicator_Unstructured_module, only : UnstructuredCommunicatorCreate
   
   implicit none
 
@@ -664,8 +664,8 @@ subroutine RealizationProcessConditions(realization)
   ! Author: Glenn Hammond
   ! Date: 10/14/08
   ! 
-  use Data_Mediator_Base_class
-  use Data_Mediator_Dataset_class
+  use Data_Mediator_Base_module
+  use Data_Mediator_Dataset_module
   
   implicit none
   
@@ -729,7 +729,7 @@ subroutine RealProcessMatPropAndSatFunc(realization)
   ! 
 
   use String_module
-  use Dataset_Common_HDF5_class
+  use Dataset_Common_HDF5_module
   use Dataset_module
   
   implicit none
@@ -1003,7 +1003,7 @@ subroutine RealProcessFlowConditions(realization)
   ! Date: 10/26/11
   ! 
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Dataset_module
 
   implicit none
@@ -1409,7 +1409,7 @@ subroutine RealizationRevertFlowParameters(realization)
   use Option_module
   use Field_module
   use Discretization_module
-  use Material_Aux_class, only : material_type, &
+  use Material_Aux_module, only : material_type, &
                               POROSITY_CURRENT, POROSITY_BASE, POROSITY_INITIAL
   use Variables_module, only : PERMEABILITY_X, PERMEABILITY_Y, PERMEABILITY_Z, &
                                POROSITY
@@ -1472,7 +1472,7 @@ subroutine RealizStoreRestartFlowParams(realization)
   use Option_module
   use Field_module
   use Discretization_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module
 
   implicit none
@@ -1559,8 +1559,8 @@ subroutine RealizationAddWaypointsToList(realization,waypoint_list)
   use Option_module
   use Waypoint_module
   use Time_Storage_module
-  use Data_Mediator_Base_class
-  use Data_Mediator_Dataset_class
+  use Data_Mediator_Base_module
+  use Data_Mediator_Dataset_module
   use Strata_module
 
   implicit none
@@ -1753,7 +1753,7 @@ subroutine RealizationUpdatePropertiesTS(realization)
   use Discretization_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use Variables_module, only : POROSITY, TORTUOSITY, PERMEABILITY_X, &
@@ -2032,7 +2032,7 @@ subroutine RealizationUpdatePropertiesNI(realization)
   use Grid_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module, only : POROSITY, TORTUOSITY, PERMEABILITY_X, &
                                PERMEABILITY_Y, PERMEABILITY_Z
  
@@ -2093,7 +2093,7 @@ subroutine RealizationCalcMineralPorosity(realization)
   use Grid_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module, only : POROSITY
  
   implicit none
@@ -2492,7 +2492,7 @@ subroutine RealizUnInitializedVarsFlow(realization)
   ! Date: 07/06/16
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module, only : VOLUME, BASE_POROSITY, PERMEABILITY_X, &
                                PERMEABILITY_Y, PERMEABILITY_Z
 
@@ -2530,7 +2530,7 @@ subroutine RealizUnInitializedVarsTran(realization)
   use Patch_module
   use Option_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module, only : VOLUME, BASE_POROSITY, TORTUOSITY
 
   implicit none
@@ -2697,4 +2697,4 @@ subroutine RealizationStrip(this)
   
 end subroutine RealizationStrip
 
-end module Realization_Subsurface_class
+end module Realization_Subsurface_module

@@ -73,7 +73,7 @@ subroutine OutputHDF5(realization_base,var_list_type)
   ! Date: 10/25/07
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Option_module
   use Grid_module
@@ -482,7 +482,7 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
   ! Date: 10/29/2012
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Option_module
   use Grid_module
@@ -881,7 +881,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
   ! Date: 07/17/2013
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Option_module
   use Grid_module
@@ -1304,7 +1304,7 @@ subroutine WriteHDF5FluxVelocities(name,realization_base,iphase,direction, &
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Option_module
@@ -1783,7 +1783,7 @@ subroutine WriteHDF5CoordinatesUGridXDMF(realization_base,option,file_id)
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use hdf5
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Grid_Unstructured_Aux_module
@@ -2300,7 +2300,7 @@ subroutine DetermineNumVertices(realization_base,option)
   ! 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Grid_Unstructured_Aux_module
@@ -2370,7 +2370,7 @@ subroutine WriteHDF5CoordinatesUGridXDMFExplicit(realization_base,option, &
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use hdf5
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Grid_Unstructured_Aux_module
@@ -2626,7 +2626,7 @@ subroutine WriteHDF5FlowratesUGrid(realization_base,option,file_id, &
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use hdf5
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -2874,7 +2874,7 @@ subroutine WriteHDF5FaceVelUGrid(realization_base,option,file_id, &
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use hdf5
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Patch_module
   use Grid_module
   use Option_module

@@ -1,4 +1,4 @@
-module PM_WIPP_SrcSink_class
+module PM_WIPP_SrcSink_module
 
 ! MODULE DESCRIPTION:
 ! ============================================================================
@@ -14,10 +14,10 @@ module PM_WIPP_SrcSink_class
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use PM_Base_class
+  use PM_Base_module
   use Region_module
   use PFLOTRAN_Constants_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Utility_module, only : Equal
   
   implicit none
@@ -749,7 +749,7 @@ subroutine PMWSSSetRealization(this,realization)
   ! Date: 02/02/2017
   !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
   
@@ -936,7 +936,7 @@ subroutine PMWSSSetRegionScaling(this,waste_panel)
   ! Date: 2/02/2017
   !
 
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_module
 
   implicit none
@@ -2375,8 +2375,8 @@ subroutine PMWSSInitializeRun(this)
   
 #include "petsc/finclude/petscis.h"
   use petscis
-  use Data_Mediator_Vec_class
-  use Realization_Base_class
+  use Data_Mediator_Vec_module
+  use Realization_Base_module
   use Material_module
   use Option_module
   
@@ -2717,7 +2717,7 @@ end subroutine PMWSSUpdateChemSpecies
   use Option_module
   use Grid_module
   use WIPP_Flow_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Global_Aux_module
   use EOS_Gas_module
   use EOS_Water_module
@@ -3885,7 +3885,7 @@ subroutine PMWSSCalcResidualValues(this,r_p,ss_flow_vol_flux)
   ! Date: 10/20/2017
   ! 
   use WIPP_Flow_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -3982,7 +3982,7 @@ subroutine PMWSSCalcJacobianValues(this,A,ierr)
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
   use WIPP_Flow_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -4280,4 +4280,4 @@ end subroutine PMWSSChemSpeciesDeallocate
 
 ! *************************************************************************** !
 
-end module PM_WIPP_SrcSink_class
+end module PM_WIPP_SrcSink_module

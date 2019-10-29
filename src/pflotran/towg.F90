@@ -66,7 +66,7 @@ module TOWG_module
   abstract interface
 
     subroutine TOWGUpdateAuxVarsDummy(realization,update_state)
-      use Realization_Subsurface_class  
+      use Realization_Subsurface_module  
       implicit none
       type(realization_subsurface_type) :: realization
       PetscBool :: update_state
@@ -79,7 +79,7 @@ module TOWG_module
       use Global_Aux_module
       use Option_module
       use Material_module
-      use Material_Aux_class
+      use Material_Aux_module
       implicit none
       class(auxvar_towg_type) :: auxvar
       type(global_auxvar_type) :: global_auxvar
@@ -93,7 +93,7 @@ module TOWG_module
     end subroutine TOWGAccumulationDummy
 
     subroutine TOWGComputeMassBalanceDummy(realization,mass_balance)
-      use Realization_Subsurface_class 
+      use Realization_Subsurface_module 
       implicit none
       type(realization_subsurface_type) :: realization
       PetscReal :: mass_balance(realization%option%nflowspec, &
@@ -114,7 +114,7 @@ module TOWG_module
       use AuxVars_TOWG_module
       use Global_Aux_module
       use Option_module
-      use Material_Aux_class
+      use Material_Aux_module
       implicit none
       class(auxvar_towg_type) :: auxvar_up, auxvar_dn
       type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
@@ -144,7 +144,7 @@ module TOWG_module
       use AuxVars_TOWG_module
       use Global_Aux_module
       use Option_module                              
-      use Material_Aux_class
+      use Material_Aux_module
       implicit none
       class(auxvar_towg_type) :: auxvar_up, auxvar_dn
       type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
@@ -185,7 +185,7 @@ module TOWG_module
     subroutine TOWGCheckUpdatePreDummy(line_search,X,dX,changed,realization, &
                                        max_it_before_damping,damping_factor, &
                                        max_pressure_change,ierr)
-      use Realization_Subsurface_class
+      use Realization_Subsurface_module
 #include "petsc/finclude/petscsnes.h"
       use petscsnes
       implicit none
@@ -204,7 +204,7 @@ module TOWG_module
                                   max_change_isubvar,max_pressure_change, &
                                   max_xmol_change,max_saturation_change, &
                                   max_temperature_change)
-      use Realization_Subsurface_class
+      use Realization_Subsurface_module
       implicit none
       class(realization_subsurface_type), pointer :: realization
       PetscInt :: max_change_ivar(:)
@@ -283,14 +283,14 @@ subroutine TOWGSetup(realization)
   ! Date: 11/07/16
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
   use Connection_module
   use Grid_module
   !use Fluid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Output_Aux_module
   use AuxVars_Flow_module
 
@@ -603,7 +603,7 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
   ! Date: 11/30/16
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -611,7 +611,7 @@ subroutine TOWGImsTLBOUpdateAuxVars(realization,update_state)
   use Coupler_module
   use Connection_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use EOS_Water_module
   use Saturation_Function_module
   
@@ -842,7 +842,7 @@ subroutine TOWGInitializeTimestep(realization)
   ! Date: 12/07/16 
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -872,13 +872,13 @@ subroutine TOWGUpdateSolution(realization)
   ! Date: 12/06/16 
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
   use Option_module
   use Grid_module
-  use Well_Data_class
+  use Well_Data_module
   
   implicit none
   
@@ -948,7 +948,7 @@ subroutine TOWGTimeCut(realization)
   ! Author: Paolo Orsini
   ! Date: 12/30/16
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Patch_module
@@ -999,7 +999,7 @@ subroutine TOWGZeroMassBalanceDelta(realization)
   ! Date: 12/08/16 
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -1040,7 +1040,7 @@ subroutine TOWGUpdateMassBalance(realization)
   ! Date: 12/06/16 
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -1092,12 +1092,12 @@ subroutine TOWGImsTLBOComputeMassBalance(realization,mass_balance)
   ! Date: 12/21/16
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
  
   implicit none
   
@@ -1183,8 +1183,8 @@ subroutine TOWGImsTLMaxChange(realization,max_change_ivar,max_change_isubvar,&
   ! Date: 12/30/16
   ! 
 
-  use Realization_Base_class
-  use Realization_Subsurface_class
+  use Realization_Base_module
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -1282,8 +1282,8 @@ subroutine TOWGBOMaxChange(realization,max_change_ivar,max_change_isubvar,&
 ! Date  : Dec 2017
 !------------------------------------------------------------------------------
 
-  use Realization_Base_class
-  use Realization_Subsurface_class
+  use Realization_Base_module
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -1422,8 +1422,8 @@ subroutine TOWGTL4PMaxChange(realization,max_change_ivar,max_change_isubvar,&
 ! Date  : Apr 2018
 !------------------------------------------------------------------------------
 
-  use Realization_Base_class
-  use Realization_Subsurface_class
+  use Realization_Base_module
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -1561,7 +1561,7 @@ subroutine TOWGMapBCAuxVarsToGlobal(realization)
   ! Date: 12/06/16 
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Coupler_module
@@ -1726,12 +1726,12 @@ subroutine TOWGUpdateFixedAccum(realization)
   ! Date: 12/07/16 
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -1833,7 +1833,7 @@ subroutine TOWGImsTLBOAccumulation(auxvar,global_auxvar,material_auxvar, &
 
   use Option_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivatives_utilities_module 
   
   implicit none
@@ -2018,7 +2018,7 @@ subroutine TOWGImsTLBOFlux(auxvar_up,global_auxvar_up, &
   ! Date: 12/08/16 
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
   use Derivatives_utilities_module
   !use Fracture_module
@@ -2619,7 +2619,7 @@ subroutine TOWGImsTLBOBCFlux(ibndtype,bc_auxvar_mapping,bc_auxvars, &
   ! Date: 12/22/16
   ! 
   use Option_module                              
-  use Material_Aux_class
+  use Material_Aux_module
   !use Fracture_module
   !use Klinkenberg_module
   use Derivatives_utilities_module
@@ -4237,7 +4237,7 @@ subroutine TOWGAccumDerivative(auxvar,global_auxvar,material_auxvar, &
 
   use Option_module
   use Saturation_Function_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
 
   implicit none
@@ -4355,7 +4355,7 @@ subroutine TOWGFluxDerivative(auxvar_up,global_auxvar_up, &
   ! Date: 12/27/16
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
   
   implicit none
@@ -4570,7 +4570,7 @@ subroutine TOWGBCFluxDerivative(ibndtype,bc_auxvar_mapping,bc_auxvars, &
   ! 
 
   use Option_module 
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
   
   implicit none
@@ -4799,7 +4799,7 @@ subroutine TOWGResidual(snes,xx,r,realization,ierr)
 #include "petsc/finclude/petscmat.h"
   use petscsnes
   use petscmat
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
@@ -4809,8 +4809,8 @@ subroutine TOWGResidual(snes,xx,r,realization,ierr)
   use Grid_module
   use Coupler_module  
   use Debug_module
-  use Material_Aux_class
-  use Well_Data_class
+  use Material_Aux_module
+  use Well_Data_module
   use Well_Solver_module
 
   implicit none
@@ -5244,7 +5244,7 @@ subroutine TOWGJacobian(snes,xx,A,B,realization,ierr)
 #include "petsc/finclude/petscmat.h"
   use petscsnes
   use petscmat
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -5252,8 +5252,8 @@ subroutine TOWGJacobian(snes,xx,A,B,realization,ierr)
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
-  use Well_Data_class
+  use Material_Aux_module
+  use Well_Data_module
 
   implicit none
 
@@ -5663,7 +5663,7 @@ subroutine TOWGImsTLCheckUpdatePre(line_search,X,dX,changed,realization, &
   ! Author: Paolo Orsini (OGS)
   ! Date: 12/30/16
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -5843,7 +5843,7 @@ subroutine TOWGBlackOilCheckUpdatePre(line_search,X,dX,changed,realization, &
 ! Date  : Oct 2017
 !------------------------------------------------------------------------------
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -6107,7 +6107,7 @@ subroutine TOWGDestroy(realization)
   ! Date: 01/19/17
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
 

@@ -512,7 +512,7 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
   use EOS_Water_module
   use EOS_Gas_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Creep_Closure_module
   use Fracture_module
   use WIPP_module
@@ -1353,7 +1353,7 @@ subroutine GeneralAuxVarUpdateState(x,gen_auxvar,global_auxvar, &
   use Global_Aux_module
   use EOS_Water_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -1590,7 +1590,7 @@ subroutine GeneralAuxVarPerturb(gen_auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -1997,7 +1997,7 @@ subroutine GeneralPrintAuxVars(general_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
 
   implicit none
@@ -2111,7 +2111,7 @@ subroutine GeneralOutputAuxVars1(general_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
 
   implicit none

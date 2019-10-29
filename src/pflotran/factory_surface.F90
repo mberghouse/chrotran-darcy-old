@@ -2,7 +2,7 @@ module Factory_Surface_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Simulation_Surface_class
+  use Simulation_Surface_module
 
   use PFLOTRAN_Constants_module
   use Utility_module, only : Equal
@@ -31,8 +31,8 @@ subroutine SurfaceInitialize(simulation_base,option)
 
   use Option_module
   use Input_Aux_module
-  use Timestepper_Base_class
-  use Simulation_Base_class
+  use Timestepper_Base_module
+  use Simulation_Base_module
   
   implicit none
   
@@ -81,9 +81,9 @@ subroutine SurfaceJumpStart(simulation)
   ! Date: 06/28/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Option_module
-  use Timestepper_Surface_class
+  use Timestepper_Surface_module
   use Output_Aux_module
   use Output_module
   use Logging_module  
@@ -238,13 +238,13 @@ subroutine SurfaceReadInput(surf_realization,surf_flow_solver,waypoint_list, &
   use Input_Aux_module
   use String_module
   use Surface_Material_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Grid_module
   use Grid_Structured_module
   use Grid_Unstructured_module
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Dataset_module
-  use Dataset_Common_HDF5_class
+  use Dataset_Common_HDF5_module
   use Grid_Unstructured_Aux_module
   use Discretization_module
   use Region_module

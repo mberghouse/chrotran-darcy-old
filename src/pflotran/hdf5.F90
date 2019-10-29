@@ -680,7 +680,7 @@ subroutine HDF5ReadRegionFromFile(grid,region,filename,option)
 
   use hdf5
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Grid_module
   use Region_module
@@ -788,7 +788,7 @@ subroutine HDF5ReadRegionDefinedByVertex(option,region,filename)
 
   use hdf5
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Grid_module
   use Region_module
@@ -960,7 +960,7 @@ subroutine HDF5ReadCellIndexedIntegerArray(realization,global_vec,filename, &
 
   use hdf5
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Option_module
   use Grid_module
@@ -1097,7 +1097,7 @@ subroutine HDF5ReadCellIndexedRealArray(realization,global_vec,filename, &
 
   use hdf5
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Option_module
   use Grid_module
@@ -1229,7 +1229,7 @@ subroutine HDF5WriteStructDataSetFromVec(name,realization_base,vec,file_id,data_
   ! 
 
   use hdf5
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Patch_module
@@ -1283,7 +1283,7 @@ subroutine HDF5WriteDataSetFromVec(name,option,vec,file_id,data_type)
   ! 
 
   use hdf5
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Option_module
   use Patch_module
@@ -1421,7 +1421,7 @@ subroutine HDF5ReadDataSetInVec(name, option, vec, file_id, data_type)
   ! 
 
   use hdf5
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Option_module
   use Patch_module

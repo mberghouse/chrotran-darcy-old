@@ -42,7 +42,7 @@ subroutine OutputTecplotHeader(fid,realization_base,icolumn)
   ! Date: 01/13/12
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Patch_module
@@ -105,7 +105,7 @@ subroutine OutputWriteTecplotZoneHeader(fid,realization_base,variable_count, &
   ! Date: 01/13/12
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module
@@ -218,7 +218,7 @@ subroutine OutputTecplotBlock(realization_base)
   ! Date: 10/25/07
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Grid_Structured_module
@@ -406,7 +406,7 @@ subroutine OutputVelocitiesTecplotBlock(realization_base)
   ! Date: 10/25/07
   ! 
  
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizationGetVariable
   use Discretization_module
   use Grid_module
@@ -579,7 +579,7 @@ subroutine OutputFluxVelocitiesTecplotBlk(realization_base,iphase, &
   ! 
 !geh - specifically, the flow velocities at the interfaces between cells
  
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Discretization_module
   use Grid_module
   use Grid_Structured_module
@@ -913,7 +913,7 @@ subroutine OutputTecplotPoint(realization_base)
   ! Date: 11/03/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizGetVariableValueAtCell
   use Discretization_module
   use Grid_module
@@ -1025,7 +1025,7 @@ subroutine OutputVelocitiesTecplotPoint(realization_base)
   ! Date: 10/25/07
   ! 
  
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizGetVariableValueAtCell
   use Discretization_module
   use Grid_module
@@ -1204,7 +1204,7 @@ subroutine OutputVectorTecplot(filename,dataset_name,realization_base,vector)
   ! Date: 10/25/07
   ! 
  
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizationGetVariable
   use Discretization_module
   use Option_module
@@ -1310,7 +1310,7 @@ subroutine WriteTecplotStructuredGrid(fid,realization_base)
   ! Date: 02/26/08
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Patch_module
@@ -1432,7 +1432,7 @@ subroutine WriteTecplotUGridVertices(fid,realization_base)
   ! Date: 01/12/12
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module
@@ -1550,7 +1550,7 @@ subroutine WriteTecplotExpGridElements(fid,realization_base)
   ! Date: 04/11/13
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module
@@ -1660,7 +1660,7 @@ subroutine WriteTecplotUGridElements(fid,realization_base)
   ! Date: 01/12/12
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module
@@ -1829,7 +1829,7 @@ subroutine WriteTecplotDataSetFromVec(fid,realization_base,vec,datatype)
   ! Date: 10/25/07
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   
   implicit none
 
@@ -1858,7 +1858,7 @@ subroutine WriteTecplotDataSet(fid,realization_base,array,datatype,size_flag)
   ! Date: 10/25/07
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Patch_module
@@ -1891,7 +1891,7 @@ subroutine WriteTecplotDataSetNumPerLine(fid,realization_base,array,datatype, &
   ! Date: 10/25/07, 12/02/11
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Patch_module
@@ -2159,7 +2159,7 @@ subroutine OutputPrintExplicitFlowrates(realization_base)
   ! Date: 04/24/13, 08/21/13 (Updated to Walkabout format)
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module
@@ -2286,7 +2286,7 @@ subroutine OutputSecondaryContinuumTecplot(realization_base)
   ! Date: 04/30/2013
   ! 
 
-  use Realization_Base_class, only : realization_base_type, &
+  use Realization_Base_module, only : realization_base_type, &
                                      RealizGetVariableValueAtCell
   use Option_module
   use Field_module
@@ -2513,7 +2513,7 @@ subroutine WriteTecplotHeaderForCellSec(fid,realization_base,region,icell, &
   ! Date: 04/30/2013
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Option_module
   use Output_Aux_module
@@ -2567,7 +2567,7 @@ subroutine WriteTecplotHeaderForCoordSec(fid,realization_base,region, &
   ! Date: 04/30/2013
   ! 
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Patch_module
   use Region_module
@@ -2609,7 +2609,7 @@ subroutine WriteTecplotHeaderSec(fid,realization_base,cell_string, &
   ! Date: 04/30/2013
   ! 
                                      
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Option_module
   use Reaction_Aux_module
 
@@ -2696,7 +2696,7 @@ end subroutine WriteTecplotHeaderSec
 ! ************************************************************************** !
 subroutine WriteTecplotPolyUGridElements(fid,realization_base)
 
-  use Realization_Base_class, only : realization_base_type
+  use Realization_Base_module, only : realization_base_type
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module

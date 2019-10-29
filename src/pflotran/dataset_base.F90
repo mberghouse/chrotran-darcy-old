@@ -1,4 +1,4 @@
-module Dataset_Base_class
+module Dataset_Base_module
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -603,4 +603,4 @@ subroutine DatasetBaseDestroy(dataset)
   
 end subroutine DatasetBaseDestroy
 
-end module Dataset_Base_class
+end module Dataset_Base_module

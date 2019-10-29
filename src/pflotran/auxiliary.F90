@@ -15,7 +15,7 @@ module Auxiliary_module
   use Hydrate_Aux_module
   use WIPP_Flow_Aux_module
   !use TOilIms_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Secondary_Continuum_Aux_module
   use InlineSurface_Aux_module
   

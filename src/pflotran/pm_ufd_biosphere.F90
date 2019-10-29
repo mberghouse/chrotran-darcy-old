@@ -1,10 +1,10 @@
-module PM_UFD_Biosphere_class
+module PM_UFD_Biosphere_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PM_Base_class
+  use PM_Base_module
   use Region_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -260,7 +260,7 @@ subroutine PMUFDBSetRealization(this,realization)
   ! Date: 03/13/2017
   !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
   
@@ -830,7 +830,7 @@ subroutine PMUFDBAssociateRegion(this,region_list)
   use Region_module
   use Option_module
   use String_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_module
   
   implicit none
@@ -1057,7 +1057,7 @@ subroutine PMUFDBAscUnsuppRadWithSuppRad(this)
 
   use Option_module
   use String_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_module
   
   implicit none
@@ -1348,7 +1348,7 @@ end subroutine PMUFDBInitializeTimestep
   
   use Utility_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Global_Aux_module
   use Reactive_Transport_Aux_module
   
@@ -1909,4 +1909,4 @@ end subroutine PMUFDBDestroy
 
 ! ************************************************************************** !
 
-end module PM_UFD_Biosphere_class
+end module PM_UFD_Biosphere_module

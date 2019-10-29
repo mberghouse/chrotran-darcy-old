@@ -37,7 +37,7 @@ subroutine OutputSurfaceInit(num_steps)
   ! Date: 01/16/13
   ! 
 
-  !use Realization_Base_class, only : realization_base_type
+  !use Realization_Base_module, only : realization_base_type
   use Option_module
 
   implicit none
@@ -70,8 +70,8 @@ subroutine OutputSurface(surf_realization,realization,snapshot_plot_flag, &
   ! Date: 05/29/12
   ! 
 
-  use Realization_Surface_class, only : realization_surface_type
-  use Realization_Subsurface_class, only : realization_subsurface_type
+  use Realization_Surface_module, only : realization_surface_type
+  use Realization_Subsurface_module, only : realization_subsurface_type
   use Option_module
   use PFLOTRAN_Constants_module
 
@@ -166,8 +166,8 @@ subroutine OutputTecplotFEQUAD(surf_realization,realization)
   ! Date: 05/29/12
   ! 
 
-  use Realization_Surface_class, only : realization_surface_type
-  use Realization_Subsurface_class, only : realization_subsurface_type
+  use Realization_Surface_module, only : realization_surface_type
+  use Realization_Subsurface_module, only : realization_subsurface_type
   use Discretization_module
   use Grid_module
   use Grid_Unstructured_Aux_module
@@ -271,7 +271,7 @@ subroutine OutputTecplotHeader(fid,surf_realization,icolumn)
   ! Date: 05/30/12
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Grid_module
   use Option_module
   use Patch_module
@@ -333,7 +333,7 @@ subroutine OutputWriteTecplotZoneHeader(fid,surf_realization,variable_count, &
   ! Date: 05/30/12
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Grid_module
   use Option_module
   use String_module
@@ -414,7 +414,7 @@ subroutine WriteTecplotUGridElements(fid, &
   ! Date: 05/30/12
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module
@@ -496,7 +496,7 @@ subroutine WriteTecplotUGridVertices(fid,surf_realization)
   ! Date: 05/30/12
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Grid_module
   use Grid_Unstructured_Aux_module
   use Option_module
@@ -554,7 +554,7 @@ subroutine OutputHydrograph(surf_realization)
   ! Author: Gautam Bisht, LBNL
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -675,8 +675,8 @@ subroutine OutputSurfaceHDF5UGridXDMF(surf_realization,realization, &
   ! Date: 10/29/2012
   ! 
 
-  use Realization_Surface_class
-  use Realization_Subsurface_class
+  use Realization_Surface_module
+  use Realization_Subsurface_module
   use Discretization_module
   use Option_module
   use Grid_module
@@ -974,8 +974,8 @@ subroutine WriteHDF5CoordinatesUGridXDMFSurf(surf_realization,realization, &
 
   use hdf5
   use HDF5_module
-  use Realization_Surface_class
-  use Realization_Subsurface_class
+  use Realization_Surface_module
+  use Realization_Subsurface_module
   use Grid_module
   use Option_module
   use Grid_Unstructured_Aux_module
@@ -1480,7 +1480,7 @@ subroutine OutputSurfaceGetVarFromArray(surf_realization,vec,ivar,isubvar,isubva
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Surface_class, only : realization_surface_type, &
+  use Realization_Surface_module, only : realization_surface_type, &
                                         RealizSurfGetVariable
   use Grid_module
   use Option_module
@@ -1516,8 +1516,8 @@ subroutine OutputSurfaceAvegVars(surf_realization,realization)
   ! Date: 03/22/13
   ! 
 
-  use Realization_Surface_class, only : realization_surface_type
-  use Realization_Subsurface_class, only : realization_subsurface_type
+  use Realization_Surface_module, only : realization_surface_type
+  use Realization_Subsurface_module, only : realization_subsurface_type
   use Option_module
   use Output_Aux_module
   use Output_Common_module, only : OutputGetVariableArray  
@@ -1763,7 +1763,7 @@ subroutine OutputSurfaceGetFlowrates(surf_realization)
   use petscvec
   use hdf5
   use HDF5_module
-  use Realization_Surface_class, only : realization_surface_type
+  use Realization_Surface_module, only : realization_surface_type
   use Patch_module
   use Grid_module
   use Option_module
@@ -1972,7 +1972,7 @@ subroutine WriteHDF5SurfaceFlowratesUGrid(surf_realization,file_id,var_list_type
   use petscvec
   use hdf5
   use HDF5_module
-  use Realization_Surface_class, only : realization_surface_type
+  use Realization_Surface_module, only : realization_surface_type
   use Patch_module
   use Grid_module
   use Option_module

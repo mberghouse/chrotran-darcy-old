@@ -1,10 +1,10 @@
-module PMC_Auxiliary_class
+module PMC_Auxiliary_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PMC_Base_class
-  use PM_Auxiliary_class
-  use Realization_Subsurface_class
+  use PMC_Base_module
+  use PM_Auxiliary_module
+  use Realization_Subsurface_module
 
   use PFLOTRAN_Constants_module
 
@@ -85,7 +85,7 @@ recursive subroutine PMCAuxiliaryRunToTime(this,sync_time,stop_flag)
   ! Date: 03/18/13
   ! 
 
-  use Timestepper_Base_class
+  use Timestepper_Base_module
 !  use Init_Subsurface_module
   use Option_module
   
@@ -227,4 +227,4 @@ recursive subroutine PMCAuxiliaryDestroy(this)
   
 end subroutine PMCAuxiliaryDestroy
   
-end module PMC_Auxiliary_class
+end module PMC_Auxiliary_module

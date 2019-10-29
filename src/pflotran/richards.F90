@@ -5,7 +5,7 @@ module Richards_module
   use Richards_Aux_module
   use Richards_Common_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use InlineSurface_Aux_module
   use InlineSurface_module
 #ifdef BUFFER_MATRIX
@@ -61,7 +61,7 @@ subroutine RichardsTimeCut(realization)
   ! Date: 12/13/07
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
  
@@ -82,7 +82,7 @@ subroutine RichardsSetup(realization)
   ! Date: 02/22/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Output_Aux_module
 
@@ -113,7 +113,7 @@ subroutine RichardsSetupPatch(realization)
   ! Date: 12/13/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
@@ -362,7 +362,7 @@ subroutine RichardsComputeMassBalance(realization,mass_balance)
   ! Date: 02/22/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   type(realization_subsurface_type) :: realization
   PetscReal :: mass_balance(realization%option%nphase)
@@ -383,7 +383,7 @@ subroutine RichardsComputeMassBalancePatch(realization,mass_balance)
   ! Date: 12/19/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
@@ -455,7 +455,7 @@ subroutine RichardsZeroMassBalDeltaPatch(realization)
   ! Date: 12/19/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -508,7 +508,7 @@ subroutine RichardsUpdateMassBalancePatch(realization)
   ! Date: 12/19/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -570,13 +570,13 @@ subroutine RichardsUpdatePermPatch(realization)
   ! 
 
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Discretization_module
   use Patch_module
   use Field_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module
   
   implicit none
@@ -688,7 +688,7 @@ subroutine RichardsUpdateAuxVars(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   type(realization_subsurface_type) :: realization
   
   call RichardsUpdateAuxVarsPatch(realization)
@@ -706,7 +706,7 @@ subroutine RichardsUpdateAuxVarsPatch(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -920,7 +920,7 @@ subroutine RichardsInitializeTimestep(realization)
   ! Date: 02/20/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module 
   
   implicit none
@@ -967,7 +967,7 @@ subroutine RichardsUpdateSolution(realization)
   ! Date: 02/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   
   implicit none
@@ -989,7 +989,7 @@ subroutine RichardsUpdateSolutionPatch(realization)
   ! Date: 02/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
     
   implicit none
   
@@ -1021,7 +1021,7 @@ subroutine RichardsUpdateFixedAccum(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   type(realization_subsurface_type) :: realization
   
@@ -1040,7 +1040,7 @@ subroutine RichardsUpdateFixedAccumPatch(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -1137,7 +1137,7 @@ subroutine RichardsNumericalJacTest(xx,realization)
   ! Date: 12/13/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -1232,13 +1232,13 @@ subroutine RichardsResidual(snes,xx,r,realization,ierr)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Option_module
   use Logging_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module
   use Debug_module
 
@@ -1304,7 +1304,7 @@ subroutine RichardsResidualPreliminaries(xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module  
@@ -1352,13 +1352,13 @@ subroutine RichardsUpdateLocalVecs(xx,realization,ierr)
   ! Date: 03/09/2016
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Option_module
   use Logging_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module
   use Debug_module
 
@@ -1413,7 +1413,7 @@ subroutine RichardsResidualInternalConn(r,realization,skip_conn_type,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1584,7 +1584,7 @@ subroutine RichardsResidualBoundaryConn(r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1749,7 +1749,7 @@ subroutine RichardsResidualSourceSink(r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1951,7 +1951,7 @@ subroutine RichardsResidualAccumulation(r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -2051,7 +2051,7 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -2155,14 +2155,14 @@ subroutine RichardsJacobianInternalConn(A,realization,ierr)
   ! 
        
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Region_module
   
   implicit none
@@ -2391,14 +2391,14 @@ subroutine RichardsJacobianBoundaryConn(A,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Region_module
   
   implicit none
@@ -2575,7 +2575,7 @@ subroutine RichardsJacobianAccumulation(A,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -2689,7 +2689,7 @@ subroutine RichardsJacobianSourceSink(A,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -2879,7 +2879,7 @@ subroutine RichardsMaxChange(realization,dpmax)
   ! Date: 01/15/08
   ! 
 
-  use Realization_Base_class
+  use Realization_Base_module
   use Option_module
   use Field_module
   
@@ -2986,7 +2986,7 @@ subroutine RichardsUpdateSurfacePress(realization)
   ! Date: 07/31/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -3082,7 +3082,7 @@ subroutine RichardsComputeCoeffsForSurfFlux(realization)
   ! Date: 05/21/14
   !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -3093,7 +3093,7 @@ subroutine RichardsComputeCoeffsForSurfFlux(realization)
   use Logging_module
   use String_module
   use EOS_Water_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
 
   implicit none
@@ -3362,9 +3362,9 @@ subroutine RichardsSSSandbox(residual,Jacobian,compute_derivative, &
   use petscmat
   use Option_module
   use Grid_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   use SrcSink_Sandbox_module
-  use SrcSink_Sandbox_Base_class
+  use SrcSink_Sandbox_Base_module
   
   implicit none
 
@@ -3433,8 +3433,8 @@ subroutine RichardsSSSandboxLoadAuxReal(srcsink,aux_real,global_auxvar, &
                                         rich_auxvars,option)
 ! Modified by: Ayman Alzraiee on 04/05/2016 
   use Option_module
-  use SrcSink_Sandbox_Base_class
-  use SrcSink_Sandbox_Downreg_class
+  use SrcSink_Sandbox_Base_module
+  use SrcSink_Sandbox_Downreg_module
 
   implicit none
 
@@ -3466,7 +3466,7 @@ subroutine RichardsComputeLateralMassFlux(realization)
   !
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
 
   implicit none
@@ -3531,7 +3531,7 @@ subroutine RichardsDestroy(realization)
   ! Date: 02/14/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
 
@@ -3551,7 +3551,7 @@ subroutine RichardsDestroyPatch(realization)
   ! Date: 02/03/09
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
 

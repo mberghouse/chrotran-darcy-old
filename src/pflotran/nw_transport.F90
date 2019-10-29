@@ -3,7 +3,7 @@ module NW_Transport_module
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use NW_Transport_Aux_module
   
   use PFLOTRAN_Constants_module
@@ -38,7 +38,7 @@ subroutine NWTMaxChange(realization,dcmax)
   ! Date: 04/18/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -71,11 +71,11 @@ subroutine NWTSetup(realization)
   ! Date: 03/12/2019
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Grid_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Coupler_module
   use Condition_module
   use Connection_module
@@ -312,7 +312,7 @@ subroutine NWTUpdateAuxVars(realization,update_cells,update_bcs)
   ! Date: 04/02/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Coupler_module
   use Connection_module
@@ -468,7 +468,7 @@ subroutine NWTAuxVarCompute(nwt_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use NWT_Equilibrium_module
   
   implicit none
@@ -541,7 +541,7 @@ subroutine NWTInitializeTimestep(realization)
   ! Date: 04/18/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   type(realization_subsurface_type) :: realization
   PetscErrorCode :: ierr
@@ -565,7 +565,7 @@ subroutine NWTResidual(snes,xx,r,realization,ierr)
   ! Date: 04/18/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Coupler_module
   use Connection_module
@@ -908,7 +908,7 @@ subroutine NWTUpdateFixedAccumulation(realization)
   ! Date: 04/18/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use NW_Transport_Aux_module
   use Option_module
   use Field_module  
@@ -1331,7 +1331,7 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 05/14/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Option_module
   use Field_module
@@ -1978,7 +1978,7 @@ subroutine NWTComputeMassBalance(realization,max_size,sum_mol)
   ! Date: 05/27/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -2071,7 +2071,7 @@ subroutine NWTUpdateMassBalance(realization)
   ! Date: 05/27/2019
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Grid_module
  
@@ -2122,7 +2122,7 @@ subroutine NWTDestroy(realization)
   ! Date: 05/27/2019
   !
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   

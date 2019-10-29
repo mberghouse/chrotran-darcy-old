@@ -3,8 +3,8 @@ module Geomechanics_Condition_module
 !  use Global_Aux_module
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Dataset_Base_module
+  use Dataset_Ascii_module
   use Time_Storage_module
   
   use PFLOTRAN_Constants_module
@@ -915,7 +915,7 @@ subroutine GeomechSubConditionDestroy(sub_condition)
   ! 
 
   use Dataset_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
   
   implicit none
   

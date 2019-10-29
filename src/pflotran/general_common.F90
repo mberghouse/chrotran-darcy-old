@@ -59,7 +59,7 @@ subroutine GeneralAccumulation(gen_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -422,7 +422,7 @@ subroutine GeneralFlux(gen_auxvar_up,global_auxvar_up, &
   ! Date: 03/09/11
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
   use Fracture_module
   use Klinkenberg_module
@@ -2443,7 +2443,7 @@ subroutine GeneralBCFlux(ibndtype,auxvar_mapping,auxvars, &
   ! Date: 03/09/11
   ! 
   use Option_module                              
-  use Material_Aux_class
+  use Material_Aux_module
   use Fracture_module
   use Klinkenberg_module
   use Upwind_Direction_module
@@ -4138,7 +4138,7 @@ subroutine GeneralAccumDerivative(gen_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -4206,7 +4206,7 @@ subroutine GeneralFluxDerivative(gen_auxvar_up,global_auxvar_up, &
   ! Date: 03/09/11
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
@@ -4338,7 +4338,7 @@ subroutine GeneralBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   ! 
 
   use Option_module 
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
@@ -4545,7 +4545,7 @@ subroutine GeneralAuxVarDiff(idof,general_auxvar,global_auxvar, &
   use Option_module
   use General_Aux_module
   use Global_Aux_module
-  use Material_Aux_class  
+  use Material_Aux_module  
 
   implicit none
   

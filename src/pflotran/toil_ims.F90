@@ -40,7 +40,7 @@ module TOilIms_module
       use PM_TOilIms_Aux_module
       use Global_Aux_module
       use Option_module
-      use Material_Aux_class
+      use Material_Aux_module
       use Connection_module
  
       implicit none
@@ -90,14 +90,14 @@ subroutine TOilImsSetup(realization)
   ! Date: 10/20/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
   use Connection_module
   use Grid_module
   !use Fluid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Output_Aux_module
   use AuxVars_Flow_module
  
@@ -252,7 +252,7 @@ subroutine TOilImsInitializeTimestep(realization)
   ! Date: 10/20/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -360,7 +360,7 @@ subroutine TOilImsTimeCut(realization)
   ! Author: Paolo Orsini
   ! Date: 11/09/15
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   !use Option_module
   !use Field_module
   !use Patch_module
@@ -391,7 +391,7 @@ subroutine TOilImsUpdateAuxVars(realization)
   ! Date: 10/21/15 - 28/05/2016
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -399,7 +399,7 @@ subroutine TOilImsUpdateAuxVars(realization)
   use Coupler_module
   use Connection_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   !use EOS_Water_module 
   !use Saturation_Function_module
   
@@ -580,12 +580,12 @@ subroutine TOilImsUpdateFixedAccum(realization)
   ! Date: 10/23/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -686,8 +686,8 @@ subroutine TOilImsUpdateSolution(realization)
   ! Date: 10/23/15
   ! 
 
-  use Realization_Subsurface_class
-  use Well_Data_class
+  use Realization_Subsurface_module
+  use Well_Data_module
   use Option_module
   
   implicit none
@@ -734,12 +734,12 @@ subroutine TOilImsComputeMassBalance(realization,mass_balance)
   ! Date: 11/12/15
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
  
   implicit none
   
@@ -804,7 +804,7 @@ subroutine TOilImsUpdateMassBalance(realization)
   ! Date: 10/23/15
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -863,7 +863,7 @@ subroutine TOilImsZeroMassBalanceDelta(realization)
   ! Date: 10/23/15
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -904,7 +904,7 @@ subroutine TOilImsMapBCAuxVarsToGlobal(realization)
   ! Date: 10/23/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Coupler_module
@@ -969,7 +969,7 @@ subroutine TOilImsAccumulation(toil_auxvar,material_auxvar, &
 
   use Option_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -1144,7 +1144,7 @@ subroutine TOilImsFluxPFL(toil_auxvar_up,global_auxvar_up, &
 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
  
   ! no fractures considered for now
@@ -1531,7 +1531,7 @@ subroutine TOilImsFluxDipc(toil_auxvar_up,global_auxvar_up, &
   ! Date: 9/13/16
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
   
   implicit none
@@ -1782,7 +1782,7 @@ subroutine TOilImsBCFlux(ibndtype,auxvar_mapping,auxvars, &
   ! Date: 10/27/15
   ! 
   use Option_module                              
-  use Material_Aux_class
+  use Material_Aux_module
   !use Fracture_module
   !use Klinkenberg_module
   
@@ -2539,7 +2539,7 @@ subroutine TOilImsAccumDerivative(toil_auxvar,material_auxvar, &
 
   use Option_module
   use Saturation_Function_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
   
   implicit none
@@ -2660,7 +2660,7 @@ subroutine ToilImsFluxDerivative(toil_auxvar_up,global_auxvar_up, &
   ! Date: 11/06/15
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
   
   implicit none
@@ -2823,7 +2823,7 @@ subroutine ToilImsBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   ! 
 
   use Option_module 
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
   
   implicit none
@@ -3046,7 +3046,7 @@ subroutine TOilImsResidual(snes,xx,r,realization,ierr)
   ! Date: 11/05/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
@@ -3056,9 +3056,9 @@ subroutine TOilImsResidual(snes,xx,r,realization,ierr)
   use Grid_module
   use Coupler_module  
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Well_Solver_module
-  use Well_Data_class
+  use Well_Data_module
 
 !#define DEBUG_WITH_TECPLOT
 #ifdef DEBUG_WITH_TECPLOT
@@ -3453,7 +3453,7 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 11/05/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -3461,8 +3461,8 @@ subroutine TOilImsJacobian(snes,xx,A,B,realization,ierr)
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
-  use Well_Data_class
+  use Material_Aux_module
+  use Well_Data_module
 
   use AuxVars_Flow_module
 
@@ -3873,7 +3873,7 @@ subroutine TOilImsDestroy(realization)
   ! Date: 11/09/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
 

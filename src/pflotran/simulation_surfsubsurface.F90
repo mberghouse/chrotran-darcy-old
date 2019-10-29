@@ -1,16 +1,16 @@
-module Simulation_Surf_Subsurf_class
+module Simulation_Surf_Subsurf_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Simulation_Surface_class
-  use Simulation_Subsurface_class
+  use Simulation_Surface_module
+  use Simulation_Subsurface_module
   use Regression_module
   use Option_module
-  use PMC_Base_class
-  use PMC_Subsurface_class
-  use PMC_Surface_class
-  use Realization_Subsurface_class
-  use Realization_Surface_class
+  use PMC_Base_module
+  use PMC_Subsurface_module
+  use PMC_Surface_module
+  use Realization_Subsurface_module
+  use Realization_Surface_module
   use Waypoint_module
 
   use PFLOTRAN_Constants_module
@@ -104,7 +104,7 @@ subroutine SurfSubsurfaceInitializeRun(this)
   use petscsys
   use Logging_module
   use Output_module
-  use PMC_Surface_class
+  use PMC_Surface_module
 
   implicit none
   
@@ -177,8 +177,8 @@ subroutine SurfSubsurfaceExecuteRun(this)
   ! Date: 06/28/13
   ! 
 
-  use Simulation_Base_class
-  use Timestepper_Base_class, only : TS_CONTINUE
+  use Simulation_Base_module
+  use Timestepper_Base_module, only : TS_CONTINUE
   use Checkpoint_module
 
   implicit none
@@ -241,8 +241,8 @@ subroutine SurfSubsurfaceFinalizeRun(this)
   ! Date: 06/28/13
   ! 
 
-  use Simulation_Base_class
-  use Timestepper_Base_class
+  use Simulation_Base_module
+  use Timestepper_Base_module
 
   implicit none
   
@@ -267,7 +267,7 @@ subroutine SurfSubsurfaceSimulationStrip(this)
   ! Date: 06/28/13
   ! 
   use Waypoint_module
-  use Simulation_Base_class
+  use Simulation_Base_module
 
   implicit none
   
@@ -337,4 +337,4 @@ subroutine SurfSubsurfaceSimulationDestroy(simulation)
   
 end subroutine SurfSubsurfaceSimulationDestroy
 
-end module Simulation_Surf_Subsurf_class
+end module Simulation_Surf_Subsurf_module

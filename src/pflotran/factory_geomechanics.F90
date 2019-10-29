@@ -4,7 +4,7 @@ module Factory_Geomechanics_module
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
 
-  use Simulation_Geomechanics_class
+  use Simulation_Geomechanics_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -43,24 +43,24 @@ subroutine GeomechanicsInitializePostPETSc(simulation)
   ! Author: Gautam Bisht, LBNL and Satish Karra, LANL
   ! Date: 01/01/14, 02/10/15
   ! 
-  use Simulation_Geomechanics_class
-  use Simulation_Subsurface_class
+  use Simulation_Geomechanics_module
+  use Simulation_Subsurface_module
   use Factory_Subsurface_module
   use Init_Common_module
   use Option_module
-  use PM_Base_class
+  use PM_Base_module
   use PM_Base_Pointer_module
-  use PM_Geomechanics_Force_class
-  use PMC_Base_class
-  use PMC_Geomechanics_class
+  use PM_Geomechanics_Force_module
+  use PMC_Base_module
+  use PMC_Geomechanics_module
   use PFLOTRAN_Constants_module
   use Geomechanics_Discretization_module
   use Geomechanics_Force_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Regression_module
   use Simulation_Aux_module
-  use Realization_Subsurface_class
-  use Timestepper_Steady_class
+  use Realization_Subsurface_module
+  use Timestepper_Steady_module
   use Input_Aux_module
   use Logging_module
   use Output_Aux_module
@@ -268,9 +268,9 @@ subroutine GeomechanicsJumpStart(simulation)
   ! Date: 01/01/14
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Option_module
-  use Timestepper_Steady_class
+  use Timestepper_Steady_module
   use Output_Aux_module
   use Output_module, only : Output, OutputPrintCouplers
   use Output_Geomechanics_module
@@ -346,7 +346,7 @@ subroutine GeomechicsInitReadRequiredCards(geomech_realization,input)
   ! 
 
   use Geomechanics_Discretization_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Geomechanics_Grid_module
   use Input_Aux_module
@@ -398,7 +398,7 @@ subroutine GeomechanicsInit(geomech_realization,input,option)
   use Geomechanics_Grid_module
   use Geomechanics_Grid_Aux_module
   use Geomechanics_Discretization_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Grid_Unstructured_Aux_module
   use Grid_Unstructured_module
@@ -485,12 +485,12 @@ subroutine GeomechanicsInitReadInput(simulation,geomech_solver, &
   ! Author: Satish Karra, LANL
   ! Date: 05/23/13
   ! 
-  use Simulation_Geomechanics_class
+  use Simulation_Geomechanics_module
   use Option_module
   use Input_Aux_module
   use String_module
   use Geomechanics_Discretization_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Geomechanics_Grid_module
   use Geomechanics_Grid_Aux_module
@@ -799,7 +799,7 @@ subroutine GeomechInitMatPropToGeomechRegions(geomech_realization)
   ! Author: Satish Karra, LANL
   ! Date: 06/17/13
   ! 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Discretization_module
   use Geomechanics_Strata_module
   use Geomechanics_Region_module
@@ -950,11 +950,11 @@ subroutine GeomechInitSetupRealization(simulation)
   ! Author: Glenn Hammond
   ! Date: 12/04/14
   ! 
-  use Simulation_Geomechanics_class
-  use Geomechanics_Realization_class
+  use Simulation_Geomechanics_module
+  use Geomechanics_Realization_module
   use Geomechanics_Global_module
   use Geomechanics_Force_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   use Option_module
   use Waypoint_module
@@ -1012,8 +1012,8 @@ subroutine GeomechInitSetupSolvers(geomech_realization,realization, &
   ! Author: Glenn Hammond
   ! Date: 12/04/14
   ! 
-  use Realization_Subsurface_class
-  use Geomechanics_Realization_class
+  use Realization_Subsurface_module
+  use Geomechanics_Realization_module
   use Option_module
   
   use Solver_module

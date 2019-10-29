@@ -43,7 +43,7 @@ subroutine RichardsAccumDerivative(rich_auxvar,global_auxvar, &
 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class, only : material_auxvar_type, &
+  use Material_Aux_module, only : material_auxvar_type, &
                                  soil_compressibility_index, &
                                  MaterialAuxVarInit, &
                                  MaterialAuxVarCopy, &
@@ -126,7 +126,7 @@ subroutine RichardsAccumulation(rich_auxvar,global_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class, only : material_auxvar_type, &
+  use Material_Aux_module, only : material_auxvar_type, &
                                  soil_compressibility_index, &
                                  MaterialCompressSoil
   
@@ -168,7 +168,7 @@ subroutine RichardsFluxDerivative(rich_auxvar_up,global_auxvar_up, &
   ! 
   use Option_module 
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
   
   implicit none
@@ -356,7 +356,7 @@ subroutine RichardsFlux(rich_auxvar_up,global_auxvar_up, &
   ! Date: 12/13/07
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
   
   implicit none
@@ -444,7 +444,7 @@ subroutine RichardsBCFluxDerivative(ibndtype,auxvars, &
   ! 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use EOS_Water_module
   use Utility_module
  
@@ -749,7 +749,7 @@ subroutine RichardsBCFlux(ibndtype,auxvars, &
   ! Date: 12/13/07
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use EOS_Water_module
   use Utility_module
  

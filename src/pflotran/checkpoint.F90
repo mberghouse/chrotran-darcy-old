@@ -330,13 +330,13 @@ subroutine CheckpointFlowProcessModelBinary(viewer,realization)
   ! Date: 07/26/13
   ! 
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Global_module
   use Material_module
-  use Material_Aux_class, only : POROSITY_BASE
+  use Material_Aux_module, only : POROSITY_BASE
   use Variables_module, only : POROSITY, PERMEABILITY_X, PERMEABILITY_Y, &
                                PERMEABILITY_Z, STATE
   
@@ -423,13 +423,13 @@ subroutine RestartFlowProcessModelBinary(viewer,realization)
   ! 
       
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Global_module
   use Material_module
-  use Material_Aux_class, only : POROSITY_BASE
+  use Material_Aux_module, only : POROSITY_BASE
   use Variables_module, only : POROSITY, PERMEABILITY_X, PERMEABILITY_Y, &
                                PERMEABILITY_Z, STATE
   
@@ -1031,13 +1031,13 @@ subroutine CheckpointFlowProcessModelHDF5(pm_grp_id, realization)
   ! Date: 07/26/13
   !
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Global_module
   use Material_module
-  use Material_Aux_class, only : POROSITY_BASE
+  use Material_Aux_module, only : POROSITY_BASE
   use Variables_module, only : POROSITY, PERMEABILITY_X, PERMEABILITY_Y, &
                                PERMEABILITY_Z, STATE
   use hdf5
@@ -1157,13 +1157,13 @@ subroutine RestartFlowProcessModelHDF5(pm_grp_id, realization)
   ! Date: 08/16/2015
   !
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Discretization_module
   use Grid_module
   use Global_module
   use Material_module
-  use Material_Aux_class, only : POROSITY_BASE
+  use Material_Aux_module, only : POROSITY_BASE
   use Variables_module, only : POROSITY, PERMEABILITY_X, PERMEABILITY_Y, &
                                PERMEABILITY_Z, STATE
   use hdf5

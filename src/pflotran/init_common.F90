@@ -126,7 +126,7 @@ subroutine InitCommonVerifyAllCouplers(realization)
   ! Date: 1/8/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
 
@@ -162,7 +162,7 @@ subroutine InitCommonVerifyCoupler(realization,patch,coupler_list)
   ! Date: 1/8/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Option_module 
   use Coupler_module
@@ -252,7 +252,7 @@ subroutine InitCommonReadRegionFiles(realization)
   ! Date: 1/03/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Region_module
   use HDF5_module
   use Option_module
@@ -322,7 +322,7 @@ subroutine readVectorFromFile(realization,vector,filename,vector_type)
   ! Date: 03/18/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Field_module
   use Grid_module
@@ -460,7 +460,7 @@ subroutine InitCommonReadVelocityField(realization)
   ! Date: 02/05/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Field_module
   use Grid_module

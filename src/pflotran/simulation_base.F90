@@ -1,9 +1,9 @@
-module Simulation_Base_class
+module Simulation_Base_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PMC_Base_class
-  use PM_Base_class
+  use PMC_Base_module
+  use PM_Base_module
   use Option_module
   use Output_Aux_module
   use Output_module
@@ -81,7 +81,7 @@ subroutine SimulationBaseInit(this,option)
   ! Author: Glenn Hammond
   ! Date: 06/11/13
   ! 
-  use Timestepper_Base_class, only : TS_CONTINUE
+  use Timestepper_Base_module, only : TS_CONTINUE
   use Option_module
   use Output_Aux_module
   use Waypoint_module
@@ -260,7 +260,7 @@ subroutine ExecuteRun(this)
   ! 
 
   use Waypoint_module
-  use Timestepper_Base_class, only : TS_CONTINUE
+  use Timestepper_Base_module, only : TS_CONTINUE
   use Checkpoint_module
 
   implicit none
@@ -336,7 +336,7 @@ subroutine SimulationBaseFinalizeRun(this)
   ! 
 
   use Logging_module
-  use Timestepper_Base_class, only : TS_STOP_WALLCLOCK_EXCEEDED
+  use Timestepper_Base_module, only : TS_STOP_WALLCLOCK_EXCEEDED
   
   implicit none
   
@@ -467,4 +467,4 @@ subroutine SimulationBaseDestroy(simulation)
   
 end subroutine SimulationBaseDestroy
   
-end module Simulation_Base_class
+end module Simulation_Base_module

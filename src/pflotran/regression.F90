@@ -200,7 +200,7 @@ subroutine RegressionCreateMapping(regression,realization)
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Discretization_module
   use Utility_module
@@ -490,10 +490,10 @@ subroutine RegressionOutput(regression,realization,flow_timestepper, &
   ! Date: 10/12/12
   ! 
 
-  use Realization_Subsurface_class
-  use Timestepper_Base_class
-  use Timestepper_TS_class
-  use Timestepper_BE_class
+  use Realization_Subsurface_module
+  use Timestepper_Base_module
+  use Timestepper_TS_module
+  use Timestepper_BE_module
   use Option_module
   use Discretization_module
   use Output_module

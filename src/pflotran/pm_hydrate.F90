@@ -1,9 +1,9 @@
-module PM_Hydrate_class
+module PM_Hydrate_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
   
   use PFLOTRAN_Constants_module
 
@@ -537,7 +537,7 @@ recursive subroutine PMHydrateInitializeRun(this)
   ! Author: Michael Nole 
   ! Date: 07/23/19
 
-  use Realization_Base_class
+  use Realization_Base_module
   
   implicit none
   
@@ -633,8 +633,8 @@ subroutine PMHydrateUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Date: 07/23/19
   ! 
 
-  use Realization_Base_class, only : RealizationGetVariable
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Base_module, only : RealizationGetVariable
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
   use Field_module
   use Global_module, only : GlobalSetAuxVarVecLoc
   use Variables_module, only : LIQUID_SATURATION, GAS_SATURATION
@@ -790,7 +790,7 @@ subroutine PMHydrateCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   ! Date: 07/23/19
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Option_module
@@ -1066,7 +1066,7 @@ subroutine PMHydrateCheckUpdatePost(this,line_search,X0,dX,X1,dX_changed, &
   use Global_Aux_module
   use Grid_module
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
@@ -1183,7 +1183,7 @@ subroutine PMHydrateCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
   use Global_Aux_module
   use Grid_module
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
   use Patch_module
@@ -1473,8 +1473,8 @@ subroutine PMHydrateMaxChange(this)
   ! Date: 07/23/19
   ! 
 
-  use Realization_Base_class
-  use Realization_Subsurface_class
+  use Realization_Base_module
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -1698,4 +1698,4 @@ subroutine PMHydrateDestroy(this)
   
 end subroutine PMHydrateDestroy
   
-end module PM_Hydrate_class
+end module PM_Hydrate_module

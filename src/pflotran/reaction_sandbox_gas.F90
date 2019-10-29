@@ -1,9 +1,9 @@
-module Reaction_Sandbox_Gas_class
+module Reaction_Sandbox_Gas_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Reaction_Sandbox_Base_class
+  use Reaction_Sandbox_Base_module
   
   use Global_Aux_module
   use Reactive_Transport_Aux_module
@@ -223,7 +223,7 @@ subroutine GasReact(this,Residual,Jacobian,compute_derivative, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -322,4 +322,4 @@ subroutine GasDestroy(this)
 
 end subroutine GasDestroy
 
-end module Reaction_Sandbox_Gas_class
+end module Reaction_Sandbox_Gas_module

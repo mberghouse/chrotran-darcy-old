@@ -96,7 +96,7 @@ subroutine GeomechanicsSubsurfacePropsAuxvarInit( &
   ! Date: 07/29/16
   !
 
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -117,7 +117,7 @@ subroutine GeomechanicsSubsurfacePropsPropertytoAux(auxvar,this)
   ! Date: 07/29/16
   !
 
-  use Material_Aux_class
+  use Material_Aux_module
   use String_module
   use Option_module
   
@@ -247,7 +247,7 @@ subroutine GeomechanicsSubsurfacePropsPoroEvaluate(grid, &
   !
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_module
 
   
@@ -409,7 +409,7 @@ subroutine GeomechanicsSubsurfacePropsPermEvaluate(grid, &
   !
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_module
 
   

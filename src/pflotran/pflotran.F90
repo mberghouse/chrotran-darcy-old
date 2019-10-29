@@ -38,7 +38,7 @@
 program pflotran
   
   use Option_module
-  use Simulation_Base_class
+  use Simulation_Base_module
   use Multi_Simulation_module
   use Factory_PFLOTRAN_module
   use Factory_Subsurface_module

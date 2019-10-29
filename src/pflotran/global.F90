@@ -28,7 +28,7 @@ subroutine GlobalSetup(realization)
   ! Date: 02/22/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
@@ -125,7 +125,7 @@ subroutine GlobalSetAuxVarScalar(realization,value,ivar)
   ! Date: 11/19/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Variables_module, only : LIQUID_PRESSURE, LIQUID_SATURATION, &
@@ -241,7 +241,7 @@ subroutine GlobalSetAuxVarVecLoc(realization,vec_loc,ivar,isubvar)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -534,7 +534,7 @@ subroutine GlobalGetAuxVarVecLoc(realization,vec_loc,ivar,isubvar)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -587,7 +587,7 @@ subroutine GlobalWeightAuxVars(realization,weight)
   ! Date: 11/03/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Material_module, only : MaterialWeightAuxVars
   
@@ -661,8 +661,8 @@ subroutine GlobalUpdateState(realization)
   ! Date: 01/14/09
   ! 
 
-  use Realization_Subsurface_class
-  use Realization_Base_class, only : RealizationGetVariable
+  use Realization_Subsurface_module
+  use Realization_Base_module, only : RealizationGetVariable
   use Communicator_Base_module
   use Variables_module, only : STATE
   
@@ -688,8 +688,8 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
   ! Date: 01/14/09
   ! 
 
-  use Realization_Subsurface_class
-  use Realization_Base_class, only : RealizationGetVariable
+  use Realization_Subsurface_module
+  use Realization_Base_module, only : RealizationGetVariable
   use Field_module
   use Option_module
   use Communicator_Base_module

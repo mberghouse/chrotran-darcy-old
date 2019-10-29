@@ -1,9 +1,9 @@
-module PM_NWT_class
+module PM_NWT_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class 
-  use Realization_Subsurface_class
+  use PM_Base_module 
+  use Realization_Subsurface_module
   use Communicator_Base_module  
   use Option_module
   use PFLOTRAN_Constants_module
@@ -371,7 +371,7 @@ subroutine PMNWTFinalizeTimestep(this)
 
   use Variables_module, only : POROSITY
   use Material_module, only : MaterialGetAuxVarVecLoc
-  use Material_Aux_class, only : POROSITY_BASE 
+  use Material_Aux_module, only : POROSITY_BASE 
   use Global_module
 
   implicit none
@@ -653,7 +653,7 @@ subroutine PMNWTCheckUpdatePre(this,line_search,X,dX,changed,ierr)
   ! Date: 05/28/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Option_module
 
@@ -1169,4 +1169,4 @@ end subroutine PMNWTDestroy
 
 ! ************************************************************************** !
 
-end module PM_NWT_class
+end module PM_NWT_module

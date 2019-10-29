@@ -1,8 +1,8 @@
-module Geomechanics_Realization_class
+module Geomechanics_Realization_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Realization_Base_class
+  use Realization_Base_module
   use Geomechanics_Discretization_module
   use Geomechanics_Patch_module
   use Geomechanics_Material_module
@@ -13,7 +13,7 @@ module Geomechanics_Realization_class
   use Input_Aux_module
   use Option_module
   use Output_Aux_module
-  use Dataset_Base_class
+  use Dataset_Base_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -345,7 +345,7 @@ subroutine GeomechRealizMapSubsurfGeomechGrid(realization, &
   use petscdm
   use Option_module
   use Geomechanics_Grid_Aux_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
 
   implicit none
@@ -936,7 +936,7 @@ subroutine GeomechRealizProcessGeomechConditions(geomech_realization)
   ! Date: 06/17/13
   ! 
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Dataset_module
 
   implicit none
@@ -1168,4 +1168,4 @@ subroutine GeomechRealizDestroy(geomech_realization)
 end subroutine GeomechRealizDestroy
 
 
-end module Geomechanics_Realization_class
+end module Geomechanics_Realization_module

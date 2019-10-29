@@ -41,7 +41,7 @@ subroutine MiscibleTimeCut(realization)
   ! Date: 9/13/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
  
@@ -68,7 +68,7 @@ subroutine MiscibleSetup(realization)
   ! Date: 9/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Output_Aux_module
    
@@ -102,7 +102,7 @@ subroutine MiscibleSetupPatch(realization)
   ! Date: 10/1/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
@@ -203,7 +203,7 @@ subroutine MiscibleComputeMassBalance(realization,mass_balance)
   ! Date: 07/21/2010
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -233,7 +233,7 @@ subroutine MiscibleComputeMassBalancePatch(realization,mass_balance)
   ! Date: 07/21/2010
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
@@ -301,7 +301,7 @@ subroutine MiscibleZeroMassBalDeltaPatch(realization)
   ! Date: 12/13/11
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -354,7 +354,7 @@ subroutine MiscibleUpdateMassBalancePatch(realization)
   ! Date: 12/13/11
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -414,7 +414,7 @@ end subroutine MiscibleUpdateMassBalancePatch
   ! Date: 12/10/07
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   
@@ -458,7 +458,7 @@ end function MiscibleInitGuessCheck
    
     use co2_span_wagner_module
      
-    use Realization_Subsurface_class
+    use Realization_Subsurface_module
     use Patch_module
     use Field_module
     use Grid_module
@@ -499,7 +499,7 @@ subroutine MiscibleUpdateAuxVars(realization)
   ! Date: 10/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -527,7 +527,7 @@ subroutine MiscibleUpdateAuxVarsPatch(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Field_module
   use Option_module
@@ -654,7 +654,7 @@ subroutine MiscibleInitializeTimestep(realization)
   ! Date: 10/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -674,7 +674,7 @@ subroutine MiscibleUpdateSolution(realization)
   ! Date: 10/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   
@@ -711,7 +711,7 @@ subroutine MiscibleUpdateSolutionPatch(realization)
   ! Date: 08/23/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
     
   implicit none
   
@@ -734,7 +734,7 @@ subroutine MiscibleUpdateFixedAccumulation(realization)
   ! Date: 10/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -762,7 +762,7 @@ subroutine MiscibleUpdateFixedAccumPatch(realization)
   ! Date: 10/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -1292,7 +1292,7 @@ subroutine MiscibleResidual(snes,xx,r,realization,ierr)
   ! Date: 10/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Discretization_module
   use Field_module
@@ -1402,7 +1402,7 @@ subroutine MiscibleResidualPatch1(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1696,7 +1696,7 @@ subroutine MiscibleResidualPatch0(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1865,7 +1865,7 @@ subroutine MiscibleResidualPatch2(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -2115,7 +2115,7 @@ subroutine MiscibleJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 10/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -2207,7 +2207,7 @@ subroutine MiscibleJacobianPatch1(snes,xx,A,B,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
@@ -2601,7 +2601,7 @@ subroutine MiscibleJacobianPatch2(snes,xx,A,B,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
@@ -2922,7 +2922,7 @@ subroutine MiscibleMaxChange(realization,dpmax,dcmax)
   ! Date: 01/15/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Option_module
   use Field_module
@@ -2968,7 +2968,7 @@ function MiscibleGetTecplotHeader(realization, icolumn)
   ! Date: 10/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
 
@@ -3092,7 +3092,7 @@ subroutine MiscibleDestroy(realization)
   ! Date: 11/27/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
   

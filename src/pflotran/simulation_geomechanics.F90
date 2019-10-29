@@ -1,15 +1,15 @@
-module Simulation_Geomechanics_class
+module Simulation_Geomechanics_module
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
   use Option_module
-  use Simulation_Subsurface_class
+  use Simulation_Subsurface_module
   use Geomechanics_Regression_module
-  use PMC_Base_class
-  use PMC_Subsurface_class
-  use PMC_Geomechanics_class
-  use Realization_Subsurface_class
-  use Geomechanics_Realization_class
+  use PMC_Base_module
+  use PMC_Subsurface_module
+  use PMC_Geomechanics_module
+  use Realization_Subsurface_module
+  use Geomechanics_Realization_module
   use PFLOTRAN_Constants_module
   use Waypoint_module
   use Simulation_Aux_module
@@ -102,7 +102,7 @@ subroutine GeomechanicsSimulationInitializeRun(this)
   ! 
 
   use Output_module
-  use PMC_Geomechanics_class
+  use PMC_Geomechanics_module
 
   implicit none
 
@@ -154,8 +154,8 @@ subroutine GeomechanicsSimulationExecuteRun(this)
   ! 
 
   use Waypoint_module
-  use Simulation_Base_class
-  use Timestepper_Base_class, only : TS_CONTINUE
+  use Simulation_Base_module
+  use Timestepper_Base_module, only : TS_CONTINUE
 
   implicit none
   
@@ -214,7 +214,7 @@ subroutine GeomechanicsSimulationFinalizeRun(this)
   ! Date: 01/01/14
   ! Modified by Satish Karra, 06/22/16
 
-  use Timestepper_Steady_class
+  use Timestepper_Steady_module
 
   implicit none
 
@@ -287,4 +287,4 @@ subroutine GeomechanicsSimulationDestroy(simulation)
   
 end subroutine GeomechanicsSimulationDestroy
 
-end module Simulation_Geomechanics_class
+end module Simulation_Geomechanics_module

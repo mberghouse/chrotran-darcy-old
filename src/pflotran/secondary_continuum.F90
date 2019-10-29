@@ -454,7 +454,7 @@ subroutine SecondaryRTTimeCut(realization)
   ! Date: 05/29/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Reaction_Aux_module
   
@@ -509,7 +509,7 @@ subroutine SecondaryRTAuxVarInit(ptr,rt_sec_transport_vars,reaction, &
   use Reaction_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Transport_Constraint_RT_module
   
   use EOS_Water_module
@@ -694,7 +694,7 @@ subroutine SecondaryRTResJacMulti(sec_transport_vars,auxvar, &
   use Reaction_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -1396,7 +1396,7 @@ subroutine SecondaryRTUpdateIterate(line_search,P0,dP,P1,dX_changed, &
   ! Date: 02/22/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Grid_module
   use Reaction_Aux_module
@@ -1537,7 +1537,7 @@ subroutine SecondaryRTUpdateKineticState(sec_transport_vars,global_auxvars, &
   use Reactive_Transport_Aux_module
   use Reaction_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
  
   implicit none
   
@@ -1610,7 +1610,7 @@ subroutine SecondaryRTCheckResidual(sec_transport_vars,auxvar, &
   use Reaction_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -2173,7 +2173,7 @@ subroutine SecondaryRTotalSorb(rt_auxvar,global_auxvar,material_auxvar,reaction,
   use Reaction_Aux_module
   use Reaction_module
   use Reactive_Transport_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -2209,7 +2209,7 @@ subroutine SecondaryRTotalSorbKD(rt_auxvar,global_auxvar,material_auxvar,reactio
   use Reaction_Aux_module
   use Reaction_module
   use Reactive_Transport_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Global_Aux_module
 
   implicit none

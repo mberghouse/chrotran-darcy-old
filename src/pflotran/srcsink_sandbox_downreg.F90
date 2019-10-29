@@ -1,4 +1,4 @@
-module SrcSink_Sandbox_Downreg_class
+module SrcSink_Sandbox_Downreg_module
 
 ! Source/sink Sandbox for downregulating source or sink terms to avoid 
 ! overpressurization (too big a pressure, + or -)
@@ -23,8 +23,8 @@ module SrcSink_Sandbox_Downreg_class
   use petscsys
 
   use PFLOTRAN_Constants_module
-  use SrcSink_Sandbox_Base_class
-  use Dataset_Base_class
+  use SrcSink_Sandbox_Base_module
+  use Dataset_Base_module
   
   implicit none
   
@@ -85,7 +85,7 @@ subroutine DownregRead(this,input,option)
   use Units_module, only : UnitsConvertToInternal
   use Condition_module 
   use Dataset_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
   use Time_Storage_module
   
   implicit none
@@ -236,7 +236,7 @@ subroutine DownregSrcSink(this,Residual,Jacobian,compute_derivative, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -333,7 +333,7 @@ subroutine DownregDestroy(this)
   ! Date: 06/04/14
 
   use Dataset_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
 
   implicit none
   
@@ -347,4 +347,4 @@ subroutine DownregDestroy(this)
 
 end subroutine DownregDestroy
 
-end module SrcSink_Sandbox_Downreg_class
+end module SrcSink_Sandbox_Downreg_module

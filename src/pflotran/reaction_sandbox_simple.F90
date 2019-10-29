@@ -1,9 +1,9 @@
-module Reaction_Sandbox_Simple_class
+module Reaction_Sandbox_Simple_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Reaction_Sandbox_Base_class
+  use Reaction_Sandbox_Base_module
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -117,7 +117,7 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -310,4 +310,4 @@ subroutine SimpleReact(this,Residual,Jacobian,compute_derivative, &
   
 end subroutine SimpleReact
 
-end module Reaction_Sandbox_Simple_class
+end module Reaction_Sandbox_Simple_module

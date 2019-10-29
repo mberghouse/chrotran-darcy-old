@@ -6,7 +6,7 @@ module Reaction_module
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module  
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   use Reaction_Surface_Complexation_module
   use Reaction_Mineral_module
@@ -1396,7 +1396,7 @@ subroutine ReactionEquilibrateConstraint(rt_auxvar,global_auxvar, &
   use Utility_module
   use Transport_Constraint_RT_module
   use EOS_Water_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   ! CO2-specific
   use co2eos_module, only: Henry_duan_sun

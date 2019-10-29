@@ -140,7 +140,7 @@ module PM_TOWG_Aux_module
       use EOS_Water_module
       use EOS_Oil_module
       use Characteristic_Curves_module
-      use Material_Aux_class
+      use Material_Aux_module
       implicit none
       type(option_type) :: option
       class(characteristic_curves_type) :: characteristic_curves
@@ -159,7 +159,7 @@ module PM_TOWG_Aux_module
       use Option_module
       use Characteristic_Curves_module
       use Global_Aux_module
-      use Material_Aux_class
+      use Material_Aux_module
       implicit none
       type(option_type) :: option
       PetscInt :: natural_id
@@ -398,7 +398,7 @@ subroutine TOWGImsAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
   use EOS_Oil_module
   use EOS_Gas_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -654,7 +654,7 @@ subroutine TOWGBlackOilAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
   use EOS_Oil_module
   use EOS_Gas_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivatives_utilities_module
 
   implicit none
@@ -1527,7 +1527,7 @@ subroutine TL4PAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
   use EOS_Gas_module
   use EOS_Slv_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivatives_utilities_module
 
   implicit none
@@ -2904,7 +2904,7 @@ subroutine TOWGTLAuxVarCompute(x,auxvar,global_auxvar,material_auxvar, &
   use EOS_Oil_module
   use EOS_Gas_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivatives_utilities_module
 
   implicit none
@@ -3812,7 +3812,7 @@ subroutine TOWGImsTLAuxVarPerturb(auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivative_tests_module
 
   implicit none
@@ -3901,7 +3901,7 @@ subroutine TOWGBlackOilAuxVarPerturb(auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivative_tests_module
 
   implicit none
@@ -4005,7 +4005,7 @@ subroutine TL4PAuxVarPerturb(auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivative_tests_module
 
 
@@ -5253,8 +5253,8 @@ subroutine TOWGAuxFieldVolRefAve(this,grid,material,imat,option)
 
   use Option_module
   use Grid_module
-  use Material_Aux_class
-  use Well_Data_class,only : SetFieldData
+  use Material_Aux_module
+  use Well_Data_module,only : SetFieldData
 
   implicit none
 
@@ -5345,7 +5345,7 @@ subroutine TOWGGetLocalSol(this,grid,material,imat,option,vsoll,isol,zsol)
   ! Date: 08/24/18
 
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   use String_module,only : StringCompareIgnoreCase
 

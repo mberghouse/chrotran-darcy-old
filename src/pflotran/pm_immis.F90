@@ -1,8 +1,8 @@
-module PM_Immis_class
+module PM_Immis_module
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
   
   use PFLOTRAN_Constants_module
 
@@ -180,7 +180,7 @@ subroutine PMImmisUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Author: Gautam Bisht
   ! Date: 11/27/13
   ! 
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
 
   implicit none
   
@@ -515,4 +515,4 @@ subroutine PMImmisDestroy(this)
   
 end subroutine PMImmisDestroy
   
-end module PM_Immis_class
+end module PM_Immis_module

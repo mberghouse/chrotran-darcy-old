@@ -1,9 +1,9 @@
-module Realization_Surface_class
+module Realization_Surface_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Realization_Base_class
+  use Realization_Base_module
   
   use Condition_module
   use Debug_module
@@ -14,7 +14,7 @@ module Realization_Surface_class
   use Region_module
   use Surface_Field_module
   use Surface_Material_module
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Reaction_Aux_module
   use Output_Aux_module
   
@@ -78,7 +78,7 @@ private
 !  public :: SurfaceRealizationGetVariable     
   
 !  interface SurfaceRealizationGetVariable
-!    module procedure :: RealizationGetVariable ! from Realization_Base_class
+!    module procedure :: RealizationGetVariable ! from Realization_Base_module
 !  end interface
   
 contains
@@ -551,7 +551,7 @@ subroutine RealizSurfProcessFlowConditions(surf_realization)
   ! Date: 02/20/12
   ! 
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Dataset_module
 
   implicit none
@@ -677,7 +677,7 @@ subroutine RealizSurfMapSurfSubsurfGrids(realization,surf_realization)
   use Grid_Unstructured_module
   use Grid_Unstructured_Aux_module
   use Grid_Unstructured_Cell_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Region_module
@@ -1049,7 +1049,7 @@ subroutine RealizSurfMapSurfSubsurfGrid( &
   use String_module
   use Grid_Unstructured_module
   use Grid_Unstructured_Cell_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Surface_Field_module
@@ -1491,4 +1491,4 @@ subroutine RealizSurfAddWaypointsToList(surf_realization,waypoint_list)
      
 end subroutine RealizSurfAddWaypointsToList
 
-end module Realization_Surface_class
+end module Realization_Surface_module

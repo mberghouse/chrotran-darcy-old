@@ -116,7 +116,7 @@ subroutine BatchChemProcessConstraints(option, input, reaction, &
   use Reaction_Database_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Transport_Constraint_module
   use Transport_Constraint_RT_module
   use Transport_Constraint_Base_module
@@ -241,7 +241,7 @@ program pflotran_rxn
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Reaction_Database_module
   use Option_module
   use Input_Aux_module

@@ -27,7 +27,7 @@ subroutine NWTEquilibrateConstraint(reaction_nw,constraint,nwt_auxvar, &
   
   use Option_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Transport_Constraint_NWT_module
   
   implicit none
@@ -194,7 +194,7 @@ subroutine NWTEqDissPrecipSorb(solubility,material_auxvar,global_auxvar, &
   ! Date: 07/15/2019
   ! 
  
-  use Material_Aux_class
+  use Material_Aux_module
   use Global_Aux_module
   
   implicit none

@@ -38,14 +38,14 @@ subroutine GeneralSetup(realization)
   ! Date: 03/10/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
   use Connection_module
   use Grid_module
   use Fluid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Output_Aux_module
  
   implicit none
@@ -227,7 +227,7 @@ subroutine GeneralInitializeTimestep(realization)
   ! Date: 03/10/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Upwind_Direction_module
   
   implicit none
@@ -258,7 +258,7 @@ subroutine GeneralUpdateSolution(realization)
   ! Date: 03/10/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
@@ -310,7 +310,7 @@ subroutine GeneralTimeCut(realization)
   ! Author: Glenn Hammond
   ! Date: 03/10/11
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Patch_module
@@ -357,7 +357,7 @@ subroutine GeneralNumericalJacobianTest(xx,realization,B)
   ! Date: 03/03/15
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Grid_module
@@ -479,12 +479,12 @@ subroutine GeneralComputeMassBalance(realization,mass_balance)
   ! Date: 03/10/11
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
  
   implicit none
   
@@ -547,7 +547,7 @@ subroutine GeneralZeroMassBalanceDelta(realization)
   ! Date: 03/10/11
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -588,7 +588,7 @@ subroutine GeneralUpdateMassBalance(realization)
   ! Date: 03/10/11
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -640,7 +640,7 @@ subroutine GeneralUpdateAuxVars(realization,update_state,update_state_bc)
   ! Date: 03/10/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
@@ -648,7 +648,7 @@ subroutine GeneralUpdateAuxVars(realization,update_state,update_state_bc)
   use Coupler_module
   use Connection_module
   use Material_module
-  use Material_Aux_class
+  use Material_Aux_module
   use EOS_Water_module
   use Saturation_Function_module
   
@@ -1045,12 +1045,12 @@ subroutine GeneralUpdateFixedAccum(realization)
   ! Date: 03/10/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
   
@@ -1131,7 +1131,7 @@ subroutine GeneralResidual(snes,xx,r,realization,ierr)
   ! Date: 03/09/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Patch_module
   use Discretization_module
@@ -1141,7 +1141,7 @@ subroutine GeneralResidual(snes,xx,r,realization,ierr)
   use Grid_module
   use Coupler_module  
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module
 
 !#define DEBUG_WITH_TECPLOT
@@ -1564,7 +1564,7 @@ subroutine GeneralJacobian(snes,xx,A,B,realization,ierr)
   ! Date: 03/09/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -1572,7 +1572,7 @@ subroutine GeneralJacobian(snes,xx,A,B,realization,ierr)
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module
 
   implicit none
@@ -1955,7 +1955,7 @@ function GeneralGetTecplotHeader(realization,icolumn)
   ! Date: 03/09/11
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
     
@@ -2081,7 +2081,7 @@ subroutine GeneralSetPlotVariables(realization,list)
   ! Date: 02/15/13
   ! 
   
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Output_Aux_module
   use Variables_module
     
@@ -2247,9 +2247,9 @@ subroutine GeneralSSSandbox(residual,Jacobian,compute_derivative, &
   use petscmat
   use Option_module
   use Grid_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   use SrcSink_Sandbox_module
-  use SrcSink_Sandbox_Base_class
+  use SrcSink_Sandbox_Base_module
   
   implicit none
 
@@ -2331,9 +2331,9 @@ end subroutine GeneralSSSandbox
 subroutine GeneralSSSandboxLoadAuxReal(srcsink,aux_real,gen_auxvar,option)
 
   use Option_module
-  use SrcSink_Sandbox_Base_class
-  use SrcSink_Sandbox_WIPP_Gas_class
-  use SrcSink_Sandbox_WIPP_Well_class
+  use SrcSink_Sandbox_Base_module
+  use SrcSink_Sandbox_WIPP_Gas_module
+  use SrcSink_Sandbox_WIPP_Well_module
 
   implicit none
 
@@ -2384,7 +2384,7 @@ subroutine GeneralMapBCAuxVarsToGlobal(realization)
   ! Date: 03/09/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Coupler_module
@@ -2440,7 +2440,7 @@ subroutine GeneralDestroy(realization)
   ! Date: 03/09/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
 

@@ -13,7 +13,7 @@ module Patch_module
   use Reaction_Base_module
   use Reaction_Aux_module
   use NW_Transport_Aux_module
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Material_module
   use Field_module
   use Saturation_Function_module
@@ -1168,8 +1168,8 @@ subroutine PatchUpdateCouplerAuxVars(patch,coupler_list,force_update_flag, &
 
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
 
   implicit none
 
@@ -1244,9 +1244,9 @@ subroutine PatchUpdateCouplerAuxVarsWF(patch,coupler,option)
   use Utility_module, only : DeallocateArray
 
   use WIPP_Flow_Aux_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
   use General_Aux_module, only : LIQUID_STATE, GAS_STATE, TWO_PHASE_STATE, &
                                  ANY_STATE
@@ -1478,9 +1478,9 @@ subroutine PatchUpdateCouplerAuxVarsG(patch,coupler,option)
 
   use General_Aux_module
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
   use String_module
 
@@ -2089,9 +2089,9 @@ subroutine PatchUpdateCouplerAuxVarsH(patch,coupler,option)
   use Utility_module
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
   use String_module
   use Hydrate_Aux_module
@@ -2666,9 +2666,9 @@ subroutine PatchUpdateCouplerAuxVarsTOI(patch,coupler,option)
   use PM_TOilIms_Aux_module
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
 
   implicit none
@@ -2873,9 +2873,9 @@ subroutine PatchUpdateCouplerAuxVarsTOWG(patch,coupler,option)
 
   use PM_TOWG_Aux_module
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
 
   implicit none
@@ -3285,8 +3285,8 @@ subroutine PatchUpdateCouplerAuxVarsMPH(patch,coupler,option)
 
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
 
   implicit none
 
@@ -3387,8 +3387,8 @@ subroutine PatchUpdateCouplerAuxVarsIMS(patch,coupler,option)
 
   use General_Aux_module
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
 
   implicit none
 
@@ -3488,8 +3488,8 @@ subroutine PatchUpdateCouplerAuxVarsFLASH2(patch,coupler,option)
 
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
 
   implicit none
 
@@ -3589,9 +3589,9 @@ subroutine PatchUpdateCouplerAuxVarsTH(patch,coupler,option)
 
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
 
   implicit none
@@ -3865,8 +3865,8 @@ subroutine PatchUpdateCouplerAuxVarsMIS(patch,coupler,option)
 
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
 
   implicit none
 
@@ -3943,9 +3943,9 @@ subroutine PatchUpdateCouplerAuxVarsRich(patch,coupler,option)
 
 
   use Grid_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
 
   implicit none
@@ -4046,9 +4046,9 @@ subroutine PatchGetCouplerValueFromDataset(coupler,option,grid,dataset,iconn, &
   use Option_module
   use Grid_module
   use Coupler_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Ascii_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Ascii_module
   use Dataset_module
 
   implicit none
@@ -4103,7 +4103,7 @@ subroutine PatchUpdateCouplerGridDataset(coupler,option,grid,dataset,dof)
   use Option_module
   use Grid_module
   use Coupler_module
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Gridded_HDF5_module
 
   implicit none
 
@@ -4158,7 +4158,7 @@ subroutine PatchScaleSourceSink(patch,source_sink,iscale_type,option)
   use Connection_module
   use Condition_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module, only : PERMEABILITY_X
 
   implicit none
@@ -4321,9 +4321,9 @@ subroutine PatchUpdateHetroCouplerAuxVars(patch,coupler,dataset_base, &
   use Condition_module
   use Grid_module
   use Dataset_module
-  use Dataset_Map_HDF5_class
-  use Dataset_Base_class
-  use Dataset_Ascii_class
+  use Dataset_Map_HDF5_module
+  use Dataset_Base_module
+  use Dataset_Ascii_module
 
   implicit none
 
@@ -4418,7 +4418,7 @@ subroutine PatchCreateFlowConditionDatasetMap(grid,dataset_map_hdf5,cell_ids,nce
   ! Date: 10/26/12
   !
   use Grid_module
-  use Dataset_Map_HDF5_class
+  use Dataset_Map_HDF5_module
   use Option_module
 
   implicit none
@@ -4592,12 +4592,12 @@ subroutine PatchInitCouplerConstraints(coupler_list,reaction_base,option)
   use NWT_Equilibrium_module
   use Reaction_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Transport_Constraint_Base_module
   use Transport_Constraint_NWT_module
   use Transport_Constraint_RT_module
   use Transport_Constraint_module
-  use Dataset_Ascii_class
+  use Dataset_Ascii_module
 
   use EOS_Water_module
 
@@ -4847,7 +4847,7 @@ subroutine PatchGetVariable1(patch,field,reaction_base,option, &
   use WIPP_Flow_Aux_module, only : WIPPFloScalePerm
   use Output_Aux_module
   use Variables_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Reaction_Base_module
 
   implicit none
@@ -6888,7 +6888,7 @@ function PatchGetVariableValueAtCell(patch,field,reaction_base,option, &
   use General_Aux_module, only : general_fmw => fmw_comp, &
                                  GAS_STATE, LIQUID_STATE
   use WIPP_Flow_Aux_module, only : WIPPFloScalePerm
-  use Material_Aux_class
+  use Material_Aux_module
   use PM_TOWG_Aux_module, only: towg_miscibility_model
 
   implicit none
@@ -8149,7 +8149,7 @@ subroutine PatchSetVariable(patch,field,option,vec,vec_format,ivar,isubvar)
   use Variables_module
   use General_Aux_module
   use WIPP_Flow_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -9220,7 +9220,7 @@ subroutine PatchCalculateCFL1Timestep(patch,option,max_dt_cfl_1)
   use Coupler_module
   use Field_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -10072,7 +10072,7 @@ subroutine PatchGetCompMassInRegion(cell_ids,num_cells,patch,option, &
   ! Date: 04/25/2016
   !
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Reaction_Aux_module
   use Grid_module
   use Option_module
@@ -10159,7 +10159,7 @@ subroutine PatchGetWaterMassInRegion(cell_ids,num_cells,patch,option, &
   ! Date: 09/20/2016
   !
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Grid_module
   use Option_module
 
@@ -10267,7 +10267,7 @@ subroutine PatchVerifyDatasetGriddedForFlux(dataset,coupler,option)
 
   use Option_module
   use Coupler_module
-  use Dataset_Gridded_HDF5_class
+  use Dataset_Gridded_HDF5_module
 
   implicit none
 

@@ -1,4 +1,4 @@
-module PM_UFD_Decay_class
+module PM_UFD_Decay_module
 
 ! MODULE DESCRIPTION:
 ! ===========================================================================
@@ -17,8 +17,8 @@ module PM_UFD_Decay_class
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PM_Base_class
-  use Realization_Subsurface_class
+  use PM_Base_module
+  use Realization_Subsurface_module
   use Option_module
   
   use PFLOTRAN_Constants_module
@@ -874,7 +874,7 @@ subroutine PMUFDDecaySetRealization(this,realization)
   ! Author: Glenn Hammond
   ! Date: 06/24/15
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
   
@@ -1044,7 +1044,7 @@ subroutine PMUFDDecaySolve(this,time,ierr)
   use Field_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Utility_module
   
   implicit none
@@ -1929,4 +1929,4 @@ subroutine PMUFDDecayDestroy(this)
   
 end subroutine PMUFDDecayDestroy
   
-end module PM_UFD_Decay_class
+end module PM_UFD_Decay_module

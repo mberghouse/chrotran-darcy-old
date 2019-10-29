@@ -1,10 +1,10 @@
-module PM_Base_class
+module PM_Base_module
 
 #include "petsc/finclude/petscts.h"
   use petscts
   use Option_module
   use Output_Aux_module
-  use Realization_Base_class
+  use Realization_Base_module
   use Solver_module
 
   use PFLOTRAN_Constants_module
@@ -411,4 +411,4 @@ subroutine PMBasePrintHeader(this)
 
 end subroutine PMBasePrintHeader
 
-end module PM_Base_class
+end module PM_Base_module

@@ -2,7 +2,7 @@ module PM_Base_Pointer_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use PM_Base_class
+  use PM_Base_module
   
   use PFLOTRAN_Constants_module
 
@@ -53,7 +53,7 @@ subroutine PMResidual(snes,xx,r,this,ierr)
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
 
@@ -82,7 +82,7 @@ subroutine PMResidualPtr(snes,xx,r,this,ierr)
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
   use Option_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
 

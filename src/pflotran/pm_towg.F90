@@ -1,9 +1,9 @@
-module PM_TOWG_class
+module PM_TOWG_module
 
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
   
   use PFLOTRAN_Constants_module
 
@@ -328,7 +328,7 @@ recursive subroutine PMTOWGInitializeRun(this)
   ! Author: Paolo Orsini
   ! Date: 12/06/16 
 
-  use Realization_Base_class
+  use Realization_Base_module
   
   implicit none
   
@@ -562,8 +562,8 @@ subroutine PMTOWGUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Date: 12/30/16
   ! 
 
-  use Realization_Base_class, only : RealizationGetVariable
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Base_module, only : RealizationGetVariable
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
   use Field_module
   use Variables_module, only : LIQUID_SATURATION, GAS_SATURATION
 
@@ -777,4 +777,4 @@ end subroutine FMISOWGRead
 
 ! ************************************************************************** !
 
-end module PM_TOWG_class
+end module PM_TOWG_module

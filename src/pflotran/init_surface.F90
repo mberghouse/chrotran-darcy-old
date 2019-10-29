@@ -29,7 +29,7 @@ subroutine SurfaceInitReadRequiredCards(surf_realization,input)
   use String_module
   use Patch_module
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_Auxiliary_module
 
   implicit none
@@ -96,7 +96,7 @@ subroutine SurfaceInit(surf_realization,input,option)
   use Input_Aux_module
   use String_module
   use Surface_Material_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Grid_module
   use Grid_Structured_module
   use Grid_Unstructured_module
@@ -181,11 +181,11 @@ subroutine InitSurfaceSetupRealization(surf_realization,subsurf_realization, &
   ! Date: 12/04/14
   ! 
   use Surface_Flow_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_TH_module
   use Surface_Global_module
-  use Timestepper_Base_class
-  use Realization_Subsurface_class
+  use Timestepper_Base_module
+  use Realization_Subsurface_module
   
   use Option_module
   use Waypoint_module
@@ -275,7 +275,7 @@ subroutine InitSurfaceSetupSolvers(surf_realization,solver,final_time)
   ! 
 #include "petsc/finclude/petscts.h"
   use petscts
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Option_module
   
   use Solver_module
@@ -323,7 +323,7 @@ subroutine SurfaceInitMatPropToRegions(surf_realization)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Discretization_module
   use Strata_module
   use Region_module
@@ -499,7 +499,7 @@ subroutine SurfaceInitReadRegionFiles(surf_realization)
   ! Date: 02/20/12
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Region_module
   use HDF5_module
   use Grid_module

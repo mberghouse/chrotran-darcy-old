@@ -82,7 +82,7 @@ subroutine SurfaceCheckpointBinary(surf_realization, &
   ! Date: 06/11/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_Field_module
   use Grid_module
   use Discretization_module
@@ -206,7 +206,7 @@ subroutine SurfaceRestartBinary(surf_realization, surf_flow_prev_dt, surf_flow_r
   ! 
 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_Field_module
   use Grid_module
   use Discretization_module
@@ -423,7 +423,7 @@ subroutine SurfaceCheckpointProcessModelBinary(viewer, surf_realization)
 
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_Field_module
   use Grid_module
   use Discretization_module
@@ -482,7 +482,7 @@ subroutine SurfaceRestartProcessModelBinary(viewer,surf_realization)
   ! Date: 09/19/13
   ! 
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Surface_Field_module
   use Grid_module
   use Discretization_module

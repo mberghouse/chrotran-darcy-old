@@ -32,16 +32,16 @@ subroutine CondControlAssignFlowInitCond(realization)
   ! Author: Glenn Hammond
   ! Date: 11/02/07, 10/18/11
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Region_module
   use Option_module
   use Field_module
   use Coupler_module
   use Condition_module
-  use Dataset_Base_class
-  use Dataset_Gridded_HDF5_class
-  use Dataset_Common_HDF5_class
+  use Dataset_Base_module
+  use Dataset_Gridded_HDF5_module
+  use Dataset_Common_HDF5_module
   use Dataset_module
   use Grid_module
   use Patch_module
@@ -956,7 +956,7 @@ subroutine CondControlAssignRTTranInitCond(realization)
   ! Date: 11/02/07, 10/18/11
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Region_module
   use Option_module
@@ -966,14 +966,14 @@ subroutine CondControlAssignRTTranInitCond(realization)
   use Transport_Constraint_Base_module
   use Transport_Constraint_RT_module
   use Grid_module
-  use Dataset_Base_class
+  use Dataset_Base_module
   use Patch_module
   use Reactive_Transport_module, only : RTUpdateAuxVars, &
                                         RTUpdateActivityCoefficients
   use Reactive_Transport_Aux_module
   use Reaction_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Reaction_module
   use HDF5_module
   
@@ -1444,7 +1444,7 @@ subroutine CondControlAssignNWTranInitCond(realization)
   ! Date: 04/02/2019
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Option_module
   use Field_module
@@ -1456,7 +1456,7 @@ subroutine CondControlAssignNWTranInitCond(realization)
   use NW_Transport_module
   use NW_Transport_Aux_module
   use NWT_Equilibrium_module
-  use Material_Aux_class
+  use Material_Aux_module
   use HDF5_module
   
   implicit none
@@ -1618,11 +1618,11 @@ subroutine ConditionControlMapDatasetToVec(realization,dataset,idof, &
   ! Author: Glenn Hammond
   ! Date: 03/23/12
   ! 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
-  use Dataset_Common_HDF5_class
-  use Dataset_Base_class
+  use Dataset_Common_HDF5_module
+  use Dataset_Base_module
   use HDF5_module
   use Discretization_module
 
@@ -1685,7 +1685,7 @@ subroutine CondControlScaleSourceSink(realization)
 #include "petsc/finclude/petscdmda.h"
   use petscdmda
       
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Region_module
   use Option_module
@@ -1695,7 +1695,7 @@ subroutine CondControlScaleSourceSink(realization)
   use Condition_module
   use Grid_module
   use Patch_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module, only : PERMEABILITY_X
 
   implicit none
@@ -1842,7 +1842,7 @@ subroutine CondControlReadTransportIC(realization,filename)
   ! Date: 03/05/10
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
   use Grid_module
@@ -1928,7 +1928,7 @@ end subroutine CondControlReadTransportIC
 
 subroutine CondControlAssignFlowInitCondSurface(surf_realization)
 
-  use Realization_Surface_class
+  use Realization_Surface_module
   use Discretization_module
   use Region_module
   use Option_module

@@ -3,7 +3,7 @@ module Data_Mediator_module
 #include "petsc/finclude/petscvec.h"
   use petscvec
 
-  use Data_Mediator_Base_class
+  use Data_Mediator_Base_module
   
   implicit none
 

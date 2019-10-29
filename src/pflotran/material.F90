@@ -2,10 +2,10 @@ module Material_module
  
 #include "petsc/finclude/petscvec.h"
   use petscvec
-  use Dataset_Base_class
+  use Dataset_Base_module
 
   use PFLOTRAN_Constants_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Fracture_module
   use Geomechanics_Subsurface_Properties_module
   use Utility_module, only : Equal
@@ -1307,7 +1307,7 @@ subroutine MaterialInitAuxIndices(material_property_ptrs,option)
   ! Author: Glenn Hammond
   ! Date: 01/09/14
   !
-  use Material_Aux_class
+  use Material_Aux_module
   use String_module
   use Option_module
   
@@ -1445,7 +1445,7 @@ subroutine MaterialAssignPropertyToAux(material_auxvar,material_property, &
   ! Author: Glenn Hammond
   ! Date: 01/09/14
   !
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   use Fracture_module 
   

@@ -1,8 +1,8 @@
-module PM_Mphase_class
+module PM_Mphase_module
 #include "petsc/finclude/petscsnes.h"
   use petscsnes
-  use PM_Base_class
-  use PM_Subsurface_Flow_class
+  use PM_Base_module
+  use PM_Subsurface_Flow_module
   
   use PFLOTRAN_Constants_module
 
@@ -271,7 +271,7 @@ subroutine PMMphaseUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
   ! Author: Glenn Hammond
   ! Date: 03/14/13
   ! 
-  use Realization_Subsurface_class, only : RealizationLimitDTByCFL
+  use Realization_Subsurface_module, only : RealizationLimitDTByCFL
 
   implicit none
   
@@ -588,4 +588,4 @@ subroutine PMMphaseDestroy(this)
   
 end subroutine PMMphaseDestroy
   
-end module PM_Mphase_class
+end module PM_Mphase_module

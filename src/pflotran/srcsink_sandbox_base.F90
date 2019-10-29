@@ -1,4 +1,4 @@
-module SrcSink_Sandbox_Base_class
+module SrcSink_Sandbox_Base_module
   
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -180,7 +180,7 @@ subroutine SSSandboxBaseEvaluate(this,Residual,Jacobian,compute_derivative, &
                                  material_auxvar,aux_real,option)
   
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -209,4 +209,4 @@ subroutine SSSandboxBaseDestroy(this)
 
 end subroutine SSSandboxBaseDestroy  
 
-end module SrcSink_Sandbox_Base_class
+end module SrcSink_Sandbox_Base_module

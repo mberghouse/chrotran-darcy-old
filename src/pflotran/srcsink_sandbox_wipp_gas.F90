@@ -1,4 +1,4 @@
-module SrcSink_Sandbox_WIPP_Gas_class
+module SrcSink_Sandbox_WIPP_Gas_module
 
 ! Sandbox srcsink for WIPP gas generation source terms
   
@@ -6,7 +6,7 @@ module SrcSink_Sandbox_WIPP_Gas_class
   use petscsys
 
   use PFLOTRAN_Constants_module
-  use SrcSink_Sandbox_Base_class
+  use SrcSink_Sandbox_Base_module
   
   implicit none
   
@@ -180,7 +180,7 @@ subroutine WIPPGasGenerationSrcSink(this,Residual,Jacobian, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use EOS_Gas_module
   
   implicit none
@@ -281,4 +281,4 @@ subroutine WIPPGasGenerationDestroy(this)
 
 end subroutine WIPPGasGenerationDestroy
 
-end module SrcSink_Sandbox_WIPP_Gas_class
+end module SrcSink_Sandbox_WIPP_Gas_module

@@ -40,7 +40,7 @@ subroutine GeomechForceSetup(geomech_realization)
   ! Date: 06/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Output_Aux_module
 
   class(realization_geomech_type) :: geomech_realization
@@ -65,7 +65,7 @@ subroutine GeomechForceSetupPatch(geomech_realization)
   ! Date: 09/11/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Option_module
  
@@ -245,7 +245,7 @@ subroutine GeomechanicsForceInitialGuess(geomech_realization)
   ! Date: 06/19/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Field_module
   use Option_module
   use Geomechanics_Grid_Aux_module
@@ -340,7 +340,7 @@ subroutine GeomechForceUpdateAuxVars(geomech_realization)
   ! Date: 06/18/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Option_module
   use Geomechanics_Field_module
@@ -420,7 +420,7 @@ subroutine GeomechForceResidual(snes,xx,r,geomech_realization,ierr)
   ! Date: 06/21/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Field_module
   use Geomechanics_Discretization_module
   use Option_module
@@ -477,7 +477,7 @@ subroutine GeomechForceResidualPatch(snes,xx,r,geomech_realization,ierr)
   ! Date: 06/24/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Field_module
   use Geomechanics_Discretization_module
   use Geomechanics_Patch_module
@@ -1291,7 +1291,7 @@ subroutine GeomechForceJacobian(snes,xx,A,B,geomech_realization,ierr)
   ! Author: Satish Karra
   ! Date: 06/21/13
   ! 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Geomechanics_Grid_module
   use Geomechanics_Grid_Aux_module
@@ -1358,7 +1358,7 @@ subroutine GeomechForceJacobianPatch(snes,xx,A,B,geomech_realization,ierr)
   ! Date: 06/21/13
   ! Modified: 07/12/16
        
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
       
   implicit none
 
@@ -1388,7 +1388,7 @@ subroutine GeomechForceJacobianLinearPart(A,geomech_realization)
   ! Modified: 07/12/16
   ! 
        
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Patch_module
   use Geomechanics_Grid_module
   use Geomechanics_Grid_Aux_module
@@ -1609,10 +1609,10 @@ subroutine GeomechUpdateFromSubsurf(realization,geomech_realization)
   ! Date: 09/10/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Grid_module
   use Field_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Grid_module
   use Geomechanics_Grid_Aux_module
   use Geomechanics_Field_module
@@ -1720,11 +1720,11 @@ subroutine GeomechUpdateSubsurfFromGeomech(realization,geomech_realization)
   ! Date: 10/10/13
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Discretization_module
   use Grid_module
   use Field_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Grid_module
   use Geomechanics_Grid_Aux_module
   use Geomechanics_Field_module
@@ -1799,12 +1799,12 @@ subroutine GeomechCreateGeomechSubsurfVec(realization,geomech_realization)
 
   use Grid_module
   use Geomechanics_Discretization_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Grid_Aux_module
   use Geomechanics_Grid_module
   use Geomechanics_Field_module
   use String_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
 
   implicit none
@@ -1844,12 +1844,12 @@ subroutine GeomechCreateSubsurfStressStrainVec(realization,geomech_realization)
 
   use Grid_module
   use Geomechanics_Discretization_module
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Grid_Aux_module
   use Geomechanics_Grid_module
   use Geomechanics_Field_module
   use String_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
 
   implicit none
@@ -1916,7 +1916,7 @@ subroutine GeomechForceStressStrain(geomech_realization)
   ! Date: 09/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Field_module
   use Geomechanics_Discretization_module
   use Geomechanics_Patch_module
@@ -2229,7 +2229,7 @@ subroutine GeomechUpdateSolution(geomech_realization)
   ! Date: 09/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
   use Geomechanics_Field_module
   
   implicit none 
@@ -2257,7 +2257,7 @@ subroutine GeomechUpdateSolutionPatch(geomech_realization)
   ! Date: 09/17/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
     
   implicit none 
   
@@ -2278,7 +2278,7 @@ subroutine GeomechStoreInitialPressTemp(geomech_realization)
   ! Date: 09/24/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
     
   implicit none 
   
@@ -2307,8 +2307,8 @@ subroutine GeomechStoreInitialPorosity(realization,geomech_realization)
   ! Date: 10/22/13
   ! 
 
-  use Geomechanics_Realization_class
-  use Realization_Subsurface_class
+  use Geomechanics_Realization_module
+  use Realization_Subsurface_module
   use Discretization_module
     
   implicit none 
@@ -2337,7 +2337,7 @@ subroutine GeomechStoreInitialDisp(geomech_realization)
   ! Date: 09/30/13
   ! 
 
-  use Geomechanics_Realization_class
+  use Geomechanics_Realization_module
     
   implicit none 
   

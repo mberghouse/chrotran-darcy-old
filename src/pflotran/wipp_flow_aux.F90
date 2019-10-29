@@ -282,7 +282,7 @@ subroutine WIPPFloAuxVarCompute(x,wippflo_auxvar,global_auxvar, &
   use EOS_Gas_module
   use Characteristic_Curves_module
   use Characteristic_Curves_WIPP_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Creep_Closure_module
   use Fracture_module
   use Klinkenberg_module
@@ -521,7 +521,7 @@ subroutine WIPPFloAuxVarPerturb(wippflo_auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -606,7 +606,7 @@ subroutine WIPPFloScalePerm(wippflo_auxvar,material_auxvar,perm,ivar)
   ! Author: Glenn Hammond
   ! Date: 08/29/17
   ! 
-  use Material_Aux_class
+  use Material_Aux_module
   use Variables_module, only : GAS_PERMEABILITY, GAS_PERMEABILITY_X, &
                                GAS_PERMEABILITY_Y, GAS_PERMEABILITY_Z
 
@@ -645,7 +645,7 @@ subroutine WIPPFloPrintAuxVars(wippflo_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
 
   implicit none
@@ -720,7 +720,7 @@ subroutine WIPPFloOutputAuxVars1(wippflo_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
 
   implicit none
@@ -989,7 +989,7 @@ subroutine WIPPFloConvertUnitsToBRAGFloRes(Res,material_auxvar,option)
   ! Date: 11/16/17
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -1014,7 +1014,7 @@ subroutine WIPPFloConvertUnitsToBRAGFloJac(Jac,material_auxvar,option)
   ! Date: 11/16/17
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 

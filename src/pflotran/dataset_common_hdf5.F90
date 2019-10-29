@@ -1,9 +1,9 @@
-module Dataset_Common_HDF5_class
+module Dataset_Common_HDF5_module
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Dataset_Base_class
+  use Dataset_Base_module
   
   use PFLOTRAN_Constants_module
 
@@ -636,4 +636,4 @@ subroutine DatasetCommonHDF5Destroy(this)
   
 end subroutine DatasetCommonHDF5Destroy
 
-end module Dataset_Common_HDF5_class
+end module Dataset_Common_HDF5_module

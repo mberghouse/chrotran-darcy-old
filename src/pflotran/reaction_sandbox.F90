@@ -3,13 +3,13 @@ module Reaction_Sandbox_module
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Reaction_Sandbox_Base_class
-  use Reaction_Sandbox_CLM_CN_class
-  use Reaction_Sandbox_UFD_WP_class
-  use Reaction_Sandbox_Example_class
-  use Reaction_Sandbox_Simple_class
-  use Reaction_Sandbox_Cyber_class
-  use Reaction_Sandbox_Gas_class 
+  use Reaction_Sandbox_Base_module
+  use Reaction_Sandbox_CLM_CN_module
+  use Reaction_Sandbox_UFD_WP_module
+  use Reaction_Sandbox_Example_module
+  use Reaction_Sandbox_Simple_module
+  use Reaction_Sandbox_Cyber_module
+  use Reaction_Sandbox_Gas_module 
 
   ! Add new reacton sandbox classes here.
   
@@ -262,7 +262,7 @@ subroutine RSandbox(Residual,Jacobian,compute_derivative,rt_auxvar, &
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   
   implicit none
 
@@ -303,7 +303,7 @@ subroutine RSandboxUpdateKineticState(rt_auxvar,global_auxvar, &
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   
   implicit none
 

@@ -4,7 +4,7 @@ module Transport_module
   use petscsnes
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Matrix_Block_Aux_module  
 
   use PFLOTRAN_Constants_module

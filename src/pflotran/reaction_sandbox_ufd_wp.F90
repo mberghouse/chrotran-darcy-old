@@ -1,4 +1,4 @@
-module Reaction_Sandbox_UFD_WP_class
+module Reaction_Sandbox_UFD_WP_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -8,7 +8,7 @@ module Reaction_Sandbox_UFD_WP_class
 ! 1. Change all references to "WastePackage" as desired to rename the module and
 !    and subroutines within the module. 
 
-  use Reaction_Sandbox_Base_class
+  use Reaction_Sandbox_Base_module
   
   use Global_Aux_module
   use Reactive_Transport_Aux_module
@@ -190,7 +190,7 @@ subroutine WastePackageReact(this,Residual,Jacobian,compute_derivative, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -258,4 +258,4 @@ subroutine WastePackageDestroy(this)
 
 end subroutine WastePackageDestroy
 
-end module Reaction_Sandbox_UFD_WP_class
+end module Reaction_Sandbox_UFD_WP_module

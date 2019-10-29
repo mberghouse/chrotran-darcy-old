@@ -1,9 +1,9 @@
-module PMC_Surface_class
+module PMC_Surface_module
 
-  use PMC_Base_class
-  use Realization_Subsurface_class
-  use Realization_Surface_class
-  use Timestepper_Surface_class
+  use PMC_Base_module
+  use Realization_Subsurface_module
+  use Realization_Surface_module
+  use Timestepper_Surface_module
 
   use PFLOTRAN_Constants_module
 
@@ -89,12 +89,12 @@ recursive subroutine PMCSurfaceRunToTime(this,sync_time,stop_flag)
 
 #include "petsc/finclude/petscviewer.h"
   use petscsys
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   use Output_Aux_module
   use Output_module, only : Output
-  use Realization_Subsurface_class, only : realization_subsurface_type
-  use PM_Base_class
-  use PM_Surface_Flow_class
+  use Realization_Subsurface_module, only : realization_subsurface_type
+  use PM_Base_module
+  use PM_Surface_Flow_module
   use Option_module
   use Surface_Flow_module
   use Surface_TH_module
@@ -374,7 +374,7 @@ subroutine PMCSurfaceSetAuxData(this)
   use Surface_Flow_module
   use Surface_TH_module
   use Surface_TH_Aux_module
-  use Realization_Surface_class
+  use Realization_Surface_module
   use String_module
 
   implicit none
@@ -738,4 +738,4 @@ recursive subroutine PMCSurfaceDestroy(this)
   
 end subroutine PMCSurfaceDestroy
 
-end module PMC_Surface_class
+end module PMC_Surface_module

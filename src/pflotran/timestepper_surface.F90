@@ -1,8 +1,8 @@
-module Timestepper_Surface_class
+module Timestepper_Surface_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   use Solver_module
   use Waypoint_module
 
@@ -210,8 +210,8 @@ subroutine TimestepperSurfaceStepDT(this,process_model,stop_flag)
 
 #include "petsc/finclude/petscts.h"
   use petscts
-  use PM_Base_class
-  use PM_Surface_Flow_class
+  use PM_Base_module
+  use PM_Surface_Flow_module
   use Option_module
   use Output_module, only : Output
   use Surface_Flow_module
@@ -537,4 +537,4 @@ subroutine TimestepperSurfaceDestroy(this)
   
 end subroutine TimestepperSurfaceDestroy
 
-end module Timestepper_Surface_class
+end module Timestepper_Surface_module

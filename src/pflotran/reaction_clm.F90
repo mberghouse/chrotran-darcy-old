@@ -1,4 +1,4 @@
-module CLM_Rxn_Base_class
+module CLM_Rxn_Base_module
   
   ! extended from reaction_sandbox_base to implement demand based 
   ! down regulation for use in CLM_Rxn t6g 10/06/2014 
@@ -90,7 +90,7 @@ module CLM_Rxn_Base_class
       use Reaction_Aux_module
       use Reactive_Transport_Aux_module
       use Global_Aux_module
-      use Material_Aux_class
+      use Material_Aux_module
   
       import clm_rxn_base_type
     
@@ -192,7 +192,7 @@ contains
     use Reaction_Aux_module
     use Reactive_Transport_Aux_module
     use Global_Aux_module
-    use Material_Aux_class
+    use Material_Aux_module
   
     implicit none
   
@@ -229,7 +229,7 @@ contains
   end subroutine Base_Destroy  
 #endif
 
-end module CLM_Rxn_Base_class
+end module CLM_Rxn_Base_module
 
 module CLM_Rxn_Common_module
 
@@ -289,9 +289,9 @@ end subroutine CalNLimitFunc
 
 end module CLM_Rxn_Common_module
 
-module CLM_Rxn_Decomp_class
+module CLM_Rxn_Decomp_module
 
-  use CLM_Rxn_Base_class
+  use CLM_Rxn_Base_module
   use Global_Aux_module
   use Reactive_Transport_Aux_module
   use PFLOTRAN_Constants_module
@@ -1179,7 +1179,7 @@ subroutine CLMDec_React(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class, only : material_auxvar_type
+  use Material_Aux_module, only : material_auxvar_type
   use CLM_Rxn_Common_module, only: CalNLimitFunc
 
   implicit none
@@ -3102,12 +3102,12 @@ subroutine CLMDec_Destroy(this)
  
 end subroutine CLMDec_Destroy
 
-end module CLM_Rxn_Decomp_class
+end module CLM_Rxn_Decomp_module
 
 
-module CLM_Rxn_PlantN_class
+module CLM_Rxn_PlantN_module
 
-  use CLM_Rxn_Base_class
+  use CLM_Rxn_Base_module
   use Global_Aux_module
   use Reactive_Transport_Aux_module
   use PFLOTRAN_Constants_module
@@ -3431,7 +3431,7 @@ subroutine PlantNReact(this,Residual,Jacobian,compute_derivative,rt_auxvar, &
   use Option_module
   use Reaction_Aux_module
   use Reaction_Immobile_Aux_module
-  use Material_Aux_class, only : material_auxvar_type
+  use Material_Aux_module, only : material_auxvar_type
   use CLM_Rxn_Common_module, only: CalNLimitFunc
 
   implicit none
@@ -3705,10 +3705,10 @@ subroutine PlantNDestroy(this)
 
 end subroutine PlantNDestroy
 
-end module CLM_Rxn_PlantN_class
+end module CLM_Rxn_PlantN_module
 
 
-module CLM_Rxn_Nitr_class
+module CLM_Rxn_Nitr_module
 
 ! ------------------------------------------------------------------------------
 ! Description
@@ -3731,7 +3731,7 @@ module CLM_Rxn_Nitr_class
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use CLM_Rxn_Base_class
+  use CLM_Rxn_Base_module
   
   use Global_Aux_module
   use Reactive_Transport_Aux_module
@@ -4042,7 +4042,7 @@ subroutine NitrReact(this,Residual,Jacobian,compute_derivative, &
                      Rate_nh4_to_no3,Jacobian_nh4_to_no3)
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class, only : material_auxvar_type
+  use Material_Aux_module, only : material_auxvar_type
   use CLM_Rxn_Common_module, only: CalNLimitFunc
   implicit none
 
@@ -4436,10 +4436,10 @@ subroutine NitrDestroy(this)
 
 end subroutine NitrDestroy
 
-end module CLM_Rxn_Nitr_class
+end module CLM_Rxn_Nitr_module
 
 
-module CLM_Rxn_Deni_class
+module CLM_Rxn_Deni_module
 
 ! ------------------------------------------------------------------------------
 ! Description
@@ -4454,7 +4454,7 @@ module CLM_Rxn_Deni_class
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use CLM_Rxn_Base_class
+  use CLM_Rxn_Base_module
   use Global_Aux_module
   use Reactive_Transport_Aux_module
   use PFLOTRAN_Constants_module
@@ -4694,7 +4694,7 @@ subroutine DeniReact(this,Residual,Jacobian,compute_derivative, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class, only : material_auxvar_type
+  use Material_Aux_module, only : material_auxvar_type
   use CLM_Rxn_Common_module, only: CalNLimitFunc
 
   implicit none
@@ -4864,7 +4864,7 @@ subroutine DeniDestroy(this)
 
 end subroutine DeniDestroy
 
-end module CLM_Rxn_Deni_class
+end module CLM_Rxn_Deni_module
 
 module CLM_Rxn_module
 
@@ -4874,11 +4874,11 @@ module CLM_Rxn_module
   ! extended from reaction_sandbox to implement demand based down regulation
   ! in RCLMRxn t6g 10/06/2014 
 
-  use CLM_Rxn_Base_class
-  use CLM_Rxn_Decomp_class
-  use CLM_Rxn_Deni_class
-  use CLM_Rxn_Nitr_class
-  use CLM_Rxn_PlantN_class
+  use CLM_Rxn_Base_module
+  use CLM_Rxn_Decomp_module
+  use CLM_Rxn_Deni_module
+  use CLM_Rxn_Nitr_module
+  use CLM_Rxn_PlantN_module
   
   use PFLOTRAN_Constants_module
 
@@ -5135,7 +5135,7 @@ subroutine RCLMRxn(Residual,Jacobian,compute_derivative,rt_auxvar, &
   use Reactive_Transport_Aux_module
   use Global_Aux_module
   use Reaction_Immobile_Aux_module
-  use Material_Aux_class, only: material_auxvar_type
+  use Material_Aux_module, only: material_auxvar_type
   
   implicit none
 

@@ -44,7 +44,7 @@ subroutine Flash2TimeCut(realization)
   ! Date: 9/13/08
   ! 
  
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
  
@@ -71,7 +71,7 @@ subroutine Flash2Setup(realization)
   ! Date: 9/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Output_Aux_module
 !  use span_wagner_module
@@ -108,7 +108,7 @@ subroutine Flash2SetupPatch(realization)
   ! Date: 10/1/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Coupler_module
@@ -218,7 +218,7 @@ subroutine Flash2ComputeMassBalance(realization,mass_balance,mass_trapped)
 ! Date: 02/22/08
 !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -250,12 +250,12 @@ subroutine Flash2ComputeMassBalancePatch(realization,mass_balance,mass_trapped)
 ! Date: 12/19/08
 !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
 ! use Saturation_Function_module
 ! use Flash2_pckr_module
 
@@ -349,7 +349,7 @@ subroutine FLASH2ZeroMassBalDeltaPatch(realization)
 ! Date: 12/19/08
 !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -403,7 +403,7 @@ subroutine FLASH2UpdateMassBalancePatch(realization)
 ! Date: 12/19/08
 !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Patch_module
   use Grid_module
@@ -464,7 +464,7 @@ end subroutine FLASH2UpdateMassBalancePatch
   ! Date: 12/10/07
   !
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
 
@@ -507,7 +507,7 @@ subroutine Flash2UpdateReasonPatch(reason,realization)
   ! Date: 10/10/08
   ! 
 
-   use Realization_Subsurface_class
+   use Realization_Subsurface_module
    use Patch_module
    use Field_module
    use Option_module
@@ -590,7 +590,7 @@ subroutine Flash2UpdateReason(reason, realization)
   ! Date: 10/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   implicit none
 
@@ -636,7 +636,7 @@ end subroutine Flash2UpdateReason
    
     use co2_span_wagner_module
      
-    use Realization_Subsurface_class
+    use Realization_Subsurface_module
     use Patch_module
     use Field_module
     use Grid_module
@@ -704,7 +704,7 @@ subroutine Flash2UpdateAuxVars(realization)
   ! Date: 10/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -732,7 +732,7 @@ subroutine Flash2UpdateAuxVarsPatch(realization)
   ! Date: 12/10/07
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Field_module
   use Option_module
@@ -900,7 +900,7 @@ subroutine Flash2InitializeTimestep(realization)
   ! Date: 10/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -920,7 +920,7 @@ subroutine Flash2UpdateSolution(realization)
   ! Date: 10/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   
   implicit none
   
@@ -947,7 +947,7 @@ subroutine Flash2UpdateFixedAccumulation(realization)
   ! Date: 10/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
 
   type(realization_subsurface_type) :: realization
@@ -975,12 +975,12 @@ subroutine Flash2UpdateFixedAccumPatch(realization)
   ! Date: 10/12/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Option_module
   use Field_module
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -1967,7 +1967,7 @@ subroutine Flash2Residual(snes,xx,r,realization,ierr)
   ! Date: 10/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Discretization_module
   use Field_module
@@ -2079,14 +2079,14 @@ subroutine Flash2ResidualPatch(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
   use Coupler_module  
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -2596,14 +2596,14 @@ subroutine Flash2ResidualPatch1(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
   use Coupler_module  
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -2882,7 +2882,7 @@ subroutine Flash2ResidualPatch0(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -3038,14 +3038,14 @@ subroutine Flash2ResidualPatch2(snes,xx,r,realization,ierr)
   ! 
 
   use Connection_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
   use Coupler_module  
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -3280,7 +3280,7 @@ subroutine Flash2Jacobian(snes,xx,A,B,realization,ierr)
   ! Date: 10/10/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Grid_module
   use Option_module
@@ -3371,12 +3371,12 @@ subroutine Flash2JacobianPatch(snes,xx,A,B,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -3926,12 +3926,12 @@ subroutine Flash2JacobianPatch1(snes,xx,A,B,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -4323,12 +4323,12 @@ subroutine Flash2JacobianPatch2(snes,xx,A,B,realization,ierr)
   use Connection_module
   use Option_module
   use Grid_module
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Patch_module
   use Coupler_module
   use Field_module
   use Debug_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -4643,7 +4643,7 @@ subroutine Flash2MaxChange(realization,dpmax,dtmpmax,dsmax)
   ! Date: 01/15/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Field_module
   use Option_module
   use Field_module
@@ -4687,7 +4687,7 @@ function Flash2GetTecplotHeader(realization, icolumn)
   ! Date: 10/13/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
   use Option_module
   use Field_module
 
@@ -4961,7 +4961,7 @@ subroutine Flash2Destroy(realization)
   ! Date: 10/14/08
   ! 
 
-  use Realization_Subsurface_class
+  use Realization_Subsurface_module
 
   implicit none
   

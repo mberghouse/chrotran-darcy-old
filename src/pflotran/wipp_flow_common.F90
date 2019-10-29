@@ -34,7 +34,7 @@ module WIPP_Flow_Common_module
       use WIPP_Flow_Aux_module
       use Global_Aux_module
       use Option_module
-      use Material_Aux_class
+      use Material_Aux_module
       implicit none
       type(wippflo_auxvar_type) :: wippflo_auxvar_up, wippflo_auxvar_dn
       type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn
@@ -65,7 +65,7 @@ module WIPP_Flow_Common_module
       use WIPP_Flow_Aux_module
       use Global_Aux_module
       use Option_module
-      use Material_Aux_class
+      use Material_Aux_module
       implicit none
       type(option_type) :: option
       PetscInt :: ibndtype(1:option%nflowdof)
@@ -117,7 +117,7 @@ subroutine WIPPFloAccumulation(wippflo_auxvar,global_auxvar,material_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -178,7 +178,7 @@ subroutine WIPPFloFluxHarmonicPermOnly(wippflo_auxvar_up,global_auxvar_up, &
   ! Date: 07/11/17
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Connection_module
   use Upwind_Direction_module
   
@@ -402,7 +402,7 @@ subroutine WIPPFloFluxLumpedHarmonic(wippflo_auxvar_up,global_auxvar_up, &
   ! Date: 07/11/17
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module
   
   implicit none
@@ -643,7 +643,7 @@ subroutine WIPPFloBCFluxHarmonicPermOnly(ibndtype,auxvar_mapping,auxvars, &
   ! Date: 07/11/17
   ! 
   use Option_module                              
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module
   
   implicit none
@@ -959,7 +959,7 @@ subroutine WIPPFloBCFluxLumpedHarmonic(ibndtype,auxvar_mapping,auxvars, &
   ! Date: 07/11/17
   ! 
   use Option_module                              
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module
   
   implicit none
@@ -1245,7 +1245,7 @@ subroutine WIPPFloSrcSink(option,qsrc,flow_src_sink_type, &
   ! Date: 07/11/17
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use EOS_Water_module
   use EOS_Gas_module
 
@@ -1335,7 +1335,7 @@ subroutine WIPPFloAccumDerivative(wippflo_auxvar,global_auxvar, &
   ! 
 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -1384,7 +1384,7 @@ subroutine XXFluxDerivative(wippflo_auxvar_up,global_auxvar_up, &
   ! Date: 07/11/17
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
@@ -1499,7 +1499,7 @@ subroutine XXBCFluxDerivative(ibndtype,auxvar_mapping,auxvars, &
   ! 
 
   use Option_module 
-  use Material_Aux_class
+  use Material_Aux_module
   use Upwind_Direction_module, only : count_upwind_direction_flip
   
   implicit none
@@ -1569,7 +1569,7 @@ subroutine WIPPFloSrcSinkDerivative(option,qsrc,flow_src_sink_type, &
   ! Date: 07/11/17
   ! 
   use Option_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 

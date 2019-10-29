@@ -8,7 +8,7 @@ module General_Derivative_module
   use General_Aux_module
   use General_Common_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -224,7 +224,7 @@ subroutine GeneralDerivativeSetup(general_parameter, &
                                   material_parameter,option)
   use Characteristic_Curves_module
   use Characteristic_Curves_Common_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   
   implicit none
@@ -458,7 +458,7 @@ end subroutine GeneralDerivativeAuxVar
 subroutine GeneralDerivativeAccum(pert,general_auxvar,global_auxvar, &
                                   material_auxvar,material_parameter, &
                                   option)
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   
   implicit none
@@ -520,7 +520,7 @@ subroutine GeneralDerivativeFlux(pert,general_auxvar,global_auxvar, &
 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -641,7 +641,7 @@ subroutine GeneralDerivativeFluxBC(pert, &
 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -725,7 +725,7 @@ subroutine GeneralDerivativeSrcSink(pert,source_sink, &
   use Option_module
   use Coupler_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -845,7 +845,7 @@ subroutine GeneralDerivativeDestroy(general_parameter, &
                                   material_parameter,option)
   use General_Aux_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   
   implicit none

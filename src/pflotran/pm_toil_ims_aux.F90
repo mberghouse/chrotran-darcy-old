@@ -238,7 +238,7 @@ subroutine TOilImsAuxVarCompute(x,toil_auxvar,global_auxvar,material_auxvar, &
   use EOS_Water_module
   use EOS_Oil_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -638,7 +638,7 @@ subroutine PerturbTOilIms(this,ghosted_id,global_auxvar,material_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -748,7 +748,7 @@ subroutine TOilImsAuxVarPerturb(toil_auxvar,global_auxvar, &
   use Option_module
   use Characteristic_Curves_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Derivative_tests_module
 
   implicit none
@@ -1024,8 +1024,8 @@ subroutine TOilImsAuxFieldVolRefAve(this,grid,material,imat,option)
 
   use Option_module
   use Grid_module
-  use Material_Aux_class
-  use Well_Data_class,only : SetFieldData
+  use Material_Aux_module
+  use Well_Data_module,only : SetFieldData
 
   implicit none
 
@@ -1112,7 +1112,7 @@ subroutine TOilImsGetLocalSol(this,grid,material,imat,option,vsoll,isol,zsol)
   ! Date: 08/24/18
 
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   use String_module,only : StringCompareIgnoreCase
 

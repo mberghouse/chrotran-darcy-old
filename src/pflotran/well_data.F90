@@ -1,11 +1,11 @@
-module Well_Data_class
+module Well_Data_module
 
 ! This is container for information associated with the WELL_DATA type wells
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
   use PFLOTRAN_Constants_module
-  use Well_Type_class
+  use Well_Type_module
 
   implicit none
 
@@ -3019,4 +3019,4 @@ subroutine throwWellDataException(message)
   stop
 end subroutine throwWellDataException
 
-end module Well_Data_class
+end module Well_Data_module

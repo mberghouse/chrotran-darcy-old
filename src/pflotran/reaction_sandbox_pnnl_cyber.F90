@@ -1,9 +1,9 @@
-module Reaction_Sandbox_Cyber_class
+module Reaction_Sandbox_Cyber_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
 
-  use Reaction_Sandbox_Base_class
+  use Reaction_Sandbox_Base_module
   
   use Global_Aux_module
   use Reactive_Transport_Aux_module
@@ -542,7 +542,7 @@ subroutine CyberReact(this,Residual,Jacobian,compute_derivative, &
 
   use Option_module
   use Reaction_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
   
@@ -895,7 +895,7 @@ subroutine CyberUpdateKineticState(this,rt_auxvar,global_auxvar, &
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
 
   implicit none
 
@@ -945,4 +945,4 @@ subroutine CyberDestroy(this)
 
 end subroutine CyberDestroy
 
-end module Reaction_Sandbox_Cyber_class
+end module Reaction_Sandbox_Cyber_module

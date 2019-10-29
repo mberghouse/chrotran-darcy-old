@@ -8,7 +8,7 @@ module WIPP_Flow_Derivative_module
   use WIPP_Flow_Aux_module
   use WIPP_Flow_Common_module
   use Global_Aux_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -213,7 +213,7 @@ subroutine WIPPFloDerivativeSetup(wippflo_parameter, &
                                   characteristic_curves, &
                                   material_parameter,option)
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   
   implicit none
@@ -444,7 +444,7 @@ end subroutine WIPPFloDerivativeAuxVar
 subroutine WIPPFloDerivativeAccum(pert,wippflo_auxvar,global_auxvar, &
                                   material_auxvar,material_parameter, &
                                   option)
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   
   implicit none
@@ -506,7 +506,7 @@ subroutine WIPPFloDerivativeFlux(pert,wippflo_auxvar,global_auxvar, &
 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -622,7 +622,7 @@ subroutine WIPPFloDerivativeFluxBC(pert, &
 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -704,7 +704,7 @@ subroutine WIPPFloDerivativeSrcSink(pert,qsrc,flow_src_sink_type, &
 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   
   implicit none
 
@@ -817,7 +817,7 @@ subroutine WIPPFloDerivativeDestroy(wippflo_parameter, &
                                   material_parameter,option)
   use WIPP_Flow_Aux_module
   use Characteristic_Curves_module
-  use Material_Aux_class
+  use Material_Aux_module
   use Option_module
   
   implicit none

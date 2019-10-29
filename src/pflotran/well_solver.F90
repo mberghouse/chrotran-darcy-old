@@ -10,8 +10,8 @@ module Well_Solver_module
   use petscsys
 
   use PFLOTRAN_Constants_module
-  use Well_Type_class
-  use Well_Data_class
+  use Well_Type_module
+  use Well_Data_module
   use PM_TOWG_Aux_module
   use Option_module
 
@@ -231,10 +231,10 @@ subroutine initialiseWell(well_data, grid, material_auxvars, option)
   ! Author: Dave Ponting
   ! Date  : 09/19/18
 
-  use Well_Data_class
+  use Well_Data_module
   use Grid_Grdecl_module, only : FindWellIndex
   use Grid_module
-  use Material_Aux_class
+  use Material_Aux_module
   use PM_TOilIms_Aux_module
 
   implicit none
@@ -502,7 +502,7 @@ subroutine SolveWell(aux, option, well_data, r_p)
   ! Author: Dave Ponting
   ! Date  : 09/19/18
 
-  use Well_Data_class
+  use Well_Data_module
   use EOS_Oil_module
   use EOS_Gas_module
   use EOS_Water_module
@@ -3582,7 +3582,7 @@ subroutine loadCellDataTOIL(auxvar, option, icmpl)
   ! Author: Dave Ponting
   ! Date  : 09/19/18
 
-  use Material_Aux_class
+  use Material_Aux_module
   use AuxVars_TOilIms_module
   use PM_TOilIms_Aux_module
 

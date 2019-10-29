@@ -1,14 +1,14 @@
-module Simulation_Subsurface_class
+module Simulation_Subsurface_module
   
 #include "petsc/finclude/petscsys.h"
   use petscsys  
-  use Simulation_Base_class
+  use Simulation_Base_module
   use Regression_module
   use Option_module
-  use PMC_Subsurface_class
-  use PMC_Third_Party_class
-  use PMC_Base_class
-  use Realization_Subsurface_class
+  use PMC_Subsurface_module
+  use PMC_Third_Party_module
+  use PMC_Base_module
+  use Realization_Subsurface_module
   use Waypoint_module
   use PFLOTRAN_Constants_module
 
@@ -217,7 +217,7 @@ subroutine SubsurfaceSimulationJumpStart(this)
   use Output_module
   use Option_module
   use Output_Aux_module
-  use Timestepper_Base_class
+  use Timestepper_Base_module
 
   implicit none
   
@@ -353,7 +353,7 @@ subroutine SubsurfaceFinalizeRun(this)
   ! Date: 03/18/13
   ! 
 
-  use Timestepper_Base_class
+  use Timestepper_Base_module
   use Reaction_Sandbox_module, only : RSandboxDestroy
   use SrcSink_Sandbox_module, only : SSSandboxDestroyList
   use WIPP_module, only : WIPPDestroy
@@ -450,4 +450,4 @@ subroutine SubsurfaceSimulationDestroy(simulation)
   
 end subroutine SubsurfaceSimulationDestroy
   
-end module Simulation_Subsurface_class
+end module Simulation_Subsurface_module
