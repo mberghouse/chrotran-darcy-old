@@ -1060,7 +1060,7 @@ subroutine UGridPartition(ugrid,option,Dual_mat,is_new, &
   call PrintMsg(option,'Partitioning')
 #endif
 
-  if (option%custom_partitioning) then
+  if (option%custom_partition) then
     call UGridCustomPartition(ugrid,option,is_new)
   else
   ! create the partitioning
@@ -1130,6 +1130,10 @@ subroutine UGridCustomPartition(ugrid,option,is_part)
 
   allocate(int_array(size(ugrid%explicit_grid%cell_ids)))
   do icell = 1, size(ugrid%explicit_grid%cell_ids)
+    if (ugrid%explicit_grid%proc_ids(icell)+1 > option%mycommsize) then
+      option%io_buffer = 'No of processors needs to be same as paritions.'
+      call PrintErrMsg(option)
+    endif
     int_array(icell) = ugrid%explicit_grid%proc_ids(icell)
   enddo
   call ISCreateGeneral(option%mycomm,size(ugrid%explicit_grid%cell_ids), &

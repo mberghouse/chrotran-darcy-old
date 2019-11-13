@@ -186,7 +186,7 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
           explicit_grid%cell_centroids(icell)%x = temp_real_array(2,icell)
           explicit_grid%cell_centroids(icell)%y = temp_real_array(3,icell)
           explicit_grid%cell_centroids(icell)%z = temp_real_array(4,icell)
-          explicit_grid%cell_volumes(icell) = temp_real_array(5,icell)a
+          explicit_grid%cell_volumes(icell) = temp_real_array(5,icell)
           if (option%custom_partition) then
             explicit_grid%proc_ids(icell) = int(temp_real_array(6,icell))
           endif
