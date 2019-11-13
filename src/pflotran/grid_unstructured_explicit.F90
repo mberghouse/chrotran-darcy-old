@@ -132,12 +132,22 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
     explicit_grid%cell_centroids(icell)%y = 0.d0
     explicit_grid%cell_centroids(icell)%z = 0.d0
   enddo
-  
+ 
+
+  if (option%custom_partition) then
+    allocate(explicit_grid%proc_ids(num_cells_local))
+    explicit_grid%proc_ids = 0
+  endif
+ 
   ! for now, read all cells from ASCII file through io_rank and communicate
   ! to other ranks
   call OptionSetBlocking(option,PETSC_FALSE)
   if (option%myrank == option%io_rank) then
-    allocate(temp_real_array(5,num_cells_local_save+1))
+    if (option%custom_partition) then
+      allocate(temp_real_array(6,num_cells_local_save+1))
+    else
+      allocate(temp_real_array(5,num_cells_local_save+1))
+    endif
     ! read for other processors
     do irank = 0, option%mycommsize-1
       temp_real_array = UNINITIALIZED_DOUBLE
@@ -157,6 +167,11 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
         call InputErrorMsg(input,option,'cell z coordinate',hint)
         call InputReadDouble(input,option,temp_real_array(5,icell))
         call InputErrorMsg(input,option,'cell volume',hint)
+        if (option%custom_partition) then
+          call InputReadInt(input,option,temp_int)
+          call InputErrorMsg(input,option,'proc id',hint)
+          temp_real_array(6,icell) = dble(temp_int)
+        endif
       enddo
 
       ! if the cells reside on io_rank
@@ -171,7 +186,10 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
           explicit_grid%cell_centroids(icell)%x = temp_real_array(2,icell)
           explicit_grid%cell_centroids(icell)%y = temp_real_array(3,icell)
           explicit_grid%cell_centroids(icell)%z = temp_real_array(4,icell)
-          explicit_grid%cell_volumes(icell) = temp_real_array(5,icell)
+          explicit_grid%cell_volumes(icell) = temp_real_array(5,icell)a
+          if (option%custom_partition) then
+            explicit_grid%proc_ids(icell) = int(temp_real_array(6,icell))
+          endif
         enddo
       else
         ! otherwise communicate to other ranks
@@ -182,7 +200,11 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
                  trim(adjustl(word))
         print *, trim(string)
 #endif
-        int_mpi = num_to_read*5
+        if (option%custom_partition) then
+          int_mpi = num_to_read*6
+        else
+          int_mpi = num_to_read*5
+        endif
         call MPI_Send(temp_real_array,int_mpi,MPI_DOUBLE_PRECISION,irank, &
                       num_to_read,option%mycomm,ierr)
       endif
@@ -196,8 +218,19 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
               trim(adjustl(word))
     print *, trim(string)
 #endif
-    allocate(temp_real_array(5,num_cells_local))
-    int_mpi = num_cells_local*5
+
+    if (option%custom_partition) then
+      allocate(temp_real_array(6,num_cells_local))
+    else
+      allocate(temp_real_array(5,num_cells_local))
+    endif
+
+    if (option%custom_partition) then
+      int_mpi = num_cells_local*6
+    else
+      int_mpi = num_cells_local*5
+    endif
+    
     call MPI_Recv(temp_real_array,int_mpi, &
                   MPI_DOUBLE_PRECISION,option%io_rank, &
                   MPI_ANY_TAG,option%mycomm,status_mpi,ierr)
@@ -207,6 +240,10 @@ subroutine UGridExplicitRead(unstructured_grid,filename,option)
       explicit_grid%cell_centroids(icell)%y = temp_real_array(3,icell)
       explicit_grid%cell_centroids(icell)%z = temp_real_array(4,icell)
       explicit_grid%cell_volumes(icell) = temp_real_array(5,icell)
+      if (option%custom_partition) then
+        explicit_grid%proc_ids(icell) = temp_real_array(6,icell)
+      endif
+
     enddo
     
   endif
@@ -1126,6 +1163,7 @@ subroutine UGridExplicitDecompose(ugrid,option)
 
   ! deallocate/allocate grid cell info locally
   deallocate(explicit_grid%cell_ids)
+  if (option%custom_partition) deallocate(explicit_grid%proc_ids)
   deallocate(explicit_grid%cell_volumes)
   deallocate(explicit_grid%cell_centroids)
 

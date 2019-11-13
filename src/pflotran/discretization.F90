@@ -248,6 +248,8 @@ subroutine DiscretizationReadRequiredCards(discretization,input,option)
            'STENCIL_WIDTH','STENCIL_TYPE','FLUX_METHOD','DOMAIN_FILENAME', &
            'UPWIND_FRACTION_METHOD','PERM_TENSOR_TO_SCALAR_MODEL', &
            '2ND_ORDER_BOUNDARY_CONDITION')
+      case('CUSTOM_PARTITION')
+        option%custom_partition = PETSC_TRUE
       case('DXYZ','BOUNDS')
         call InputSkipToEND(input,option,word) 
       case default
@@ -379,7 +381,7 @@ subroutine DiscretizationRead(discretization,input,option)
     call StringToUpper(word)
       
     select case(trim(word))
-      case('TYPE','NXYZ','ORIGIN','FILE')
+      case('TYPE','NXYZ','ORIGIN','FILE','CUSTOM_PARTITION')
       case('DXYZ')
         dxyz_read = PETSC_TRUE
         select case(discretization%itype)

@@ -70,6 +70,7 @@ module Grid_Unstructured_Aux_module
   
   type, public :: unstructured_explicit_type
     PetscInt, pointer :: cell_ids(:)
+    PetscInt, pointer :: proc_ids(:)
     PetscReal, pointer :: cell_volumes(:)
     type(point3d_type), pointer :: cell_centroids(:)
     PetscInt, pointer :: connections(:,:)
@@ -299,6 +300,7 @@ function UGridExplicitCreate()
   allocate(explicit_grid)
 
   nullify(explicit_grid%cell_ids)
+  nullify(explicit_grid%proc_ids)
   nullify(explicit_grid%cell_volumes)
   nullify(explicit_grid%cell_centroids)
   nullify(explicit_grid%connections)
@@ -1058,17 +1060,22 @@ subroutine UGridPartition(ugrid,option,Dual_mat,is_new, &
   call PrintMsg(option,'Partitioning')
 #endif
 
+  if (option%custom_partitioning) then
+    call UGridCustomPartition(ugrid,option,is_new)
+  else
   ! create the partitioning
-  call MatPartitioningCreate(option%mycomm,Part,ierr);CHKERRQ(ierr)
+    call MatPartitioningCreate(option%mycomm,Part,ierr);CHKERRQ(ierr)
   ! MatPartitioningSetAdjacency sets the adjacency graph (matrix) of the 
   ! thing to be partitioned.  - petsc
-  call MatPartitioningSetAdjacency(Part,Dual_mat,ierr);CHKERRQ(ierr)
-  call MatPartitioningSetFromOptions(Part,ierr);CHKERRQ(ierr)
+    call MatPartitioningSetAdjacency(Part,Dual_mat,ierr);CHKERRQ(ierr)
+    call MatPartitioningSetFromOptions(Part,ierr);CHKERRQ(ierr)
   ! MatPartitioningApply gets a partitioning for a matrix. For each local cell 
   ! this tells the processor number that that cell is assigned to. - petsc
   ! is_new holds this information
-  call MatPartitioningApply(Part,is_new,ierr);CHKERRQ(ierr)
-  call MatPartitioningDestroy(Part,ierr);CHKERRQ(ierr)
+    call MatPartitioningApply(Part,is_new,ierr);CHKERRQ(ierr)
+    call MatPartitioningDestroy(Part,ierr);CHKERRQ(ierr)
+  endif
+
 
 #if UGRID_DEBUG
   if (ugrid%grid_type == THREE_DIM_GRID) then
@@ -1098,6 +1105,40 @@ subroutine UGridPartition(ugrid,option,Dual_mat,is_new, &
   endif
   
 end subroutine UGridPartition  
+
+! ************************************************************************** !
+
+subroutine UGridCustomPartition(ugrid,option,is_part)
+
+! UGridCustomPartition: Reads user-prescribed partition and creates and new IS
+! from that
+!
+! Author: Satish Karra
+! Date: 05/22/2018
+
+  use Option_module
+
+  implicit none
+
+  type(grid_unstructured_type) :: ugrid
+  type(option_type) :: option
+  IS :: is_part
+  PetscInt, allocatable :: int_array(:)
+  PetscInt :: icell
+  PetscErrorCode :: ierr
+
+
+  allocate(int_array(size(ugrid%explicit_grid%cell_ids)))
+  do icell = 1, size(ugrid%explicit_grid%cell_ids)
+    int_array(icell) = ugrid%explicit_grid%proc_ids(icell)
+  enddo
+  call ISCreateGeneral(option%mycomm,size(ugrid%explicit_grid%cell_ids), &
+                       int_array,PETSC_COPY_VALUES,is_part,ierr);CHKERRQ(ierr)
+
+  deallocate(int_array)
+
+
+end subroutine UGridCustomPartition
 
 ! ************************************************************************** !
 
@@ -2184,6 +2225,10 @@ subroutine UGridExplicitDestroy(explicit_grid)
   if (.not.associated(explicit_grid)) return
 
   call DeallocateArray(explicit_grid%cell_ids)
+  if (associated(explicit_grid%proc_ids)) &
+    deallocate(explicit_grid%proc_ids)
+  nullify(explicit_grid%proc_ids)
+  call DeallocateArray(explicit_grid%proc_ids)
   call DeallocateArray(explicit_grid%cell_volumes)
   if (associated(explicit_grid%cell_centroids)) &
     deallocate(explicit_grid%cell_centroids)

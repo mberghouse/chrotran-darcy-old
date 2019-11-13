@@ -225,7 +225,8 @@ module Option_module
     PetscBool :: inline_surface_flow
     PetscReal :: inline_surface_Mannings_coeff
     character(len=MAXSTRINGLENGTH) :: inline_surface_region_name
-    
+  
+    PetscBool :: custom_partition  
 
   end type option_type
 
@@ -606,6 +607,7 @@ subroutine OptionInitRealization(option)
   option%inline_surface_Mannings_coeff = 0.02d0
   option%inline_surface_region_name    = ""
   
+  option%custom_partition = PETSC_FALSE
 
 end subroutine OptionInitRealization
 
@@ -640,6 +642,9 @@ subroutine OptionCheckCommandLine(option)
   call PetscOptionsHasName(PETSC_NULL_OPTIONS, &
                            PETSC_NULL_CHARACTER, "-use_mc", &
                            option%use_mc, ierr);CHKERRQ(ierr)
+  call PetscOptionsHasName(PETSC_NULL_OPTIONS, &
+                           PETSC_NULL_CHARACTER, "-custom_partition", &
+                           option%custom_partition, ierr);CHKERRQ(ierr)
 
   call PetscOptionsGetString(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER, &
                              '-restart', option%restart_filename, &
