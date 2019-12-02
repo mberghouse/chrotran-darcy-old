@@ -2309,6 +2309,7 @@ subroutine UGridCalculateDist(pt_up, pt_dn, pt_center, vol_up, vol_dn, &
   PetscReal :: distance
   PetscReal :: distance_up, distance_dn
   character(len=MAXSTRINGLENGTH) :: string
+  PetscReal, parameter :: off_center_projection_tol = -1.d-2
 
   dist = 0
   v(:) = pt_dn(:) - pt_up(:)
@@ -2335,7 +2336,8 @@ subroutine UGridCalculateDist(pt_up, pt_dn, pt_center, vol_up, vol_dn, &
       ! centroid) onto vector between cell centers
       v_up_projected = DotProduct(unit_vector,v_up)*unit_vector
       upwind_fraction = sqrt(DotProduct(v_up_projected,v_up_projected))/distance
-      if (upwind_fraction > 1.d0 .or. minval(v_up*unit_vector) < 0.d0) then
+      if (upwind_fraction > 1.d0 .or. &
+          minval(v_up*unit_vector) < off_center_projection_tol) then
         error = PETSC_TRUE
         write(string,'(2(es16.9,","),es16.9)') pt_center(:)
         option%io_buffer = 'Face (' // trim(adjustl(string)) // ') cannot &
@@ -2351,7 +2353,7 @@ subroutine UGridCalculateDist(pt_up, pt_dn, pt_center, vol_up, vol_dn, &
           option%io_buffer = trim(option%io_buffer) // ' Upwind fraction: ' // &
             trim(adjustl(string)) // ';'
         endif
-        if (minval(v_up*unit_vector) < 0.d0) then
+        if (minval(v_up*unit_vector) < off_center_projection_tol) then
           write(string,'(2(es16.9,","),es16.9)') (v_up*unit_vector)
             option%io_buffer = trim(option%io_buffer) // &
               ' v_up*unit_vector: (' // &
