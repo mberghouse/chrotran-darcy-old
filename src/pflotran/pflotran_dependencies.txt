@@ -1006,11 +1006,14 @@ time_storage.o : option.o pflotran_constants.o
 timestepper_BE.o : checkpoint.o convergence.o hdf5_aux.o input_aux.o option.o \
                    output.o output_ekg.o pflotran_constants.o pm_base.o \
                    solver.o string.o timestepper_base.o utility.o
+timestepper_KSP.o : checkpoint.o hdf5_aux.o input_aux.o option.o \
+                    pflotran_constants.o pm_base.o solver.o string.o \
+                    waypoint.o
 timestepper_TS.o : input_aux.o option.o output.o pflotran_constants.o \
                    pm_base.o pm_surface_flow.o solver.o string.o \
                    surface_flow.o timestepper_base.o utility.o waypoint.o
-timestepper_base.o : input_aux.o option.o output.o pflotran_constants.o \
-                     pm_base.o solver.o string.o waypoint.o
+timestepper_base.o : input_aux.o option.o pflotran_constants.o pm_base.o \
+                     solver.o string.o waypoint.o
 timestepper_steady.o : convergence.o option.o output.o pflotran_constants.o \
                        pm_base.o pm_geomechanics_force.o solver.o \
                        timestepper_BE.o timestepper_base.o waypoint.o

@@ -549,7 +549,7 @@ subroutine TimestepperBaseSetTargetTime(this,sync_time,option,stop_flag, &
   this%target_time = target_time
   this%cur_waypoint => cur_waypoint
 
- end subroutine TimestepperBaseSetTargetTime
+end subroutine TimestepperBaseSetTargetTime
 
 ! ************************************************************************** !
 
@@ -563,7 +563,6 @@ subroutine TimestepperBaseStepDT(this,process_model,stop_flag)
 
   use PM_Base_class
   use Option_module
-  use Output_module, only : Output
   
   implicit none
 

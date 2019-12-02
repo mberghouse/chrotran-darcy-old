@@ -157,10 +157,12 @@ subroutine TimestepperBERead(this,input,option)
 
 
   if (option%flow%resdef) then
-    option%io_buffer = 'TIMESTEPPER CARD: applying common defaults (RESERVOIR_DEFAULTS)'
+    option%io_buffer = 'TIMESTEPPER CARD: applying common defaults &
+                       &(RESERVOIR_DEFAULTS)'
     call PrintMsg(option)
     this%iaccel=100
-    option%io_buffer = 'TIMESTEPPER CARD: TS_ACCELERATION as been set to 100 (RESERVOIR_DEFAULTS)'
+    option%io_buffer = 'TIMESTEPPER CARD: TS_ACCELERATION as been &
+                       &set to 100 (RESERVOIR_DEFAULTS)'
     call PrintMsg(option)
   endif
 
@@ -182,7 +184,8 @@ subroutine TimestepperBERead(this,input,option)
         call InputReadInt(input,option,this%iaccel)
         call InputDefaultMsg(input,option,'iaccel')
         if (option%flow%resdef) then
-          option%io_buffer = 'WARNING: TS_ACCELERATION has been changed, overwritting the RESERVOIR_DEFAULTS default'
+          option%io_buffer = 'WARNING: TS_ACCELERATION has been changed, &
+                             &overwritting the RESERVOIR_DEFAULTS default'
           call PrintMsg(option)
         endif
 
