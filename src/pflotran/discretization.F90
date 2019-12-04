@@ -875,6 +875,7 @@ end function DiscretizationGetDMCPtrFromIndex
 
 ! ************************************************************************** !
 
+!TODO(geh): rename to CreateMatrix()
 subroutine DiscretizationCreateJacobian(discretization,dm_index,mat_type,Jacobian,option)
   ! 
   ! Creates Jacobian matrix associated with discretization

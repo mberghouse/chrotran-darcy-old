@@ -1137,8 +1137,8 @@ subroutine InitSubsurfaceSetupZeroArrays(realization)
   if (option%ntrandof > 0) then
     select case(option%itranmode)
       case(RT_MODE,EXPLICIT_ADVECTION)
-        ! remove ndof above if this is moved
-        if (option%transport%reactive_transport_coupling == GLOBAL_IMPLICIT) then
+        if (option%transport%reactive_transport_coupling == &
+            GLOBAL_IMPLICIT) then
           ndof = realization%reaction%ncomp
         else
           ndof = 1

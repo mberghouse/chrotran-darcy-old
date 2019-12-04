@@ -379,6 +379,171 @@ end subroutine SolverSetSNESOptions
 
 ! ************************************************************************** !
 
+subroutine SolverCreateKSP(solver,comm)
+  ! 
+  ! Create PETSc KSP object. Only use for linear solves.
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 12/02/19
+  ! 
+
+  implicit none
+  
+  type(solver_type) :: solver
+
+  PetscMPIInt :: comm
+  PetscErrorCode :: ierr
+  
+  call KSPCreate(comm,solver%ksp,ierr);CHKERRQ(ierr)
+  call KSPSetFromOptions(solver%ksp,ierr);CHKERRQ(ierr)
+
+  ! grab handle for pc
+  call KSPGetPC(solver%ksp,solver%pc,ierr);CHKERRQ(ierr)
+
+end subroutine SolverCreateKSP
+
+! ************************************************************************** !
+
+subroutine SolverSetKSPOptions(solver, option)
+  ! 
+  ! Sets options for KSP object
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 12/02/19
+  ! 
+  use Option_module
+
+  implicit none
+  
+  type(solver_type) :: solver
+  type(option_type) :: option
+
+  SNESLineSearch :: linesearch
+  KSP, pointer :: sub_ksps(:)
+  PC :: pc
+  PetscInt :: nsub_ksp
+  PetscInt :: first_sub_ksp
+  PetscErrorCode :: ierr
+  PetscInt :: i
+  
+  ! if ksp_type or pc_type specified in input file, set them here
+  if (len_trim(solver%ksp_type) > 1) then
+    call KSPSetType(solver%ksp,solver%ksp_type,ierr);CHKERRQ(ierr)
+  endif
+  if (len_trim(solver%pc_type) > 1) then
+    if (associated(solver%cprstash)) then
+      call SolverCPRInit(solver%J, solver%cprstash, solver%pc, ierr, option)
+    else
+      call PCSetType(solver%pc,solver%pc_type,ierr);CHKERRQ(ierr)
+    endif
+  endif
+
+  call KSPSetTolerances(solver%ksp,solver%linear_rtol,solver%linear_atol, &
+                        solver%linear_dtol,solver%linear_max_iterations, &
+                        ierr);CHKERRQ(ierr)
+  ! as of PETSc 3.7, we need to turn on error reporting due to zero pivots
+  ! as PETSc no longer reports zero pivots for very small concentrations
+  !geh: this gets overwritten by ksp->errorifnotconverted
+  if (solver%linear_stop_on_failure) then
+    call KSPSetErrorIfNotConverged(solver%ksp,PETSC_TRUE,ierr);CHKERRQ(ierr)
+  endif
+
+  ! Setup for n-level Galerkin multigrid.
+  if (solver%use_galerkin_mg) then
+    call PCSetType(solver%pc, PCMG,ierr);CHKERRQ(ierr)
+    call PCMGSetLevels(solver%pc, solver%galerkin_mg_levels, &
+                       MPI_COMM_NULL,ierr);CHKERRQ(ierr)
+    do i=1,solver%galerkin_mg_levels-1
+      call PCMGSetInterpolation(solver%pc, i, solver%interpolation(i), &
+                                ierr);CHKERRQ(ierr)
+      !geh: not sure if this is the right type....
+      call PCMGSetGalerkin(solver%pc,PC_MG_GALERKIN_MAT,ierr);CHKERRQ(ierr)
+    enddo
+  endif
+  
+  ! Note that KSPSetFromOptions() calls PCSetFromOptions(), so these should 
+  ! not be called separately
+  call KSPSetFromOptions(solver%ksp,ierr);CHKERRQ(ierr)
+
+  ! get the ksp_type and pc_type incase of command line override.
+  call KSPGetType(solver%ksp,solver%ksp_type,ierr);CHKERRQ(ierr)
+  call PCGetType(solver%pc,solver%pc_type,ierr);CHKERRQ(ierr)
+
+  if (solver%linear_shift) then
+    ! the below must come after KSPSetFromOptions
+    ! PETSc no longer performs a shift on matrix diagonals by default.  We 
+    ! force the shift since it helps alleviate zero pivots.
+    ! Note that if the preconditioner type does not support a shift, the shift 
+    ! we've set is ignored; we don't need to check to see if the type supports 
+    ! a shift before calling this.
+    call PCFactorSetShiftType(solver%pc,MAT_SHIFT_INBLOCKS,ierr);CHKERRQ(ierr)
+    if (solver%pc_type == PCBJACOBI .or. solver%pc_type == PCASM .or. &
+        solver%pc_type == PCGASM) then
+      call KSPSetup(solver%ksp,ierr);CHKERRQ(ierr)
+      select case(solver%pc_type)
+        case(PCBJACOBI)
+          call PCBJacobiGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                                  PETSC_NULL_KSP,ierr);CHKERRQ(ierr)
+        case(PCASM)
+          call PCASMGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                              PETSC_NULL_KSP,ierr);CHKERRQ(ierr)
+        case(PCGASM)
+          call PCGASMGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                               PETSC_NULL_KSP,ierr);CHKERRQ(ierr)
+      end select
+      allocate(sub_ksps(nsub_ksp))
+      select case(solver%pc_type)
+        case(PCBJACOBI)
+          call PCBJacobiGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                                  sub_ksps,ierr);CHKERRQ(ierr)
+        case(PCASM)
+          call PCASMGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                              sub_ksps,ierr);CHKERRQ(ierr)
+        case(PCGASM)
+          call PCGASMGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                               sub_ksps,ierr);CHKERRQ(ierr)
+      end select
+      do i = 1, nsub_ksp
+        call KSPGetPC(sub_ksps(i),pc,ierr);CHKERRQ(ierr)
+        call PCFactorSetShiftType(pc,MAT_SHIFT_INBLOCKS,ierr);CHKERRQ(ierr)
+      enddo
+      deallocate(sub_ksps)
+      nullify(sub_ksps)
+    endif
+  endif
+  
+  if (Initialized(solver%linear_zero_pivot_tol)) then
+    call PCFactorSetZeroPivot(solver%pc,solver%linear_zero_pivot_tol, &
+                              ierr);CHKERRQ(ierr)
+    if (solver%pc_type == PCBJACOBI) then
+      call KSPSetup(solver%ksp,ierr);CHKERRQ(ierr)
+      call PCBJacobiGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                              PETSC_NULL_KSP,ierr);CHKERRQ(ierr)
+      allocate(sub_ksps(nsub_ksp))
+      call PCBJacobiGetSubKSP(solver%pc,nsub_ksp,first_sub_ksp, &
+                              sub_ksps,ierr);CHKERRQ(ierr)
+      do i = 1, nsub_ksp
+        call KSPGetPC(sub_ksps(i),pc,ierr);CHKERRQ(ierr)
+        call PCFactorSetZeroPivot(pc,solver%linear_zero_pivot_tol, &
+                                  ierr);CHKERRQ(ierr)
+      enddo
+      deallocate(sub_ksps)
+      nullify(sub_ksps)
+    elseif (.not.(solver%pc_type == PCLU .or. solver%pc_type == PCILU)) then
+      option%io_buffer = 'PCFactorSetZeroPivot for PC ' // &
+        trim(solver%pc_type) // ' is not supported at this time.'
+      call PrintErrMsg(option)
+    endif
+  endif
+
+  call KSPGetTolerances(solver%ksp,solver%linear_rtol,solver%linear_atol, &
+                         solver%linear_dtol,solver%linear_max_iterations, &
+                        ierr);CHKERRQ(ierr)
+
+end subroutine SolverSetKSPOptions
+
+! ************************************************************************** !
+
 subroutine SolverCreateTS(solver,comm)
   ! 
   ! This routine creates PETSc TS object.

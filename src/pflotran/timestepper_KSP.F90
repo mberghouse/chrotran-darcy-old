@@ -225,6 +225,7 @@ subroutine TimestepperKSPStepDT(this,process_model,stop_flag)
   
   type(solver_type), pointer :: solver
   type(option_type), pointer :: option
+  PetscErrorCode :: ierr
 
   PetscInt :: icut
 
@@ -239,7 +240,7 @@ subroutine TimestepperKSPStepDT(this,process_model,stop_flag)
 
 !    call PetscTime(log_start_time,ierr);CHKERRQ(ierr)
 
-    ! pm%solve()
+     call process_model%Solve(option%time,ierr)
 
 !    call PetscTime(log_end_time,ierr);CHKERRQ(ierr)
 

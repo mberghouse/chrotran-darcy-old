@@ -46,6 +46,7 @@ module PM_RT_class
     procedure, public :: Jacobian => PMRTJacobian
     procedure, public :: UpdateTimestep => PMRTUpdateTimestep
     procedure, public :: PreSolve => PMRTPreSolve
+    procedure, public :: Solve => PMRTSolve
     procedure, public :: PostSolve => PMRTPostSolve
     procedure, public :: AcceptSolution => PMRTAcceptSolution
     procedure, public :: CheckUpdatePre => PMRTCheckUpdatePre
@@ -167,7 +168,10 @@ subroutine PMRTRead(this,input)
     if (found) cycle
 
     select case(trim(keyword))
-      case('GLOBAL_IMPLICIT','OPERATOR_SPLIT','OPERATOR_SPLITTING')
+      case('GLOBAL_IMPLICIT')
+        option%transport%reactive_transport_coupling = GLOBAL_IMPLICIT
+      case('OPERATOR_SPLIT','OPERATOR_SPLITTING')
+        option%transport%reactive_transport_coupling = OPERATOR_SPLIT
       case('MAX_VOLUME_FRACTION_CHANGE')
         call InputReadDouble(input,option,this%volfrac_change_governor)
         call InputDefaultMsg(input,option,'maximum volume fraction change')
@@ -498,6 +502,58 @@ subroutine PMRTPreSolve(this)
                           this%realization%option)
   
 end subroutine PMRTPreSolve
+
+! ************************************************************************** !
+
+subroutine PMRTSolve(this,time,ierr)
+  ! 
+  ! Solves the operator split reactive transport problem
+  !
+  ! Author: Glenn Hammond
+  ! Date: 12/02/19
+  ! 
+  implicit none
+
+  class(pm_rt_type) :: this
+  PetscReal :: time
+  PetscErrorCode :: ierr
+
+#if 0
+  ! from commit 2d58f86
+  call DiscretizationGlobalToLocal(discretization,field%tran_xx, &
+                                   field%tran_xx_loc,NTRANDOF)
+  if (option%nflowdof > 0 .and. .not.steady_flow) then
+    call TimestepperSetTranWeights(option,flow_t0,flow_t1)
+    ! set densities and saturations to t
+    call GlobalUpdateDenAndSat(realization,option%tran_weight_t0)
+  endif
+  call RTUpdateRHSCoefs(realization)
+  call RTUpdateAuxVars(realization,PETSC_TRUE,PETSC_FALSE,PETSC_FALSE)
+  call RTCalculateRHS_t0(realization)
+  if (option%nflowdof > 0 .and. .not.steady_flow) then
+    call GlobalUpdateDenAndSat(realization,option%tran_weight_t1)
+  endif
+  call RTUpdateTransportCoefs(realization)
+  call RTCalculateRHS_t1(realization)
+  call RTCalculateTransportMatrix(realization,solver%J)
+  call KSPSetOperators(solver%ksp,solver%J,solver%Jpre, &
+                       SAME_NONZERO_PATTERN,ierr)
+  do idof = 1, option%ntrandof
+    call VecStrideGather(field%tran_rhs,idof-1,field%work,INSERT_VALUES,ierr)
+    option%rt_idof = idof
+    call KSPSolve(solver%ksp,field%work,field%work,ierr)
+    ! tran_xx will contain transported totals
+    ! tran_xx_loc will still contain free-ion from previous solution
+    call VecStrideScatter(field%work,idof-1,field%tran_xx,INSERT_VALUES,ierr)
+    call KSPGetIterationNumber(solver%ksp,num_linear_iterations,ierr)
+    call KSPGetConvergedReason(solver%ksp,ksp_reason,ierr)
+    sum_linear_iterations = sum_linear_iterations + num_linear_iterations
+  enddo
+
+  call RTReact()
+#endif
+
+end subroutine PMRTSolve
 
 ! ************************************************************************** !
 

@@ -89,6 +89,7 @@ subroutine PMCSubsurfaceSetupSolvers(this)
   ! Date: 06/22/18
   ! 
   use Option_module
+  use Timestepper_KSP_class
   use Timestepper_BE_class
   use Timestepper_TS_class
 
@@ -103,9 +104,11 @@ subroutine PMCSubsurfaceSetupSolvers(this)
   if (associated(this%timestepper)) then
     select type(ts => this%timestepper)
       class is(timestepper_TS_type)
-        call PMCSubsurfaceSetupSolvers_TS(this)
+        call PMCSubsurfSetupSolvers_TS(this)
       class is(timestepper_BE_type)
-        call PMCSubsurfaceSetupSolvers_TimestepperBE(this)
+        call PMCSubsurfSetupSolvers_BE(this)
+      class is(timestepper_KSP_type)
+        call PMCSubsurfSetupSolvers_KSP(this)
       class default
         option%io_buffer = &
           'Unknown timestepper found in PMCSubsurfaceSetupSolvers '
@@ -117,7 +120,84 @@ end subroutine PMCSubsurfaceSetupSolvers
 
 ! ************************************************************************** !
 
-subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
+subroutine PMCSubsurfSetupSolvers_KSP(this)
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 03/18/13
+  ! 
+  use Convergence_module
+  use Discretization_module
+  use Realization_Subsurface_class
+  use Option_module
+  use PMC_Base_class
+  use PM_Base_Pointer_module
+  use PM_Base_class
+  use PM_RT_class
+  use PM_NWT_class
+  use Solver_module
+  use Timestepper_Base_class
+  use Timestepper_KSP_class
+
+  implicit none
+
+  class(pmc_subsurface_type) :: this
+
+  type(solver_type), pointer :: solver
+  type(option_type), pointer :: option
+  type(discretization_type), pointer :: discretization
+  class(realization_subsurface_type), pointer :: realization
+  character(len=MAXSTRINGLENGTH) :: string  
+  PetscErrorCode :: ierr
+
+  option => this%option
+  solver => this%timestepper%solver
+  
+  check_update = PETSC_FALSE
+
+  call SolverCreateKSP(solver,option%mycomm)
+  call SNESGetLineSearch(this%timestepper%solver%snes,linesearch, &
+                         ierr);CHKERRQ(ierr)
+  ! set solver pointer within pm for convergence purposes
+  call this%pm_ptr%pm%SetSolver(solver)
+  select type(pm => this%pm_ptr%pm)
+    class is(pm_rt_type)
+      if (option%transport%reactive_transport_coupling == GLOBAL_IMPLICIT) then
+        option%io_buffer = 'PMCSubsurfSetupSolvers_KSP not &
+          &supported for global implicit reactive transport'
+        call PrintErrMsg(option)
+      endif
+      discretization => pm%realization%discretization
+      realization => pm%realization
+      if (OptionPrintToScreen(option)) then
+        write(*,'(" mode = Reactive Transport")')
+      endif
+    class default
+      option%io_buffer = 'PM type not supported in &
+           &PMCSubsurfSetupSolvers_KSP'
+      call PrintErrMsg(option)
+  end select
+  
+  call PrintMsg(option,"  Beginning setup of TRAN KSP ")
+  call KSPSetOptionsPrefix(solver%snes, "tran_",ierr);CHKERRQ(ierr)
+  call SolverCheckCommandLine(solver)
+    
+  solver%J_mat_type = MATAIJ
+  solver%Jpre_mat_type = MATAIJ
+  call DiscretizationCreateJacobian(discretization, &
+                                    ONEDOF, &
+                                    solver%Jpre_mat_type, &
+                                    solver%Jpre,option)
+  solver%J = solver%Jpre
+
+  call PrintMsg(option,"  Finished setting up TRAN KSP ")
+
+  call SolverSetKSPOptions(solver,option)
+
+end subroutine PMCSubsurfSetupSolvers_KSP
+
+! ************************************************************************** !
+
+subroutine PMCSubsurfSetupSolvers_BE(this)
   ! 
   ! Author: Glenn Hammond
   ! Date: 03/18/13
@@ -157,8 +237,6 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   SNESLineSearch :: linesearch  
   character(len=MAXSTRINGLENGTH) :: string  
   PetscBool :: add_pre_check, check_update, check_post_convergence
-  PetscInt :: itransport, RT, NWT
-  PetscInt :: trans_coupling
   SNESType :: snes_type
   PetscErrorCode :: ierr
 
@@ -170,10 +248,6 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   solver => this%timestepper%solver
   
   check_update = PETSC_FALSE
-  itransport = 0
-  trans_coupling = 10000 ! set to high value (not 0 or 1)
-  RT = 1
-  NWT = 2
 
   call SolverCreateSNES(solver,option%mycomm)
   call SNESGetLineSearch(this%timestepper%solver%snes,linesearch, &
@@ -558,11 +632,11 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
                        ierr);CHKERRQ(ierr)
   call SolverSetSNESOptions(solver,option)
 
-end subroutine PMCSubsurfaceSetupSolvers_TimestepperBE
+end subroutine PMCSubsurfSetupSolvers_BE
 
 ! ************************************************************************** !
 
-subroutine PMCSubsurfaceSetupSolvers_TS(this)
+subroutine PMCSubsurfSetupSolvers_TS(this)
   ! 
   ! Author: Gautam Bisht
   ! Date: 06/20/2018
@@ -679,7 +753,7 @@ subroutine PMCSubsurfaceSetupSolvers_TS(this)
 
   end select
 
-end subroutine PMCSubsurfaceSetupSolvers_TS
+end subroutine PMCSubsurfSetupSolvers_TS
 
 ! ************************************************************************** !
 

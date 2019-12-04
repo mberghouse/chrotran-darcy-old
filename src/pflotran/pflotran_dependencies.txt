@@ -184,7 +184,7 @@ factory_subsurface.o : characteristic_curves.o checkpoint.o condition.o \
                        regression.o saturation_function.o \
                        simulation_subsurface.o solver.o srcsink_sandbox.o \
                        strata.o string.o th_aux.o timestepper_BE.o \
-                       timestepper_TS.o timestepper_steady.o \
+                       timestepper_KSP.o timestepper_TS.o timestepper_steady.o \
                        transport_constraint.o transport_constraint_base.o \
                        transport_constraint_nwt.o transport_constraint_rt.o \
                        units.o utility.o waypoint.o well_data.o wipp.o
@@ -700,8 +700,8 @@ pmc_subsurface.o : connection.o convergence.o coupler.o discretization.o \
                    pm_toil_ims.o pm_towg.o pm_ufd_decay.o pm_waste_form.o \
                    pm_wipp_flow.o pmc_base.o realization_base.o \
                    realization_subsurface.o secondary_continuum.o solver.o \
-                   string.o timestepper_BE.o timestepper_TS.o \
-                   timestepper_base.o variables.o
+                   string.o timestepper_BE.o timestepper_KSP.o \
+                   timestepper_TS.o timestepper_base.o variables.o
 pmc_surface.o : checkpoint.o connection.o coupler.o eos_water.o grid.o \
                 option.o output.o output_aux.o output_surface.o patch.o \
                 pflotran_constants.o pm_base.o pm_surface_flow.o pmc_base.o \
@@ -1008,7 +1008,7 @@ timestepper_BE.o : checkpoint.o convergence.o hdf5_aux.o input_aux.o option.o \
                    solver.o string.o timestepper_base.o utility.o
 timestepper_KSP.o : checkpoint.o hdf5_aux.o input_aux.o option.o \
                     pflotran_constants.o pm_base.o solver.o string.o \
-                    waypoint.o
+                    timestepper_base.o
 timestepper_TS.o : input_aux.o option.o output.o pflotran_constants.o \
                    pm_base.o pm_surface_flow.o solver.o string.o \
                    surface_flow.o timestepper_base.o utility.o waypoint.o

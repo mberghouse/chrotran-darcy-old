@@ -1368,7 +1368,6 @@ subroutine SubsurfaceInitSimulation(simulation)
   use PM_Base_Pointer_module
   use PM_Subsurface_Flow_class
   use PM_Auxiliary_class
-  use Timestepper_BE_class
   use Waypoint_module
 
   implicit none
@@ -2162,6 +2161,7 @@ subroutine SubsurfaceReadInput(simulation,input)
   use Simulation_Subsurface_class
   use PMC_Subsurface_class
   use Timestepper_BE_class
+  use Timestepper_KSP_class
   use Timestepper_Steady_class
   use Timestepper_TS_class
   use Well_Data_class
@@ -2240,7 +2240,7 @@ subroutine SubsurfaceReadInput(simulation,input)
 
   class(timestepper_base_type), pointer :: temp_timestepper
   class(timestepper_base_type), pointer :: flow_timestepper
-  class(timestepper_BE_type), pointer :: tran_timestepper
+  class(timestepper_base_type), pointer :: tran_timestepper
 
   PetscInt::iwaytime,nwaytime,mwaytime
   PetscReal,dimension(:),pointer :: waytime
@@ -2267,7 +2267,12 @@ subroutine SubsurfaceReadInput(simulation,input)
   endif
   flow_timestepper%solver%itype = FLOW_CLASS
 
-  tran_timestepper => TimestepperBECreate()
+  if (option%itranmode == RT_MODE .and. &
+      option%transport%reactive_transport_coupling == OPERATOR_SPLIT) then
+    tran_timestepper => TimestepperKSPCreate()
+  else
+    tran_timestepper => TimestepperBECreate()
+  endif
   tran_timestepper%solver%itype = TRANSPORT_CLASS
 
   backslash = achar(92)  ! 92 = "\" Some compilers choke on \" thinking it
