@@ -72,6 +72,7 @@ module PM_RT_class
   
   public :: PMRTCreate, &
             PMRTInit, &
+            PMRTCopy, &
             PMRTInitializeRun, &
             PMRTWeightFlowParameters, &
             PMRTStrip
@@ -116,8 +117,6 @@ subroutine PMRTInit(pm_rt)
   class(pm_rt_type) :: pm_rt
   
   call PMBaseInit(pm_rt)
-  nullify(pm_rt%option)
-  nullify(pm_rt%output_option)
   nullify(pm_rt%realization)
   nullify(pm_rt%comm1)
   nullify(pm_rt%commN)
@@ -135,8 +134,44 @@ subroutine PMRTInit(pm_rt)
   ! these flags can only be true for transport only
   pm_rt%transient_porosity = PETSC_FALSE
   pm_rt%operator_split = PETSC_FALSE
+  ! be sure to add any new members to PMBaseCopy below.
 
 end subroutine PMRTInit
+
+! ************************************************************************** !
+
+subroutine PMRTCopy(from,to)
+  ! 
+  ! Initializes reactive transport process model
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 12/09/19
+  ! 
+  implicit none
+  
+  class(pm_rt_type) :: from
+  class(pm_rt_type) :: to
+  
+  call PMBaseCopy(from,to)
+  to%realization => from%realization
+  to%comm1 => from%comm1
+  to%commN => from%commN
+  
+  ! local variables
+  to%steady_flow = from%steady_flow
+  to%tran_weight_t0 = from%tran_weight_t0
+  to%tran_weight_t1 = from%tran_weight_t1
+  to%check_post_convergence = from%check_post_convergence
+  to%max_concentration_change => from%max_concentration_change
+  to%max_volfrac_change => from%max_volfrac_change
+  to%volfrac_change_governor = from%volfrac_change_governor
+  to%cfl_governor = from%cfl_governor
+  to%temperature_dependent_diffusion = from%temperature_dependent_diffusion
+  ! these flags can only be true for transport only
+  to%transient_porosity = from%transient_porosity
+  to%operator_split = from%operator_split
+
+end subroutine PMRTCopy
 
 ! ************************************************************************** !
 
@@ -1914,8 +1949,10 @@ subroutine PMRTStrip(this)
   nullify(this%comm1)
   nullify(this%option)
   nullify(this%output_option)
-  call this%commN%Destroy()
-  if (associated(this%commN)) deallocate(this%commN)
+  if (associated(this%commN)) then
+    call this%commN%Destroy()
+    deallocate(this%commN)
+  endif
   nullify(this%commN)  
 
 end subroutine PMRTStrip

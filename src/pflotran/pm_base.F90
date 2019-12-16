@@ -66,6 +66,7 @@ module PM_Base_class
   end type pm_base_header_type
     
   public :: PMBaseInit, &
+            PMBaseCopy, &
             PMBaseInputRecord, &
             PMBaseReadSelectCase, &
             PMBasePrintHeader, &
@@ -95,8 +96,32 @@ subroutine PMBaseInit(this)
   this%print_ekg = PETSC_FALSE
   this%skip_restart = PETSC_FALSE
   nullify(this%next)
+  ! be sure to add any new members to PMBaseCopy below.
   
 end subroutine PMBaseInit
+
+! ************************************************************************** !
+
+subroutine PMBaseCopy(from,to)
+
+  implicit none
+  
+  class(pm_base_type) :: from  
+  class(pm_base_type) :: to  
+
+  to%name = from%name
+  to%header = from%header
+  to%option => from%option
+  to%output_option => from%output_option
+  to%realization_base => from%realization_base
+  to%solver => from%solver
+  to%solution_vec = from%solution_vec
+  to%residual_vec = from%residual_vec
+  to%print_ekg = from%print_ekg
+  to%skip_restart = from%skip_restart
+  to%next => from%next
+  
+end subroutine PMBaseCopy
 
 ! ************************************************************************** !
 

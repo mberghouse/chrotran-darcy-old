@@ -1071,6 +1071,7 @@ subroutine SubsurfaceReadTransportPM(input,option,pm)
   type(input_type), pointer :: input
   type(option_type), pointer :: option
   class(pm_base_type), pointer :: pm
+  class(pm_osrt_type), pointer :: pm_osrt
 
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
@@ -1094,13 +1095,13 @@ subroutine SubsurfaceReadTransportPM(input,option,pm)
         call InputErrorMsg(input,option,'mode',error_string)
         call StringToUpper(word)
         select case(word)
-          case('RT')
+          case('OSRT','RT')
             pm => PMRTCreate()
             option%itranmode = RT_MODE
-          case('OSRT')
-            pm => PMOSRTCreate()
-            option%itranmode = RT_MODE
-            option%transport%reactive_transport_coupling = OPERATOR_SPLIT
+!          case('OSRT')
+!            pm => PMOSRTCreate()
+!            option%itranmode = RT_MODE
+!            option%transport%reactive_transport_coupling = OPERATOR_SPLIT
           case('NWT')
             pm => PMNWTCreate()
             option%itranmode = NWT_MODE
@@ -1116,6 +1117,23 @@ subroutine SubsurfaceReadTransportPM(input,option,pm)
           call PrintErrMsg(option)
         endif
         call pm%ReadSimulationBlock(input)
+        select type(pm)
+          class is(pm_osrt_type)
+            ! if already operator split, do nothing
+          ! must come second since pm_osrt_type is a daughter of pm_rt_type
+          class is(pm_rt_type)
+            if (pm%operator_split) then
+              pm_osrt => PMOSRTCreate()
+              ! copy settings from pm_rt_type to pm_osrt_type
+              call PMRTCopy(pm,pm_osrt)
+              call pm%Destroy()
+              deallocate(pm)
+              nullify(pm)
+              pm => pm_osrt
+              nullify(pm_osrt)
+              option%transport%reactive_transport_coupling = OPERATOR_SPLIT
+            endif
+        end select
       case('GLOBAL_IMPLICIT')
         print_refactor_msg = PETSC_TRUE
         exit
