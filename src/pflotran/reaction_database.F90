@@ -1,5 +1,8 @@
 module Reaction_Database_module
 
+#include "petsc/finclude/petscsys.h"
+  use petscsys
+
   use Reaction_module
   use Reaction_Aux_module
   use Reaction_Database_Aux_module
@@ -10,8 +13,6 @@ module Reaction_Database_module
   
   private
   
-#include "petsc/finclude/petscsys.h"
-
   public :: DatabaseRead, BasisInit
   
   public :: GetSpeciesBasisID, &
@@ -30,8 +31,6 @@ subroutine DatabaseRead(reaction,option)
   ! Date: 09/01/08
   ! 
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   use Input_Aux_module
   use String_module
@@ -47,7 +46,7 @@ subroutine DatabaseRead(reaction,option)
   
   implicit none
   
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   type(option_type) :: option
   
   type(aq_species_type), pointer :: cur_aq_spec, cur_aq_spec2
@@ -234,6 +233,10 @@ subroutine DatabaseRead(reaction,option)
         do
           if (found .or. .not.associated(cur_immobile_spec)) exit
           if (StringCompare(name,cur_immobile_spec%name,MAXWORDLENGTH)) then
+            option%io_buffer = 'Immobile species [i.e. ' // &
+              trim(cur_immobile_spec%name) // '] should not be placed in &
+              &the reaction database.'
+            call PrintErrMsg(option)
             found = PETSC_TRUE          
             ! change negative id to positive, indicating it was found in 
             ! database
@@ -287,16 +290,19 @@ subroutine DatabaseRead(reaction,option)
             call InputErrorMsg(input,option,'EQRXN logKs','DATABASE') 
           enddo
         endif
-        ! read the Debye-Huckel ion size parameter (a0)
-        call InputReadDouble(input,option,cur_aq_spec%a0)
-        call InputErrorMsg(input,option,'AQ Species a0','DATABASE')            
-        ! read the valence
-        call InputReadDouble(input,option,cur_aq_spec%Z)
-        call InputErrorMsg(input,option,'AQ Species Z','DATABASE')            
-        ! read the molar weight
-        call InputReadDouble(input,option,cur_aq_spec%molar_weight)
-        call InputErrorMsg(input,option,'AQ Species molar weight','DATABASE')
         
+        ! only read for aqueous species
+        if (associated(cur_aq_spec)) then
+          ! read the Debye-Huckel ion size parameter (a0)
+          call InputReadDouble(input,option,cur_aq_spec%a0)
+          call InputErrorMsg(input,option,'AQ Species a0','DATABASE')
+          ! read the valence
+          call InputReadDouble(input,option,cur_aq_spec%Z)
+          call InputErrorMsg(input,option,'AQ Species Z','DATABASE')
+          ! read the molar weight
+          call InputReadDouble(input,option,cur_aq_spec%molar_weight)
+          call InputErrorMsg(input,option,'AQ Species molar weight','DATABASE')
+        endif
                     
       case(2) ! gas species
         cur_gas_spec => reaction%gas%list
@@ -798,8 +804,6 @@ subroutine BasisInit(reaction,option)
   ! Date: 09/01/08
   ! 
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   use String_module
   use Utility_module
@@ -819,7 +823,7 @@ subroutine BasisInit(reaction,option)
 
   implicit none
   
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   type(option_type) :: option
   
   type(aq_species_type), pointer :: cur_aq_spec
@@ -3985,7 +3989,7 @@ function GetSpeciesBasisID(reaction,option,ncomp_h2o,reaction_name, &
 
   implicit none
 
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   type(option_type) :: option
   PetscInt :: ncomp_h2o
   character(len=MAXWORDLENGTH) :: reaction_name
@@ -4046,15 +4050,13 @@ subroutine ReactionDatabaseSetupGases(reaction,num_logKs,option,h2o_id, &
   ! Author: Glenn Hammond
   ! Date: 08/10/16
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   use Reaction_Gas_Aux_module
   use Utility_module
   
   implicit none
   
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   PetscInt :: num_logKs
   type(option_type) :: option
   PetscInt :: h2o_id
@@ -4203,7 +4205,7 @@ subroutine BasisPrint(reaction,title,option)
 
   implicit none
   
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   character(len=*) :: title
   type(option_type) :: option
   

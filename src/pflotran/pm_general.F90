@@ -643,7 +643,7 @@ subroutine PMGeneralUpdateTimestep(this,dt,dt_min,dt_max,iacceleration, &
     call this%realization%comm1%GlobalToLocal(field%work,field%work_loc)
     call GlobalSetAuxVarVecLoc(this%realization,field%work_loc, &
                                GAS_SATURATION,TIME_NULL)
-    call RealizationLimitDTByCFL(this%realization,this%cfl_governor,dt)
+    call RealizationLimitDTByCFL(this%realization,this%cfl_governor,dt,dt_max)
   endif
 
 end subroutine PMGeneralUpdateTimestep
@@ -1414,8 +1414,6 @@ end subroutine PMGeneralUpdateAuxVars
 ! ************************************************************************** !
 
 subroutine PMGeneralMaxChange(this)
-  ! 
-  ! Not needed given GeneralMaxChange is called in PostSolve
   ! 
   ! Author: Glenn Hammond
   ! Date: 03/14/13

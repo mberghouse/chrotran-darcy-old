@@ -60,8 +60,6 @@ module Output_Aux_module
     PetscBool :: print_observation 
     PetscBool :: print_column_ids
 
-    PetscBool :: print_mad 
-
     PetscBool :: print_explicit_primal_grid    ! prints primal grid if true
     PetscBool :: print_explicit_dual_grid      ! prints voronoi (dual) grid if true
 
@@ -150,6 +148,10 @@ module Output_Aux_module
     PetscInt  :: write_ecl_rst_lasts
   end type
 
+  type, public :: output_h5_type
+    PetscBool :: first_write
+  end type output_h5_type
+
 !  type, public, EXTENDS (output_variable_type) :: aveg_output_variable_type
 !    PetscReal :: time_interval
 !  end type aveg_output_variable_type
@@ -195,7 +197,9 @@ module Output_Aux_module
             OutputVariableListDestroy, &
             CheckpointOptionCreate, &
             CheckpointOptionDestroy, &
-            CreateOutputOptionEclipse
+            CreateOutputOptionEclipse, &
+            OutputH5Create, &
+            OutputH5Destroy
 
 contains
 
@@ -236,7 +240,6 @@ function OutputOptionCreate()
   output_option%print_vtk_vel_cent = PETSC_FALSE
   output_option%print_observation = PETSC_FALSE
   output_option%print_column_ids = PETSC_FALSE
-  output_option%print_mad = PETSC_FALSE
   output_option%print_explicit_primal_grid = PETSC_FALSE
   output_option%print_explicit_dual_grid = PETSC_FALSE
   output_option%print_initial_obs = PETSC_TRUE
@@ -280,6 +283,22 @@ function OutputOptionCreate()
   OutputOptionCreate => output_option
   
 end function OutputOptionCreate
+
+! ************************************************************************** !
+
+function OutputH5Create()
+  ! 
+  ! Initializes module variables for H5 output
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 10/18/19
+  ! 
+  type(output_h5_type), pointer :: OutputH5Create
+
+  allocate(OutputH5Create)
+  OutputH5Create%first_write = PETSC_TRUE
+
+end function OutputH5Create
 
 ! ************************************************************************** !
 
@@ -327,7 +346,6 @@ function OutputOptionDuplicate(output_option)
   output_option2%print_vtk_vel_cent = output_option%print_vtk_vel_cent
   output_option2%print_observation = output_option%print_observation
   output_option2%print_column_ids = output_option%print_column_ids
-  output_option2%print_mad = output_option%print_mad
   output_option2%print_initial_obs = output_option%print_initial_obs
   output_option2%print_final_obs = output_option%print_final_obs
   output_option2%print_initial_snap = output_option%print_initial_snap
@@ -1127,6 +1145,27 @@ subroutine DestroyOutputOptionEclipse(eclipse_options)
   endif
 
 end subroutine DestroyOutputOptionEclipse
+
+! ************************************************************************** !
+
+subroutine OutputH5Destroy(output_h5)
+  !
+  ! Deallocates an output_h5 object
+  !
+  ! Author: Dave Ponting
+  ! Date: 10/19/19
+  !
+
+  implicit none
+
+  type(output_h5_type), pointer :: output_h5
+
+  if (.not.associated(output_h5)) return
+
+  deallocate(output_h5)
+  nullify(output_h5)
+
+end subroutine OutputH5Destroy
 
 ! ************************************************************************** !
 

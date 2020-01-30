@@ -21,6 +21,10 @@ REGRESSION
   /
 END
 
+#=========================== hydrate ==========================================
+HYDRATE
+  ADJUST_SOLUBILITY_WITHIN_GHSZ
+END
 #=========================== discretization ===================================
 GRID
   TYPE STRUCTURED CYLINDRICAL

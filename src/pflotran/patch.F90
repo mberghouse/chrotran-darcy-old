@@ -1,7 +1,8 @@
 module Patch_module
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
+#include "petsc/finclude/petscvec.h"
+  use petscvec
+
   use Option_module
   use Grid_module
   use Coupler_module
@@ -9,6 +10,7 @@ module Patch_module
   use Integral_Flux_module
   use Strata_module
   use Region_module
+  use Reaction_Base_module
   use Reaction_Aux_module
   use NW_Transport_Aux_module
   use Dataset_Base_class
@@ -84,9 +86,10 @@ module Patch_module
 
     ! Pointers to objects in mother realization object
     type(field_type), pointer :: field
-    type(reaction_type), pointer :: reaction
-    type(nw_trans_realization_type), pointer :: nw_trans
     class(dataset_base_type), pointer :: datasets
+    class(reaction_rt_type), pointer :: reaction
+    class(reaction_nw_type), pointer :: reaction_nw
+    class(reaction_base_type), pointer :: reaction_base
 
     type(auxiliary_type) :: aux
 
@@ -98,8 +101,6 @@ module Patch_module
     type(surface_material_property_ptr_type), pointer :: surf_material_property_array(:)
     type(surface_field_type), pointer :: surf_field
     type(surface_auxiliary_type) :: surf_aux
-
-    type(methanogenesis_type), pointer :: methanogenesis
 
   end type patch_type
 
@@ -216,9 +217,10 @@ function PatchCreate()
   call AuxInit(patch%aux)
 
   nullify(patch%field)
-  nullify(patch%reaction)
-  nullify(patch%nw_trans)
   nullify(patch%datasets)
+  nullify(patch%reaction_base)
+  nullify(patch%reaction)
+  nullify(patch%reaction_nw)
 
   nullify(patch%next)
 
@@ -226,9 +228,6 @@ function PatchCreate()
   nullify(patch%surf_material_property_array)
   nullify(patch%surf_field)
   call SurfaceAuxInit(patch%surf_aux)
-
-  nullify(patch%methanogenesis)
-
 
   PatchCreate => patch
 
@@ -859,9 +858,11 @@ subroutine PatchInitCouplerAuxVars(coupler_list,patch,option)
   use Reaction_Aux_module
   use Reactive_Transport_Aux_module
   use NW_Transport_Aux_module
-  use NWT_Constraint_module
   use Global_Aux_module
   use Condition_module
+  use Transport_Constraint_Base_module
+  use Transport_Constraint_NWT_module
+  use Transport_Constraint_RT_module
   use Transport_Constraint_module
   use General_Aux_module
   use WIPP_Flow_Aux_module
@@ -879,8 +880,7 @@ subroutine PatchInitCouplerAuxVars(coupler_list,patch,option)
   PetscBool :: force_update_flag
 
   type(coupler_type), pointer :: coupler
-  type(tran_constraint_coupler_type), pointer :: cur_constraint_coupler
-  type(nwt_constraint_coupler_type), pointer :: cur_nwt_constraint_coupler
+  class(tran_constraint_coupler_base_type), pointer :: cur_constraint_coupler
   PetscInt :: idof
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: temp_int
@@ -1078,59 +1078,38 @@ subroutine PatchInitCouplerAuxVars(coupler_list,patch,option)
     endif ! associated(coupler%connection_set)
 
     ! TRANSPORT
-    if (associated(patch%reaction)) then
-      if (associated(coupler%tran_condition)) then
-        cur_constraint_coupler => &
-                                coupler%tran_condition%constraint_coupler_list
-        do
-          if (.not.associated(cur_constraint_coupler)) exit
-          ! Setting option%iflag = 0 ensures that the "mass_balance" array
-          ! is not allocated.
-          option%iflag = 0
-          ! Only allocate the XXX_auxvar objects if they have not been allocated.
-          ! Since coupler%tran_condition is a pointer to a separate list of
-          ! tran conditions, the XXX_auxvar object may already be allocated.
-          if (.not.associated(cur_constraint_coupler%global_auxvar)) then
-            allocate(cur_constraint_coupler%global_auxvar)
-            call GlobalAuxVarInit(cur_constraint_coupler%global_auxvar,option)
-          endif
-          if (.not.associated(cur_constraint_coupler%rt_auxvar)) then
-            allocate(cur_constraint_coupler%rt_auxvar)
-            call RTAuxVarInit(cur_constraint_coupler%rt_auxvar,patch%reaction, &
-                              option)
-          endif
-          cur_constraint_coupler => cur_constraint_coupler%next
-        enddo
-      endif
+    if (associated(coupler%tran_condition)) then
+      cur_constraint_coupler => &
+                          coupler%tran_condition%constraint_coupler_list
+      do
+        if (.not.associated(cur_constraint_coupler)) exit
+        ! Setting option%iflag = 0 ensures that the "mass_balance" array
+        ! is not allocated.
+        option%iflag = 0
+        ! Only allocate the XXX_auxvar objects if they have not been allocated.
+        ! Since coupler%tran_condition is a pointer to a separate list of
+        ! tran conditions, the XXX_auxvar object may already be allocated.
+        if (.not.associated(cur_constraint_coupler%global_auxvar)) then
+          allocate(cur_constraint_coupler%global_auxvar)
+          call GlobalAuxVarInit(cur_constraint_coupler%global_auxvar,option)
+        endif
+        select type(cur_constraint_coupler)
+          class is (tran_constraint_coupler_rt_type)
+            if (.not.associated(cur_constraint_coupler%rt_auxvar)) then
+              allocate(cur_constraint_coupler%rt_auxvar)
+              call RTAuxVarInit(cur_constraint_coupler%rt_auxvar, &
+                                patch%reaction,option)
+            endif
+          class is (tran_constraint_coupler_nwt_type)
+            if (.not.associated(cur_constraint_coupler%nwt_auxvar)) then
+              allocate(cur_constraint_coupler%nwt_auxvar)
+              call NWTAuxVarInit(cur_constraint_coupler%nwt_auxvar, &
+                                 NWTReactionCast(patch%reaction_base),option)
+            endif
+        end select
+        cur_constraint_coupler => cur_constraint_coupler%next
+      enddo
     endif
-    
-    if (associated(patch%nw_trans)) then
-      if (associated(coupler%tran_condition)) then
-        cur_nwt_constraint_coupler => &
-                             coupler%tran_condition%nwt_constraint_coupler_list
-        do
-          if (.not.associated(cur_nwt_constraint_coupler)) exit
-          ! Setting option%iflag = 0 ensures that the "mass_balance" array
-          ! is not allocated.
-          option%iflag = 0
-          ! Only allocate the XXX_auxvar objects if they have not been allocated.
-          ! Since coupler%tran_condition is a pointer to a separate list of
-          ! tran conditions, the XXX_auxvar object may already be allocated.
-          if (.not.associated(cur_nwt_constraint_coupler%global_auxvar)) then
-            allocate(cur_nwt_constraint_coupler%global_auxvar)
-            call GlobalAuxVarInit(cur_nwt_constraint_coupler%global_auxvar, &
-                                  option)
-          endif
-          if (.not.associated(cur_nwt_constraint_coupler%nwt_auxvar)) then
-            allocate(cur_nwt_constraint_coupler%nwt_auxvar)
-            call NWTAuxVarInit(cur_nwt_constraint_coupler%nwt_auxvar, &
-                               patch%nw_trans,option)
-          endif
-          cur_nwt_constraint_coupler => cur_nwt_constraint_coupler%next
-        enddo
-      endif
-    endif
-    
     coupler => coupler%next
   enddo
 
@@ -2125,7 +2104,8 @@ subroutine PatchUpdateCouplerAuxVarsH(patch,coupler,option)
   PetscBool :: dof1, dof2, dof3
   PetscReal :: temperature, p_sat, p_cap, s_liq, xmol
   PetscReal :: relative_humidity
-  PetscReal :: gas_sat, hyd_sat, air_pressure, gas_pressure, liq_pressure
+  PetscReal :: liq_sat, gas_sat, hyd_sat, ice_sat, air_pressure, gas_pressure, &
+               liq_pressure
   PetscReal :: dummy_real
   PetscReal :: x(option%nflowdof)
   character(len=MAXSTRINGLENGTH) :: string, string2
@@ -2221,13 +2201,6 @@ subroutine PatchUpdateCouplerAuxVarsH(patch,coupler,option)
           call DatasetUnknownClass(dataset,option, &
                                    'PatchUpdateCouplerAuxVarsH')
       end select
-    case(GA_STATE)
-      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
-        GA_STATE
-        ! no need to loop in the next do loop if its all the same state, which 
-        ! you know from flow_condition%iphase
-    case(HA_STATE)
-      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = HA_STATE
     case(L_STATE)
       coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
         L_STATE
@@ -2268,6 +2241,66 @@ subroutine PatchUpdateCouplerAuxVarsH(patch,coupler,option)
     case(G_STATE)
       coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
         G_STATE
+    case(H_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        H_STATE
+    case(I_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        I_STATE
+    case(GA_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        GA_STATE
+        ! no need to loop in the next do loop if its all the same state, which 
+        ! you know from flow_condition%iphase
+    case(HG_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        HG_STATE
+    case(HA_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = HA_STATE
+      if (associated(hydrate%liquid_pressure) .and.  hydrate% &
+                              liquid_pressure%itype == HYDROSTATIC_BC) then
+        if (hydrate%temperature%itype /= DIRICHLET_BC) then
+          option%io_buffer = 'Hydrostatic hydrate-aq. state pressure BC for &
+            &flow condition "' // trim(flow_condition%name) // &
+            '" requires a temperature BC of type DIRICHLET.'
+          call PrintErrMsg(option)
+        endif
+        call HydrostaticUpdateCoupler(coupler,option,patch%grid)
+        do iconn = 1, num_connections
+          if (coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,iconn) /= &
+              L_STATE .and. coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,iconn)&
+              /= HA_STATE) then
+            string = 'Non L or HA state'
+            option%io_buffer = 'A ' // trim(string) // ' cell was found &
+              &within a HYDROSTATIC_BC boundary condition for HYDRATE mode. &
+              &A hydrostatic boundary condition may not be used to set &
+              &state variables in the vadose zone for HYDRATE mode.'
+            call PrintErrMsg(option)
+          endif
+        enddo
+        dof1 = PETSC_TRUE; dof2 = PETSC_TRUE; dof3 = PETSC_TRUE;
+      endif
+    case(HI_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        HI_STATE
+    case(GI_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        GI_STATE
+    case(HGA_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        HGA_STATE
+    case(HAI_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        HAI_STATE
+    case(GAI_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        GAI_STATE
+    case(HGI_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        HGI_STATE
+    case(QUAD_STATE)
+      coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
+        QUAD_STATE
     case(HYD_ANY_STATE)
       if (associated(coupler%flow_aux_int_var)) then ! not used with rate
         coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,1:num_connections) = &
@@ -2284,105 +2317,8 @@ subroutine PatchUpdateCouplerAuxVarsH(patch,coupler,option)
     do iconn = 1, num_connections
       select case(coupler%flow_aux_int_var(HYDRATE_STATE_INDEX,iconn))
       ! ---------------------------------------------------------------------- !
-        case(HA_STATE)
-          ! gas pressure; 1st dof ------------------------ !
-          select case(hydrate%gas_pressure%itype)
-            case(DIRICHLET_BC)
-              call PatchGetCouplerValueFromDataset(coupler,option, &
-                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
-              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
-              dof1 = PETSC_TRUE
-              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
-            case default
-              string = GetSubConditionName(hydrate%gas_pressure%itype)
-              option%io_buffer = &
-                FlowConditionUnknownItype(coupler%flow_condition, &
-                  'HYDRATE MODE HA-state gas pressure ',string)
-              call PrintErrMsg(option)
-          end select
-          ! hydrate saturation; 2nd dof ---------------------- !
-          select case(hydrate%hydrate_saturation%itype)
-            case(DIRICHLET_BC)
-              call PatchGetCouplerValueFromDataset(coupler,option, &
-                        patch%grid,hydrate%hydrate_saturation%dataset,iconn, &
-                        hyd_sat)
-              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = hyd_sat
-              dof2 = PETSC_TRUE
-              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
-            case default
-              string = GetSubConditionName(hydrate%hydrate_saturation%itype)
-              option%io_buffer = &
-                FlowConditionUnknownItype(coupler%flow_condition, &
-                  'HYDRATE MODE HA-state hydrate saturation ',string)
-              call PrintErrMsg(option)
-          end select
-          ! temperature; 3rd dof ------------------------- !  
-          select case(hydrate%temperature%itype)
-            case(DIRICHLET_BC)
-              call PatchGetCouplerValueFromDataset(coupler,option, &
-                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
-              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
-              dof3 = PETSC_TRUE
-              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
-            case default
-              string = GetSubConditionName(hydrate%temperature%itype)
-              option%io_buffer = &
-                FlowConditionUnknownItype(coupler%flow_condition, &
-                  'HYDRATE MODE HA-state temperature ',string)
-              call PrintErrMsg(option)
-          end select
-        case(GA_STATE)
-          ! gas pressure; 1st dof ------------------------ !
-          select case(hydrate%gas_pressure%itype)
-            case(DIRICHLET_BC)
-              call PatchGetCouplerValueFromDataset(coupler,option, &
-                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
-              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
-              dof1 = PETSC_TRUE
-              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
-            case default
-              string = GetSubConditionName(hydrate%gas_pressure%itype)
-              option%io_buffer = &
-                FlowConditionUnknownItype(coupler%flow_condition, &
-                  'HYDRATE MODE GA-State gas pressure ',string)
-              call PrintErrMsg(option)
-          end select
-          ! temperature; 2nd dof ------------------------- !  
-          select case(hydrate%temperature%itype)
-            case(DIRICHLET_BC)
-              call PatchGetCouplerValueFromDataset(coupler,option, &
-                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
-              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
-              dof2 = PETSC_TRUE
-              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
-            case default
-              string = GetSubConditionName(hydrate%temperature%itype)
-              option%io_buffer = &
-                FlowConditionUnknownItype(coupler%flow_condition, &
-                  'HYDRATE MODE two phase state temperature ',string)
-              call PrintErrMsg(option)
-          end select
-          ! gas saturation; 3rd dof ---------------------- !
-          select case(hydrate%gas_saturation%itype)
-            case(DIRICHLET_BC)
-              call PatchGetCouplerValueFromDataset(coupler,option, &
-                        patch%grid,hydrate%gas_saturation%dataset,iconn,gas_sat)
-              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = gas_sat
-              dof3 = PETSC_TRUE
-              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
-            case default
-              string = GetSubConditionName(hydrate%gas_saturation%itype)
-              option%io_buffer = &
-                FlowConditionUnknownItype(coupler%flow_condition, &
-                  'HYDRATE MODE two phase state gas saturation ',string)
-              call PrintErrMsg(option)
-          end select
-      ! ---------------------------------------------------------------------- !
         case(L_STATE)
           if (hydrate%liquid_pressure%itype == HYDROSTATIC_BC) then
-  !         option%io_buffer = 'Hydrostatic BC for general phase cannot possibly ' // &
-  !           'be set up correctly. - GEH'
-  !         call PrintErrMsg(option)
             if (hydrate%mole_fraction%itype /= DIRICHLET_BC) then
               option%io_buffer = 'Hydrostatic liquid state pressure BC for &
                 &flow condition "' // trim(flow_condition%name) // &
@@ -2552,6 +2488,532 @@ subroutine PatchUpdateCouplerAuxVarsH(patch,coupler,option)
                 call PrintErrMsg(option)
             end select
           endif
+    ! ---------------------------------------------------------------------- !
+        case(H_STATE)
+          ! gas pressure; 1st dof ------------------------ !
+          select case(hydrate%gas_pressure%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_pressure%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE H-state gas pressure ',string)
+              call PrintErrMsg(option)
+          end select
+          ! temperature; 2nd dof ------------------------- !
+          select case(hydrate%temperature%itype)
+              case(DIRICHLET_BC)
+                call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+                coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+                dof2 = PETSC_TRUE
+                coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = &
+                                                                    DIRICHLET_BC
+              case default
+                string = GetSubConditionName(hydrate%temperature%itype)
+                option%io_buffer = &
+                  FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE H-state state temperature ',string)
+                call PrintErrMsg(option)
+            end select
+          ! mole fraction; 3rd dof ----------------------- !
+            select case(hydrate%mole_fraction%itype)
+              case(DIRICHLET_BC)
+                xmol = MOL_RATIO_METH
+                coupler%flow_aux_real_var(THREE_INTEGER,iconn) = xmol
+                dof3 = PETSC_TRUE
+                coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+              case default
+                string = GetSubConditionName(hydrate%mole_fraction%itype)
+                option%io_buffer = &
+                  FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE H-state mole fraction ',string)
+                call PrintErrMsg(option)
+            end select
+    ! ---------------------------------------------------------------------- !
+        case(I_STATE)
+          ! gas pressure; 1st dof ------------------------ !
+          select case(hydrate%gas_pressure%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_pressure%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE I-state gas pressure ',string)
+              call PrintErrMsg(option)
+          end select
+          ! temperature; 2nd dof ------------------------- !
+            select case(hydrate%temperature%itype)
+              case(DIRICHLET_BC)
+                call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+                coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+                dof2 = PETSC_TRUE
+                coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = &
+                                                                    DIRICHLET_BC
+              case default
+                string = GetSubConditionName(hydrate%temperature%itype)
+                option%io_buffer = &
+                  FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE I-state state temperature ',string)
+                call PrintErrMsg(option)
+            end select
+          ! mole fraction; 3rd dof ----------------------- !
+            select case(hydrate%mole_fraction%itype)
+              case(DIRICHLET_BC)
+                xmol = 0.d0
+                coupler%flow_aux_real_var(THREE_INTEGER,iconn) = xmol
+                dof3 = PETSC_TRUE
+                coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+              case default
+                string = GetSubConditionName(hydrate%mole_fraction%itype)
+                option%io_buffer = &
+                  FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE I-state mole fraction ',string)
+                call PrintErrMsg(option)
+            end select
+    ! ---------------------------------------------------------------------- !
+        case(GA_STATE, HG_STATE)
+          ! gas pressure; 1st dof ------------------------ !
+          select case(hydrate%gas_pressure%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_pressure%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE GA-State gas pressure ',string)
+              call PrintErrMsg(option)
+          end select
+          ! temperature; 2nd dof ------------------------- !  
+          select case(hydrate%temperature%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%temperature%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE GA-State temperature ',string)
+              call PrintErrMsg(option)
+          end select
+          ! gas saturation; 3rd dof ---------------------- !
+          select case(hydrate%gas_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%gas_saturation%dataset,iconn,gas_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = gas_sat
+              dof3 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE GA-State gas saturation ',string)
+              call PrintErrMsg(option)
+          end select
+    ! ---------------------------------------------------------------------- !
+        case(HA_STATE, HI_STATE)
+          ! gas pressure; 1st dof ------------------------ !
+          if (associated(hydrate%gas_pressure)) then
+            select case(hydrate%gas_pressure%itype)
+              case(DIRICHLET_BC)
+                call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
+                coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
+                dof1 = PETSC_TRUE
+                coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = &
+                                                                  DIRICHLET_BC
+              case default
+                string = GetSubConditionName(hydrate%gas_pressure%itype)
+                option%io_buffer = &
+                  FlowConditionUnknownItype(coupler%flow_condition, &
+                    'HYDRATE MODE HA-state gas pressure ',string)
+                call PrintErrMsg(option)
+            end select
+            ! temperature; 2nd dof ------------------------- !  
+            select case(hydrate%temperature%itype)
+              case(DIRICHLET_BC)
+                call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+                coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+                dof3 = PETSC_TRUE
+                coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = &
+                                                                 DIRICHLET_BC
+              case default
+                string = GetSubConditionName(hydrate%temperature%itype)
+                option%io_buffer = &
+                  FlowConditionUnknownItype(coupler%flow_condition, &
+                    'HYDRATE MODE HA-state temperature ',string)
+                call PrintErrMsg(option)
+            end select
+
+          else
+            if (hydrate%liquid_pressure%itype == HYDROSTATIC_BC) then
+              if (hydrate%temperature%itype /= DIRICHLET_BC) then
+                option%io_buffer = 'Hydrostatic HA state pressure BC for &
+                  &flow condition "' // trim(flow_condition%name) // &
+                  '" requires a temperature BC of type DIRICHLET.'
+                call PrintErrMsg(option)
+              endif
+              ! ---> see code that just prints error
+              coupler%flow_bc_type(1) = HYDROSTATIC_BC
+              coupler%flow_bc_type(2:3) = DIRICHLET_BC
+            else
+            ! liquid pressure; 1st dof --------------------- !
+              select case(hydrate%liquid_pressure%itype)
+                case(DIRICHLET_BC)
+                  call PatchGetCouplerValueFromDataset(coupler,option,patch% &
+                      grid,hydrate%liquid_pressure%dataset,iconn,liq_pressure)
+                  coupler%flow_aux_real_var(ONE_INTEGER,iconn) = liq_pressure
+                  dof1 = PETSC_TRUE
+                  coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = &
+                                                                  DIRICHLET_BC
+                case default
+                  string = GetSubConditionName(hydrate%liquid_pressure%itype)
+                  option%io_buffer = &
+                    FlowConditionUnknownItype(coupler%flow_condition, &
+                    'HYDRATE MODE HA-state liquid pressure ',string)
+                  call PrintErrMsg(option)
+              end select
+            ! temperature; 2nd dof ------------------------- !
+              select case(hydrate%temperature%itype)
+                case(DIRICHLET_BC)
+                  call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+                  coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+                  dof3 = PETSC_TRUE
+                  coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = &
+                                                                    DIRICHLET_BC
+                case default
+                  string = GetSubConditionName(hydrate%temperature%itype)
+                  option%io_buffer = &
+                    FlowConditionUnknownItype(coupler%flow_condition, &
+                    'HYDRATE MODE HA-state temperature ',string)
+                  call PrintErrMsg(option)
+              end select
+            endif
+          endif
+          ! hydrate saturation; 3rd dof ---------------------- !
+          select case(hydrate%hydrate_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%hydrate_saturation%dataset,iconn, &
+                        hyd_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = hyd_sat
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%hydrate_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HA-state hydrate saturation ',string)
+              call PrintErrMsg(option)
+          end select
+      ! ---------------------------------------------------------------------- !
+        case(GI_STATE)
+          ! gas pressure; 1st dof ------------------------ !
+          select case(hydrate%gas_pressure%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_pressure%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE GI-State gas pressure ',string)
+              call PrintErrMsg(option)
+          end select
+          ! temperature; 2nd dof ------------------------- !  
+          select case(hydrate%temperature%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%temperature%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE GI-state temperature ',string)
+              call PrintErrMsg(option)
+          end select
+          ! ice saturation; 3rd dof ---------------------- !
+          select case(hydrate%gas_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%ice_saturation%dataset,iconn,ice_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = ice_sat
+              dof3 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%ice_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE GI-state gas saturation ',string)
+              call PrintErrMsg(option)
+          end select
+      ! ---------------------------------------------------------------------- !
+        case(AI_STATE)
+          ! gas pressure; 1st dof ------------------------ !
+          select case(hydrate%gas_pressure%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_pressure%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE AI-State gas pressure ',string)
+              call PrintErrMsg(option)
+          end select
+          ! temperature; 2nd dof ------------------------- !  
+          select case(hydrate%temperature%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%temperature%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE AI-state temperature ',string)
+              call PrintErrMsg(option)
+          end select
+          ! liquid saturation; 3rd dof ---------------------- !
+          select case(hydrate%gas_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%liquid_saturation%dataset,iconn, &
+                        liq_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = liq_sat
+              dof3 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%liquid_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE AI-state liquid saturation ',string)
+              call PrintErrMsg(option)
+          end select
+      ! ---------------------------------------------------------------------- !
+        case(HGA_STATE)
+          ! gas saturation; 1st dof ------------------------ !
+          select case(hydrate%gas_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_saturation%dataset,iconn,gas_sat)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_sat
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HGA-State gas saturation ',string)
+              call PrintErrMsg(option)
+          end select
+          ! temperature; 2nd dof ------------------------- !  
+          select case(hydrate%temperature%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%temperature%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HGA-state temperature ',string)
+              call PrintErrMsg(option)
+          end select
+          ! hydrate saturation; 3rd dof ---------------------- !
+          select case(hydrate%hydrate_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%hydrate_saturation%dataset,iconn, &
+                        hyd_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = hyd_sat
+              dof3 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%hydrate_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HGA-state hydrate saturation ',string)
+              call PrintErrMsg(option)
+          end select
+      ! ---------------------------------------------------------------------- !
+        case(HAI_STATE, GAI_STATE)
+          ! gas pressure; 1st dof ------------------------ !
+          select case(hydrate%gas_pressure%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%gas_pressure%dataset,iconn,gas_pressure)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = gas_pressure
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_pressure%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HAI-State gas pressure ',string)
+              call PrintErrMsg(option)
+          end select
+          ! ice saturation; 2nd dof ------------------------- !  
+          select case(hydrate%ice_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%ice_saturation%dataset,iconn,ice_sat)
+              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = ice_sat
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%ice_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HAI-state ice saturation ',string)
+              call PrintErrMsg(option)
+          end select
+          ! hydrate saturation; 3rd dof ---------------------- !
+          select case(hydrate%hydrate_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%hydrate_saturation%dataset,iconn, &
+                        hyd_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = hyd_sat
+              dof3 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%hydrate_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HAI-state hydrate saturation ',string)
+              call PrintErrMsg(option)
+          end select
+      ! ---------------------------------------------------------------------- !
+        case(HGI_STATE)
+          ! ice saturation; 1st dof ------------------------ !
+          select case(hydrate%ice_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%ice_saturation%dataset,iconn,ice_sat)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = ice_sat
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%ice_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HGI-State ice saturation ',string)
+              call PrintErrMsg(option)
+          end select
+          ! temperature; 2nd dof ------------------------- !  
+          select case(hydrate%temperature%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%temperature%dataset,iconn,temperature)
+              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = temperature
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%temperature%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HGI-state temperature ',string)
+              call PrintErrMsg(option)
+          end select
+          ! hydrate saturation; 3rd dof ---------------------- !
+          select case(hydrate%hydrate_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%hydrate_saturation%dataset,iconn, &
+                        hyd_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = hyd_sat
+              dof3 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%hydrate_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE HGI-state hydrate saturation ',string)
+              call PrintErrMsg(option)
+          end select
+      ! ---------------------------------------------------------------------- !
+        case(QUAD_STATE)
+          ! liquid saturation; 1st dof ------------------------ !
+          select case(hydrate%liquid_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                     patch%grid,hydrate%liquid_saturation%dataset,iconn,liq_sat)
+              coupler%flow_aux_real_var(ONE_INTEGER,iconn) = liq_sat
+              dof1 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_LIQUID_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%liquid_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE QUAD-State liquid saturation ',string)
+              call PrintErrMsg(option)
+          end select
+          ! ice satuation; 2nd dof ------------------------- !  
+          select case(hydrate%ice_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                       patch%grid,hydrate%ice_saturation%dataset,iconn,ice_sat)
+              coupler%flow_aux_real_var(TWO_INTEGER,iconn) = ice_sat
+              dof2 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_ENERGY_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%ice_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE QUAD-state ice saturation ',string)
+              call PrintErrMsg(option)
+          end select
+          ! gas saturation; 3rd dof ---------------------- !
+          select case(hydrate%gas_saturation%itype)
+            case(DIRICHLET_BC)
+              call PatchGetCouplerValueFromDataset(coupler,option, &
+                        patch%grid,hydrate%gas_saturation%dataset,iconn, &
+                        gas_sat)
+              coupler%flow_aux_real_var(THREE_INTEGER,iconn) = gas_sat
+              dof3 = PETSC_TRUE
+              coupler%flow_bc_type(HYDRATE_GAS_EQUATION_INDEX) = DIRICHLET_BC
+            case default
+              string = GetSubConditionName(hydrate%gas_saturation%itype)
+              option%io_buffer = &
+                FlowConditionUnknownItype(coupler%flow_condition, &
+                  'HYDRATE MODE QUAD-state gas saturation ',string)
+              call PrintErrMsg(option)
+          end select
       ! ---------------------------------------------------------------------- !
         case(HYD_ANY_STATE)
           ! temperature; 2nd dof ------------------------- !
@@ -2653,7 +3115,7 @@ subroutine PatchUpdateCouplerAuxVarsH(patch,coupler,option)
   ! boundary condition might be split up on 2 or more processes  
   if (.not.dof1 .or. .not.dof2 .or. .not.dof3) then
     if (coupler%itype .ne. SRC_SINK_COUPLER_TYPE) then
-      option%io_buffer = 'Error with GENERAL_MODE phase boundary condition: &
+      option%io_buffer = 'Error with HYDRATE_MODE phase boundary condition: &
                           &Missing dof.'
       call PrintErrMsg(option)
     endif
@@ -4433,8 +4895,6 @@ subroutine PatchCreateFlowConditionDatasetMap(grid,dataset_map_hdf5,cell_ids,nce
   ! Author: Gautam Bisht, LBL
   ! Date: 10/26/12
   !
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Grid_module
   use Dataset_Map_HDF5_class
   use Option_module
@@ -4567,38 +5027,35 @@ end subroutine PatchCreateFlowConditionDatasetMap
 
 ! ************************************************************************** !
 
-subroutine PatchInitConstraints(patch,reaction,nw_trans,option)
+subroutine PatchInitConstraints(patch,reaction_base,option)
   !
   ! Initializes constraint concentrations
   !
   ! Author: Glenn Hammond
   ! Date: 12/04/08
   !
-
-  use Reaction_Aux_module
-  use NW_Transport_Aux_module
+  use Reaction_Base_module
 
   implicit none
 
   type(patch_type) :: patch
-  type(reaction_type), pointer :: reaction
-  type(nw_trans_realization_type), pointer :: nw_trans
+  class(reaction_base_type), pointer :: reaction_base
   type(option_type) :: option
 
   call PatchInitCouplerConstraints(patch%initial_condition_list, &
-                                   reaction,nw_trans,option)
+                                   reaction_base,option)
 
   call PatchInitCouplerConstraints(patch%boundary_condition_list, &
-                                   reaction,nw_trans,option)
+                                   reaction_base,option)
 
   call PatchInitCouplerConstraints(patch%source_sink_list, &
-                                   reaction,nw_trans,option)
+                                   reaction_base,option)
 
 end subroutine PatchInitConstraints
 
 ! ************************************************************************** !
 
-subroutine PatchInitCouplerConstraints(coupler_list,reaction,nw_trans,option)
+subroutine PatchInitCouplerConstraints(coupler_list,reaction_base,option)
   !
   ! Initializes constraint concentrations
   ! for a given coupler
@@ -4611,10 +5068,12 @@ subroutine PatchInitCouplerConstraints(coupler_list,reaction,nw_trans,option)
   use Reactive_Transport_Aux_module
   use NW_Transport_Aux_module
   use NWT_Equilibrium_module
-  use NWT_Constraint_module
   use Reaction_Aux_module
   use Global_Aux_module
   use Material_Aux_class
+  use Transport_Constraint_Base_module
+  use Transport_Constraint_NWT_module
+  use Transport_Constraint_RT_module
   use Transport_Constraint_module
   use Dataset_Ascii_class
 
@@ -4623,8 +5082,7 @@ subroutine PatchInitCouplerConstraints(coupler_list,reaction,nw_trans,option)
   implicit none
 
   type(coupler_list_type), pointer :: coupler_list
-  type(reaction_type), pointer :: reaction
-  type(nw_trans_realization_type), pointer :: nw_trans
+  class(reaction_base_type), pointer :: reaction_base
   type(option_type) :: option
 
   type(reactive_transport_auxvar_type), pointer :: rt_auxvar
@@ -4632,14 +5090,26 @@ subroutine PatchInitCouplerConstraints(coupler_list,reaction,nw_trans,option)
   type(global_auxvar_type), pointer :: global_auxvar
   class(material_auxvar_type), allocatable :: material_auxvar
   type(coupler_type), pointer :: cur_coupler
-  type(tran_constraint_coupler_type), pointer :: cur_constraint_coupler
-  type(nwt_constraint_coupler_type), pointer :: cur_nwt_constraint_coupler
+  class(tran_constraint_coupler_base_type), pointer :: cur_constraint_coupler
+  class(reaction_rt_type), pointer :: reaction
+  class(reaction_nw_type), pointer :: reaction_nw
   PetscReal :: dum1
   PetscErrorCode :: ierr
+
+  nullify(global_auxvar)
+  nullify(rt_auxvar)
+  nullify(nwt_auxvar)
 
   allocate(material_auxvar)
   call MaterialAuxVarInit(material_auxvar,option)
   material_auxvar%porosity = option%reference_porosity
+
+  select type(r=>reaction_base)
+    class is(reaction_rt_type)
+      reaction => r
+    class is(reaction_nw_type)
+      reaction_nw => r
+  end select
 
   cur_coupler => coupler_list%first
   do
@@ -4654,25 +5124,11 @@ subroutine PatchInitCouplerConstraints(coupler_list,reaction,nw_trans,option)
       call PrintErrMsg(option)
     endif
 
-    if (associated(reaction)) then
-      cur_constraint_coupler => &
+    cur_constraint_coupler => &
         cur_coupler%tran_condition%constraint_coupler_list
-    endif
-    if (associated(nw_trans)) then
-      cur_nwt_constraint_coupler => &
-        cur_coupler%tran_condition%nwt_constraint_coupler_list
-    endif
     do
-      if (associated(reaction)) then
-        if (.not.associated(cur_constraint_coupler)) exit
-        global_auxvar => cur_constraint_coupler%global_auxvar
-        rt_auxvar => cur_constraint_coupler%rt_auxvar
-      endif
-      if (associated(nw_trans)) then
-        if (.not.associated(cur_nwt_constraint_coupler)) exit
-        global_auxvar => cur_nwt_constraint_coupler%global_auxvar
-        nwt_auxvar => cur_nwt_constraint_coupler%nwt_auxvar
-      endif
+      if (.not.associated(cur_constraint_coupler)) exit
+      global_auxvar => cur_constraint_coupler%global_auxvar
       if (associated(cur_coupler%flow_condition)) then
         if (associated(cur_coupler%flow_condition%pressure)) then
           if (associated(cur_coupler%flow_condition%pressure%dataset)) then
@@ -4731,30 +5187,25 @@ subroutine PatchInitCouplerConstraints(coupler_list,reaction,nw_trans,option)
           1.d0 - global_auxvar%sat(option%liquid_phase)
       endif
 
-      if (associated(reaction)) then
-        call ReactionEquilibrateConstraint(rt_auxvar,global_auxvar, &
-                            material_auxvar,reaction, &
-                            cur_constraint_coupler%constraint_name, &
-                            cur_constraint_coupler%aqueous_species, &
-                            cur_constraint_coupler%free_ion_guess, &
-                            cur_constraint_coupler%minerals, &
-                            cur_constraint_coupler%surface_complexes, &
-                            cur_constraint_coupler%colloids, &
-                            cur_constraint_coupler%immobile_species, &
-                            cur_constraint_coupler%num_iterations, &
-                            PETSC_FALSE,option)
-      endif
-      
-      if (associated(nw_trans)) then
-        call NWTEquilibrateConstraint(nw_trans, &
-                                      cur_nwt_constraint_coupler%nwt_species, &
+      select type(constraint_coupler=>cur_constraint_coupler)
+        class is(tran_constraint_coupler_rt_type)
+          ! set this pointer for use below in CO2
+          rt_auxvar => constraint_coupler%rt_auxvar
+          call ReactionEquilibrateConstraint(rt_auxvar, &
+                                  global_auxvar,material_auxvar,reaction, &
+                         TranConstraintRTCast(constraint_coupler%constraint), &
+                                  constraint_coupler%num_iterations, &
+                                  PETSC_FALSE,option)
+        class is(tran_constraint_coupler_nwt_type)
+          nwt_auxvar => constraint_coupler%nwt_auxvar
+          call NWTEquilibrateConstraint(reaction_nw, &
+                        TranConstraintNWTCast(constraint_coupler%constraint), &
                                       nwt_auxvar,global_auxvar, &
                                       material_auxvar,option)
-      endif
-      
+      end select
       ! update CO2 mole fraction for CO2 modes
       select case(option%iflowmode)
-      ! jenn:todo Add error message saying you can't use NW Transport with MPH_MODE, FLASH2_MODE, etc. Here is not the best place, do it some where sooner in the set up.
+      ! TODO(jenn) Add error message saying you can't use NW Transport with MPH_MODE, FLASH2_MODE, etc. Here is not the best place, do it some where sooner in the set up.
         case(MPH_MODE,FLASH2_MODE)
           if ( (cur_coupler%flow_condition%iphase == 1) .and. &
                (associated(reaction)) ) then
@@ -4765,12 +5216,7 @@ subroutine PatchInitCouplerConstraints(coupler_list,reaction,nw_trans,option)
             endif
           endif
       end select
-      if (associated(reaction)) then
-        cur_constraint_coupler => cur_constraint_coupler%next
-      endif
-      if (associated(nw_trans)) then
-        cur_nwt_constraint_coupler => cur_nwt_constraint_coupler%next
-      endif
+      cur_constraint_coupler => cur_constraint_coupler%next
     enddo
     cur_coupler => cur_coupler%next
   enddo
@@ -4852,7 +5298,7 @@ end subroutine PatchUpdateUniformVelocity
 
 ! ************************************************************************** !
 
-subroutine PatchGetVariable1(patch,field,reaction,nw_trans,option, &
+subroutine PatchGetVariable1(patch,field,reaction_base,option, &
                              output_option,vec,ivar,isubvar,isubvar2)
   !
   ! PatchGetVariable: Extracts variables indexed by ivar and isubvar from a patch
@@ -4861,8 +5307,6 @@ subroutine PatchGetVariable1(patch,field,reaction,nw_trans,option, &
   ! Date: 09/12/08
   !
 
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Grid_module
   use Option_module
   use Field_module
@@ -4875,7 +5319,6 @@ subroutine PatchGetVariable1(patch,field,reaction,nw_trans,option, &
   use Reaction_Mineral_module
   use Reaction_module
   use Reactive_Transport_Aux_module
-  use NW_Transport_Aux_module
   use Reaction_Surface_Complexation_Aux_module
   use General_Aux_module, only : general_fmw => fmw_comp, &
                                  GAS_STATE, LIQUID_STATE
@@ -4883,12 +5326,12 @@ subroutine PatchGetVariable1(patch,field,reaction,nw_trans,option, &
   use Output_Aux_module
   use Variables_module
   use Material_Aux_class
+  use Reaction_Base_module
 
   implicit none
 
   type(option_type), pointer :: option
-  type(reaction_type), pointer :: reaction
-  type(nw_trans_realization_type), pointer :: nw_trans
+  class(reaction_base_type), pointer :: reaction_base
   type(output_option_type), pointer :: output_option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
@@ -4901,6 +5344,7 @@ subroutine PatchGetVariable1(patch,field,reaction,nw_trans,option, &
   PetscInt :: local_id, ghosted_id
   type(grid_type), pointer :: grid
   class(material_auxvar_type), pointer :: material_auxvars(:)
+  class(reaction_rt_type), pointer :: reaction
   PetscReal, pointer :: vec_ptr(:), vec_ptr2(:)
   PetscReal :: xmass, lnQKgas, ehfac, eh0, pe0, ph0, tk
   PetscReal :: tempreal
@@ -4912,6 +5356,7 @@ subroutine PatchGetVariable1(patch,field,reaction,nw_trans,option, &
 
   grid => patch%grid
   material_auxvars => patch%aux%Material%auxvars
+  reaction => ReactionCast(reaction_base)
 
   call VecGetArrayF90(vec,vec_ptr,ierr);CHKERRQ(ierr)
   vec_ptr(:) = UNINITIALIZED_DOUBLE
@@ -6892,7 +7337,7 @@ end subroutine PatchGetVariable1
 
 ! ************************************************************************** !
 
-function PatchGetVariableValueAtCell(patch,field,reaction,nw_trans,option, &
+function PatchGetVariableValueAtCell(patch,field,reaction_base,option, &
                                      output_option,ghosted_id, &
                                      ivar,isubvar,isubvar2)
   !
@@ -6903,8 +7348,6 @@ function PatchGetVariableValueAtCell(patch,field,reaction,nw_trans,option, &
   ! Date: 02/11/08
   !
 
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Grid_module
   use Option_module
   use Field_module
@@ -6914,7 +7357,6 @@ function PatchGetVariableValueAtCell(patch,field,reaction,nw_trans,option, &
   use Richards_Aux_module
   use Miscible_Aux_module
   use Reactive_Transport_Aux_module
-  use NW_Transport_Aux_module
   use Reaction_Mineral_module
   use Reaction_module
   use Reaction_Mineral_Aux_module
@@ -6931,12 +7373,12 @@ function PatchGetVariableValueAtCell(patch,field,reaction,nw_trans,option, &
 
   PetscReal :: PatchGetVariableValueAtCell
   type(option_type), pointer :: option
-  type(reaction_type), pointer :: reaction
-  type(nw_trans_realization_type), pointer :: nw_trans
+  class(reaction_base_type), pointer :: reaction_base
   type(output_option_type), pointer :: output_option
   type(field_type), pointer :: field
   type(patch_type), pointer :: patch
   class(material_auxvar_type), pointer :: material_auxvars(:)
+  class(reaction_rt_type), pointer :: reaction
   PetscInt :: ivar
   PetscInt :: isubvar
   PetscInt :: tempint, tempint2
@@ -6954,6 +7396,7 @@ function PatchGetVariableValueAtCell(patch,field,reaction,nw_trans,option, &
 
   grid => patch%grid
   material_auxvars => patch%aux%Material%auxvars
+  reaction => ReactionCast(reaction_base)
 
   value = UNINITIALIZED_DOUBLE
 
@@ -8178,8 +8621,6 @@ subroutine PatchSetVariable(patch,field,option,vec,vec_format,ivar,isubvar)
   ! Date: 09/12/08
   !
 
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Grid_module
   use Option_module
   use Field_module
@@ -9252,8 +9693,6 @@ subroutine PatchCalculateCFL1Timestep(patch,option,max_dt_cfl_1)
   ! Date: 10/06/11
   !
 
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Option_module
   use Connection_module
   use Coupler_module
@@ -9446,8 +9885,6 @@ subroutine PatchGetVariable2(patch,surf_field,option,output_option,vec, &
   ! Date: 09/12/08
   !
 
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Grid_module
   use Option_module
   use Output_Aux_module
@@ -9457,7 +9894,7 @@ subroutine PatchGetVariable2(patch,surf_field,option,output_option,vec, &
   implicit none
 
   type(option_type), pointer :: option
-  !type(reaction_type), pointer :: reaction
+  !class(reaction_rt_type), pointer :: reaction
   type(output_option_type), pointer :: output_option
   type(surface_field_type), pointer :: surf_field
   type(patch_type), pointer :: patch
@@ -9625,6 +10062,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   ! Date: 10/20/14, 01/31/18
   !
   use Option_module
+  use String_module
   use Integral_Flux_module
   use Geometry_module
   use Utility_module
@@ -9648,7 +10086,6 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   type(connection_set_type), pointer :: cur_connection_set
   type(coupler_type), pointer :: boundary_condition
 
-  character(len=MAXWORDLENGTH) :: word
   PetscInt, pointer :: connections(:)
   PetscInt :: idir
   PetscInt :: icount
@@ -9659,9 +10096,10 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   PetscInt :: i, ii
   PetscInt :: face_id
   PetscInt :: local_id
-  PetscInt :: local_id_up
+  PetscInt :: local_id_up, local_id_dn
   PetscInt :: ghosted_id
-  PetscInt :: ghosted_id_up
+  PetscInt :: ghosted_id_up, ghosted_id_dn
+  PetscInt :: natural_id_up, natural_id_dn
   PetscReal :: fraction_upwind
   PetscReal :: magnitude
   PetscReal :: v1(3), v2(3), cp(3)
@@ -9681,6 +10119,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   PetscInt :: iv1, iv2
   PetscInt :: num_vertices1, num_vertices2
   PetscInt :: num_to_be_found
+  character(len=MAXSTRINGLENGTH) :: error_string
   PetscErrorCode :: ierr
 
   nullify(yet_to_be_found)
@@ -9694,6 +10133,8 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   num_to_be_found = 0
 
   if (associated(polygon)) then
+    error_string = 'polygon coincides with an internal cell boundary &
+      &or a boundary condition.'
     ! determine orientation of polygon
     allocate(plane)
     if (size(polygon) > 2) then
@@ -9756,12 +10197,16 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   endif
 
   if (associated(coordinates_and_directions)) then
+    error_string = 'coordinates and directions coincide with an internal &
+      &cell boundary or a boundary condition.'
     num_to_be_found = size(coordinates_and_directions,2)
     allocate(yet_to_be_found(num_to_be_found))
     yet_to_be_found = PETSC_TRUE
   endif
 
   if (associated(vertices)) then
+    error_string = 'vertices match the face and are ordered properly &
+      &(clockwise or counter-clockwise)'
     if (grid%itype /= IMPLICIT_UNSTRUCTURED_GRID) then
       option%io_buffer = 'INTEGRAL_FLUXES defined by VERTICES are only &
         &supported for implicit unstructured grids: ' // &
@@ -9804,10 +10249,27 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
         select case(ipass)
           case(1) ! internal connections
             ghosted_id_up = cur_connection_set%id_up(iconn)
+            ghosted_id_dn = cur_connection_set%id_dn(iconn)
             local_id_up = grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
+            local_id_dn = grid%nG2L(ghosted_id_dn)
+            ! natural ids are used to ensure that a connection is only mapped
+            ! on one process if running in parallel
+            natural_id_up = grid%nG2A(ghosted_id_up)
+            natural_id_dn = grid%nG2A(ghosted_id_dn)
             ! if one of the cells is ghosted, the process stores the flux only
             ! when the upwind cell is non-ghosted.
-            if (local_id_up <= 0) cycle
+            if (local_id_up <= 0 .or. local_id_dn <= 0) then
+              ! we are on a ghost boundary. we cannot rely on local or ghost
+              ! numbering to determine on which process to store the
+              ! connection as these numbering schemes vary across
+              ! processes. use natural numbering and only store if the
+              ! on process cell has the lower number
+              if ((local_id_up > 0 .and. natural_id_up > natural_id_dn) .or. &
+                  (local_id_dn > 0 .and. natural_id_dn > natural_id_up)) then
+                ! skip this connection on this process
+                cycle
+              endif
+            endif
             fraction_upwind = cur_connection_set%dist(-1,iconn)
             x = grid%x(ghosted_id_up) + fraction_upwind * magnitude * &
                                         unit_direction(X_DIRECTION)
@@ -9865,8 +10327,12 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
         endif
         if (.not.found .and. associated(vertices)) then
           face_id = grid%unstructured_grid%connection_to_face(iconn)
-          face_vertices_natural = &
-            grid%unstructured_grid%face_to_vertex_natural(:,face_id)
+          do ivert = 1, MAX_VERT_PER_FACE
+            face_vertices_natural(ivert) = &
+              grid%unstructured_grid% &
+                vertex_ids_natural(grid%unstructured_grid% &
+                                     face_to_vertex(ivert,face_id))
+          enddo
           num_vertices1 = MAX_VERT_PER_FACE
           do
             if (face_vertices_natural(num_vertices1) > 0) exit
@@ -9881,6 +10347,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
             enddo
             if (num_vertices1 /= num_vertices2) cycle
             found2 = PETSC_FALSE
+            ! find the first vertex
             do ivert1 = 1, num_vertices1
               do ivert2 = 1, num_vertices2
                 if (face_vertices_natural(ivert1) == vertices(ivert2,i)) then
@@ -9888,6 +10355,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
                   exit
                 endif
               enddo
+              if (found2) exit
             enddo
             if (found2) then
               reverse_direction = PETSC_FALSE
@@ -9897,6 +10365,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
               do ii = 1, num_vertices1
                 if (face_vertices_natural(iv1) /= vertices(iv2,i)) then
                   found2 = PETSC_FALSE
+                  exit
                 endif
                 iv1 = iv1 + 1
                 if (iv1 > num_vertices1) iv1 = 1
@@ -9904,7 +10373,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
                 if (iv2 > num_vertices1) iv2 = 1
               enddo
               ! search backward direction
-              if (.not.found) then
+              if (.not.found2) then
                 reverse_direction = PETSC_TRUE
                 found2 = PETSC_TRUE
                 iv1 = ivert1
@@ -9912,6 +10381,7 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
                 do ii = 1, num_vertices1
                   if (face_vertices_natural(iv1) /= vertices(iv2,i)) then
                     found2 = PETSC_FALSE
+                    exit
                   endif
                   iv1 = iv1 + 1
                   if (iv1 > num_vertices1) iv1 = 1
@@ -9977,25 +10447,33 @@ subroutine PatchGetIntegralFluxConnections(patch,integral_flux,option)
   if (icount == 0) then
     option%io_buffer = 'Zero connections found for INTEGRAL_FLUX "' // &
       trim(adjustl(integral_flux%name)) // &
-      '".  Please ensure that the polygon coincides with an internal &
-      &cell boundary or a boundary condition.'
+      '".  Please ensure that the ' // trim(error_string) // '.'
     call PrintErrMsg(option)
   else if (num_to_be_found > 0 .and. icount /= num_to_be_found) then
-    write(word,*) num_to_be_found - icount
-    option%io_buffer = trim(adjustl(word)) // &
-      ' face(s) missed for INTEGRAL_FLUX "' // &
-      trim(adjustl(integral_flux%name)) // &
-      '".  Please ensure that the polygon coincides with an internal &
-      &cell boundary or a boundary condition.'
+    if (icount > num_to_be_found) then
+      option%io_buffer = trim(StringWrite(icount-num_to_be_found)) // &
+        ' extra face(s) [beyond ' // trim(StringWrite(num_to_be_found)) // &
+        '] found for INTEGRAL_FLUX "' // &
+        trim(adjustl(integral_flux%name)) // &
+        '".  There is likely an issue with the parallel implementation. &
+        &Please email pflotran-dev@googlegroups.com.'
+    else
+      option%io_buffer = trim(StringWrite(num_to_be_found-icount)) // &
+        ' face(s) of ' // trim(StringWrite(num_to_be_found)) // &
+        ' missed for INTEGRAL_FLUX "' // &
+        trim(adjustl(integral_flux%name)) // &
+        '".  Please ensure that the ' // trim(error_string) // '.'
+    endif
     call PrintErrMsg(option)
   else
     write(option%io_buffer,*) icount
-    option%io_buffer = trim(adjustl(option%io_buffer)) // ' connections found &
+    option%io_buffer = trim(StringWrite(icount)) // ' connections found &
       &for integral flux "' // trim(adjustl(integral_flux%name)) // '".'
     call PrintMsg(option)
   endif
 
 end subroutine PatchGetIntegralFluxConnections
+
 ! **************************************************************************** !
 
 subroutine PatchCouplerInputRecord(patch)
@@ -10130,7 +10608,7 @@ subroutine PatchGetCompMassInRegion(cell_ids,num_cells,patch,option, &
   type(global_auxvar_type), pointer :: global_auxvars(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
-  type(reaction_type), pointer :: reaction
+  class(reaction_rt_type), pointer :: reaction
   PetscReal :: aq_species_mass    ! [mol]
   PetscReal :: sorb_species_mass  ! [mol]
   PetscReal :: ppt_species_mass   ! [mol]
@@ -10647,7 +11125,9 @@ subroutine PatchDestroy(patch)
   call SurfaceAuxDestroy(patch%surf_aux)
 
   ! these are solely pointers, must not destroy.
+  nullify(patch%reaction_base)
   nullify(patch%reaction)
+  nullify(patch%reaction_nw)
   nullify(patch%datasets)
   nullify(patch%field)
 

@@ -1,6 +1,8 @@
 module Checkpoint_module
-#include "petsc/finclude/petscdm.h"
-  use petscdm
+
+#include "petsc/finclude/petscvec.h"
+  use petscvec
+
   use PFLOTRAN_Constants_module
 
   implicit none
@@ -30,8 +32,6 @@ module Checkpoint_module
 
   interface PetscBagGetData
     subroutine PetscBagGetData(bag,header,ierr)
-#include "petsc/finclude/petscsys.h"
-      use petscsys
       import :: checkpoint_header_type
       implicit none
       PetscBag :: bag
@@ -160,9 +160,6 @@ subroutine CheckpointOpenFileForWriteBinary(viewer,append_name,option)
   ! Author: Glenn Hammond
   ! Date: 07/26/13
   ! 
-
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
 
   implicit none
@@ -217,8 +214,6 @@ subroutine CheckPointWriteCompatibilityBinary(viewer,option)
   ! Author: Glenn Hammond
   ! Date: 003/26/15
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   
   implicit none
@@ -272,8 +267,6 @@ subroutine CheckPointReadCompatibilityBinary(viewer,option)
   ! Author: Glenn Hammond
   ! Date: 003/26/15
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   
   implicit none
@@ -336,8 +329,6 @@ subroutine CheckpointFlowProcessModelBinary(viewer,realization)
   ! Author: Glenn Hammond
   ! Date: 07/26/13
   ! 
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Option_module
   use Realization_Subsurface_class
   use Field_module
@@ -430,8 +421,6 @@ subroutine RestartFlowProcessModelBinary(viewer,realization)
   ! Author: Glenn Hammond
   ! Date: 07/26/13
   ! 
-#include "petsc/finclude/petscvec.h"
-  use petscvec
       
   use Option_module
   use Realization_Subsurface_class
@@ -653,10 +642,11 @@ subroutine CheckPointWriteIntDatasetHDF5(chk_grp_id, dataset_name, dataset_rank,
   call h5eset_auto_f(ON, hdf5_err)
 
   if (hdf5_flag < 0) then
+    ! if the dataset does not exist, create it
     call h5pcreate_f(H5P_DATASET_CREATE_F, prop_id, hdf5_err)
     call h5screate_simple_f(dataset_rank, dims, grp_space_id, hdf5_err, dims)
-    call h5dcreate_f(chk_grp_id, dataset_name, H5T_NATIVE_INTEGER, grp_space_id, &
-                     data_set_id, hdf5_err, prop_id)
+    call h5dcreate_f(chk_grp_id, dataset_name, H5T_NATIVE_INTEGER, &
+                     grp_space_id, data_set_id, hdf5_err, prop_id)
     call h5pclose_f(prop_id, hdf5_err)
   else
     call h5dget_space_f(data_set_id, grp_space_id, hdf5_err)
@@ -698,8 +688,6 @@ subroutine CheckPointWriteRealDatasetHDF5(chk_grp_id, dataset_name, dataset_rank
   ! Author: Gautam Bisht
   ! Date: 07/30/15
   ! 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Option_module
   use hdf5
   use HDF5_module, only : trick_hdf5
@@ -735,10 +723,11 @@ subroutine CheckPointWriteRealDatasetHDF5(chk_grp_id, dataset_name, dataset_rank
   call h5eset_auto_f(ON, hdf5_err)
 
   if (hdf5_flag < 0) then
+    ! if the dataset does not exist, create it
     call h5pcreate_f(H5P_DATASET_CREATE_F, prop_id, hdf5_err)
     call h5screate_simple_f(dataset_rank, dims, grp_space_id, hdf5_err, dims)
-    call h5dcreate_f(chk_grp_id, dataset_name, H5T_NATIVE_DOUBLE, grp_space_id, &
-                     data_set_id, hdf5_err, prop_id)
+    call h5dcreate_f(chk_grp_id, dataset_name, H5T_NATIVE_DOUBLE, &
+                     grp_space_id, data_set_id, hdf5_err, prop_id)
     call h5pclose_f(prop_id, hdf5_err)
   else
     call h5dget_space_f(data_set_id, grp_space_id, hdf5_err)
@@ -1041,8 +1030,6 @@ subroutine CheckpointFlowProcessModelHDF5(pm_grp_id, realization)
   ! Author: Glenn Hammond
   ! Date: 07/26/13
   !
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Option_module
   use Realization_Subsurface_class
   use Field_module
@@ -1098,7 +1085,7 @@ subroutine CheckpointFlowProcessModelHDF5(pm_grp_id, realization)
     ! that indicates what phases are present, as well as the 'var' vector
     ! that holds variables derived from the primary ones via the translator.
     select case(option%iflowmode)
-      case(RICHARDS_MODE,RICHARDS_TS_MODE)
+      case(RICHARDS_MODE,RICHARDS_TS_MODE,WF_MODE)
       case default
         call GlobalGetAuxVarVecLoc(realization,field%work_loc, &
                                    STATE,ZERO_INTEGER)
@@ -1169,8 +1156,6 @@ subroutine RestartFlowProcessModelHDF5(pm_grp_id, realization)
   ! Author: Gautam Bisht, LBNL
   ! Date: 08/16/2015
   !
-#include "petsc/finclude/petscvec.h"
-  use petscvec
   use Option_module
   use Realization_Subsurface_class
   use Field_module
@@ -1231,7 +1216,7 @@ subroutine RestartFlowProcessModelHDF5(pm_grp_id, realization)
     ! that holds variables derived from the primary ones via the translator.
     dataset_name = "State" // CHAR(0)
     select case(option%iflowmode)
-      case(RICHARDS_MODE,RICHARDS_TS_MODE)
+      case(RICHARDS_MODE,RICHARDS_TS_MODE,WF_MODE)
       case default
         call HDF5ReadDataSetInVec(dataset_name, option, natural_vec, &
              pm_grp_id, H5T_NATIVE_DOUBLE)

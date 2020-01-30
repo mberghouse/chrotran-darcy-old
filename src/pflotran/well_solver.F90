@@ -7,8 +7,8 @@ module Well_Solver_module
   ! Solution results are stored in the Well_Data class
 
 #include "petsc/finclude/petscsys.h"
-
   use petscsys
+
   use PFLOTRAN_Constants_module
   use Well_Type_class
   use Well_Data_class
@@ -502,8 +502,6 @@ subroutine SolveWell(aux, option, well_data, r_p)
   ! Author: Dave Ponting
   ! Date  : 09/19/18
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Well_Data_class
   use EOS_Oil_module
   use EOS_Gas_module
@@ -3447,8 +3445,6 @@ subroutine wellSolverLoaderTOWG(aux, option)
   ! Author: Dave Ponting
   ! Date  : 09/19/18
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Auxiliary_module
   use PM_TOWG_Aux_module
 
@@ -3482,8 +3478,6 @@ subroutine wellSolverLoaderTOIL(aux, option)
   ! Author: Dave Ponting
   ! Date  : 09/19/18
 
-#include "petsc/finclude/petscsys.h"
-  use petscsys
   use Auxiliary_module
   use PM_TOilIms_Aux_module
 
@@ -4007,13 +4001,13 @@ subroutine findFullFlowDerivatives(jwwi)
 
   PetscReal, intent(in) :: jwwi
 
-  PetscInt  :: icomp, icmpl, jcmplg, jdof
+  PetscInt  :: icompe, icmpl, jcmplg, jdof
   PetscReal :: sum
 
   ! Step 1: construct dPw/dXc=-(1/(dRw/dPw))*(dRw/dXc)
   !         Note derivatives have expanded into Pw and Xc derivatives
 
-  do jcmplg = 1, w_ncmpl
+  do jcmplg = 1, w_ncmplg
     do jdof = 1, ws_ndof
       w_dpwdxc(jcmplg, jdof) = -jwwi*w_rwxc(jcmplg, jdof)
     enddo
@@ -4023,7 +4017,7 @@ subroutine findFullFlowDerivatives(jwwi)
 
   ! Loop over flows
   do icmpl = 1, w_ncmpl
-    do icomp = 1, ws_ncomp
+    do icompe = 1, ws_ncompe
 
       ! Loop over Xc
       do jcmplg = 1, w_ncmplg
@@ -4031,12 +4025,12 @@ subroutine findFullFlowDerivatives(jwwi)
 
           ! Extend df/dXc with df/fPw.dPw/dXc
 
-          sum = c_flowspw(icmpl, icomp)*w_dpwdxc(jcmplg, jdof)
+          sum = c_flowspw(icmpl, icompe)*w_dpwdxc(jcmplg, jdof)
 
           ! Add extension to this flow term
 
-            c_flowsxc(icmpl, icomp, jcmplg, jdof) &
-          = c_flowsxc(icmpl, icomp, jcmplg, jdof)+sum
+            c_flowsxc(icmpl, icompe, jcmplg, jdof) &
+          = c_flowsxc(icmpl, icompe, jcmplg, jdof)+sum
 
         enddo
       enddo
@@ -4227,7 +4221,7 @@ function allTrue(vote)
 
   PetscInt :: il(1), ig(1), ierr
 
-  il(1) = 1
+  il(1) = 0
   ig(1) = 0
   ierr  = 0
 
