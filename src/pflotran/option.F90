@@ -391,7 +391,7 @@ subroutine OptionInitAll(option)
   option%print_to_file = PETSC_TRUE
   option%verbosity = 0
   option%keyword_logging = PETSC_TRUE
-  option%keyword_logging_screen_output = PETSC_FALSE
+  option%keyword_logging_screen_output = PETSC_TRUE
   option%keyword_log = ''
   option%keyword_buf = ''
   option%keyword_block_map(:) = 0
