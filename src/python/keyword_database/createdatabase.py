@@ -37,14 +37,48 @@ for file in files:
                     words.pop(-1)
                 
                 keyword = words[-1]
-#                try:
-#                    previous_keyword = words[-2]
-#                except:
-#                    previous_keyword = None
-#                if previous_keyword == 'CHARACTERISTIC_CURVES' or previous_keyword == 'SATURATION_FUNCTIONS':
-#                    print(keyword)
-#                if re.search(r'\d',keyword):
-#                    print(keyword)
+                try:
+                    previous_keyword = words[-2]
+                except:
+                    previous_keyword = None
+                    
+                try:
+                    second_previous_keyword = words[-3]
+                except:
+                    second_previous_keyword = None
+                    
+                #####remove what isn't actually a keyword
+                if previous_keyword == 'CHARACTERISTIC_CURVES' or previous_keyword == 'SATURATION_FUNCTIONS':
+                    keyword = previous_keyword
+                if previous_keyword == 'CHEMISTRY':# or 'CYBERNETIC':
+                    if re.search(r'\d',keyword):
+                        keyword = previous_keyword
+                    if re.search('-',keyword):
+                        keyword = previous_keyword
+                    if re.search('\+',keyword):
+                        keyword = previous_keyword
+                if previous_keyword == 'CYBERNETIC':
+                    if re.search(r'\d',keyword):
+                        keyword = previous_keyword
+                if previous_keyword == 'MINERALS':
+                    keyword = previous_keyword
+                if previous_keyword == 'CONCENTRATIONS':
+                    keyword = previous_keyword
+                if previous_keyword == 'FREE_ION_GUESS':
+                    keyword = previous_keyword
+                if previous_keyword == 'PREFACTOR_SPECIES':
+                    keyword = previous_keyword
+                if second_previous_keyword=='CHEMISTRY_2ND_PASS':
+                    regex = re.compile('/+')
+                    if re.search(r'\d',keyword):
+                        keyword = second_previous_keyword
+                    if re.search('-',keyword):
+                        keyword = second_previous_keyword
+                    if re.search('\+',keyword):
+                        keyword = second_previous_keyword
+
+                    
+                #####Store keywords
                 if keyword in keywords_dict.keys():
                     if file not in keywords_dict[keyword]:
                         keywords_dict[keyword].append(file)
