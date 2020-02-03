@@ -406,10 +406,10 @@ integral_flux.o : geometry.o input_aux.o option.o pflotran_constants.o \
 logging.o : pflotran_constants.o
 lookup_table.o : input_aux.o option.o pflotran_constants.o units.o utility.o
 material.o : characteristic_curves.o communicator_base.o dataset.o \
-             dataset_base.o field.o geomechanics_subsurface_properties.o \
-             global_aux.o input_aux.o material_aux.o option.o \
-             pflotran_constants.o string.o units.o utility.o variables.o \
-             wipp.o
+             dataset_base.o field.o general_aux.o \
+             geomechanics_subsurface_properties.o global_aux.o input_aux.o \
+             material_aux.o option.o pflotran_constants.o string.o units.o \
+             utility.o variables.o wipp.o
 material_aux.o : option.o pflotran_constants.o utility.o variables.o
 matrix_block_aux.o : option.o pflotran_constants.o utility.o
 matrix_buffer.o : grid.o grid_structured.o pflotran_constants.o

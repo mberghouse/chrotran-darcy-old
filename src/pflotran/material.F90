@@ -61,11 +61,17 @@ module Material_module
 
     !MAN: for DRZ permeability evolution
     PetscInt :: material_flag
+    PetscInt :: fracture_perm_model
     PetscReal :: bulk_mod
     PetscReal :: swelling_coeff
     PetscReal :: fracture_compressibility
     PetscReal :: initial_saturation
     PetscReal :: initial_permeability
+    PetscReal :: initial_perm_soft
+    PetscReal :: hard_material_const
+    PetscReal :: soft_material_const_alpha
+    PetscReal :: soft_material_const_m
+    PetscReal :: soft_fraction
 
     ! ice properties
     PetscReal :: thermal_conductivity_frozen
@@ -202,12 +208,18 @@ function MaterialPropertyCreate()
   nullify(material_property%compressibility_dataset)
 
   !MAN: for DRZ permeability evolution
-  material_property%material_flag = 0
+  material_property%material_flag = ZERO_INTEGER
+  material_property%fracture_perm_model = ONE_INTEGER
   material_property%bulk_mod = 0.d0
   material_property%swelling_coeff = 0.d0
   material_property%fracture_compressibility = 0.d0
   material_property%initial_saturation = 0.d0
   material_property%initial_permeability = 0.d0
+  material_property%initial_perm_soft = 0.d0
+  material_property%hard_material_const = 0.d0
+  material_property%soft_material_const_alpha = 0.d0
+  material_property%soft_material_const_m = 0.d0
+  material_property%soft_fraction = 0.d0
 
   material_property%thermal_conductivity_frozen = UNINITIALIZED_DOUBLE
   material_property%alpha_fr = 0.95d0
@@ -257,6 +269,7 @@ subroutine MaterialPropertyRead(material_property,input,option)
   use Geomechanics_Subsurface_Properties_module
   use Dataset_module
   use Units_module
+  use General_Aux_module, only: general_fracture_perm_model
   
   implicit none
   
@@ -762,7 +775,7 @@ subroutine MaterialPropertyRead(material_property,input,option)
       case('MATERIAL_PROPERTY_FLAG')
         call InputReadWord(input,option,word,PETSC_TRUE)
         call InputErrorMsg(input,option,'keyword', &
-                             'MATERIAL_PROPERTY,MATERIAL_PROPERTY_FLAG')
+                             'MATERIAL_PROPERTY, MATERIAL_PROPERTY_FLAG')
         select case(trim(word))
           case('DRZ')
             material_property%material_flag = DRZ_INT
@@ -789,11 +802,48 @@ subroutine MaterialPropertyRead(material_property,input,option)
                              material_property%initial_saturation)
         call InputErrorMsg(input,option,'initial saturation', &
                            'MATERIAL_PROPERTY')
-      case('INITIAL_PERMEABILITY')
+      case('INITIAL_PERMEABILITY','INITIAL_PERM_HARD')
         call InputReadDouble(input,option, &
                              material_property%initial_permeability)
         call InputErrorMsg(input,option,'initial permeability', &
                            'MATERIAL_PROPERTY')
+      case('INITIAL_PERM_SOFT')
+        call InputReadDouble(input,option, &
+                             material_property%initial_perm_soft)
+        call InputErrorMsg(input,option,'initial soft permeability', &
+                           'MATERIAL_PROPERTY')
+      case('MATERIAL_CONSTANT_HARD')
+        call InputReadDouble(input,option, &
+                             material_property%hard_material_const)
+        call InputErrorMsg(input,option,'hard material constant', &
+                           'MATERIAL_PROPERTY')
+      case('MATERIAL_CONSTANT_SOFT_ALPHA')
+        call InputReadDouble(input,option, &
+                             material_property%soft_material_const_alpha)
+        call InputErrorMsg(input,option,'soft material constant alpha', &
+                           'MATERIAL_PROPERTY')
+      case('MATERIAL_CONSTANT_SOFT_M')
+        call InputReadDouble(input,option, &
+                             material_property%soft_material_const_m)
+        call InputErrorMsg(input,option,'soft material constant m', &
+                           'MATERIAL_PROPERTY')
+      case('SOFT_PROPORTION')
+        call InputReadDouble(input,option, &
+                             material_property%soft_fraction)
+        call InputErrorMsg(input,option,'soft proportion', &
+                           'MATERIAL_PROPERTY')
+      case('FRACTURE_PERMEABILITY_MODEL')
+        call InputReadWord(input,option,word,PETSC_TRUE)
+        call InputErrorMsg(input,option,'keyword', &
+                           'MATERIAL_PROPERTY, FRACTURE_PERMEABILITY_MODEL')
+        select case(trim(word))
+          case('POWER_LAW')
+            material_property%fracture_perm_model = ONE_INTEGER
+          case('CUBIC')
+            material_property%fracture_perm_model = TWO_INTEGER
+          case('TWO_PART_HOOKE','TPHM')
+            material_property%fracture_perm_model = THREE_INTEGER
+        end select
       case default
         call InputKeywordUnrecognized(input,keyword,'MATERIAL_PROPERTY',option)
     end select 
@@ -1540,6 +1590,14 @@ subroutine MaterialAssignPropertyToAux(material_auxvar,material_property, &
                           material_property%fracture_compressibility
   material_auxvar%initial_permeability = material_property%initial_permeability
   material_auxvar%initial_saturation = material_property%initial_saturation
+  material_auxvar%fracture_perm_model = material_property%fracture_perm_model
+  material_auxvar%initial_perm_soft = material_property%initial_perm_soft
+  material_auxvar%hard_material_const = material_property%hard_material_const
+  material_auxvar%soft_material_const_alpha = material_property% &
+                                              soft_material_const_alpha 
+  material_auxvar%soft_material_const_m = material_property% &
+                                        soft_material_const_m
+  material_auxvar%soft_fraction = material_property%soft_fraction
 
 !  if (soil_heat_capacity_index > 0) then
 !    material_auxvar%soil_properties(soil_heat_capacity_index) = &

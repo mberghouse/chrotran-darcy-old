@@ -44,6 +44,7 @@ module General_Aux_module
   PetscReal, public :: general_avg_buffer_stress = 0.d0
   PetscReal, public :: general_t_init = UNINITIALIZED_DOUBLE
   PetscReal, public :: general_p_init = UNINITIALIZED_DOUBLE
+  PetscInt, public :: general_fracture_perm_model = ONE_INTEGER
 
   ! debugging
   PetscInt, public :: general_ni_count
@@ -979,9 +980,7 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
     ! water saturation in the buffer for nearfield modeling integration.
     if (GENERAL_UPDATE_DRZ_PERM .and. material_auxvar%material_flag > 0.d0) then
       if (material_auxvar%material_flag == DRZ_INT) then
-        call MaterialFractureCompress(material_auxvar%initial_permeability,&
-             material_auxvar%fracture_compressibility, &
-             general_avg_buffer_stress,material_auxvar%permeability)
+        call MaterialFractureCompress(material_auxvar,general_avg_buffer_stress)
       endif
     endif 
 

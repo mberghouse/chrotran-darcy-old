@@ -68,11 +68,17 @@ module Material_Aux_class
 
     !MAN: for DRZ permeability evolution
     PetscInt :: material_flag
+    PetscInt :: fracture_perm_model
     PetscReal :: bulk_mod
     PetscReal :: swelling_coeff
     PetscReal :: fracture_compressibility
-    PetscReal :: initial_permeability
     PetscReal :: initial_saturation
+    PetscReal :: initial_permeability
+    PetscReal :: initial_perm_soft
+    PetscReal :: hard_material_const
+    PetscReal :: soft_material_const_alpha
+    PetscReal :: soft_material_const_m
+    PetscReal :: soft_fraction
 
 !    procedure(SaturationFunction), nopass, pointer :: SaturationFunction
   contains
@@ -772,7 +778,7 @@ end subroutine MaterialCompressSoilQuadratic
 
 ! ************************************************************************** !
 
-subroutine MaterialFractureCompress(perm_init,cf,sigma,perm)
+subroutine MaterialFractureCompress(material_aux, sigma)
   !
   ! Computes permeability change due to fracture compression
   ! Author: Michael Nole
@@ -781,15 +787,30 @@ subroutine MaterialFractureCompress(perm_init,cf,sigma,perm)
 
   implicit none
 
-  PetscReal, intent(in) :: perm_init
-  PetscReal, intent(in) :: cf
+  class(material_auxvar_type) :: material_aux
   PetscReal, intent(in) :: sigma
-  PetscReal, pointer :: perm(:)
 
-  !Chen et al., 2015
-  
-  perm(:) = perm_init * exp(-3.d0 * cf * sigma/1.d6)
+  PetscReal :: perm_hard, perm_soft
 
+  select case(material_aux%fracture_perm_model)
+    case(ONE_INTEGER)
+      !Chen et al., 2015
+      material_aux%permeability(:) = material_aux%initial_permeability * &
+               exp(-3.d0 * material_aux%fracture_compressibility * sigma / 1.d6)
+    case(TWO_INTEGER)
+      !Kwon et al., 2001
+      !perm(:) = perm_init * (1.d0 - (sigma/P)) ** 3
+    case(THREE_INTEGER)
+      !Two-part Hooke's Model (Zheng et al., 2016)
+      perm_hard = material_aux%initial_permeability * &
+                  exp(-material_aux%hard_material_const * &
+                  material_aux%fracture_compressibility * &
+                  material_aux%porosity_0 * sigma / 1.d6) 
+      perm_soft = material_aux%soft_material_const_alpha * &
+                  (material_aux%soft_fraction * exp(-(sigma / 1.d6) / &
+                  material_aux%bulk_mod)) ** material_aux%soft_material_const_m
+      material_aux%permeability(:) = perm_soft + perm_hard
+  end select
 
 end subroutine MaterialFractureCompress
 
@@ -813,6 +834,7 @@ subroutine MaterialSwell(sat_init,sat,bulk_mod,swelling_coeff,swelling_stress)
 
   if (sat < sat_init) return
 
+  ! Rutqvist et al., 2011, Eqn 39. Swelling stress in Pa 
   swelling_stress = 3.d0 * bulk_mod * (sat - sat_init) * swelling_coeff
 
 end subroutine MaterialSwell
