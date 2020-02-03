@@ -6,7 +6,7 @@ Created on Tue Jan 28 10:40:03 2020
 @author: rleone
 """
 
-#######MUST RUN REGRESSIONS FIRST BEFORE RUNNING PYTHON PROGRAM#######
+#######MUST RUN REGRESSIONS FIRST AND CREATE FOLDER 'DOCS' IN KEYWORD_DATABASE BEFORE RUNNING PYTHON PROGRAM#######
 import os
 import numpy as np
 import re
@@ -37,6 +37,14 @@ for file in files:
                     words.pop(-1)
                 
                 keyword = words[-1]
+#                try:
+#                    previous_keyword = words[-2]
+#                except:
+#                    previous_keyword = None
+#                if previous_keyword == 'CHARACTERISTIC_CURVES' or previous_keyword == 'SATURATION_FUNCTIONS':
+#                    print(keyword)
+#                if re.search(r'\d',keyword):
+#                    print(keyword)
                 if keyword in keywords_dict.keys():
                     if file not in keywords_dict[keyword]:
                         keywords_dict[keyword].append(file)
@@ -97,8 +105,8 @@ PFLOTRAN Keyword Database
         f.write("""
    {}""".format(keyword_rst))
     
-    
         with open('{}/docs/{}'.format(base_dir,keyword_rst),'w') as fin:
+
           fin.write('.. _{}:'.format(keyword))
           fin.write('\n\n')
           fin.write('{}'.format(keyword))
