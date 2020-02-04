@@ -95,6 +95,7 @@ STANDARD_CFG = \
 	wipp/wipp_flow/input_format/input_format.cfg \
 	wipp/wipp_flow/gas_generation/gas_generation.cfg \
         wipp/wipp_flow/cpr_wipp/cpr_wipp.cfg \
+        wipp/wipp_flow/tr_wipp/tr_wipp.cfg \
 	wipp/nuts/nuts.cfg \
         wipp/transport/batch/wipp_batch.cfg \
         wipp/transport/wipp_regular.cfg \

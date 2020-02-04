@@ -932,11 +932,19 @@ subroutine SolverReadNewton(solver,input,option)
   type(input_type), pointer :: input
   type(option_type) :: option
   
-  character(len=MAXWORDLENGTH) :: keyword, word, word2
+  character(len=MAXWORDLENGTH) :: keyword, word, word2, prefix
   character(len=MAXSTRINGLENGTH) :: error_string
+  character(len=MAXSTRINGLENGTH) :: string
   PetscBool :: boolean
   PetscErrorCode :: ierr
-  
+
+  select case(solver%itype)
+    case(FLOW_CLASS)
+      prefix = '-flow_'
+    case(TRANSPORT_CLASS)
+      prefix = '-tran_'
+  end select
+
   input%ierr = 0
   call InputPushBlock(input,option)
   do
@@ -1139,15 +1147,15 @@ subroutine SolverReadNewton(solver,input,option)
         enddo
         call InputPopBlock(input,option)
         
-        case ('TR_OPTIONS')
-          error_string = 'NEWTON_SOLVER,TR_OPTIONS'
+        case ('TR_OPTIONS','TRUST_REGION_OPTIONS')
+          error_string = 'NEWTON_SOLVER,TR OPTIONS'
           call InputPushBlock(input,option)
           do
             call InputReadPflotranString(input,option)
             if (InputCheckExit(input,option)) exit
             call InputReadCard(input,option,keyword)
             call InputErrorMsg(input,option,'keyword', &
-                               'CPR OPTIONS, HYPRE options')
+                               'TR OPTIONS, NEWTONTR options')
             call StringToUpper(keyword)
             select case(trim(keyword))
               case('TR_TOL','TOL')
@@ -1155,73 +1163,73 @@ subroutine SolverReadNewton(solver,input,option)
                 call InputErrorMsg(input,option, &
                                    'TR tolerance', &
                                    'TRUST REGION OPTIONS')
-                string = '-snes_trtol'
+                string = trim(prefix) // 'snes_trtol'
                 call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                           trim(string),trim(word), &
                                           ierr);CHKERRQ(ierr)
-              case('TR_MU')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
-                                 'TR Mu', &
-                                 'TRUST REGION OPTIONS')
-              string = '-snes_tr_mu'
-              call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
-                                        trim(string),trim(word), &
-                                        ierr);CHKERRQ(ierr)
-              case('TR_ETA')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
-                                 'TR Eta', &
-                                 'TRUST REGION OPTIONS')
-              string = '-snes_tr_eta'
-              call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
-                                        trim(string),trim(word), &
-                                        ierr);CHKERRQ(ierr)
-              case('TR_SIGMA')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
-                                 'TR Sigma', &
-                                 'TRUST REGION OPTIONS')
-              string = '-snes_tr_sigma'
-              call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
-                                        trim(string),trim(word), &
-                                        ierr);CHKERRQ(ierr)
-              case('TR_DELTA0')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
-                                 'TR Delta0', &
-                                 'TRUST REGION OPTIONS')
-              string = '-snes_tr_delta0'
-              call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
-                                        trim(string),trim(word), &
-                                        ierr);CHKERRQ(ierr)
-              case('TR_DELTA1')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
-                                 'TR Delta1', &
-                                 'TRUST REGION OPTIONS')
-              string = '-snes_tr_delta1'
-              call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
-                                        trim(string),trim(word), &
-                                        ierr);CHKERRQ(ierr)
-              case('TR_DELTA2')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
-                                 'TR Delta2', &
-                                 'TRUST REGION OPTIONS')
-              string = '-snes_tr_delta2'
-              call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
-                                        trim(string),trim(word), &
-                                        ierr);CHKERRQ(ierr)
-              case('TR_DELTA3')
-              call InputReadWord(input,option,word,PETSC_TRUE)
-              call InputErrorMsg(input,option, &
-                                 'TR Delta3', &
-                                 'TRUST REGION OPTIONS')
-              string = '-snes_tr_delta3'
-              call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
-                                        trim(string),trim(word), &
-                                        ierr);CHKERRQ(ierr)
+              case('TR_MU','MU')
+                call InputReadWord(input,option,word,PETSC_TRUE)
+                call InputErrorMsg(input,option, &
+                                   'TR Mu', &
+                                   'TRUST REGION OPTIONS')
+                string = trim(prefix) // 'snes_tr_mu'
+                call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                          trim(string),trim(word), &
+                                          ierr);CHKERRQ(ierr)                                       
+              case('TR_ETA','ETA')
+                call InputReadWord(input,option,word,PETSC_TRUE)
+                call InputErrorMsg(input,option, &
+                                   'TR Eta', &
+                                   'TRUST REGION OPTIONS')
+                string = trim(prefix) // 'snes_tr_eta'
+                call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                          trim(string),trim(word), &
+                                          ierr);CHKERRQ(ierr)
+              case('TR_SIGMA','SIGMA')
+                call InputReadWord(input,option,word,PETSC_TRUE)
+                call InputErrorMsg(input,option, &
+                                   'TR Sigma', &
+                                   'TRUST REGION OPTIONS')
+                string = trim(prefix) // 'snes_tr_sigma'
+                call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                          trim(string),trim(word), &
+                                          ierr);CHKERRQ(ierr)
+              case('TR_DELTA0','DELTA0')
+                call InputReadWord(input,option,word,PETSC_TRUE)
+                call InputErrorMsg(input,option, &
+                                   'TR Delta0', &
+                                   'TRUST REGION OPTIONS')
+                string = trim(prefix) // 'snes_tr_delta0'
+                call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                          trim(string),trim(word), &
+                                          ierr);CHKERRQ(ierr)
+              case('TR_DELTA1','DELTA1')
+                call InputReadWord(input,option,word,PETSC_TRUE)
+                call InputErrorMsg(input,option, &
+                                   'TR Delta1', &
+                                   'TRUST REGION OPTIONS')
+                string = trim(prefix) // 'snes_tr_delta1'
+                call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                          trim(string),trim(word), &
+                                          ierr);CHKERRQ(ierr)
+              case('TR_DELTA2','DELTA2')
+                call InputReadWord(input,option,word,PETSC_TRUE)
+                call InputErrorMsg(input,option, &
+                                   'TR Delta2', &
+                                   'TRUST REGION OPTIONS')
+                string = trim(prefix) // 'snes_tr_delta2'
+                call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                          trim(string),trim(word), &
+                                          ierr);CHKERRQ(ierr)
+              case('TR_DELTA3','DELTA3')
+                call InputReadWord(input,option,word,PETSC_TRUE)
+                call InputErrorMsg(input,option, &
+                                   'TR Delta3', &
+                                   'TRUST REGION OPTIONS')
+                string = trim(prefix) // 'snes_tr_delta3'
+                call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                          trim(string),trim(word), &
+                                          ierr);CHKERRQ(ierr)
             end select
           enddo
           call InputPopBlock(input,option)
