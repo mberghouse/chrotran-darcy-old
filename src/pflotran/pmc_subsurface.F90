@@ -160,6 +160,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   PetscInt :: itransport, RT, NWT
   PetscInt :: trans_coupling
   SNESType :: snes_type
+  PetscBool :: use_newtontr = PETSC_FALSE
   PetscErrorCode :: ierr
 
 #ifdef DEBUG
@@ -217,6 +218,11 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
         end select
       endif
 
+      call SNESGetType(solver%snes,snes_type,ierr);CHKERRQ(ierr)
+      if (trim(snes_type) == 'newtontr') then
+        use_newtontr = PETSC_TRUE
+      endif
+      
       select case(option%iflowmode)
         case(G_MODE)
           call SNESGetType(solver%snes,snes_type,ierr);CHKERRQ(ierr)
@@ -324,10 +330,17 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
                                   PETSC_NULL_FUNCTION,ierr);CHKERRQ(ierr)
 
       if (pm%check_post_convergence) then
-        call SNESLineSearchSetPostCheck(linesearch, &
+        if (use_newtontr) then
+          call SNESNewtonTRSetPostCheck(solver%snes, &
                                         PMCheckUpdatePostPtr, &
                                         this%pm_ptr, &
                                         ierr);CHKERRQ(ierr)
+        else
+          call SNESLineSearchSetPostCheck(linesearch, &
+                                          PMCheckUpdatePostPtr, &
+                                          this%pm_ptr, &
+                                          ierr);CHKERRQ(ierr)
+        endif
         !geh: it is possible that the other side has not been set
         pm%check_post_convergence = PETSC_TRUE
       endif
@@ -356,10 +369,17 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
       end select
 
         if (add_pre_check) then
+          if (use_newtontr) then
+            call SNESNewtonTRSetPreCheck(solver%snes, &
+                                         PMCheckUpdatePrePtr, &
+                                         this%pm_ptr, &
+                                         ierr);CHKERRQ(ierr)
+          else
             call SNESLineSearchSetPreCheck(linesearch, &
                                            PMCheckUpdatePrePtr, &
                                            this%pm_ptr, &
                                            ierr);CHKERRQ(ierr)
+          endif
         endif
 
       call PrintMsg(option,"  Finished setting up FLOW SNES ")
