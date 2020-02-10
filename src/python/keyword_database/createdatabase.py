@@ -6,7 +6,15 @@ Created on Tue Jan 28 10:40:03 2020
 @author: rleone
 """
 
-#######MUST RUN REGRESSIONS FIRST AND CREATE FOLDER 'DOCS' IN KEYWORD_DATABASE BEFORE RUNNING PYTHON PROGRAM#######
+#####STEPS TO CREATE KEYWORD DATABASE######
+#1. Run regression tests:
+    #a. cd software/pflotran/regression_tests
+    #b. make test
+#2. Create a folder called 'docs' in keyword_database folder
+    #a. cd software/pflotran/src/python/keyword_database
+    #b. mkdir docs
+#3. Run script
+
 import os
 import numpy as np
 import re
