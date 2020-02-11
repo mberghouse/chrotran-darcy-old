@@ -2095,7 +2095,8 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
   discretization => realization%discretization
   patch => realization%patch
  
-!  call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,NFLOWDOF)
+  call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,NFLOWDOF)
+
  ! check initial guess -----------------------------------------------
   ierr = MphaseInitGuessCheck(realization)
   if (ierr<0)then
@@ -2231,18 +2232,24 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
     
 ! mphase code need assemble 
   call VecLockPop(xx,ierr); CHKERRQ(ierr)
-  call VecGetArrayF90(xx, xx_p, ierr);CHKERRQ(ierr)
+
+!  call VecGetArrayF90(xx, xx_p, ierr);CHKERRQ(ierr)
+  call VecGetArrayF90(field%flow_xx_loc, xx_p, ierr);CHKERRQ(ierr)
+
   call VecLockPush(xx,ierr); CHKERRQ(ierr)
   call VecGetArrayF90(field%flow_yy, yy_p, ierr);CHKERRQ(ierr)
   
   ichange = 0   
-  do local_id = 1,grid%nlmax
-    ghosted_id = grid%nL2G(local_id)
+!  do local_id = 1,grid%nlmax
+!    ghosted_id = grid%nL2G(local_id)
+  do ghosted_id = 1,grid%ngmax
+    local_id = grid%nG2L(ghosted_id)
     if (associated(patch%imat)) then
       if (patch%imat(ghosted_id) <= 0) cycle
     endif
     ipr=0 
-    dof_offset=(local_id-1)* option%nflowdof
+!    dof_offset=(local_id-1)* option%nflowdof
+    dof_offset=(ghosted_id-1)* option%nflowdof
     iipha = global_auxvars(ghosted_id)%istate
     p = xx_p(dof_offset+1)
     t = xx_p(dof_offset+2)
@@ -2471,7 +2478,8 @@ subroutine MphaseVarSwitchPatch(xx, realization, icri, ichange)
     end select
   enddo
 
-  call VecRestoreArrayReadF90(xx, xx_p, ierr);CHKERRQ(ierr)
+!  call VecRestoreArrayReadF90(xx, xx_p, ierr);CHKERRQ(ierr)
+  call VecRestoreArrayF90(field%flow_xx_loc, xx_p, ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(field%flow_yy, yy_p, ierr);CHKERRQ(ierr)
 
 end subroutine MphaseVarSwitchPatch
