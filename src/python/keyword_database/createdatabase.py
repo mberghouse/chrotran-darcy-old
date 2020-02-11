@@ -6,27 +6,29 @@ Created on Tue Jan 28 10:40:03 2020
 @author: rleone
 """
 
-#####STEPS TO CREATE KEYWORD DATABASE######
-#1. Run regression tests:
-    #a. cd software/pflotran/regression_tests
-    #b. make test
-#2. Create a folder called 'docs' in keyword_database folder
-    #a. cd software/pflotran/src/python/keyword_database
-    #b. mkdir docs
-#3. Run script
+# STEPS TO CREATE KEYWORD DATABASE
+# 1. Run regression tests:
+#   > cd $PFLOTRAN_DIR/regression_tests
+#   > make test
+# 2. Create a folder called 'docs' in keyword_database folder
+#   > cd $PFLOTRAN_DIR/src/python/keyword_database
+#   > mkdir docs
+# 3. Run script
+#   > python createdatabase.py
     
     
-####STEPS TO CREATE HTML FILE######
-#1. Go into docs directory
-    #a. cd docs
-#2. Setup sphinx (will give error that there is already an index file but ignore this)
-    #a. sphinx-quickstart
-#3. Make the html files
-    #a. make clean
-    #b. make html
-#4. Open up html files
-    #a. cd _build/html
-    #b. open index.html 
+# STEPS TO CREATE HTML FILE
+# 1. Go into docs directory
+#   > cd docs
+# 2. Setup sphinx (will give error that there is already an index file but 
+#    ignore this)
+#   > sphinx-quickstart
+# 3. Make the html files
+#   > make clean
+#   > make html
+# 4. Open up html files
+#   > cd _build/html
+#     open index.html 
 
 import os
 import numpy as np
