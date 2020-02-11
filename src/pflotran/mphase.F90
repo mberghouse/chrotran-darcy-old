@@ -2073,6 +2073,7 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
   use Grid_module
   use Material_module
   use Variables_module, only : PERMEABILITY_X, PERMEABILITY_Y, PERMEABILITY_Z
+  use Global_module
 
   implicit none
 
@@ -2096,6 +2097,7 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
   patch => realization%patch
  
 !  call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,NFLOWDOF)
+  call GlobalUpdateState(realization)
  ! check initial guess -----------------------------------------------
   ierr = MphaseInitGuessCheck(realization)
   if (ierr<0)then
@@ -2120,6 +2122,7 @@ subroutine MphaseResidual(snes,xx,r,realization,ierr)
 
   ! Communication -----------------------------------------
   ! These 3 must be called before MphaseUpdateAuxVars()
+  call GlobalUpdateState(realization)
   call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,NFLOWDOF)
   call DiscretizationLocalToLocal(discretization,field%icap_loc,field%icap_loc,ONEDOF)
 
