@@ -896,6 +896,8 @@ function TimestepperBaseWallClockStop(this,option)
     average_step_time = (current_time-option%start_time)/ &
                         dble(this%steps-this%start_time_step+1) &
                         *2.d0  ! just to be safe, double it
+    print *, 'wallclock_stop_time = ', option%wallclock_stop_time
+    print *, 'step time plus current time = ', average_step_time + current_time
     if (average_step_time + current_time > option%wallclock_stop_time) then
       TimestepperBaseWallclockStop = PETSC_TRUE
     endif
