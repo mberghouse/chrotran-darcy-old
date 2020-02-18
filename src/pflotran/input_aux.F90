@@ -10,6 +10,9 @@ module Input_Aux_module
 
   private
 
+  PetscInt, parameter :: PFLOTRAN_CARD = 0
+  PetscInt, parameter :: USER_DEFINED_CARD = 1
+  PetscInt, parameter :: INPUT_ERROR_FLAG = 2
 
   type, public :: input_type 
     PetscInt :: fid
@@ -359,7 +362,7 @@ subroutine InputErrorMsg2(input,option)
   type(option_type) :: option
 
   if (InputError(input)) then
-    call InputPrintKeywordLog(input,option,PETSC_TRUE)
+    call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
     option%io_buffer = 'While reading "' // trim(input%err_buf) // &
                        '" under keyword: ' // trim(input%err_buf2) // '.'
     call PrintErrMsg(option)
@@ -406,7 +409,7 @@ subroutine InputReadStringErrorMsg2(input, option)
   type(option_type) :: option
 
   if (InputError(input)) then
-    call InputPrintKeywordLog(input,option,PETSC_TRUE)
+    call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
     option%io_buffer = 'While reading in string in "' // &
                        trim(input%err_buf) // '".'
     call PrintErrMsg(option)
@@ -431,7 +434,7 @@ subroutine InputFindStringErrorMsg(input, option, string)
   character(len=*) :: string
 
   if (InputError(input)) then
-    call InputPrintKeywordLog(input,option,PETSC_TRUE)
+    call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
     option%io_buffer = 'Card (' // trim(string) // ') not &
                        &found in file.'
     call PrintErrMsg(option)
@@ -802,7 +805,7 @@ subroutine InputReadPflotranStringSlave(input, option)
         input%line_number = input%line_number + 1
         read(input%fid,'(a)',iostat=input%ierr) tempstring
         if (InputError(input)) then
-          call InputPrintKeywordLog(input,option,PETSC_TRUE)
+          call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
           option%io_buffer = 'End of file reached in ' // &
               'InputReadPflotranStringSlave.  SKIP encountered ' // &
               'without a matching NOSKIP.'
@@ -843,7 +846,7 @@ end subroutine InputReadPflotranStringSlave
 
 ! ************************************************************************** !
 
-subroutine InputReadCard(input, option, word, push_to_log)
+subroutine InputReadCard(input, option, word, flag)
   ! 
   ! Reads a keyword from the input deck, providing the option of logging
   ! 
@@ -856,14 +859,14 @@ subroutine InputReadCard(input, option, word, push_to_log)
   type(input_type) :: input
   type(option_type) :: option
   character(len=MAXWORDLENGTH) :: word
-  PetscBool, optional :: push_to_log
+  PetscInt, optional :: flag
   
   if (InputError(input)) return
   
   call InputReadWord(input,option,word,PETSC_TRUE)
   
-  if (present(push_to_log)) then
-    call InputPushCard(input,word,option)
+  if (present(flag)) then
+    call InputPushCard(input,word,option,flag)
   else
     call InputPushCard(input,word,option)
   endif
@@ -872,7 +875,7 @@ end subroutine InputReadCard
 
 ! ************************************************************************** !
 
-subroutine InputPrintKeywordLog(input,option,print_error)
+subroutine InputPrintKeywordLog(input,option,input_flag)
   ! 
   ! Prints the current strings stored by keyword logging.
   ! 
@@ -881,31 +884,37 @@ subroutine InputPrintKeywordLog(input,option,print_error)
   ! 
   type(input_type) :: input
   type(option_type) :: option
-  PetscBool, optional :: print_error
+  PetscInt, optional :: input_flag
  
   character(len=MAXWORDLENGTH) :: word
+  PetscInt :: flag
+
+  flag = PFLOTRAN_CARD
+  if (present(input_flag)) flag = input_flag
 
   if (option%keyword_logging) then
-    if (present(print_error)) then
-      if (print_error) then
-        option%io_buffer = new_line('a') // &
-                           ' ---------------------------------------&
-                           &---------------------------------------' // &
-                           new_line('a')
-        call PrintMsg(option)
-        option%io_buffer = &
-           ' Helpful information for debugging the input deck:' // new_line('a')
-        call PrintMsg(option)
-        option%io_buffer = '     Filename : ' // trim(input%path) // &
-                                                trim(input%filename)
-        call PrintMsg(option)
-        write(option%io_buffer,*) input%line_number
-        option%io_buffer = '  Line Number : ' // trim(adjustl(option%io_buffer))
-        call PrintMsg(option)
-      endif
+    if (flag == INPUT_ERROR_FLAG) then
+      option%io_buffer = new_line('a') // &
+                         ' ---------------------------------------&
+                         &---------------------------------------' // &
+                         new_line('a')
+      call PrintMsg(option)
+      option%io_buffer = &
+         ' Helpful information for debugging the input deck:' // new_line('a')
+      call PrintMsg(option)
+      option%io_buffer = '     Filename : ' // trim(input%path) // &
+                                              trim(input%filename)
+      call PrintMsg(option)
+      write(option%io_buffer,*) input%line_number
+      option%io_buffer = '  Line Number : ' // trim(adjustl(option%io_buffer))
+      call PrintMsg(option)
       word = '      Keyword :'
     else
-      word = 'KEYWORD:'
+      if (flag == PFLOTRAN_CARD) then
+        word = 'KEYWORD:'
+      elseif (flag == USER_DEFINED_CARD) then
+        word = 'USER_DEFINED_CARD:'
+      endif
     endif
     if (len_trim(option%keyword_log) > 0) then
       option%io_buffer = trim(word) // ' ' // trim(option%keyword_log) // &
@@ -916,20 +925,18 @@ subroutine InputPrintKeywordLog(input,option,print_error)
     call PrintMsg(option)
   endif
 
-  if (option%keyword_logging .and. present(print_error)) then
-    if (print_error) then
-      option%io_buffer = new_line('a') // &
-                         ' ---------------------------------------&
-                         &---------------------------------------'
-      call PrintMsg(option)
-   endif
+  if (option%keyword_logging .and. flag == INPUT_ERROR_FLAG) then
+    option%io_buffer = new_line('a') // &
+                       ' ---------------------------------------&
+                       &---------------------------------------'
+    call PrintMsg(option)
  endif
 
 end subroutine InputPrintKeywordLog
 
 ! ************************************************************************** !
 
-subroutine InputPushCard(input,card,option)
+subroutine InputPushCard(input,card,option,flag)
   ! 
   ! Sometimes cards are optional and cannot be registered at the time of 
   ! being read. This routines allows  
@@ -943,11 +950,16 @@ subroutine InputPushCard(input,card,option)
   type(input_type) :: input
   type(option_type) :: option
   character(len=*) :: card
+  PetscInt, optional :: input_flag
 
   character(len=MAXSTRINGLENGTH) :: string
-  
+  PetscInt :: flag
+
   if (.not.option%keyword_logging) return
   if (InputError(input)) return
+
+  flag = PFLOTRAN_CARD
+  if (present(input_flag)) flag = input_flag
 
   string = ''
   if (len_trim(option%keyword_buf) > 0) then
@@ -958,7 +970,7 @@ subroutine InputPushCard(input,card,option)
 
   if (len_trim(option%keyword_buf) > 0 .and. &
       option%keyword_logging_screen_output) then
-    call InputPrintKeywordLog(input,option)
+    call InputPrintKeywordLog(input,option,flag)
   endif
 
   select case(card)
@@ -2253,7 +2265,7 @@ subroutine InputReadASCIIDbase(filename,option)
     if (InputError(input)) exit
     call InputReadNChars(input,option,string,MAXSTRINGLENGTH,PETSC_FALSE)
     if (len_trim(string) > MAXWORDLENGTH) then
-      call InputPrintKeywordLog(input,option,PETSC_TRUE)
+      call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
       option%io_buffer = 'ASCII DBASE object names must be shorter than &
         &32 characters: ' // trim(string)
       call PrintErrMsg(option)
@@ -2287,7 +2299,7 @@ subroutine InputReadASCIIDbase(filename,option)
   value_index = 1
   if (option%id > 0) then
     if (option%id > num_values_in_dataset) then
-      call InputPrintKeywordLog(input,option,PETSC_TRUE)
+      call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
       write(word,*) num_values_in_dataset
         option%io_buffer = 'Data in DBASE_FILENAME "' // &
         trim(filename) // &
@@ -2345,7 +2357,7 @@ subroutine InputReadASCIIDbase(filename,option)
           words(value_count) = word
       enddo
       if (value_count /= num_values_in_dataset) then
-        call InputPrintKeywordLog(input,option,PETSC_TRUE)
+        call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
         write(word,*) value_count
         option%io_buffer = 'Data in DBASE_FILENAME "' // &
           trim(object_name) // &
@@ -2663,7 +2675,7 @@ subroutine InputKeywordUnrecognized2(input,keyword,string,string2,option)
   character(len=*) :: string2
   type(option_type) :: option
   
-  call InputPrintKeywordLog(input,option,PETSC_TRUE)
+  call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
   option%io_buffer = 'Keyword "' // &
                      trim(keyword) // &
                      '" not recognized in ' // &
@@ -2693,7 +2705,7 @@ subroutine InputCheckMandatoryUnits(input,option)
   type(option_type) :: option
   
   if (input%force_units) then
-    call InputPrintKeywordLog(input,option,PETSC_TRUE)
+    call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
     option%io_buffer = 'Missing units'
     if (len_trim(input%err_buf) > 1) then
       option%io_buffer = trim(option%io_buffer) // ' in ' // &
@@ -2733,7 +2745,7 @@ subroutine InputReadAndConvertUnits(input,double_value,internal_units, &
   call InputReadWord(input,option,units,PETSC_TRUE)
   if (input%ierr == 0) then
     if (len_trim(internal_units) < 1) then
-      call InputPrintKeywordLog(input,option,PETSC_TRUE)
+      call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
       option%io_buffer = 'No internal units provided in &
                          &InputReadAndConvertUnits()'
       call PrintErrMsg(option)
@@ -2778,7 +2790,7 @@ function UnitReadAndConversionFactor(input,internal_units, &
   call InputReadWord(input,option,units,PETSC_TRUE)
   if (input%ierr == 0) then
     if (len_trim(internal_units) < 1) then
-      call InputPrintKeywordLog(input,option,PETSC_TRUE)
+      call InputPrintKeywordLog(input,option,INPUT_ERROR_FLAG)
       option%io_buffer = 'No internal units provided in &
                          & UnitReadAndConversionFactor()'
       call PrintErrMsg(option)

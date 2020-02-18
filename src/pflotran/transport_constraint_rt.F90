@@ -276,7 +276,8 @@ subroutine TranConstraintRTRead(constraint,reaction,input,option)
             call PrintErrMsg(option)
           endif
           
-          call InputReadCard(input,option,aq_species_constraint%names(icomp))
+          call InputReadCard(input,option,aq_species_constraint%names(icomp), &
+                             USER_DEFINED_CARD)
           call InputErrorMsg(input,option,'aqueous species name',block_string)
           option%io_buffer = 'Constraint Species: ' // &
                              trim(aq_species_constraint%names(icomp))
@@ -340,11 +341,12 @@ subroutine TranConstraintRTRead(constraint,reaction,input,option)
                 aq_species_constraint%constraint_type(icomp) == &
                   CONSTRAINT_SUPERCRIT_CO2) then
               call InputReadCard(input,option,aq_species_constraint% &
-                                 constraint_aux_string(icomp))
+                                 constraint_aux_string(icomp), &
+                                 USER_DEFINED_CARD)
               call InputErrorMsg(input,option,'constraining species name', &
                                  block_string)
             else
-              call InputReadCard(input,option,word,PETSC_FALSE)
+              call InputReadCard(input,option,word)
               if (input%ierr == 0) then
                 call StringToUpper(word)
                 select case(word)
@@ -405,7 +407,8 @@ subroutine TranConstraintRTRead(constraint,reaction,input,option)
           endif
           
           call InputReadCard(input,option, &
-                             free_ion_guess_constraint%names(icomp))
+                             free_ion_guess_constraint%names(icomp), &
+                             USER_DEFINED_CARD)
           call InputErrorMsg(input,option,'free ion guess name',block_string)
           option%io_buffer = 'Constraint Species: ' // &
                              trim(free_ion_guess_constraint%names(icomp))
