@@ -487,6 +487,9 @@ subroutine NWTAuxVarCompute(nwt_auxvar,global_auxvar,material_auxvar, &
   PetscReal :: ele_kd(reaction_nw%params%nspecies)      ! [m^3-water/m^3-bulk]
   PetscBool :: dry_out
   PetscInt :: ispecies
+  PetscInt :: cur_istate
+  PetscInt, save :: prev_istate(10) = 0
+  PetscReal :: conc_save(4)
   PetscReal :: sat, por
   character(len=MAXWORDLENGTH) :: names(reaction_nw%params%nspecies)
 
@@ -518,12 +521,27 @@ subroutine NWTAuxVarCompute(nwt_auxvar,global_auxvar,material_auxvar, &
   endif
   ! check aqueous concentration against solubility limit and update
   do ispecies = 1,reaction_nw%params%nspecies
-    if (ispecies == 3) print *, trim(names(ispecies))
+    conc_save(1) = nwt_auxvar%aqueous_eq_conc(ispecies)
+    conc_save(2) = sorb_mass(ispecies)
+    conc_save(3) = ppt_mass(ispecies)
+    conc_save(4) = nwt_auxvar%total_bulk_conc(ispecies)
+    cur_istate = prev_istate(ispecies)
     call NWTEqDissPrecipSorb(solubility(ispecies),material_auxvar, &
                              global_auxvar,dry_out,ele_kd(ispecies), &
                              nwt_auxvar%total_bulk_conc(ispecies), &
                              nwt_auxvar%aqueous_eq_conc(ispecies), &
-                             ppt_mass(ispecies),sorb_mass(ispecies),ispecies==3)
+                             ppt_mass(ispecies),sorb_mass(ispecies), &
+                             PETSC_FALSE,cur_istate)
+    if (cur_istate /= prev_istate(ispecies)) then
+      print *, 'change_state: ', trim(names(ispecies))
+      write(*,'(4es12.3,i3)') conc_save(:), prev_istate(ispecies)
+      write(*,'(4es12.3,i3)') nwt_auxvar%aqueous_eq_conc(ispecies),&
+        sorb_mass(ispecies), &
+        ppt_mass(ispecies), &
+        nwt_auxvar%total_bulk_conc(ispecies), &
+        cur_istate
+    endif
+    prev_istate(ispecies) = cur_istate
   enddo
                      
   !-------sorbed concentration (equilibrium)

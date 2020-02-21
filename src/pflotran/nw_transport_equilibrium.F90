@@ -50,6 +50,7 @@ subroutine NWTEquilibrateConstraint(reaction_nw,constraint,nwt_auxvar, &
   PetscReal :: ppt_mass    ! [mol/m^3-bulk]
   PetscReal :: sorb_mass   ! [mol/m^3-bulk]
   PetscReal :: sat, por
+  PetscInt :: idum
 
   nwt_species => constraint%nwt_species
   
@@ -88,7 +89,7 @@ subroutine NWTEquilibrateConstraint(reaction_nw,constraint,nwt_auxvar, &
                                  global_auxvar,dry_out,ele_kd(ispecies), &
                                  nwt_auxvar%total_bulk_conc(ispecies), &
                                  nwt_auxvar%aqueous_eq_conc(ispecies), &
-                                 ppt_mass,sorb_mass,PETSC_FALSE)        
+                                 ppt_mass,sorb_mass,PETSC_FALSE,idum)        
         nwt_auxvar%sorb_eq_conc(ispecies) = sorb_mass
         nwt_auxvar%mnrl_eq_conc(ispecies) = ppt_mass
         nwt_auxvar%mnrl_vol_frac(:) = nwt_auxvar%mnrl_eq_conc(:)/ &
@@ -102,7 +103,7 @@ subroutine NWTEquilibrateConstraint(reaction_nw,constraint,nwt_auxvar, &
                                  global_auxvar,dry_out,ele_kd(ispecies), &
                                  nwt_auxvar%total_bulk_conc(ispecies), &
                                  nwt_auxvar%aqueous_eq_conc(ispecies), &
-                                 ppt_mass,sorb_mass,PETSC_FALSE) 
+                                 ppt_mass,sorb_mass,PETSC_FALSE,idum) 
         nwt_auxvar%sorb_eq_conc(ispecies) = sorb_mass
         nwt_auxvar%mnrl_eq_conc(ispecies) = ppt_mass
         nwt_auxvar%mnrl_vol_frac(ispecies) = &
@@ -166,7 +167,7 @@ subroutine NWTEquilibrateConstraint(reaction_nw,constraint,nwt_auxvar, &
                                  global_auxvar,dry_out,ele_kd(ispecies), &
                                  nwt_auxvar%total_bulk_conc(ispecies), &
                                  nwt_auxvar%aqueous_eq_conc(ispecies), &
-                                 ppt_mass,sorb_mass,PETSC_FALSE) 
+                                 ppt_mass,sorb_mass,PETSC_FALSE,idum) 
         nwt_auxvar%mnrl_eq_conc(ispecies) = ppt_mass
         nwt_auxvar%mnrl_vol_frac(ispecies) = &
                                       nwt_auxvar%mnrl_eq_conc(ispecies)/ &
@@ -186,7 +187,7 @@ end subroutine NWTEquilibrateConstraint
 
 subroutine NWTEqDissPrecipSorb(solubility,material_auxvar,global_auxvar, &
                                dry_out,ele_kd,total_bulk_conc,aqueous_eq_conc, &
-                               ppt_mass_conc,sorb_mass_conc,iprint)
+                               ppt_mass_conc,sorb_mass_conc,iprint,istate)
   ! 
   ! Computes the equilibrium dissolution/precipitation state.
   ! 
@@ -209,19 +210,22 @@ subroutine NWTEqDissPrecipSorb(solubility,material_auxvar,global_auxvar, &
   PetscReal :: ppt_mass_conc    ! [mol/m^3-bulk]
   PetscReal :: sorb_mass_conc   ! [mol/m^3-bulk]
   PetscBool :: iprint
+  PetscInt :: istate
   
   PetscReal :: extra_mass_conc  ! [mol/m^3-liq]
 
   if (.not.dry_out) then
   !---- Cell is wet ----!
     if (aqueous_eq_conc > solubility) then
-      if (iprint) print *, 'aqueous_eq_conc > solubility'
+!      if (iprint) print *, 'aqueous_eq_conc > solubility'
       extra_mass_conc = aqueous_eq_conc - solubility  ! [mol/m^3-liq]
       aqueous_eq_conc = solubility
       sorb_mass_conc = aqueous_eq_conc*ele_kd
       ppt_mass_conc = extra_mass_conc - sorb_mass_conc
+      istate = 2
       if (ppt_mass_conc < 0.d0) then
-        if (iprint) print *, 'ppt_mass_conc < 0.d0'
+        istate = 3
+!        if (iprint) print *, 'ppt_mass_conc < 0.d0'
       ! this means that more mass wants to be sorbed than is available,
       ! so sorbed mass needs to be reduced (ppt_mass_conc is negative)
         sorb_mass_conc = sorb_mass_conc + ppt_mass_conc
@@ -231,18 +235,20 @@ subroutine NWTEqDissPrecipSorb(solubility,material_auxvar,global_auxvar, &
       ppt_mass_conc = ppt_mass_conc*global_auxvar%sat(LIQUID_PHASE)* &
                       material_auxvar%porosity
     else
-      if (iprint) print *, 'aqueous_eq_conc < solubility ----- !'
+      istate = 1
+!      if (iprint) print *, 'aqueous_eq_conc < solubility ----- !'
       sorb_mass_conc = aqueous_eq_conc*ele_kd
       ppt_mass_conc = 0.d0
     endif
   else
   !---- Cell is dry ---!
-    if (iprint) print *, 'cell id dry'
+    istate = 10
+!    if (iprint) print *, 'cell id dry'
     ppt_mass_conc = total_bulk_conc
     sorb_mass_conc = 0.d0
     aqueous_eq_conc = 0.d0
   endif
-  if (iprint) write(*,'(4es12.3)') aqueous_eq_conc, sorb_mass_conc, ppt_mass_conc, total_bulk_conc
+!  if (iprint) write(*,'(4es12.3,i3)') aqueous_eq_conc, sorb_mass_conc, ppt_mass_conc, total_bulk_conc, istate
 
 end subroutine NWTEqDissPrecipSorb
 
