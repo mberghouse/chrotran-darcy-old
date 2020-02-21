@@ -488,6 +488,7 @@ subroutine NWTAuxVarCompute(nwt_auxvar,global_auxvar,material_auxvar, &
   PetscBool :: dry_out
   PetscInt :: ispecies
   PetscReal :: sat, por
+  character(len=MAXWORDLENGTH) :: names(reaction_nw%params%nspecies)
 
   sat = global_auxvar%sat(LIQUID_PHASE)
   por = material_auxvar%porosity
@@ -504,6 +505,7 @@ subroutine NWTAuxVarCompute(nwt_auxvar,global_auxvar,material_auxvar, &
     solubility(cur_species%id) = cur_species%solubility_limit
     mnrl_molar_density(cur_species%id) = cur_species%mnrl_molar_density
     ele_kd(cur_species%id) = cur_species%ele_kd
+    names(cur_species%id) = cur_species%name
     cur_species => cur_species%next
   enddo
   
@@ -516,11 +518,12 @@ subroutine NWTAuxVarCompute(nwt_auxvar,global_auxvar,material_auxvar, &
   endif
   ! check aqueous concentration against solubility limit and update
   do ispecies = 1,reaction_nw%params%nspecies
+    if (ispecies == 3) print *, trim(names(ispecies))
     call NWTEqDissPrecipSorb(solubility(ispecies),material_auxvar, &
                              global_auxvar,dry_out,ele_kd(ispecies), &
                              nwt_auxvar%total_bulk_conc(ispecies), &
                              nwt_auxvar%aqueous_eq_conc(ispecies), &
-                             ppt_mass(ispecies),sorb_mass(ispecies))
+                             ppt_mass(ispecies),sorb_mass(ispecies),ispecies==3)
   enddo
                      
   !-------sorbed concentration (equilibrium)
