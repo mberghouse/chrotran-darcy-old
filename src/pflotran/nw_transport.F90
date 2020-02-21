@@ -1402,6 +1402,7 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   class(reaction_nw_type), pointer :: reaction_nw
   type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
   type(nw_transport_auxvar_type), pointer :: nwt_auxvars(:)
+  type(nw_transport_auxvar_type) :: nwt_auxvar_pert
   type(nw_transport_auxvar_type), pointer :: nwt_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
@@ -1424,8 +1425,14 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
                      realization%reaction_nw%params%nspecies)
   PetscReal :: JacDn(realization%reaction_nw%params%nspecies, &
                      realization%reaction_nw%params%nspecies)
+  PetscReal :: Res(realization%reaction_nw%params%nspecies)
+  PetscReal :: Res_orig(realization%reaction_nw%params%nspecies)
+  PetscReal :: Res_pert(realization%reaction_nw%params%nspecies)
   PetscReal :: area
   PetscReal :: rdum
+  PetscReal :: pert
+  PetscInt :: i, ii
+  PetscReal, pointer :: xx_loc_p(:)
     
   option => realization%option
   grid => realization%patch%grid
@@ -1438,7 +1445,7 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   material_auxvars => realization%patch%aux%Material%auxvars
   ! note: there is no realization%patch%aux%Material%auxvars_bc
   material_auxvars_bc => realization%patch%aux%Material%auxvars
-  
+
   ! Strictly used to check if alpha needs to be considered in the area
   nullify(wippflo_auxvars)
   if (associated(realization%patch%aux%WIPPFlo)) then
@@ -1460,6 +1467,50 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
     
   ! Zero out the Jacobian matrix
   call MatZeroEntries(J,ierr);CHKERRQ(ierr)
+
+! for numerical derivatives
+#if 1
+  if (grid%nlmax > 1) then
+    option%io_buffer = 'Numerical derivatives in nw_transport.F90 are only &
+      &supported for batch reaction scenarios.'
+    call PrintErrMsg(option)
+  endif
+  ghosted_id = 1
+  Res_orig = 0.d0
+  call NWTResidualAccum(nwt_auxvars(ghosted_id),global_auxvars(ghosted_id), &
+                        material_auxvars(ghosted_id),reaction_nw,Res)
+  Res_orig = Res_orig + Res/option%tran_dt
+  call NWTResidualRx(nwt_auxvars(ghosted_id),material_auxvars(ghosted_id), &
+                     reaction_nw,Res)
+  Res_orig = Res_orig + Res
+  call NWTAuxVarInit(nwt_auxvar_pert,reaction_nw,option)
+  call VecGetArrayReadF90(realization%field%tran_xx_loc, &
+                          xx_loc_p,ierr);CHKERRQ(ierr)
+  Jac = 0.d0
+  do i = 1, reaction_nw%params%nspecies
+    nwt_auxvar_pert%total_bulk_conc = xx_loc_p(1:reaction_nw%params%nspecies)
+    pert = xx_loc_p(i)*1.d-5
+    nwt_auxvar_pert%total_bulk_conc(i) = xx_loc_p(i) + pert
+    call NWTAuxVarCompute(nwt_auxvar_pert,global_auxvars(ghosted_id), &
+                          material_auxvars(ghosted_id),reaction_nw,option)
+    Res_pert = 0.d0
+    call NWTResidualAccum(nwt_auxvar_pert,global_auxvars(ghosted_id), &
+                          material_auxvars(ghosted_id),reaction_nw,Res)
+    Res_pert = Res_pert + Res/option%tran_dt
+    call NWTResidualRx(nwt_auxvar_pert,material_auxvars(ghosted_id), &
+                       reaction_nw,Res)
+    Res_pert = Res_pert + Res
+    do ii = 1, reaction_nw%params%nspecies
+      Jac(ii,i) = Jac(ii,i) + (Res_pert(ii) - Res_orig(ii)) / pert
+    enddo
+  enddo
+  call VecRestoreArrayReadF90(realization%field%tran_xx_loc, &
+                              xx_loc_p,ierr);CHKERRQ(ierr)
+  call NWTAuxVarStrip(nwt_auxvar_pert)
+  call MatSetValuesBlockedLocal(A,1,ghosted_id-1,1,ghosted_id-1,Jac, &
+                                ADD_VALUES,ierr);CHKERRQ(ierr)
+
+#else
   
 #if 1
   !== Accumulation Terms ======================================
@@ -1626,6 +1677,8 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   enddo
 #endif
 
+#endif
+
   !== ?????? ==================================================
   
   if (reaction_nw%use_log_formulation) then
@@ -1670,6 +1723,7 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   endif
 
   call PetscLogEventEnd(logging%event_nwt_jacobian,ierr);CHKERRQ(ierr)
+
   
 end subroutine NWTJacobian
 
