@@ -1469,7 +1469,7 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   call MatZeroEntries(J,ierr);CHKERRQ(ierr)
 
 ! for numerical derivatives
-#if 1
+#if 0
   if (grid%nlmax > 1) then
     option%io_buffer = 'Numerical derivatives in nw_transport.F90 are only &
       &supported for batch reaction scenarios.'
