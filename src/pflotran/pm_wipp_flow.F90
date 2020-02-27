@@ -602,15 +602,6 @@ recursive subroutine PMWIPPFloInitializeRun(this)
   field => this%realization%field
   option => this%option
 
-  ! need to allocate vectors for max change
-  call VecDuplicateVecsF90(field%work,SIX_INTEGER,field%max_change_vecs, &
-                           ierr);CHKERRQ(ierr)
-  ! set initial values
-  do i = 1, 3
-    call RealizationGetVariable(this%realization,field%max_change_vecs(i), &
-                                this%max_change_ivar(i),ZERO_INTEGER)
-  enddo
-
   ! call parent implementation
   call PMSubsurfaceFlowInitializeRun(this)
   
@@ -899,7 +890,16 @@ recursive subroutine PMWIPPFloInitializeRun(this)
       call PrintErrMsg(option)
     endif
   endif
-  
+
+  ! need to allocate vectors for max change
+  call VecDuplicateVecsF90(field%work,SIX_INTEGER,field%max_change_vecs, &
+                           ierr);CHKERRQ(ierr)
+  ! set initial values
+  do i = 1, 3
+    call RealizationGetVariable(this%realization,field%max_change_vecs(i), &
+                                this%max_change_ivar(i),ZERO_INTEGER)
+  enddo
+
 end subroutine PMWIPPFloInitializeRun
 
 ! ************************************************************************** !
