@@ -135,98 +135,98 @@ subroutine GeomechForceSetPlotVariables(list)
     return
   endif
 
-  name = 'displacement_x'
+  name = 'DISPLACEMENT_X'
   units = 'm'
   call OutputVariableAddToList(list,name,OUTPUT_DISPLACEMENT,units, &
                                GEOMECH_DISP_X)
                                
-  name = 'displacement_y'
+  name = 'DISPLACEMENT_Y'
   units = 'm'
   call OutputVariableAddToList(list,name,OUTPUT_DISPLACEMENT,units, &
                                GEOMECH_DISP_Y)
                                
-  name = 'displacement_z'
+  name = 'DISPLACEMENT_Z'
   units = 'm'
   call OutputVariableAddToList(list,name,OUTPUT_DISPLACEMENT,units, &
                                GEOMECH_DISP_Z)
 
   units = ''
-  name = 'Material ID'
+  name = 'MATERIAL_ID'
   output_variable => OutputVariableCreate(name,OUTPUT_DISCRETE, &
                                           units,GEOMECH_MATERIAL_ID)
   output_variable%iformat = 1 ! integer
   call OutputVariableAddToList(list,output_variable)
                              
-  name = 'strain_xx'
+  name = 'STRAIN_XX'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRAIN,units, &
                                STRAIN_XX)
                                
-  name = 'strain_yy'
+  name = 'STRAIN_YY'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRAIN,units, &
                                STRAIN_YY)
                                
-  name = 'strain_zz'
+  name = 'STRAIN_ZZ'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRAIN,units, &
                                STRAIN_ZZ)
                                
-  name = 'strain_xy'
+  name = 'STRAIN_XY'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRAIN,units, &
                                STRAIN_XY)
                                
-  name = 'strain_yz'
+  name = 'STRAIN_YZ'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRAIN,units, &
                                STRAIN_YZ)
                                
-  name = 'strain_zx'
+  name = 'STRAIN_ZX'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRAIN,units, &
                                STRAIN_ZX)
                                                                               
-  name = 'stress_xx'
+  name = 'STRESS_XX'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRESS,units, &
                                STRESS_XX)
                                
-  name = 'stress_yy'
+  name = 'STRESS_YY'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRESS,units, &
                                STRESS_YY)
                                
-  name = 'stress_zz'
+  name = 'STRESS_ZZ'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRESS,units, &
                                STRESS_ZZ)
                                
-  name = 'stress_xy'
+  name = 'STRESS_XY'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRESS,units, &
                                STRESS_XY)
                                
-  name = 'stress_yz'
+  name = 'STRESS_YZ'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRESS,units, &
                                STRESS_YZ)
                                
-  name = 'stress_zx'
+  name = 'STRESS_ZX'
   units = ''
   call OutputVariableAddToList(list,name,OUTPUT_STRESS,units, &
                                STRESS_ZX)
-  name = 'relative_displacement_x'
+  name = 'RELATIVE_DISPLACEMENT_X'
   units = 'm'
   call OutputVariableAddToList(list,name,OUTPUT_DISPLACEMENT,units, &
                                GEOMECH_REL_DISP_X)
                                
-  name = 'relative_displacement_y'
+  name = 'RELATIVE_DISPLACEMENT_Y'
   units = 'm'
   call OutputVariableAddToList(list,name,OUTPUT_DISPLACEMENT,units, &
                                GEOMECH_REL_DISP_Y)
                                
-  name = 'relative_displacement_z'
+  name = 'RELATIVE_DISPLACEMENT_Z'
   units = 'm'
   call OutputVariableAddToList(list,name,OUTPUT_DISPLACEMENT,units, &
                                GEOMECH_REL_DISP_Z)
