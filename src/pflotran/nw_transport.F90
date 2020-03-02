@@ -233,6 +233,10 @@ subroutine NWTSetup(realization)
     call NWTSetPlotVariables(list,reaction_nw,option, &
                              realization%output_option%tunit)
   endif
+
+  nwt_ts_count = 0
+  nwt_ts_cut_count = 0
+  nwt_ni_count = 0
   
 end subroutine NWTSetup
 
@@ -573,6 +577,8 @@ subroutine NWTInitializeTimestep(realization)
   call VecCopy(realization%field%tran_xx,realization%field%tran_yy, &
                ierr);CHKERRQ(ierr)
   call NWTUpdateFixedAccumulation(realization)
+
+  nwt_ni_count = 0
 
 end subroutine NWTInitializeTimestep
 
@@ -926,7 +932,9 @@ subroutine NWTResidual(snes,xx,r,realization,ierr)
   call VecRestoreArrayF90(r, r_p, ierr);CHKERRQ(ierr)
 
   if (realization%debug%vecview_residual) then
-    string = 'NWTresidual'
+    call DebugWriteFilename(realization%debug,string,'NWTresidual','', &
+                            nwt_ts_count,nwt_ts_cut_count, &
+                            nwt_ni_count)
     call DebugCreateViewer(realization%debug,string,option,viewer)
     call VecView(r,viewer,ierr);CHKERRQ(ierr)
     call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
@@ -1703,7 +1711,9 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
   call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)  
     
   if (realization%debug%matview_Jacobian) then
-    string = 'NWTjacobian'
+    call DebugWriteFilename(realization%debug,string,'NWTjacobian','', &
+                            nwt_ts_count,nwt_ts_cut_count, &
+                            nwt_ni_count)
     call DebugCreateViewer(realization%debug,string,realization%option,viewer)
     call MatView(J,viewer,ierr);CHKERRQ(ierr)
     call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
@@ -1722,8 +1732,9 @@ subroutine NWTJacobian(snes,xx,A,B,realization,ierr)
     
   endif
 
-  call PetscLogEventEnd(logging%event_nwt_jacobian,ierr);CHKERRQ(ierr)
+  nwt_ni_count = nwt_ni_count + 1
 
+  call PetscLogEventEnd(logging%event_nwt_jacobian,ierr);CHKERRQ(ierr)
   
 end subroutine NWTJacobian
 

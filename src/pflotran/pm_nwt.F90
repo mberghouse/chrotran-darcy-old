@@ -578,6 +578,10 @@ subroutine PMNWTUpdateSolution(this)
                             INTEGRATE_TRANSPORT,this%option)
   endif
 
+  nwt_ts_count = nwt_ts_count + 1
+  nwt_ts_cut_count = 0
+  nwt_ni_count = 0
+
 end subroutine PMNWTUpdateSolution   
 
 ! ************************************************************************** !
@@ -956,6 +960,9 @@ subroutine PMNWTTimeCut(this)
     call GlobalWeightAuxVars(realization, &
                              realization%option%transport%tran_weight_t1)
   endif
+
+  nwt_ts_cut_count = nwt_ts_cut_count + 1
+  nwt_ni_count = 0
  
 end subroutine PMNWTTimeCut
 
