@@ -1511,8 +1511,11 @@ end subroutine HydrateBCFlux
 ! ************************************************************************** !
 
 subroutine HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
-                          hyd_auxvar,global_auxvar,ss_flow_vol_flux, &
-                          scale,Res,J,analytical_derivatives,debug_cell)
+                          hyd_auxvar,global_auxvar,global_auxvar_ss, &
+                          material_auxvar, ss_flow_vol_flux, &
+                          characteristic_curves, natural_id, scale,Res,J, &
+                          analytical_derivatives,aux_var_compute_only, &
+                          debug_cell)
   ! 
   ! Computes the source/sink terms for the residual
   ! 
@@ -1523,17 +1526,23 @@ subroutine HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
   use Option_module
   use EOS_Water_module
   use EOS_Gas_module
+  use Material_Aux_class
+  use Characteristic_Curves_module
 
   implicit none
 
   type(option_type) :: option
   type(hydrate_auxvar_type) :: hyd_auxvar,hyd_auxvar_ss
-  type(global_auxvar_type) :: global_auxvar
+  type(global_auxvar_type) :: global_auxvar,global_auxvar_ss
+  class(material_auxvar_type) :: material_auxvar
   PetscReal :: ss_flow_vol_flux(option%nphase)
+  type(characteristic_curves_type) :: characteristic_curves
+  PetscInt :: natural_id
   PetscReal :: scale
   PetscReal :: Res(option%nflowdof)
   PetscReal :: J(option%nflowdof,option%nflowdof)  
   PetscBool :: analytical_derivatives  
+  PetscBool :: aux_var_compute_only
   PetscBool :: debug_cell
   
   PetscReal :: qsrc(3)
@@ -1548,16 +1557,55 @@ subroutine HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
   PetscReal :: hw_dp, hw_dT, ha_dp, ha_dT
   PetscErrorCode :: ierr
   PetscReal :: mob_tot
-  PetscInt, parameter :: lid = 1
-  PetscInt, parameter :: gid = 2
+  PetscReal :: cell_pressure
+  PetscReal :: xxss(THREE_INTEGER)
+  PetscInt :: lid, gid, apid
 
+  lid = option%liquid_phase
+  gid = option%gas_phase
+  apid = option%air_pressure_id
   wat_comp_id = option%water_id
   air_comp_id = option%air_id
   energy_id = option%energy_id
   
   Res = 0.d0
   J = 0.d0
- 
+
+  ! Index 0 contains user-defined source/sink characteristics.
+  xxss(1) = maxval(hyd_auxvar_ss%pres(lid:gid))
+  xxss(2) = hyd_auxvar_ss%sat(gid)
+  xxss(3) = hyd_auxvar_ss%temp
+
+  cell_pressure = maxval(hyd_auxvar%pres(lid:gid)) 
+
+  ! If extracting
+  if (qsrc(wat_comp_id)<0.d0 .or. qsrc(air_comp_id)<0.d0) then
+    ! Use cell primary variables for state variable calculations
+    call HydrateAuxVarCopy(hyd_auxvar,hyd_auxvar_ss,option)
+  else ! If injecting, use primary variables from user-supplied conditions
+    select case(global_auxvar_ss%istate)
+      case(L_STATE)
+        xxss(TWO_INTEGER) = hyd_auxvar_ss%xmol(air_comp_id, wat_comp_id)
+        xxss(THREE_INTEGER) = hyd_auxvar_ss%temp
+      case(G_STATE)
+        xxss(TWO_INTEGER) = hyd_auxvar_ss%pres(apid)
+        xxss(THREE_INTEGER) = hyd_auxvar_ss%temp
+      case(GA_STATE)
+        xxss(TWO_INTEGER) = hyd_auxvar_ss%sat(gid)
+        if (hydrate_2ph_energy_dof == HYDRATE_TEMPERATURE_INDEX) then
+          xxss(THREE_INTEGER) = hyd_auxvar_ss%temp
+        else
+          xxss(THREE_INTEGER) = hyd_auxvar_ss%pres(apid)
+        endif
+    end select
+    ! Compute state variables
+    call HydrateAuxVarCompute(xxss,hyd_auxvar_ss, global_auxvar_ss, &
+                            material_auxvar, characteristic_curves, &
+                            natural_id,option)
+  endif
+
+  if (aux_var_compute_only) return
+
   qsrc_mol = 0.d0 
   if (flow_src_sink_type == TOTAL_MASS_RATE_SS) then
     !MAN: this has only been tested for an extraction well. Scales the mass of 
@@ -1566,13 +1614,15 @@ subroutine HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
       if (hyd_auxvar%sat(gid) <= 0.d0) then
         ! Water component, liquid phase
         ! kg/s phase to kmol/sec phase
-        qsrc_mol = qsrc(wat_comp_id) * hyd_auxvar%den(lid) / hyd_auxvar%den_kg(lid)
+        qsrc_mol = qsrc(wat_comp_id) * hyd_auxvar%den(lid) / &
+                   hyd_auxvar%den_kg(lid)
         ! kmol/sec phase to kmol/sec component
         qsrc_mol = qsrc_mol * hyd_auxvar%xmol(lid,lid)
       elseif (hyd_auxvar%sat(lid) <= 0.d0) then
         ! Water component, gas phase
         ! kg/s phase to kmol/sec phase
-        qsrc_mol = qsrc(wat_comp_id) * hyd_auxvar%den(gid) / hyd_auxvar%den_kg(gid)
+        qsrc_mol = qsrc(wat_comp_id) * hyd_auxvar%den(gid) / &
+                   hyd_auxvar%den_kg(gid)
         ! kmol/sec phase to kmol/sec component
         qsrc_mol = qsrc_mol * hyd_auxvar%xmol(lid,gid)
       else
@@ -2121,7 +2171,9 @@ end subroutine HydrateBCFluxDerivative
 ! ************************************************************************** !
 
 subroutine HydrateSrcSinkDerivative(option,source_sink,hyd_auxvar_ss, &
-                                    hyd_auxvars,global_auxvar,scale,Jac)
+                                    hyd_auxvar,global_auxvar,global_auxvar_ss,&
+                                    characteristic_curves,natural_id, &
+                                    material_auxvar,scale,Jac)
   ! 
   ! Computes the source/sink terms for the residual
   ! 
@@ -2131,13 +2183,18 @@ subroutine HydrateSrcSinkDerivative(option,source_sink,hyd_auxvar_ss, &
 
   use Option_module
   use Coupler_module
+  use Material_Aux_class
+  use Characteristic_Curves_module
 
   implicit none
 
   type(option_type) :: option
   type(coupler_type), pointer :: source_sink
-  type(hydrate_auxvar_type) :: hyd_auxvars(0:), hyd_auxvar_ss
-  type(global_auxvar_type) :: global_auxvar
+  type(hydrate_auxvar_type) :: hyd_auxvar(0:), hyd_auxvar_ss(0:1)
+  type(global_auxvar_type) :: global_auxvar, global_auxvar_ss
+  type(characteristic_curves_type) :: characteristic_curves
+  PetscInt :: natural_id
+  class(material_auxvar_type) :: material_auxvar
   PetscReal :: scale
   PetscReal :: Jac(option%nflowdof,option%nflowdof)
   
@@ -2153,12 +2210,16 @@ subroutine HydrateSrcSinkDerivative(option,source_sink,hyd_auxvar_ss, &
   flow_src_sink_type = source_sink%flow_condition%hydrate%rate%itype
 
   option%iflag = -3
-  
+ 
+  ! Index 0 contains user-specified conditions
+  ! Index 1 contains auxvars to be used in src/sink calculations 
   if (.not. hydrate_central_diff_jacobian) then
-    call HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
-                      hyd_auxvars(ZERO_INTEGER),global_auxvar,dummy_real, &
-                      scale,res,Jdum,hydrate_analytical_derivatives, &
-                      PETSC_FALSE)
+    call HydrateSrcSink(option,qsrc,flow_src_sink_type, &
+                        hyd_auxvar_ss(ZERO_INTEGER),hyd_auxvar(ZERO_INTEGER), &
+                        global_auxvar,global_auxvar_ss,material_auxvar, &
+                        dummy_real,characteristic_curves,natural_id,scale,res, &
+                        Jdum,hydrate_analytical_derivatives,PETSC_FALSE, &
+                        PETSC_FALSE)
   endif
 
   if (hydrate_analytical_derivatives) then
@@ -2167,28 +2228,38 @@ subroutine HydrateSrcSinkDerivative(option,source_sink,hyd_auxvar_ss, &
     ! downgradient derivatives
     if (hydrate_central_diff_jacobian) then
       do idof = 1, option%nflowdof
-        call HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
-                          hyd_auxvars(idof),global_auxvar,dummy_real, &
-                          scale,res_pert_plus,Jdum,PETSC_FALSE,PETSC_FALSE)
-        call HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
-                          hyd_auxvars(idof+option%nflowdof),global_auxvar, &
-                          dummy_real,scale,res_pert_minus,Jdum,PETSC_FALSE, &
+        call HydrateAuxVarCopy(hyd_auxvar_ss(ZERO_INTEGER), &
+                               hyd_auxvar_ss(ONE_INTEGER), option)
+        call HydrateSrcSink(option,qsrc,flow_src_sink_type, &
+                          hyd_auxvar_ss(ONE_INTEGER),hyd_auxvar(idof), &
+                          global_auxvar,global_auxvar_ss,material_auxvar, &
+                          dummy_real,characteristic_curves,natural_id,&
+                          scale,res_pert_plus,Jdum,PETSC_FALSE,PETSC_FALSE, &
                           PETSC_FALSE)
+        call HydrateSrcSink(option,qsrc,flow_src_sink_type, &
+                          hyd_auxvar_ss(ONE_INTEGER), &
+                          hyd_auxvar(idof+option%nflowdof),global_auxvar, &
+                          global_auxvar_ss,material_auxvar,dummy_real, &
+                          characteristic_curves,natural_id,scale, &
+                          res_pert_minus,Jdum,PETSC_FALSE,PETSC_FALSE,PETSC_FALSE)
       
         do irow = 1, option%nflowdof
           Jac(irow,idof) = (res_pert_plus(irow)-res_pert_minus(irow))/ (2.d0 * &
-                          hyd_auxvars(idof)%pert)
+                          hyd_auxvar(idof)%pert)
         enddo !irow
       enddo ! idof
     else
       do idof = 1, option%nflowdof
-        call HydrateSrcSink(option,qsrc,flow_src_sink_type,hyd_auxvar_ss, &
-                          hyd_auxvars(idof),global_auxvar,dummy_real, &
-                          scale,res_pert_plus,Jdum,PETSC_FALSE,PETSC_FALSE)
+        call HydrateSrcSink(option,qsrc,flow_src_sink_type, &
+                          hyd_auxvar_ss(ONE_INTEGER),hyd_auxvar(idof), &
+                          global_auxvar,global_auxvar_ss,material_auxvar, &
+                          dummy_real,characteristic_curves,natural_id, &
+                          scale,res_pert_plus,Jdum,PETSC_FALSE,PETSC_FALSE, &
+                          PETSC_FALSE)
 
         do irow = 1, option%nflowdof
           Jac(irow,idof) = (res_pert_plus(irow)-res(irow))/ &
-                          hyd_auxvars(idof)%pert
+                          hyd_auxvar(idof)%pert
         enddo !irow
       enddo ! idof 
     endif

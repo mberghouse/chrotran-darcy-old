@@ -348,9 +348,10 @@ hydrate.o : connection.o coupler.o debug.o discretization.o eos_water.o \
 hydrate_aux.o : characteristic_curves.o eos_gas.o eos_water.o global_aux.o \
                 material_aux.o matrix_zeroing.o option.o pflotran_constants.o \
                 string.o utility.o
-hydrate_common.o : connection.o coupler.o eos_gas.o eos_water.o global_aux.o \
-                   hydrate_aux.o material_aux.o option.o pflotran_constants.o \
-                   upwind_direction.o utility.o wipp.o
+hydrate_common.o : characteristic_curves.o connection.o coupler.o eos_gas.o \
+                   eos_water.o global_aux.o hydrate_aux.o material_aux.o \
+                   option.o pflotran_constants.o upwind_direction.o utility.o \
+                   wipp.o
 hydrostatic.o : condition.o connection.o coupler.o dataset_ascii.o \
                 dataset_common_hdf5.o dataset_gridded_hdf5.o eos_water.o \
                 general_aux.o grid.o grid_structured.o hydrate_aux.o option.o \

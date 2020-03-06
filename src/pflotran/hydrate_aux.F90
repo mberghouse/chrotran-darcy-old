@@ -261,7 +261,7 @@ module Hydrate_Aux_module
     type(hydrate_parameter_type), pointer :: hydrate_parameter
     type(hydrate_auxvar_type), pointer :: auxvars(:,:)
     type(hydrate_auxvar_type), pointer :: auxvars_bc(:)
-    type(hydrate_auxvar_type), pointer :: auxvars_ss(:)
+    type(hydrate_auxvar_type), pointer :: auxvars_ss(:,:)
     type(matrix_zeroing_type), pointer :: matrix_zeroing
   end type hydrate_type
 
@@ -1628,10 +1628,6 @@ subroutine HydrateAuxVarUpdateState(x,hyd_auxvar,global_auxvar, &
   hyd_epsilon = 0.d0
   two_phase_epsilon = 0.d0
 
-  !man: right now comparing hydrate equilib pressure to gas
-  !pressure (assuming low water solubility in methane). 
-  !Ideally would compare to partial pressure of methane.
-
   if (global_auxvar%istate == ZERO_INTEGER .and. hyd_auxvar%sat(gid) &
        < 0.d0) then
     global_auxvar%istate = HA_STATE
@@ -1643,12 +1639,20 @@ subroutine HydrateAuxVarUpdateState(x,hyd_auxvar,global_auxvar, &
                               istate = global_auxvar%istate
   hyd_auxvar%istate_store(PREV_IT) = global_auxvar%istate
 
-  if (hyd_auxvar%sat(hid) > hyd_auxvar%sat(iid)) then
-    h_sat_eff = hyd_auxvar%sat(hid)+hyd_auxvar%sat(iid)
-    i_sat_eff = 2.d0 * hyd_auxvar%sat(iid)
-  else
-    h_sat_eff = 2.d0 * hyd_auxvar%sat(hid)
-    i_sat_eff = hyd_auxvar%sat(hid) + hyd_auxvar%sat(iid)
+  if (hydrate_gt_3phase) then
+    !if (hyd_auxvar%sat(hid) > hyd_auxvar%sat(iid)) then
+    !  h_sat_eff = hyd_auxvar%sat(hid)+hyd_auxvar%sat(iid)
+    !  i_sat_eff = 2.d0 * hyd_auxvar%sat(iid)
+    !else
+    !  h_sat_eff = 2.d0 * hyd_auxvar%sat(hid)
+    !  i_sat_eff = hyd_auxvar%sat(hid) + hyd_auxvar%sat(iid)
+    !endif
+  
+    if (hyd_auxvar%sat(hid) > hyd_auxvar%sat(gid)) then
+      h_sat_eff = hyd_auxvar%sat(hid) + hyd_auxvar%sat(gid) 
+    else
+      h_sat_eff = 2.d0 * hyd_auxvar%sat(hid)
+    endif
   endif
 
   call HydratePE(hyd_auxvar%temp,h_sat_eff, PE_hyd, dP,&

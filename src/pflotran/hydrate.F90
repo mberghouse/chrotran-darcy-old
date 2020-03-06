@@ -67,7 +67,7 @@ subroutine HydrateSetup(realization)
                                                 ! extra index for derivatives
   type(hydrate_auxvar_type), pointer :: hyd_auxvars(:,:)
   type(hydrate_auxvar_type), pointer :: hyd_auxvars_bc(:)
-  type(hydrate_auxvar_type), pointer :: hyd_auxvars_ss(:)
+  type(hydrate_auxvar_type), pointer :: hyd_auxvars_ss(:,:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
   type(fluid_property_type), pointer :: cur_fluid_property
 
@@ -165,9 +165,11 @@ subroutine HydrateSetup(realization)
   ! auxvar data structures for them  
   sum_connection = CouplerGetNumConnectionsInList(patch%source_sink_list)
   if (sum_connection > 0) then
-    allocate(hyd_auxvars_ss(sum_connection))
+    allocate(hyd_auxvars_ss(0:ONE_INTEGER,sum_connection))
     do iconn = 1, sum_connection
-      call HydrateAuxVarInit(hyd_auxvars_ss(iconn),PETSC_FALSE,option)
+      do i = 0,ONE_INTEGER
+        call HydrateAuxVarInit(hyd_auxvars_ss(i,iconn),PETSC_FALSE,option)
+      enddo
     enddo
     patch%aux%Hydrate%auxvars_ss => hyd_auxvars_ss
   endif
@@ -656,9 +658,7 @@ subroutine HydrateUpdateAuxVars(realization,update_state)
   type(coupler_type), pointer :: boundary_condition, source_sink
   type(connection_set_type), pointer :: cur_connection_set
   type(hydrate_auxvar_type), pointer :: hyd_auxvars(:,:), hyd_auxvars_bc(:), &
-                                        hyd_auxvars_ss(:)
-  type(hydrate_auxvar_type) :: hyd_auxvar, hyd_auxvar_ss
-  type(global_auxvar_type) :: global_auxvar_ss, global_auxvar
+                                        hyd_auxvars_ss(:,:)
   type(global_auxvar_type), pointer :: global_auxvars(:), &
                                        global_auxvars_bc(:), global_auxvars_ss(:)
   
@@ -669,7 +669,7 @@ subroutine HydrateUpdateAuxVars(realization,update_state)
   PetscInt :: iphasebc, iphase
   PetscInt :: offset
   PetscInt :: istate
-  PetscInt :: wat_comp_id, air_comp_id
+  PetscInt :: wat_comp_id, air_comp_id,lid,gid
   PetscReal :: gas_pressure, capillary_pressure, liquid_saturation
   PetscReal :: saturation_pressure, temperature
   PetscReal :: qsrc(3)
@@ -678,6 +678,10 @@ subroutine HydrateUpdateAuxVars(realization,update_state)
   PetscReal :: xxbc(realization%option%nflowdof), & 
                xxss(realization%option%nflowdof)
   PetscReal :: cell_pressure,qsrc_vol(2),scale
+  PetscReal :: Res_dummy(realization%option%nflowdof)
+  PetscReal :: Jac_dummy(realization%option%nflowdof, &
+                         realization%option%nflowdof)
+  PetscReal :: ss_flow_vol_flux(realization%option%nphase)
   PetscErrorCode :: ierr
   
   option => realization%option
@@ -889,6 +893,8 @@ subroutine HydrateUpdateAuxVars(realization,update_state)
   
   wat_comp_id = option%water_id
   air_comp_id = option%air_id
+  lid = option%liquid_phase
+  gid = option%gas_phase
   source_sink => patch%source_sink_list%first
   sum_connection = 0
   do
@@ -906,102 +912,103 @@ subroutine HydrateUpdateAuxVars(realization,update_state)
 
       flow_src_sink_type = source_sink%flow_condition%hydrate%rate%itype
 
-      global_auxvar = global_auxvars(ghosted_id)
-      hyd_auxvar = hyd_auxvars(ZERO_INTEGER, ghosted_id)
-      hyd_auxvar_ss = hyd_auxvars_ss(sum_connection)
-      global_auxvar_ss = global_auxvars_ss(sum_connection)
-    
-      flow_src_sink_type = source_sink%flow_condition%hydrate%rate%itype
-    
       if (associated(source_sink%flow_condition%hydrate%temperature)) then
-        hyd_auxvar_ss%temp = source_sink%flow_condition%hydrate% &
-                           temperature%dataset%rarray(1)
+        hyd_auxvars_ss(ZERO_INTEGER,sum_connection)%temp = source_sink% &
+                        flow_condition%hydrate%temperature%dataset%rarray(1)
       else
-        hyd_auxvar_ss%temp = hyd_auxvar%temp
+        hyd_auxvars_ss(ZERO_INTEGER,sum_connection)%temp = &
+                       hyd_auxvars(ZERO_INTEGER,ghosted_id)%temp
       endif
     
       ! Check if liquid pressure is set
       if (associated(source_sink%flow_condition%hydrate%liquid_pressure)) then
-        hyd_auxvar_ss%pres(wat_comp_id) = source_sink%flow_condition% &
-                                    hydrate%liquid_pressure%dataset%rarray(1)
+        hyd_auxvars_ss(ZERO_INTEGER,sum_connection)%pres(wat_comp_id) = &
+                       source_sink%flow_condition%hydrate%liquid_pressure% &
+                       dataset%rarray(1)
       else
-        hyd_auxvar_ss%pres(wat_comp_id) = hyd_auxvar%pres(option%liquid_phase)
+        hyd_auxvars_ss(ZERO_INTEGER,sum_connection)%pres(wat_comp_id) = &
+                       hyd_auxvars(ZERO_INTEGER,ghosted_id)%pres(option%liquid_phase)
       endif
     
       ! Check if gas pressure is set
       if (associated(source_sink%flow_condition%hydrate%gas_pressure)) then
-        hyd_auxvar_ss%pres(air_comp_id) = source_sink%flow_condition% &
-                               hydrate%gas_pressure%dataset%rarray(1)
+        hyd_auxvars_ss(ZERO_INTEGER,sum_connection)%pres(air_comp_id) = &
+                       source_sink%flow_condition%hydrate%gas_pressure% &
+                       dataset%rarray(1)
       else
-        hyd_auxvar_ss%pres(air_comp_id) = hyd_auxvar%pres(option%gas_phase)
+        hyd_auxvars_ss(ZERO_INTEGER,sum_connection)%pres(air_comp_id) = &
+                       hyd_auxvars(ZERO_INTEGER,ghosted_id)%pres(option%gas_phase)
       endif
+
+      !select case(flow_src_sink_type)
+      !  case(MASS_RATE_SS)
+      !    qsrc_vol(air_comp_id) = qsrc(air_comp_id)/(fmw_comp(air_comp_id)* &
+      !                          hyd_auxvars(ZERO_INTEGER,ghosted_id)% &
+      !                          den(air_comp_id))
+      !    qsrc_vol(wat_comp_id) = qsrc(wat_comp_id)/(fmw_comp(wat_comp_id)* &
+      !                          hyd_auxvars(ZERO_INTEGER,ghosted_id)% &
+      !                          den(wat_comp_id))
+      !  case(SCALED_MASS_RATE_SS)                       ! kg/sec -> kmol/sec
+      !    qsrc_vol(air_comp_id) = qsrc(air_comp_id)/(fmw_comp(air_comp_id)* &
+      !                          hyd_auxvars(ZERO_INTEGER,ghosted_id)% &
+      !                          den(air_comp_id))*scale 
+      !    qsrc_vol(wat_comp_id) = qsrc(wat_comp_id)/(fmw_comp(wat_comp_id)* &
+      !                          hyd_auxvars(ZERO_INTEGER,ghosted_id)% &
+      !                          den(wat_comp_id))*scale 
+      !  case(SCALED_VOLUMETRIC_RATE_SS)  ! assume local density for now
+      !  ! qsrc1 = m^3/sec             ! den = kmol/m^3
+      !    qsrc_vol(air_comp_id) = qsrc(air_comp_id)*scale
+      !    qsrc_vol(wat_comp_id) = qsrc(wat_comp_id)*scale
+      !end select
     
-      select case(flow_src_sink_type)
-      case(MASS_RATE_SS)
-        qsrc_vol(air_comp_id) = qsrc(air_comp_id)/(fmw_comp(air_comp_id)* &
-                              hyd_auxvar%den(air_comp_id))
-        qsrc_vol(wat_comp_id) = qsrc(wat_comp_id)/(fmw_comp(wat_comp_id)* &
-                              hyd_auxvar%den(wat_comp_id))
-      case(SCALED_MASS_RATE_SS)                       ! kg/sec -> kmol/sec
-        qsrc_vol(air_comp_id) = qsrc(air_comp_id)/(fmw_comp(air_comp_id)* &
-                              hyd_auxvar%den(air_comp_id))*scale 
-        qsrc_vol(wat_comp_id) = qsrc(wat_comp_id)/(fmw_comp(wat_comp_id)* &
-                              hyd_auxvar%den(wat_comp_id))*scale 
-      case(SCALED_VOLUMETRIC_RATE_SS)  ! assume local density for now
-      ! qsrc1 = m^3/sec             ! den = kmol/m^3
-        qsrc_vol(air_comp_id) = qsrc(air_comp_id)*scale
-        qsrc_vol(wat_comp_id) = qsrc(wat_comp_id)*scale
-      end select
+      xxss(1) = maxval(hyd_auxvars_ss(ZERO_INTEGER,sum_connection)% &
+                       pres(lid:gid))
+      xxss(2) = 5.d-1
+      xxss(3) = hyd_auxvars_ss(ZERO_INTEGER,sum_connection)%temp
     
-      xxss(1) = maxval(hyd_auxvar_ss%pres(option% &
-                     liquid_phase:option%gas_phase))
-      if (dabs(qsrc_vol(wat_comp_id)) < 1.d-40 .and. &
-          dabs(qsrc_vol(air_comp_id)) < 1.d-40) then
-        xxss(2) = 0.d0
-      else
-        xxss(2) = qsrc_vol(air_comp_id)/(qsrc_vol(wat_comp_id) &
-                + qsrc_vol(air_comp_id))
-      endif
-      xxss(3) = hyd_auxvar_ss%temp
+      cell_pressure = maxval(hyd_auxvars(ZERO_INTEGER,ghosted_id)% &
+                             pres(lid:gid))    
     
-      cell_pressure = maxval(hyd_auxvar%pres(option% &
-                           liquid_phase:option%gas_phase))    
-    
-      if (cell_pressure>xxss(1) .or. qsrc(wat_comp_id)<0 .or. &
-         qsrc(air_comp_id)<0.d0) then
+      if (qsrc(wat_comp_id)<0 .or. qsrc(air_comp_id)<0.d0) then
         xxss(1) = cell_pressure
-        xxss(2) = hyd_auxvar%sat(air_comp_id)
-        xxss(3) = hyd_auxvar%temp
+        xxss(2) = hyd_auxvars(ZERO_INTEGER,ghosted_id)%sat(gid)
+        xxss(3) = hyd_auxvars(ZERO_INTEGER,ghosted_id)%temp
       endif
     
       if (dabs(qsrc(wat_comp_id)) > 0.d0 .and. &
           dabs(qsrc(air_comp_id)) > 0.d0) then
-        global_auxvar_ss%istate = GA_STATE
+        global_auxvars_ss(sum_connection)%istate = GA_STATE
       elseif (dabs(qsrc(wat_comp_id)) > 0.d0) then
-        global_auxvar_ss%istate = L_STATE
+        global_auxvars_ss(sum_connection)%istate = L_STATE
       elseif (dabs(qsrc(air_comp_id)) > 0.d0) then
-        global_auxvar_ss%istate = G_STATE
+        global_auxvars_ss(sum_connection)%istate = G_STATE
       else
-        global_auxvar_ss%istate = GA_STATE
+        global_auxvars_ss(sum_connection)%istate = GA_STATE
       endif
     
-      if (global_auxvar_ss%istate /= global_auxvar%istate) then
-        global_auxvar_ss%istate = GA_STATE
+      if (global_auxvars_ss(sum_connection)%istate /= &
+          global_auxvars(ghosted_id)%istate) then
+        global_auxvars_ss(sum_connection)%istate = GA_STATE
       endif
     
-      allocate(global_auxvar_ss%m_nacl(1))
-      global_auxvar_ss%m_nacl(1) = 0.d0
+      !allocate(global_auxvars_ss(sum_connection)%m_nacl(1))
+      !global_auxvars_ss(sum_connection)%m_nacl(1) = 0.d0
+
       option%iflag = HYDRATE_UPDATE_FOR_SS
     
-      ! Compute state variables 
-      call HydrateAuxVarCompute(xxss,hyd_auxvar_ss, &
-                                global_auxvar_ss, &
-                                material_auxvars(ghosted_id), &
-                                patch%characteristic_curves_array( &
-                                patch%sat_func_id(source_sink%region% &
-                                cell_ids(1)))%ptr, &
-                                source_sink%region%cell_ids(1), &
-                                option)
+      call HydrateSrcSink(option,qsrc,flow_src_sink_type, &
+                          hyd_auxvars_ss(ZERO_INTEGER,sum_connection), &
+                          hyd_auxvars(ZERO_INTEGER,ghosted_id), &
+                          global_auxvars(ghosted_id), &
+                          global_auxvars_ss(sum_connection), &
+                          material_auxvars(ghosted_id), &
+                          ss_flow_vol_flux, &
+                          patch%characteristic_curves_array( &
+                          patch%sat_func_id(ghosted_id))%ptr, &
+                          grid%nG2A(ghosted_id), &
+                          scale, Res_dummy, Jac_dummy, &
+                          PETSC_FALSE, PETSC_TRUE, &
+                          local_id == hydrate_debug_cell_id) 
     enddo
     source_sink => source_sink%next
   enddo
@@ -1148,7 +1155,7 @@ subroutine HydrateResidual(snes,xx,r,realization,ierr)
   type(material_parameter_type), pointer :: material_parameter
   type(hydrate_parameter_type), pointer :: hydrate_parameter
   type(hydrate_auxvar_type), pointer :: hyd_auxvars(:,:), hyd_auxvars_bc(:), &
-                                        hyd_auxvars_ss(:)
+                                        hyd_auxvars_ss(:,:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars_ss(:)
@@ -1423,12 +1430,17 @@ subroutine HydrateResidual(snes,xx,r,realization,ierr)
       flow_src_sink_type=source_sink%flow_condition%hydrate%rate%itype
       
       call HydrateSrcSink(option,qsrc,flow_src_sink_type, &
-                          hyd_auxvars_ss(sum_connection), &
+                          hyd_auxvars_ss(ZERO_INTEGER,sum_connection), &
                           hyd_auxvars(ZERO_INTEGER,ghosted_id), &
                           global_auxvars(ghosted_id), &
+                          global_auxvars_ss(sum_connection), &
+                          material_auxvars(ghosted_id), &
                           ss_flow_vol_flux, &
+                          patch%characteristic_curves_array( &
+                          patch%sat_func_id(ghosted_id))%ptr, &
+                          grid%nG2A(ghosted_id), &
                           scale,Res,Jac_dummy, &
-                          hydrate_analytical_derivatives, &
+                          PETSC_FALSE,PETSC_FALSE, &
                           local_id == hydrate_debug_cell_id)
 
       r_p(local_start:local_end) =  r_p(local_start:local_end) - Res(:)
@@ -1568,8 +1580,9 @@ subroutine HydrateJacobian(snes,xx,A,B,realization,ierr)
   type(hydrate_parameter_type), pointer :: hydrate_parameter
   type(hydrate_auxvar_type), pointer :: hyd_auxvars(:,:), &
                                         hyd_auxvars_bc(:), &
-                                        hyd_auxvars_ss(:)
-  type(global_auxvar_type), pointer :: global_auxvars(:), global_auxvars_bc(:) 
+                                        hyd_auxvars_ss(:,:)
+  type(global_auxvar_type), pointer :: global_auxvars(:), global_auxvars_bc(:),&
+                                       global_auxvars_ss(:) 
   class(material_auxvar_type), pointer :: material_auxvars(:)
   
   character(len=MAXSTRINGLENGTH) :: string
@@ -1586,6 +1599,7 @@ subroutine HydrateJacobian(snes,xx,A,B,realization,ierr)
   hydrate_parameter => patch%aux%Hydrate%hydrate_parameter
   global_auxvars => patch%aux%Global%auxvars
   global_auxvars_bc => patch%aux%Global%auxvars_bc
+  global_auxvars_ss => patch%aux%Global%auxvars_ss
   material_auxvars => patch%aux%Material%auxvars
 
   hydrate_force_iteration = PETSC_FALSE
@@ -1788,10 +1802,14 @@ subroutine HydrateJacobian(snes,xx,A,B,realization,ierr)
       endif
       
       Jup = 0.d0
-      call HydrateSrcSinkDerivative(option,source_sink,hyd_auxvars_ss( &
-                        sum_connection), &
+      call HydrateSrcSinkDerivative(option,source_sink, &
+                        hyd_auxvars_ss(:,sum_connection), &
                         hyd_auxvars(:,ghosted_id), &
                         global_auxvars(ghosted_id), &
+                        global_auxvars_ss(sum_connection), &
+                        patch%characteristic_curves_array( &
+                        patch%sat_func_id(ghosted_id))%ptr, &
+                        grid%nG2A(ghosted_id),material_auxvars(ghosted_id), &
                         scale,Jup)
 
       call MatSetValuesBlockedLocal(A,1,ghosted_id-1,1,ghosted_id-1,Jup, &
