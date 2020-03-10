@@ -799,7 +799,9 @@ subroutine MaterialFractureCompress(material_aux, sigma)
                exp(-3.d0 * material_aux%fracture_compressibility * sigma / 1.d6)
     case(TWO_INTEGER)
       !Kwon et al., 2001
-      !perm(:) = perm_init * (1.d0 - (sigma/P)) ** 3
+      material_aux%permeability(:) = material_aux%initial_permeability * &
+              (1.d0 - (sigma / material_aux%bulk_mod) ** &
+               material_aux%hard_material_const) ** 3 
     case(THREE_INTEGER)
       !Two-part Hooke's Model (Zheng et al., 2016)
       perm_hard = material_aux%initial_permeability * &

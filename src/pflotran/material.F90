@@ -784,7 +784,7 @@ subroutine MaterialPropertyRead(material_property,input,option)
           case('HOST_ROCK')
             material_property%material_flag = HR_INT
         end select
-      case('BULK_MODULUS')
+      case('BULK_MODULUS','EFFECTIVE_MODULUS')
         call InputReadDouble(input,option, material_property%bulk_mod)
         call InputErrorMsg(input,option,'bulk modulus', &
                            'MATERIAL_PROPERTY')
@@ -812,7 +812,7 @@ subroutine MaterialPropertyRead(material_property,input,option)
                              material_property%initial_perm_soft)
         call InputErrorMsg(input,option,'initial soft permeability', &
                            'MATERIAL_PROPERTY')
-      case('MATERIAL_CONSTANT_HARD')
+      case('MATERIAL_CONSTANT_HARD','MATERIAL_CONSTANT')
         call InputReadDouble(input,option, &
                              material_property%hard_material_const)
         call InputErrorMsg(input,option,'hard material constant', &
