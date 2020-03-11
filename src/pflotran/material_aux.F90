@@ -800,7 +800,7 @@ subroutine MaterialFractureCompress(material_aux, sigma)
     case(TWO_INTEGER)
       !Kwon et al., 2001
       material_aux%permeability(:) = material_aux%initial_permeability * &
-              (1.d0 - (sigma / material_aux%bulk_mod) ** &
+              (1.d0 - (sigma / (1.d6 * material_aux%bulk_mod)) ** &
                material_aux%hard_material_const) ** 3 
     case(THREE_INTEGER)
       !Two-part Hooke's Model (Zheng et al., 2016)
