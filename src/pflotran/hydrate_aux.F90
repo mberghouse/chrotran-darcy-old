@@ -15,7 +15,7 @@ module Hydrate_Aux_module
   PetscBool, public :: hydrate_immiscible = PETSC_FALSE
   PetscBool, public :: hydrate_central_diff_jacobian = PETSC_FALSE
   PetscBool, public :: hydrate_restrict_state_chng = PETSC_FALSE
-  PetscReal, public :: window_epsilon = 1.d-4 !0.d0
+  PetscReal, public :: window_epsilon = 0.d0 !1.d-4
   PetscReal, public :: hydrate_phase_chng_epsilon = 0.d0 !1.d-6
   PetscReal, public :: fmw_comp(2) = [FMWH2O,FMWAIR]
   PetscReal, public :: hydrate_max_pressure_change = 5.d4
@@ -940,9 +940,7 @@ subroutine HydrateAuxVarCompute(x,hyd_auxvar,global_auxvar,material_auxvar, &
 
       !hyd_auxvar%pres(spid) = 1.d-6
       hyd_auxvar%pres(cpid) = 0.d0
-      ! Setting air pressure equal to gas pressure makes forming hydrate
-      ! easier
-      hyd_auxvar%pres(apid) = hyd_auxvar%pres(gid) - hyd_auxvar%pres(spid)
+      hyd_auxvar%pres(apid) = hyd_auxvar%pres(gid) !- hyd_auxvar%pres(spid)
       hyd_auxvar%pres(lid) = hyd_auxvar%pres(gid)
       hyd_auxvar%pres(vpid) = hyd_auxvar%pres(gid) - hyd_auxvar%pres(apid)
 
