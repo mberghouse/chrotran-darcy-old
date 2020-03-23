@@ -711,6 +711,7 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
   use PM_Mphase_class
   use PM_Richards_class
   use PM_TH_class
+  use PM_THS_class
   use PM_TOilIms_class
   use PM_TOWG_class
   use PM_TOWG_Aux_module
@@ -904,6 +905,8 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
       option%nflowspec = 1
       option%use_isothermal = PETSC_FALSE
       option%flow%store_fluxes = PETSC_TRUE
+    class is (pm_ths_type)
+      call PMTHSSetFlowMode(option)
     class is (pm_richards_ts_type)
       option%iflowmode = RICHARDS_TS_MODE
       option%nphase = 1
@@ -953,6 +956,7 @@ subroutine SubsurfaceReadFlowPM(input,option,pm)
   use PM_TOWG_class
   use PM_Richards_TS_class
   use PM_TH_TS_class
+  use PM_THS_class
   use Init_Common_module
   use General_module
 
@@ -983,7 +987,7 @@ subroutine SubsurfaceReadFlowPM(input,option,pm)
         select case(word)
           case('GENERAL','HYDRATE','TOIL_IMS','TOWG_IMMISCIBLE', &
                'TODD_LONGSTAFF','TOWG_MISCIBLE','BLACK_OIL', &
-               'SOLVENT_TL','WIPP_FLOW')
+               'SOLVENT_TL','WIPP_FLOW','THS')
           ! In OptionFlowInitRealization(), numerical_derivatives is set to
           ! PETSC_FALSE, but the default for GENERAL needs to be PETSC_TRUE.
           ! This is will eventually affect all flow modes with numerical
@@ -1006,7 +1010,7 @@ subroutine SubsurfaceReadFlowPM(input,option,pm)
             pm => PMMphaseCreate()
           case('FLASH2')
             pm => PMFlash2Create()
-          case('IMS','IMMIS','THS')
+          case('IMS','IMMIS')
             pm => PMImmisCreate()
           case('MIS','MISCIBLE')
             pm => PMMiscibleCreate()
@@ -1020,10 +1024,12 @@ subroutine SubsurfaceReadFlowPM(input,option,pm)
           case('TOWG_IMMISCIBLE','TODD_LONGSTAFF','TOWG_MISCIBLE', &
                'BLACK_OIL','SOLVENT_TL')
             pm => PMTOWGCreate(input,word,option)
-          case ('RICHARDS_TS')
+          case('RICHARDS_TS')
             pm => PMRichardsTSCreate()
-          case ('TH_TS')
+          case('TH_TS')
             pm => PMTHTSCreate()
+          case('THS')
+            pm => PMTHSCreate()
           case default
             error_string = trim(error_string) // ',MODE'
             call InputKeywordUnrecognized(input,word,error_string,option)
@@ -2457,6 +2463,8 @@ subroutine SubsurfaceReadInput(simulation,input)
             call FlowConditionTOilImsRead(flow_condition,input,option)
           case(TOWG_MODE)
             call FlowConditionTOWGRead(flow_condition,input,option)
+          case(THS_MODE)
+            call FlowConditionTHSRead(flow_condition,input,option)
           case default
             call FlowConditionRead(flow_condition,input,option)
         end select
@@ -2886,7 +2894,8 @@ subroutine SubsurfaceReadInput(simulation,input)
             (option%iflowmode == TH_MODE .and. &
              .not. th_use_freezing) .or. &
             option%iflowmode == TH_TS_MODE .or. &
-            option%iflowmode == WF_MODE) then
+            option%iflowmode == WF_MODE .or. &
+            option%iflowmode == THS_MODE) then
           option%io_buffer = &
             'Must compile with legacy_saturation_function=1 to use the &
             &SATURATION_FUNCTION keyword.  Otherwise, use &
@@ -2916,10 +2925,11 @@ subroutine SubsurfaceReadInput(simulation,input)
                   option%iflowmode == TH_TS_MODE .or. &
                   (option%iflowmode == TH_MODE .and. &
                     .not. th_use_freezing) .or. &
-                  option%iflowmode == WF_MODE)) then
+                  option%iflowmode == WF_MODE) .or. &
+                  option%iflowmode == THS_MODE) then
           option%io_buffer = 'CHARACTERISTIC_CURVES not supported in flow &
-            &modes other than RICHARDS, RICHARDS_TS, TOIL_IMS, WIPP_FLOW, TH, or GENERAL. &
-            &Use SATURATION_FUNCTION.'
+            &modes other than RICHARDS, RICHARDS_TS, TOIL_IMS, WIPP_FLOW, TH, &
+            & THS, or GENERAL. Use SATURATION_FUNCTION.'
           call PrintErrMsg(option)
         endif
         characteristic_curves => CharacteristicCurvesCreate()

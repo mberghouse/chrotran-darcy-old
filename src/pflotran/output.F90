@@ -2082,6 +2082,11 @@ subroutine OutputPrintCouplers(realization_base,istep)
       auxvar_names(1) = 'liquid_pressure'
       iauxvars(2) = GENERAL_ENERGY_DOF
       auxvar_names(2) = 'gas_saturation'
+    case(THS_MODE)
+      !MAN: placeholder
+      option%io_buffer = &
+        'OutputPrintCouplers() not implemented in THS mode'
+      call PrintErrMsg(option)
     case default
       option%io_buffer = &
         'OutputPrintCouplers() not yet supported for this flow mode'

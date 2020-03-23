@@ -1002,6 +1002,8 @@ subroutine PatchInitCouplerAuxVars(coupler_list,patch,option)
                 coupler%flow_aux_real_var = 0.d0
                 coupler%flow_aux_int_var = 0
 
+              case(THS_MODE)
+                !MAN: placeholder
               case default
                 option%io_buffer = 'Failed allocation for flow condition "' // &
                   trim(coupler%flow_condition%name)
@@ -1211,6 +1213,8 @@ subroutine PatchUpdateCouplerAuxVars(patch,coupler_list,force_update_flag, &
             call PatchUpdateCouplerAuxVarsTOI(patch,coupler,option)
           case(TOWG_MODE)
             call PatchUpdateCouplerAuxVarsTOWG(patch,coupler,option)
+          case(THS_MODE)
+            call PatchUpdateCouplerAuxVarsTHS(patch,coupler,option)
         end select
       endif
     endif
@@ -4512,6 +4516,40 @@ end subroutine PatchUpdateCouplerAuxVarsRich
 
 ! ************************************************************************** !
 
+subroutine PatchUpdateCouplerAuxVarsTHS(patch,coupler,option)
+  !
+  ! Updates flow auxiliary variables associated
+  ! with a coupler for THS_MODE
+  !
+  ! Author: Michael Nole
+  ! Date: 03/22/20
+  !
+
+  use Option_module
+  use Condition_module
+  use Hydrostatic_module
+  use Saturation_module
+  use EOS_Water_module
+  use Utility_module
+
+  use THS_Aux_module
+  use Grid_module
+  use Dataset_Common_HDF5_class
+  use Dataset_Gridded_HDF5_class
+  use Dataset_Ascii_class
+  use Dataset_module
+  use String_module
+
+  implicit none
+
+  type(patch_type) :: patch
+  type(coupler_type), pointer :: coupler
+  type(option_type) :: option
+
+end subroutine PatchUpdateCouplerAuxVarsTHS
+
+! ************************************************************************** !
+
 subroutine PatchGetCouplerValueFromDataset(coupler,option,grid,dataset,iconn, &
                                            value)
   !
@@ -4767,7 +4805,7 @@ subroutine PatchScaleSourceSink(patch,source_sink,iscale_type,option)
       !geh: This is a scaling factor that is stored that would be applied to
       !     all phases.
       case(RICHARDS_MODE,RICHARDS_TS_MODE,G_MODE,H_MODE,TH_MODE,TH_TS_MODE, &
-           TOIL_IMS_MODE,WF_MODE)
+           TOIL_IMS_MODE,WF_MODE,THS_MODE)
         source_sink%flow_aux_real_var(ONE_INTEGER,iconn) = &
           vec_ptr(local_id)
       case(MPH_MODE,IMS_MODE,MIS_MODE,FLASH2_MODE)
@@ -7281,6 +7319,10 @@ subroutine PatchGetVariable1(patch,field,reaction_base,option, &
               patch%aux%WIPPFlo%auxvars(ZERO_INTEGER,grid%nL2G(local_id))% &
                 kr(option%liquid_phase)
           enddo
+        case(THS_MODE)
+          !MAN: placeholder
+          option%io_buffer = 'Output of liquid phase relative permeability &
+            &not supported for THS mode.'
         case default
           option%io_buffer = 'Output of liquid phase relative permeability &
             &not supported for current flow mode.'
@@ -8571,6 +8613,10 @@ function PatchGetVariableValueAtCell(patch,field,reaction_base,option, &
         case(WF_MODE)
           value = patch%aux%WIPPFlo%auxvars(ZERO_INTEGER,ghosted_id)% &
                     kr(option%liquid_phase)
+        case(THS_MODE)
+          !MAN: placeholder
+          option%io_buffer = 'Output of liquid phase relative permeability &
+            &not supported for THS mode.'
         case default
           option%io_buffer = 'Output of liquid phase relative permeability &
             &not supported for current flow mode.'

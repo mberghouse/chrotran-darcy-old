@@ -43,6 +43,7 @@ subroutine InitSubsurfFlowSetupRealization(simulation)
   use WIPP_Flow_module
   use TOilIms_module
   use TOWG_module
+  use THS_module
   use Condition_Control_module
   use co2_sw_module, only : init_span_wagner
   use PM_Hydrate_class 
@@ -109,6 +110,8 @@ subroutine InitSubsurfFlowSetupRealization(simulation)
         call TOilImsSetup(realization)
       case(TOWG_MODE)
         call TOWGSetup(realization)
+      case(THS_MODE)
+        call THSSetup(realization)
       case default
         option%io_buffer = 'Unknown flowmode found during <Mode>Setup'
         call PrintErrMsg(option)
@@ -153,6 +156,8 @@ subroutine InitSubsurfFlowSetupRealization(simulation)
         call TOilImsUpdateAuxVars(realization)
       case(TOWG_MODE)
         call TOWGUpdateAuxVars(realization,PETSC_FALSE)
+      case(THS_MODE)
+        call THSUpdateAuxVars(realization)
       case default
         option%io_buffer = 'Unknown flowmode found during <Mode>UpdateAuxVars'
         call PrintErrMsg(option)

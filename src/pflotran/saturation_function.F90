@@ -172,6 +172,11 @@ subroutine SaturationFunctionRead(saturation_function,input,option)
         'supported for GENERAL mode.  Please use CHARACTERISTIC_' // &
         'CURVES card defined on the PFLOTRAN wiki.'
       call PrintErrMsg(option)
+    case(THS_MODE)
+      option%io_buffer = 'SATURATION_FUNCTION card is not ' // &
+        'supported for THS mode.  Please use CHARACTERISTIC_' // &
+        'CURVES card defined on the PFLOTRAN wiki.'
+      call PrintErrMsg(option)
   end select
   
   input%ierr = 0

@@ -76,6 +76,7 @@ mode_aux_obj = \
 	${common_src}pm_surface_th.o \
 	${common_src}pm_surface.o \
 	${common_src}pm_th.o \
+        ${common_src}pm_ths.o \
 	${common_src}pm_th_ts.o \
 	${common_src}pm_ufd_decay.o \
 	${common_src}pm_waste_form.o \
@@ -83,6 +84,7 @@ mode_aux_obj = \
 	${common_src}pm_ufd_biosphere.o \
 	${common_src}richards_aux.o \
 	${common_src}th_aux.o \
+	${common_src}ths_aux.o \
 	${common_src}inlinesurface_aux.o
 
 mode_obj = \
@@ -104,6 +106,8 @@ mode_obj = \
 	${common_src}richards.o \
 	${common_src}richards_common.o \
 	${common_src}th.o \
+	${common_src}ths.o \
+        ${common_src}ths_common.o \
 	${common_src}inlinesurface.o
 
 # DO NOT place any object files that depend on the discretization within 

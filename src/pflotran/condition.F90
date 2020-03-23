@@ -175,6 +175,7 @@ module Condition_module
   public :: FlowConditionCreate, FlowConditionDestroy, FlowConditionRead, &
             FlowConditionGeneralRead, FlowConditionTOilImsRead, &
             FlowConditionHydrateRead, FlowConditionTOWGRead, &
+            FlowConditionTHSRead, &
             FlowConditionAddToList, FlowConditionInitList, &
             FlowConditionDestroyList, &
             FlowConditionGetPtrFromList, FlowConditionUpdate, &
@@ -1636,6 +1637,10 @@ subroutine FlowConditionRead(condition,input,option)
       call PrintMsg(option)
     case(TOIL_IMS_MODE)
       option%io_buffer = 'TOilIms mode not supported in original &
+        &FlowConditionRead.'
+      call PrintMsg(option)
+    case(THS_MODE)
+      option%io_buffer = 'THS mode not supported in original &
         &FlowConditionRead.'
       call PrintMsg(option)
     case(MPH_MODE,IMS_MODE,FLASH2_MODE)
@@ -4309,6 +4314,33 @@ subroutine FlowConditionTOWGRead(condition,input,option)
   call PetscLogEventEnd(logging%event_flow_condition_read,ierr);CHKERRQ(ierr)
 
 end subroutine FlowConditionTOWGRead
+
+! ************************************************************************** !
+
+subroutine FlowConditionTHSRead(condition,input,option)
+  !
+  ! Reads a condition from the input file for THS mode
+  !
+  ! Author: Michael Nole
+  ! Date: 03/22/20
+  !
+
+  use Option_module
+  use Input_Aux_module
+  use String_module
+  use Logging_module
+  use Time_Storage_module
+  use Dataset_module
+
+  implicit none
+
+  type(flow_condition_type) :: condition
+  type(input_type), pointer :: input
+  type(option_type) :: option
+
+
+
+end subroutine FlowConditionTHSRead
 
 ! ************************************************************************** !
 

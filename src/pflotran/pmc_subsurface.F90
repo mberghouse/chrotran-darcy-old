@@ -135,6 +135,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   use PM_UFD_Decay_class
   use PM_TOilIms_class
   use PM_TOWG_class
+  use PM_THS_class
   use Secondary_Continuum_module, only : SecondaryRTUpdateIterate  
   use Solver_module
   use Timestepper_Base_class
@@ -202,7 +203,9 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
             write(*,'(" mode = Hydrate: p, sg/sh/si/X, T")')
           case(WF_MODE) 
             write(*,'(" mode = WIPP Flow: p, sg")')
-          case(TOIL_IMS_MODE)   
+          case(TOIL_IMS_MODE)
+          case(THS_MODE)
+            !MAN: placeholder 
         end select
       endif
 
@@ -343,6 +346,8 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
               Initialized(pm%temperature_change_limit)) then
               add_pre_check = PETSC_TRUE
           endif
+        class is(pm_ths_type)
+          !MAN: placeholder
       end select
 
         if (add_pre_check) then

@@ -260,6 +260,8 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
         piezometric_head_gradient(1:3) = &
           condition%pressure%gradient%rarray(1:3)
       endif
+    case(THS_MODE)
+      !MAN: placeholder
   end select      
 
   if (associated(condition%datum)) then
@@ -393,7 +395,7 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
       dist_z = dist_z + delta_z
       select case(option%iflowmode)
         case(TH_MODE,TH_TS_MODE,MPH_MODE,IMS_MODE,FLASH2_MODE,G_MODE,H_MODE, &
-             MIS_MODE,TOIL_IMS_MODE)
+             MIS_MODE,TOIL_IMS_MODE,THS_MODE)
           temperature = temperature + temperature_gradient(Z_DIRECTION)*delta_z
       end select
       call EOSWaterDensityExt(temperature,pressure0, &
@@ -433,7 +435,8 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
     ! compute pressures below datum, if any
     pressure0 = pressure_array(idatum)
     select case(option%iflowmode)
-      case(TH_MODE,TH_TS_MODE,MPH_MODE,IMS_MODE,FLASH2_MODE,MIS_MODE,G_MODE,TOIL_IMS_MODE)
+      case(TH_MODE,TH_TS_MODE,MPH_MODE,IMS_MODE,FLASH2_MODE,MIS_MODE,G_MODE, &
+           TOIL_IMS_MODE,THS_MODE)
         temperature = temperature_at_datum
     end select
     dist_z = 0.d0
@@ -442,7 +445,7 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
       dist_z = dist_z + delta_z
       select case(option%iflowmode)
         case(TH_MODE,TH_TS_MODE,MPH_MODE,IMS_MODE,MIS_MODE,FLASH2_MODE,G_MODE, &
-          TOIL_IMS_MODE)
+          TOIL_IMS_MODE,THS_MODE)
           temperature = temperature - temperature_gradient(Z_DIRECTION)*delta_z
       end select
       call EOSWaterDensityExt(temperature,pressure0,aux,rho_kg,dummy,ierr)
@@ -650,6 +653,8 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
                     temperature_gradient(Z_DIRECTION)*dist_z 
         coupler%flow_aux_real_var(3,iconn) = &
           temperature
+      case(THS_MODE)
+        !MAN: placeholder
       case default
         coupler%flow_aux_int_var(COUPLER_IPHASE_INDEX,iconn) = 1
     end select

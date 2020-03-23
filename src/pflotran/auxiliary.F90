@@ -4,6 +4,7 @@ module Auxiliary_module
   use petscsys
   use Global_Aux_module
   use TH_Aux_module
+  use THS_Aux_module
   use Richards_Aux_module
   use Reactive_Transport_Aux_module
   use NW_Transport_Aux_module
@@ -33,6 +34,7 @@ module Auxiliary_module
     type(reactive_transport_type), pointer :: RT
     type(nw_transport_type), pointer :: NWT
     type(th_type), pointer :: TH
+    type(ths_type), pointer :: THS
     type(richards_type), pointer :: Richards
     type(mphase_type), pointer :: Mphase
     type(immis_type), pointer :: Immis

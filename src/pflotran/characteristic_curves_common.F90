@@ -469,7 +469,7 @@ subroutine SFConstantVerify(this,name,option)
   endif
   call SFBaseVerify(this,string,option)
   select case(option%iflowmode)
-    case(RICHARDS_MODE,RICHARDS_TS_MODE,TH_MODE,TH_TS_MODE)
+    case(RICHARDS_MODE,RICHARDS_TS_MODE,TH_MODE,TH_TS_MODE,THS_MODE)
       if (Initialized(this%constant_capillary_pressure)) then
         option%io_buffer = 'CONSTANT_CAPILLARY_PRESSURE is not supported for &
           &Richards or TH flow modes as CONSTANT_SATURATION must be applied. &
@@ -486,7 +486,7 @@ subroutine SFConstantVerify(this,name,option)
       if (Initialized(this%constant_saturation)) then
         option%io_buffer = 'CONSTANT_SATURATION is not supported for &
           &multiphase flow modes as CONSTANT_CAPILLARY_PRESSURE must be &
-          &applied. Saturation is a primary dependent variables. &
+          &applied. Saturation is a primary dependent variable. &
           &See ' // trim(string) // '.'
         call PrintErrMsg(option)
       endif

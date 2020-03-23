@@ -628,6 +628,8 @@ subroutine THUpdateAuxVars(realization)
 
   use Realization_Subsurface_class
   use Patch_module
+  
+  implicit none
 
   type(realization_subsurface_type) :: realization
   

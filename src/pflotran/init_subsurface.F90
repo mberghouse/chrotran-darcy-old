@@ -1083,6 +1083,8 @@ subroutine InitSubsurfaceSetupZeroArrays(realization)
         matrix_zeroing => patch%aux%Miscible%matrix_zeroing
       case(FLASH2_MODE)
         matrix_zeroing => patch%aux%Flash2%matrix_zeroing
+      case(THS_MODE)
+        matrix_zeroing => patch%aux%THS%matrix_zeroing
     end select
     call InitSubsurfaceCreateZeroArray(patch,dof_is_active,matrix_zeroing, &
                                        inactive_cells_exist,option)
@@ -1121,6 +1123,9 @@ subroutine InitSubsurfaceSetupZeroArrays(realization)
       case(FLASH2_MODE)
         patch%aux%Flash2%matrix_zeroing => matrix_zeroing
         patch%aux%Flash2%inactive_cells_exist = inactive_cells_exist
+      case(THS_MODE)
+        patch%aux%THS%matrix_zeroing => matrix_zeroing
+        patch%aux%THS%inactive_cells_exist = inactive_cells_exist
     end select
     deallocate(dof_is_active)
   endif

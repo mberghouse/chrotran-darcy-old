@@ -1092,7 +1092,8 @@ subroutine WriteObservationDataForBC(fid,realization_base,patch,connection_set)
   if (associated(connection_set)) then
     offset = connection_set%offset
     select case(option%iflowmode)
-      case(MPH_MODE,TH_MODE,TH_TS_MODE,IMS_MODE,FLASH2_MODE,G_MODE,H_MODE)
+      case(MPH_MODE,TH_MODE,TH_TS_MODE,IMS_MODE,FLASH2_MODE,G_MODE,H_MODE, &
+           THS_MODE)
       case(WF_MODE)
         option%io_buffer = 'WriteObservationDataForBC() needs to be set up &
           & for WIPP Flow, and perhaps the other multiphase flow modes.'
@@ -1697,6 +1698,8 @@ subroutine OutputIntegralFlux(realization_base)
     case(MPH_MODE,FLASH2_MODE,IMS_MODE)
       flow_dof_scale(1) = FMWH2O
       flow_dof_scale(2) = FMWCO2
+    case(THS_MODE)
+      !MAN: placeholder
   end select
 
   if (len_trim(output_option%plot_name) > 2) then
@@ -1739,7 +1742,7 @@ subroutine OutputIntegralFlux(realization_base)
         select case(option%iflowmode)
           case(RICHARDS_MODE,RICHARDS_TS_MODE, &
                TH_MODE,TH_TS_MODE,MIS_MODE,G_MODE,H_MODE,MPH_MODE,FLASH2_MODE, &
-               IMS_MODE,WF_MODE)
+               IMS_MODE,WF_MODE,THS_MODE)
             string = trim(integral_flux%name) // ' Water'
             call OutputWriteToHeader(fid,string,'kg','',icol)
             units = 'kg/' // trim(output_option%tunit) // ''
@@ -1771,10 +1774,12 @@ subroutine OutputIntegralFlux(realization_base)
             units = 'kg/' // trim(output_option%tunit) // ''
             string = trim(integral_flux%name) // ' CO2'
             call OutputWriteToHeader(fid,string,units,'',icol)
+          case(THS_MODE)
+            !MAN: placeholder
         end select
         select case(option%iflowmode)
           case(TH_MODE,TH_TS_MODE,MIS_MODE,G_MODE,H_MODE,MPH_MODE,FLASH2_MODE, &
-               IMS_MODE)
+               IMS_MODE,THS_MODE)
             string = trim(integral_flux%name) // ' Energy'
             call OutputWriteToHeader(fid,string,'MJ','',icol)
             units = 'MJ/' // trim(output_option%tunit) // ''
@@ -1949,6 +1954,7 @@ subroutine OutputMassBalance(realization_base)
   use WIPP_Flow_module, only : WIPPFloComputeMassBalance
   use TOilIms_module, only : TOilImsComputeMassBalance
   use TOWG_module, only : TOWGComputeMassBalance
+  use THS_module, only: THSComputeMassBalance
   use PM_TOilIms_Aux_module
   use PM_TOWG_Aux_module
 
@@ -2123,6 +2129,8 @@ subroutine OutputMassBalance(realization_base)
                                     'kg','',icol)
           call OutputWriteToHeader(fid,'Global Glycol Mass in Liquid Phase', &
                                     'kg','',icol)
+        case(THS_MODE)
+          !MAN: placeholder
       end select
 
       if (option%ntrandof > 0) then
@@ -2271,6 +2279,8 @@ subroutine OutputMassBalance(realization_base)
             call OutputWriteToHeader(fid,string,units,'',icol)
             string = trim(coupler%name) // ' CO2 Mass'
             call OutputWriteToHeader(fid,string,units,'',icol)
+          case(THS_MODE)
+            !MAN: placeholder
         end select
         
         if (option%ntrandof > 0) then
@@ -2385,6 +2395,8 @@ subroutine OutputMassBalance(realization_base)
             call TOilImsComputeMassBalance(realization_base,sum_kg(:,:))
           case(TOWG_MODE)
             call TOWGComputeMassBalance(realization_base,sum_kg(:,:))
+          case(THS_MODE)
+            call THSComputeMassBalance(realization_base,sum_kg(:,:))
         end select
       class default
         option%io_buffer = 'Unrecognized realization class in MassBalance().'
@@ -2407,7 +2419,7 @@ subroutine OutputMassBalance(realization_base)
     if (option%myrank == option%io_rank) then
       select case(option%iflowmode)
         case(RICHARDS_MODE,RICHARDS_TS_MODE,IMS_MODE,MIS_MODE,G_MODE,H_MODE, &
-             TH_MODE,TH_TS_MODE)
+             TH_MODE,TH_TS_MODE,THS_MODE)
           do iphase = 1, option%nphase
             do ispec = 1, option%nflowspec
               write(fid,110,advance="no") sum_kg_global(ispec,iphase)
@@ -2937,6 +2949,8 @@ subroutine OutputMassBalance(realization_base)
             ! change sign for positive in / negative out
             write(fid,110,advance="no") -sum_kg_global(:,1)*output_option%tconv
           endif
+        case(THS_MODE)
+          !MAN: placeholder
       end select
     endif
     

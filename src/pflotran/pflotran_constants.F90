@@ -156,6 +156,7 @@ module PFLOTRAN_Constants_module
   PetscInt, parameter, public :: RICHARDS_TS_MODE = 11
   PetscInt, parameter, public :: TH_TS_MODE = 12
   PetscInt, parameter, public :: H_MODE = 13
+  PetscInt, parameter, public :: THS_MODE = 14
 
   ! flow sub-modes
   PetscInt, parameter, public :: TOWG_IMMISCIBLE = 1

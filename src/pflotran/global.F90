@@ -646,6 +646,8 @@ subroutine GlobalWeightAuxVars(realization,weight)
   !        (weight*auxvars(ghosted_id)%den_store(:,TIME_TpDT)+ &
   !         (1.d0-weight)*auxvars(ghosted_id)%den_store(:,TIME_T))
       enddo  
+    case(THS_MODE)
+      !MAN: placeholder. Not sure if necessary
   end select
   
 end subroutine GlobalWeightAuxVars
@@ -888,6 +890,8 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
       call realization%comm1%LocalToLocal(field%work_loc,field%work_loc)
       call GlobalSetAuxVarVecLoc(realization,field%work_loc,TEMPERATURE, &
                                  time_level)
+    case(THS_MODE)
+      !MAN: placeholder
   end select
 
 end subroutine GlobalUpdateAuxVars

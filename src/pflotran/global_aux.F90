@@ -207,6 +207,8 @@ subroutine GlobalAuxVarInit(auxvar,option)
         allocate(auxvar%pres_store(nphase,TWO_INTEGER))
         auxvar%pres_store = 0.d0
       endif
+    case(THS_MODE)
+      !MAN: placeholder
     case default
   end select
   

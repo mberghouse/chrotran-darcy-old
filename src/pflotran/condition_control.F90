@@ -917,6 +917,9 @@ subroutine CondControlAssignFlowInitCond(realization)
      
         call VecRestoreArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
 
+      case(THS_MODE)
+        !MAN: placeholder
+
       case default
         ! assign initial conditions values to domain
         call VecGetArrayF90(field%flow_xx,xx_p, ierr);CHKERRQ(ierr)
@@ -1837,7 +1840,7 @@ subroutine CondControlScaleSourceSink(realization)
         ghosted_id = grid%nL2G(local_id)
 
         select case(option%iflowmode)
-          case(RICHARDS_MODE,RICHARDS_TS_MODE,G_MODE,WF_MODE,H_MODE)
+          case(RICHARDS_MODE,RICHARDS_TS_MODE,G_MODE,WF_MODE,H_MODE,THS_MODE)
               call GridGetGhostedNeighbors(grid,ghosted_id,DMDA_STENCIL_STAR, &
                                           x_width,y_width,z_width, &
                                           x_count,y_count,z_count, &
@@ -1901,6 +1904,9 @@ subroutine CondControlScaleSourceSink(realization)
           case(IMS_MODE)
           case(MIS_MODE)
           case(FLASH2_MODE)
+          case(THS_MODE)
+            cur_source_sink%flow_aux_real_var(ONE_INTEGER,iconn) = &
+              vec_ptr(local_id)
         end select
 
       enddo
