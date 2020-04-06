@@ -14,6 +14,12 @@ END
 
 SUBSURFACE
 
+#=========================== solvers =======================================
+
+LINEAR_SOLVER FLOW
+  DTOL 1.d9
+END
+
 #=========================== regression =======================================
 REGRESSION
   CELLS
