@@ -339,7 +339,8 @@ subroutine PMSubsurfaceFlowSetup(this)
           if (.not.sf%ignore_permeability .and. &
               .not.(this%option%iflowmode == WF_MODE .or. &
                     this%option%iflowmode == G_MODE .or. &
-                    this%option%iflowmode == H_MODE)) then
+                    this%option%iflowmode == H_MODE .or. &
+                    this%option%iflowmode == RICHARDS_MODE)) then
             this%option%io_buffer = 'A WIPP capillary pressure - saturation &
               &function (' // trim(cur_cc%name) // ') is being used without &
               &the IGNORE_PERMEABILITY feature in a flow mode &
