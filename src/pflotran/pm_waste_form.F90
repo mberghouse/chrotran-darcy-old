@@ -22,6 +22,8 @@ module PM_Waste_Form_class
   use Dataset_Ascii_class
   use Region_module
   use Checkpoint_module
+  use kNNr_module
+  use kdtree2_module
  
   use PFLOTRAN_Constants_module
   use Utility_module, only : Equal
@@ -277,8 +279,9 @@ module PM_Waste_Form_class
     PetscReal, pointer :: scaler_means(:)
     PetscReal, pointer :: scaler_variances(:)
   contains
-    procedure, public :: Dissolution => WFMechFMDMSurrogateDissolution
-  end type wf_mechanism_fmdm_surrogate_type
+    procedure, public :: Dissolution => WFMechFMDMSurrogatekNNr
+ end type wf_mechanism_fmdm_surrogate_type
+ !!!CHANGE BACK
 ! -----------------------------------------------------------------------
   
 ! OBJECT wf_mechanism_custom_type:
@@ -404,7 +407,7 @@ module PM_Waste_Form_class
   contains
     procedure, public :: SetRealization => PMWFSetRealization
     procedure, public :: Setup => PMWFSetup
-    procedure, public :: ReadPMBlock => PMWFReadPMBlock
+    procedure, public :: ReadPMBlock => PMWFRead
     procedure, public :: InitializeRun => PMWFInitializeRun
     procedure, public :: InitializeTimestep => PMWFInitializeTimestep
     procedure, public :: FinalizeTimestep => PMWFFinalizeTimestep
@@ -753,6 +756,66 @@ end function PMWFMechanismFMDMSurrogateCreate
 
 ! ************************************************************************** !
 
+function PMWFMechanismFMDMkNNrCreate()
+  ! 
+  ! Testing
+  ! 
+  ! Author: Tom Seidl
+  ! Date: 03/05/2019
+
+
+
+  use kNNr_module
+
+  implicit none
+
+! LOCAL VARIABLES:
+! ================
+! PMWFMechanismFMDMkNNrCreate (output): new FMDM surrogate
+! mechanism object
+! surrfmdm: new FMDM mechanism object with shorter name
+! ----------------------------------------------------------------- 
+  class(wf_mechanism_fmdm_surrogate_type), pointer :: PMWFMechanismFMDMkNNrCreate
+  class(wf_mechanism_fmdm_surrogate_type), pointer :: surrfmdm
+! -----------------------------------------------------------------
+
+  allocate(surrfmdm)
+  call PMWFMechanismInit(surrfmdm)
+
+  surrfmdm%dissolution_rate = UNINITIALIZED_DOUBLE       ! kg/m^2/sec
+  surrfmdm%frac_dissolution_rate = UNINITIALIZED_DOUBLE  ! 1/day
+  surrfmdm%burnup = UNINITIALIZED_DOUBLE                 ! GWd/MTHM
+  surrfmdm%decay_time = UNINITIALIZED_DOUBLE    ! K
+  ! TS - may want to change to C later
+
+  surrfmdm%num_concentrations = 4  ! hardwired
+  surrfmdm%iCO3_2n = 1
+  surrfmdm%iO2 = 2
+  surrfmdm%iFe_2p = 3
+  surrfmdm%iH2 = 4
+
+  allocate(surrfmdm%mapping_surrfmdm_to_pflotran(surrfmdm%num_concentrations))
+  surrfmdm%mapping_surrfmdm_to_pflotran = UNINITIALIZED_INTEGER
+
+  allocate(surrfmdm%concentration(surrfmdm%num_concentrations))
+  surrfmdm%concentration = 1.d-13
+
+  allocate(surrfmdm%mapping_surrfmdm(4))
+  surrfmdm%mapping_surrfmdm = [surrfmdm%iO2,surrfmdm%iCO3_2n, &
+       surrfmdm%iH2,surrfmdm%iFe_2p]
+
+  print *, 'begin knnr_init'
+
+  call knnr_init( )
+
+  
+
+
+  PMWFMechanismFMDMkNNrCreate => surrfmdm
+
+end function PMWFMechanismFMDMknnrCreate
+! ***************************************************
+
 function PMWFMechanismCustomCreate()
   ! 
   ! Creates the 'custom' waste form mechanism package
@@ -903,7 +966,7 @@ end function PMWFCreate
 
 ! ************************************************************************** !
 
-subroutine PMWFReadPMBlock(this,input)
+subroutine PMWFRead(this,input)
   ! 
   ! Reads input file parameters associated with the waste form process model
   ! 
@@ -963,6 +1026,9 @@ subroutine PMWFReadPMBlock(this,input)
     call StringToUpper(word)
 
     found = PETSC_FALSE
+    !    call PMBaseReadSelectCase(this,input,word,found,error_string,option)
+    word = 'PRINT_MASS_BALANCE'
+    if (found) cycle    
     
     select case(trim(word))
     !-------------------------------------
@@ -1112,7 +1178,7 @@ subroutine PMWFReadPMBlock(this,input)
     cur_waste_form => cur_waste_form%next
   enddo
     
-end subroutine PMWFReadPMBlock
+end subroutine PMWFRead
 
 ! ************************************************************************** !
 
@@ -1220,10 +1286,17 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
           allocate(new_mechanism)
           new_mechanism => PMWFMechanismFMDMCreate()
       !---------------------------------
-        case('FMDM_SURROGATE')
+       case('FMDM_SURROGATE')
+          print *, "HEREHEREHERE"
           error_string = trim(error_string) // ' FMDM_SURROGATE'
           allocate(new_mechanism)
           new_mechanism => PMWFMechanismFMDMSurrogateCreate()
+      !---------------------------------
+        case('FMDM_KNNR')
+          print *, "HEREHEREHERE2"
+          error_string = trim(error_string) // ' FMDM_KNNR'
+          allocate(new_mechanism)
+          new_mechanism => PMWFMechanismFMDMkNNrCreate()
       !---------------------------------
         case('CUSTOM')
           error_string = trim(error_string) // ' CUSTOM'
@@ -2961,12 +3034,6 @@ subroutine PMWFInitializeTimestep(this)
         cur_waste_form%inst_release_amount(k) = &
            (cwfm%rad_species_list(k)%inst_release_fraction * &
             cur_waste_form%rad_concentration(k))
-
-        ! Update cumulative release (mol) to include instantaneous release
-        cur_waste_form%cumulative_mass(k) = cur_waste_form% &
-                  cumulative_mass(k) + cur_waste_form%inst_release_amount(k) * &
-                  cur_waste_form%volume * cwfm%matrix_density * 1.d3
-
         cur_waste_form%rad_concentration(k) = &
            cur_waste_form%rad_concentration(k) - &
            cur_waste_form%inst_release_amount(k)
@@ -2995,9 +3062,7 @@ subroutine PMWFInitializeTimestep(this)
           xx_p(idof) = xx_p(idof) + & 
                        (inst_release_molality*cur_waste_form%scaling_factor(f))
         enddo
-
       enddo
-
       cur_waste_form%breached = PETSC_TRUE 
       cur_waste_form%breach_time = option%time
       call VecRestoreArrayF90(field%tran_xx,xx_p,ierr);CHKERRQ(ierr)
@@ -3972,6 +4037,8 @@ subroutine WFMechFMDMSurrogateDissolution(this,waste_form,pm,ierr)
                           this%inner_weights, this%scaler_means, &
                           this%scaler_variances, this%dissolution_rate)
 
+  print *,this%dissolution_rate
+
   ! convert total component concentration from mol/m3 back to mol/L (/1.d3)
   this%concentration = this%concentration/1.d3
   ! convert this%dissolution_rate from fmdm to pflotran units:
@@ -3996,6 +4063,138 @@ subroutine WFMechFMDMSurrogateDissolution(this,waste_form,pm,ierr)
   
 end subroutine WFMechFMDMSurrogateDissolution
 
+! ************************************************************************** !
+
+subroutine WFMechFMDMSurrogatekNNr(this,waste_form,pm,ierr)
+  !
+  ! Calculates the FMDM waste form dissolution rate using a
+  ! single-layer feed-forward artifical neural network
+  ! SURROGATE APPROXIMATION of the FMDM model
+  !
+  ! Author: Tom Seidl (with old code by Jenn Frederick and Glenn Hammond)
+  ! Date: 11/12/2019
+
+  use Grid_module
+  use Reactive_Transport_Aux_module
+  use Global_Aux_module
+  use Option_module
+  use Utility_module
+  use kNNr_module
+
+  implicit none
+  
+! INPUT ARGUMENTS:
+! ================
+! this (input/output): base mechanism object
+! waste_form (input/output): base waste form object
+! pm (input/output): waste form process model
+! ierr (input/output): [-] PETSc error integer
+! -----------------------------------------
+  class(wf_mechanism_fmdm_surrogate_type) :: this
+  class(waste_form_base_type) :: waste_form
+  class(pm_waste_form_type) :: pm
+  PetscErrorCode :: ierr
+! -----------------------------------------
+  
+! LOCAL VARIABLES:
+! ================
+! grid: pointer to grid object
+! rt_auxvars(:): pointer to reactive transport auxvar object, which stores
+!    the total component concentration, and is indexed by the ghosted cell id
+! i, k: [-] looping index integers
+! icomp_fmdm: [-] FMDM species component number
+! icomp_pflotran: [-] species component number mapped from FMDM to PFLOTRAN
+! ghosted_id: [-] ghosted grid cell id
+! avg_temp_local: [C] average temperature in the waste form region
+! --------------------------------------------------------------
+  type(grid_type), pointer :: grid
+  type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:)
+  PetscInt :: i, k
+  PetscInt :: icomp_surrfmdm
+  PetscInt :: icomp_pflotran
+  PetscInt :: ghosted_id
+  PetscReal :: avg_temp_local
+! --------------------------------------------------------------
+  
+ ! FMDM surrogate model: 
+ !=======================================================
+  PetscReal :: time
+  PetscReal :: avg_temp_global
+  type(global_auxvar_type), pointer :: global_auxvars(:)
+  type(option_type), pointer :: option
+ !========================================================
+  
+  grid => pm%realization%patch%grid
+  rt_auxvars => pm%realization%patch%aux%RT%auxvars
+  global_auxvars => pm%realization%patch%aux%Global%auxvars
+  option => pm%realization%option
+
+  do k = 1,waste_form%region%num_cells
+    ghosted_id = grid%nL2G(waste_form%region%cell_ids(k))
+    ! overwrite the components in mapping_pflotran array
+    do i = 1, size(this%mapping_surrfmdm)
+      icomp_surrfmdm = this%mapping_surrfmdm(i)
+      icomp_pflotran = this%mapping_surrfmdm_to_pflotran(icomp_surrfmdm)
+      this%concentration(icomp_surrfmdm) = &
+        rt_auxvars(ghosted_id)%total(icomp_pflotran,LIQUID_PHASE)
+    enddo
+  enddo
+  
+  ! convert total component concentration from mol/L to mol/m3 (*1.d3)
+  this%concentration = this%concentration*1.d3
+  
+ ! FMDM surrogate model calculates this%dissolution_rate [g/m^2/yr]:
+ !====================================================================
+  time = option%time
+  
+  avg_temp_local = 0.d0
+  do i = 1,waste_form%region%num_cells
+    ghosted_id = grid%nL2G(waste_form%region%cell_ids(i))
+    avg_temp_local = avg_temp_local + &  ! Celcius
+               global_auxvars(ghosted_id)%temp * waste_form%scaling_factor(i)
+  enddo
+  call CalcParallelSUM(option,waste_form%rank_list,avg_temp_local, &
+       avg_temp_global)
+
+  print *, 'begin knnr_query'
+
+  call knnr_query(avg_temp_global,this%decay_time,this%concentration, &
+       this%dissolution_rate)
+
+  call knnr_close()
+
+  print *,'end knnr_query, printing dissolution'
+
+  print *,this%dissolution_rate
+  
+
+!  call AMP_surrogate_step(this%burnup, time, avg_temp_global, &
+!                          this%concentration, this%decay_time, &
+!                          this%dissolution_rate)
+
+  ! convert total component concentration from mol/m3 back to mol/L (/1.d3)
+  this%concentration = this%concentration/1.d3
+  ! convert this%dissolution_rate from fmdm to pflotran units:
+  ! g/m^2/yr => kg/m^2/sec
+  this%dissolution_rate = this%dissolution_rate / &
+                          (1000.d0*24.d0*3600.d0*DAYS_PER_YEAR)
+
+  ierr = 0
+  !==================
+  this%frac_dissolution_rate = &    ! 1/sec
+    this%dissolution_rate * &       ! kg-matrix/m^2/sec
+    this%specific_surface_area      ! m^2/kg-matrix
+  !==================
+  
+  ! kg-matrix / sec
+  waste_form%eff_dissolution_rate = &
+     this%dissolution_rate * &         ! kg-matrix/m^2/sec
+     this%specific_surface_area * &    ! m^2/kg-matrix
+     this%matrix_density * &           ! kg-matrix/m^3-matrix
+     waste_form%volume * &             ! m^3-matrix
+     waste_form%exposure_factor        ! [-]
+  
+end subroutine WFMechFMDMSurrogatekNNr
 ! ************************************************************************** !
 
 subroutine WFMechCustomDissolution(this,waste_form,pm,ierr) 
@@ -4322,13 +4521,13 @@ subroutine PMWFOutputHeader(this)
                              icolumn)
     do i = 1, cur_waste_form%mechanism%num_species
       variable_string = trim(cur_waste_form%mechanism%rad_species_list(i)%name) &
-                        // ' Cum. Release'
+                        // ' Cum. Mass Flux'
       ! cumulative
       units_string = 'mol'
       call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                                icolumn)
       variable_string = trim(cur_waste_form%mechanism%rad_species_list(i)%name) &
-                        // ' Release Rate'
+                        // ' Inst. Mass Flux'
       ! instantaneous
       units_string = 'mol/s' !// trim(adjustl(output_option%tunit))
       call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
@@ -4347,11 +4546,11 @@ subroutine PMWFOutputHeader(this)
     units_string = 'm^3'
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
-    variable_string = 'Canister Vitality Deg. Rate'
+    variable_string = 'WF Vitality Degradation Rate'
     units_string = '1/yr'
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
-    variable_string = 'Canister Vitality'
+    variable_string = 'WF Canister Vitality'
     units_string = '%' 
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)

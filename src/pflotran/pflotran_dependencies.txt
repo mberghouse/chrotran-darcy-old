@@ -547,7 +547,7 @@ pm_auxiliary.o : communicator_base.o global_aux.o init_subsurface.o \
                  reaction_aux.o reactive_transport_aux.o \
                  realization_subsurface.o string.o
 pm_base.o : input_aux.o option.o output_aux.o pflotran_constants.o \
-            realization_base.o solver.o string.o
+            region.o realization_base.o solver.o string.o
 pm_base_aux.o : auxvars_base.o grid.o matrix_zeroing.o option.o \
                 pflotran_constants.o utility.o
 pm_base_pointer.o : pflotran_constants.o pm_base.o
@@ -679,7 +679,8 @@ pm_waste_form.o : checkpoint.o condition.o data_mediator_vec.o dataset.o \
                   material_aux.o option.o output_aux.o patch.o \
                   pflotran_constants.o pm_base.o reaction_aux.o \
                   reactive_transport_aux.o realization_base.o \
-                  realization_subsurface.o region.o string.o units.o utility.o
+                  realization_subsurface.o region.o string.o units.o utility.o \
+		  knnr.o kdtree2.o
 pm_wipp_flow.o : checkpoint.o convergence.o dataset.o dataset_base.o \
                  dataset_common_hdf5.o debug.o discretization.o field.o \
                  global.o global_aux.o grid.o hdf5.o input_aux.o material.o \
