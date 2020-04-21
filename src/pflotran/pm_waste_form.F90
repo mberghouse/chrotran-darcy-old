@@ -407,7 +407,7 @@ module PM_Waste_Form_class
   contains
     procedure, public :: SetRealization => PMWFSetRealization
     procedure, public :: Setup => PMWFSetup
-    procedure, public :: ReadPMBlock => PMWFRead
+    procedure, public :: ReadPMBlock => PMWFReadBlock
     procedure, public :: InitializeRun => PMWFInitializeRun
     procedure, public :: InitializeTimestep => PMWFInitializeTimestep
     procedure, public :: FinalizeTimestep => PMWFFinalizeTimestep
@@ -966,7 +966,7 @@ end function PMWFCreate
 
 ! ************************************************************************** !
 
-subroutine PMWFRead(this,input)
+subroutine PMWFReadBlock(this,input)
   ! 
   ! Reads input file parameters associated with the waste form process model
   ! 
@@ -1026,9 +1026,7 @@ subroutine PMWFRead(this,input)
     call StringToUpper(word)
 
     found = PETSC_FALSE
-    !    call PMBaseReadSelectCase(this,input,word,found,error_string,option)
-    word = 'PRINT_MASS_BALANCE'
-    if (found) cycle    
+    
     
     select case(trim(word))
     !-------------------------------------
@@ -1178,7 +1176,7 @@ subroutine PMWFRead(this,input)
     cur_waste_form => cur_waste_form%next
   enddo
     
-end subroutine PMWFRead
+end subroutine PMWFReadBlock
 
 ! ************************************************************************** !
 
@@ -1287,13 +1285,12 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
           new_mechanism => PMWFMechanismFMDMCreate()
       !---------------------------------
        case('FMDM_SURROGATE')
-          print *, "HEREHEREHERE"
           error_string = trim(error_string) // ' FMDM_SURROGATE'
           allocate(new_mechanism)
           new_mechanism => PMWFMechanismFMDMSurrogateCreate()
       !---------------------------------
         case('FMDM_KNNR')
-          print *, "HEREHEREHERE2"
+
           error_string = trim(error_string) // ' FMDM_KNNR'
           allocate(new_mechanism)
           new_mechanism => PMWFMechanismFMDMkNNrCreate()
@@ -4158,10 +4155,10 @@ subroutine WFMechFMDMSurrogatekNNr(this,waste_form,pm,ierr)
 
   print *, 'begin knnr_query'
 
-  call knnr_query(avg_temp_global,this%decay_time,this%concentration, &
+  call knnr_query(this%burnup, time,avg_temp_global,this%decay_time,this%concentration, &
        this%dissolution_rate)
 
-  call knnr_close()
+!  call knnr_close()
 
   print *,'end knnr_query, printing dissolution'
 
@@ -5223,9 +5220,10 @@ subroutine PMWFStrip(this)
   class(waste_form_base_type), pointer :: cur_waste_form
   class(waste_form_base_type), pointer :: prev_waste_form
 ! -------------------------------------------------------
-
+ 
   nullify(this%realization)
   nullify(this%data_mediator)
+ 
 
   cur_waste_form => this%waste_form_list
   do
@@ -5233,7 +5231,8 @@ subroutine PMWFStrip(this)
     prev_waste_form => cur_waste_form
     cur_waste_form => cur_waste_form%next
     call PMWFDestroyWasteForm(prev_waste_form)
-  enddo
+ enddo
+ 
   nullify(this%waste_form_list)
   call PMWFMechanismStrip(this)
 !   call CriticalityStrip(this%criticality_mediator)
@@ -5251,6 +5250,7 @@ subroutine PMWFMechanismStrip(this)
   !
   
   use Utility_module, only : DeallocateArray
+  use kNNr_module
   
   implicit none
   
@@ -5282,14 +5282,17 @@ subroutine PMWFMechanismStrip(this)
         call DeallocateArray(prev_mechanism%concentration)
         call DeallocateArray(prev_mechanism%mapping_fmdm)
         call DeallocateArray(prev_mechanism%mapping_fmdm_to_pflotran)
-      type is (wf_mechanism_fmdm_surrogate_type)
+     type is (wf_mechanism_fmdm_surrogate_type)
+        
         call DeallocateArray(prev_mechanism%concentration)
         call DeallocateArray(prev_mechanism%mapping_surrfmdm)
         call DeallocateArray(prev_mechanism%mapping_surrfmdm_to_pflotran)
-        call DeallocateArray(prev_mechanism%outer_weights)
-        call DeallocateArray(prev_mechanism%inner_weights)
-        call DeallocateArray(prev_mechanism%scaler_means)
-        call DeallocateArray(prev_mechanism%scaler_variances)
+!        call DeallocateArray(prev_mechanism%outer_weights)
+!        call DeallocateArray(prev_mechanism%inner_weights)
+!        call DeallocateArray(prev_mechanism%scaler_means)
+!        call DeallocateArray(prev_mechanism%scaler_variances)
+        call knnr_close()
+       
     end select
     deallocate(prev_mechanism)
     nullify(prev_mechanism)
@@ -5356,6 +5359,7 @@ subroutine PMWFDestroy(this)
   
   write(*,'(/,a)') 'PM Waste Form time = ' // trim(adjustl(word)) // ' seconds'
   call PMWFStrip(this)
+ 
   
 end subroutine PMWFDestroy
 
