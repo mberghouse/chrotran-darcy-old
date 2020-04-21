@@ -34,11 +34,7 @@ contains
   implicit none
 
   character ( len = 80 ) :: csv_file_name = 'test_data.csv'
-!  character ( len = 80 ) :: csv_file_name = '../data_conditioning/clean_data_test.csv'
-  !  character ( len = 80 ) :: csv_file_name = 'TEST_amp_chunk_500_runs_1_NO_10803-10809.csv'
-  !  character ( len = 100 ) :: csv_file_name = 'TEST_amp_chunk_500_runs_1_NO_10803-10809.csv'
-  !  character ( len = 100 ) :: csv_file_name = 'TEST_amp_chunk_500_runs_1_NO_10803-10809_NO25341-25345_26451.csv'
-  !  character ( len = 100 ) :: csv_file_name = '../knnr_metamodel/refactoring/data/test_5k/amp_chunk_500_runs_1.csv'
+
   integer   ( kind = 4 ) csv_file_status
   integer   ( kind = 4 ) csv_file_unit
   integer   ( kind = 4 ) csv_record_status
@@ -58,34 +54,20 @@ contains
 
 
   call csv_file_open_read ( csv_file_name, csv_file_unit )
-  !  write (*, '(a)') 'Reading Header Line '
+
   read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
 
   call csv_value_count ( record, csv_record_status, value_count )
 
-!  write (*,*)
-!  write (*,*)                'Input file: '
 
-
-  ! Allocate space for all elements
-!  line_num = 26753 ! (For debugging segmentation fault issues with data)
   allocate(table_data(line_num-1,value_count))
 
-  ! Read and parse the data file
-!  write (*, *)
-!  write (*, '(a)') 'Reading data... '
-!  write (*, *)
+
 
   do i = 1, line_num - 1
-    ! do i = 1, 2 ! read two more lines
-    ! write (*, *)
-    ! write (*, '(a,i6)') 'Reading line ', i
+
     read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
-    ! write ( *, '(a,a)' ) 'Record: ', trim ( record )
-    ! call csv_value_count ( record, csv_record_status, value_count )
-    ! write ( *, * ) i, value_count
-    ! write (*, '(a,i4,a)') 'with ', value_count, ' entries'
-    ! call csv_values_extract ( record, csv_record_status, value_count, my_values)
+
 
     ! TODO: Need to add some error checking that throws a fit if any lines have less than the expected number of records
     call csv_values_extract ( record, csv_record_status, this_value_count, my_values, vl, al)
@@ -95,9 +77,7 @@ contains
 !    endif
 
     do i_v = 1, value_count
-      ! write (*, '(a,i4,a,a)') 'Value ', i_v, ' is ', my_values(i_v)
       read(my_values(i_v), *) table_data(i,i_v)
-      ! write (*, '(a,i4,a,e15.5)') 'Value ', i_v, ' is ', table_data(i,i_v)
     end do
   end do
 
@@ -733,10 +713,18 @@ subroutine knnr_init()
 
   do i_d = 1, d
     do i_n = 1, n
-      my_array(i_d,i_n) = log(table_data(i_n,i_d))
-!      my_array(i_d,i_n) = table_data(i_n,i_d)
+       if (i_d == 1) then
+          my_array(i_d,i_n) = table_data(i_n,i_d)
+       else
+          my_array(i_d,i_n) = log(table_data(i_n,i_d))
+       endif     
     end do
  end do
+
+! do i_n =1,n
+!    my_array(1,i_n) = table_data (i_n,1)
+ !end do
+
 
  print *, 'beginning tree'
 
@@ -808,8 +796,9 @@ subroutine knnr_init()
   f(5) = log10(conc(4)) ! Env_H2
   f(6) = log10(rad0)
 
+  print *, f
   
-  nn=10
+  nn=7
 
   allocate(results(nn))
   print *, 'calling nearest'
@@ -831,7 +820,7 @@ subroutine knnr_init()
   end do
 
   print *, 'almost there'
-  fuelDisRate = qoi_sum/float(nn)
+  fuelDisRate = (qoi_sum/float(nn))*270.0
 
 end subroutine knnr_query
 
