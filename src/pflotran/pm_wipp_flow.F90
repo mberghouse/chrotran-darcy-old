@@ -66,7 +66,11 @@ module PM_WIPP_Flow_class
     PetscReal :: auto_pressure_Pb_0
     PetscReal :: auto_press_shallow_origin(3)
     PetscReal :: linear_system_scaling_factor
-    PetscBool :: scale_linear_system
+    PetscBool :: scale_linear_system ! Jacobian and residual is scaled 
+                                     ! just before the PETSc solver.
+    PetscBool :: scale_pressure ! pressure solution itself is scaled 
+                                ! this is used for advanced nonlinear methods
+    PetscReal :: pressure_scaling_factor ! user set parameter (default 1.d7)
     Vec :: scaling_vec
     ! When reading Dirichlet 2D Flared BC
     PetscInt, pointer :: dirichlet_dofs_ghosted(:) ! this array is zero-based indexing
@@ -190,6 +194,8 @@ subroutine PMWIPPFloInitObject(this)
   this%auto_press_shallow_origin = UNINITIALIZED_DOUBLE !this will default to dip rotation origin later
   this%linear_system_scaling_factor = 1.d7
   this%scale_linear_system = PETSC_TRUE
+  this%scale_pressure = PETSC_FALSE
+  this%pressure_scaling_factor = 1.d7
   this%scaling_vec = PETSC_NULL_VEC
   nullify(this%dirichlet_dofs_ghosted)
   nullify(this%dirichlet_dofs_ints)
@@ -457,6 +463,12 @@ subroutine PMWIPPFloRead(this,input)
         this%scale_linear_system = PETSC_TRUE
       case('DO_NOT_SCALE_JACOBIAN')
         this%scale_linear_system = PETSC_FALSE
+      case('SCALE_PRESSURE') ! This option will scale solution, residual, and Jacobian
+        this%scale_pressure = PETSC_TRUE
+        this%scale_linear_system = PETSC_TRUE
+        call InputReadDouble(input,option,this%pressure_scaling_factor)
+        call InputErrorMsg(input,option,keyword,error_string)
+        this%linear_system_scaling_factor = this%pressure_scaling_factor
       case('2D_FLARED_DIRICHLET_BCS')
         icount = 0
         do
