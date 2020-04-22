@@ -1,6 +1,6 @@
-module table_data_mod
-  real ( kind = 8 ), allocatable :: table_data(:,:)
-end module table_data_mod
+!module table_data_mod
+  
+!end module table_data_mod
 
 !*****************************************************************************80
 
@@ -9,7 +9,7 @@ end module table_data_mod
 module kNNr_module
 
 #include "petsc/finclude/petscsys.h"
-  use table_data_mod
+!  use table_data_mod
   use kdtree2_module
 !  use time_kdtree
   use petscvec
@@ -21,6 +21,7 @@ module kNNr_module
   type(kdtree2), pointer :: tree, tree2, tree3
   real(kdkind), dimension(:,:), allocatable :: my_array
   integer :: n, d
+  real ( kind = 8 ), allocatable :: table_data(:,:)
 
 contains
   
@@ -30,7 +31,7 @@ contains
 !! reads a CSV table data file, with one header line, and real valued entries after that.
 !
 !*****************************************************************************80
-  use table_data_mod
+!  use table_data_mod
   implicit none
 
   character ( len = 80 ) :: csv_file_name = 'test_data.csv'
@@ -334,75 +335,7 @@ subroutine csv_file_close_read ( csv_file_name, csv_file_unit )
   return
 end subroutine csv_file_close_read
 
-subroutine csv_file_close_write ( csv_file_name, csv_file_unit )
 
-!*****************************************************************************80
-!
-!! CSV_FILE_CLOSE_WRITE closes a CSV file for writing.
-!
-!  Licensing:
-!
-!    This code is distributed under the GNU LGPL license.
-!
-!  Modified:
-!
-!    22 November 2008
-!
-!  Author:
-!
-!    John Burkardt
-!
-!  Parameters:
-!
-!    Input, character ( len = * ) CSV_FILE_NAME, the name of the file.
-!
-!    Input, integer ( kind = 4 ) CSV_FILE_UNIT, the unit number
-!
-  implicit none
-
-  character ( len = * ) csv_file_name
-  integer ( kind = 4 ) csv_file_unit
-
-  close ( unit = csv_file_unit )
-
-  return
-end subroutine csv_file_close_write
-
-subroutine csv_file_header_write ( csv_file_name, csv_file_unit, header )
-
-!*****************************************************************************80
-!
-!! CSV_FILE_HEADER_WRITE writes a header to a CSV file.
-!
-!  Licensing:
-!
-!    This code is distributed under the GNU LGPL license.
-!
-!  Modified:
-!
-!    22 November 2008
-!
-!  Author:
-!
-!    John Burkardt
-!
-!  Parameters:
-!
-!    Input, character ( len = * ) CSV_FILE_NAME, the name of the file.
-!
-!    Input, integer ( kind = 4 ) CSV_FILE_UNIT, the unit number
-!
-!    Input, character ( len = * ) HEADER, the header.
-!
-  implicit none
-
-  character ( len = * ) csv_file_name
-  integer ( kind = 4 ) csv_file_unit
-  character ( len = * ) header
-
-
-  return
-end subroutine csv_file_header_write
 
 subroutine csv_file_line_count ( csv_file_name, line_num )
 
@@ -477,41 +410,7 @@ subroutine csv_file_line_count ( csv_file_name, line_num )
   return
 end subroutine csv_file_line_count
 
-subroutine csv_file_record_write ( csv_file_name, csv_file_unit, record )
 
-!*****************************************************************************80
-!
-!! CSV_FILE_RECORD_WRITE writes a record to a CSV file.
-!
-!  Licensing:
-!
-!    This code is distributed under the GNU LGPL license.
-!
-!  Modified:
-!
-!    22 November 2008
-!
-!  Author:
-!
-!    John Burkardt
-!
-!  Parameters:
-!
-!    Input, character ( len = * ) CSV_FILE_NAME, the name of the file.
-!
-!    Input, integer ( kind = 4 ) CSV_FILE_UNIT, the unit number
-!
-!    Input, character ( len = * ) RECORD, the record.
-!
-  implicit none
-
-  character ( len = * ) csv_file_name
-  integer ( kind = 4 ) csv_file_unit
-  character ( len = * ) record
-
-
-  return
-end subroutine csv_file_record_write
 
 subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
 
@@ -558,50 +457,6 @@ subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
 
   return
 end subroutine csv_file_open_read
-
-subroutine csv_file_open_write ( csv_file_name, csv_file_unit )
-
-!*****************************************************************************80
-!
-!! CSV_FILE_OPEN_WRITE opens a CSV file for writing.
-!
-!  Licensing:
-!
-!    This code is distributed under the GNU LGPL license.
-!
-!  Modified:
-!
-!    22 November 2008
-!
-!  Author:
-!
-!    John Burkardt
-!
-!  Parameters:
-!
-!    Input, character ( len = * ) CSV_FILE_NAME, the name of the file.
-!
-!    Output, integer ( kind = 4 ) CSV_FILE_UNIT, the unit number
-!
-  implicit none
-
-  character ( len = * ) csv_file_name
-  integer ( kind = 4 ) csv_file_status
-  integer ( kind = 4 ) csv_file_unit
-
-  call get_unit ( csv_file_unit )
-
-  open ( unit = csv_file_unit, file = csv_file_name, status = 'replace', &
-    iostat = csv_file_status )
-
-
-
-  return
-end subroutine csv_file_open_write
-
-
-
-
 
 subroutine get_unit ( iunit )
 
@@ -672,7 +527,6 @@ end subroutine get_unit
 
 
 
-
 !***********************************
 !***********************************
 !***********************************
@@ -691,15 +545,13 @@ subroutine knnr_init()
   integer :: i_n,i_d,k
 
 
-
-
   integer, dimension(2) :: data_array_shape
 
-  print *, 'reading csv data'
+
 
   call read_my_csv_data ()
 
-  print *, 'done reading csv data'
+
 
   
 
@@ -721,18 +573,10 @@ subroutine knnr_init()
     end do
  end do
 
-! do i_n =1,n
-!    my_array(1,i_n) = table_data (i_n,1)
- !end do
 
-
- print *, 'beginning tree'
 
  tree => kdtree2_create(my_array,sort=.false.,rearrange=.false.)  ! this is how you create a tree.
 
-  print *, 'end tree'
-
-  !!!!SAVE TREE!!!!
 
   end subroutine knnr_init
   
@@ -787,6 +631,7 @@ subroutine knnr_init()
         + 20.97112373957833d0*f2 + 678.8463343193430d0*f3 &
         - 506.7149017370657d0*f4 + 0.1555448893425319d0*f5
   rad0 = max(exp(rad0a),5.0d-3)
+
   
 
   f(1) = current_temp_C + 273.15d0
@@ -796,31 +641,33 @@ subroutine knnr_init()
   f(5) = log10(conc(4)) ! Env_H2
   f(6) = log10(rad0)
 
-  print *, f
+  print *,f(1),conc(1),conc(2),conc(3),conc(4),rad0
   
   nn=7
 
   allocate(results(nn))
-  print *, 'calling nearest'
-  allocate(query_vec(6))
-  query_vec = f
+
+!  allocate(query_vec(6))
+!  query_vec = f
 
   call kdtree2_n_nearest(tp=tree,qv=f,nn=nn,results=results)
 
-  print *, 'out'
 
     qoi_sum = 0.d0 
 
   do i_d = 1,nn
      myresult = results(i_d)
+     print *,'my result', myresult
 
      qoi_i = table_data(myresult%idx,d+1)
-     print *, qoi_i
+ !    print *, qoi_i
+ !    print *,myresult%dis
     qoi_sum = qoi_sum + qoi_i
   end do
 
-  print *, 'almost there'
   fuelDisRate = (qoi_sum/float(nn))*270.0
+
+  print *, 'mol/m/yr', fuelDisRate/270.0
 
 end subroutine knnr_query
 
