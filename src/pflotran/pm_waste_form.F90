@@ -33,6 +33,7 @@ module PM_Waste_Form_class
   private
 
   PetscBool, public :: bypass_warning_message = PETSC_FALSE
+  PetscBool, public :: knnr = PETSC_FALSE
 
 ! OBJECT rad_species_type:
 ! ========================
@@ -279,7 +280,7 @@ module PM_Waste_Form_class
     PetscReal, pointer :: scaler_means(:)
     PetscReal, pointer :: scaler_variances(:)
   contains
-    procedure, public :: Dissolution => WFMechFMDMSurrogatekNNr
+    procedure, public :: Dissolution => WFMechFMDMSurrogateDissolution
  end type wf_mechanism_fmdm_surrogate_type
  !!!CHANGE BACK
 ! -----------------------------------------------------------------------
@@ -728,27 +729,32 @@ function PMWFMechanismFMDMSurrogateCreate()
 
   allocate(surrfmdm%mapping_surrfmdm(4))
   surrfmdm%mapping_surrfmdm = [surrfmdm%iO2,surrfmdm%iCO3_2n, &
-                               surrfmdm%iH2,surrfmdm%iFe_2p]
+       surrfmdm%iH2,surrfmdm%iFe_2p]
 
-  allocate(surrfmdm%outer_weights(101))
-  open(IUNIT_TEMP,file="ann_surrogate/outer_weights.txt")
-  read(IUNIT_TEMP,*) surrfmdm%outer_weights
-  close(IUNIT_TEMP)
+  if (knnr) then
+    call knnr_init( )
+  else
 
-  allocate(surrfmdm%inner_weights(7,100))
-  open(IUNIT_TEMP,file="ann_surrogate/inner_weights.txt")
-  read(IUNIT_TEMP,*) surrfmdm%inner_weights
-  close(IUNIT_TEMP)
+    allocate(surrfmdm%outer_weights(101))
+    open(IUNIT_TEMP,file="ann_surrogate/outer_weights.txt")
+    read(IUNIT_TEMP,*) surrfmdm%outer_weights
+    close(IUNIT_TEMP)
 
-  allocate(surrfmdm%scaler_means(6))
-  open(IUNIT_TEMP,file="ann_surrogate/means.txt")
-  read(IUNIT_TEMP,*) surrfmdm%scaler_means
-  close(IUNIT_TEMP)
+    allocate(surrfmdm%inner_weights(7,100))
+    open(IUNIT_TEMP,file="ann_surrogate/inner_weights.txt")
+    read(IUNIT_TEMP,*) surrfmdm%inner_weights
+    close(IUNIT_TEMP)
 
-  allocate(surrfmdm%scaler_variances(6))
-  open(IUNIT_TEMP,file="ann_surrogate/vars.txt")
-  read(IUNIT_TEMP,*) surrfmdm%scaler_variances
-  close(IUNIT_TEMP)
+    allocate(surrfmdm%scaler_means(6))
+    open(IUNIT_TEMP,file="ann_surrogate/means.txt")
+    read(IUNIT_TEMP,*) surrfmdm%scaler_means
+    close(IUNIT_TEMP)
+
+    allocate(surrfmdm%scaler_variances(6))
+    open(IUNIT_TEMP,file="ann_surrogate/vars.txt")
+    read(IUNIT_TEMP,*) surrfmdm%scaler_variances
+    close(IUNIT_TEMP)
+  endif
 
   PMWFMechanismFMDMSurrogateCreate => surrfmdm
 
@@ -1290,10 +1296,10 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
           new_mechanism => PMWFMechanismFMDMSurrogateCreate()
       !---------------------------------
         case('FMDM_KNNR')
-
+          knnr = PETSC_TRUE
           error_string = trim(error_string) // ' FMDM_KNNR'
           allocate(new_mechanism)
-          new_mechanism => PMWFMechanismFMDMkNNrCreate()
+          new_mechanism => PMWFMechanismFMDMSurrogateCreate()
       !---------------------------------
         case('CUSTOM')
           error_string = trim(error_string) // ' CUSTOM'
@@ -4027,12 +4033,16 @@ subroutine WFMechFMDMSurrogateDissolution(this,waste_form,pm,ierr)
   enddo
   call CalcParallelSUM(option,waste_form%rank_list,avg_temp_local, &
                        avg_temp_global)
-
-  call AMP_surrogate_step(this%burnup, time, avg_temp_global, &
+  if (knnr) then
+     call knnr_query(this%burnup, time,avg_temp_global,this%decay_time,this%concentration, &
+          this%dissolution_rate)
+  else
+     call AMP_surrogate_step(this%burnup, time, avg_temp_global, &
                           this%concentration, this%decay_time, &
                           this%outer_weights, &
                           this%inner_weights, this%scaler_means, &
                           this%scaler_variances, this%dissolution_rate)
+  endif
 
   print *,this%dissolution_rate
 
@@ -5287,11 +5297,15 @@ subroutine PMWFMechanismStrip(this)
         call DeallocateArray(prev_mechanism%concentration)
         call DeallocateArray(prev_mechanism%mapping_surrfmdm)
         call DeallocateArray(prev_mechanism%mapping_surrfmdm_to_pflotran)
-!        call DeallocateArray(prev_mechanism%outer_weights)
-!        call DeallocateArray(prev_mechanism%inner_weights)
-!        call DeallocateArray(prev_mechanism%scaler_means)
-!        call DeallocateArray(prev_mechanism%scaler_variances)
-        call knnr_close()
+        if (knnr) then
+           call knnr_close()
+        else
+         call DeallocateArray(prev_mechanism%outer_weights)
+         call DeallocateArray(prev_mechanism%inner_weights)
+         call DeallocateArray(prev_mechanism%scaler_means)
+         call DeallocateArray(prev_mechanism%scaler_variances)
+        endif
+
        
     end select
     deallocate(prev_mechanism)

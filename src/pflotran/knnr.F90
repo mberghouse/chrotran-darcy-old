@@ -16,6 +16,8 @@ module kNNr_module
  
   use petscsnes
 
+  use PFLOTRAN_Constants_module
+
   implicit none
 
   type(kdtree2), pointer :: tree, tree2, tree3
@@ -33,6 +35,8 @@ contains
 !*****************************************************************************80
 !  use table_data_mod
   implicit none
+
+  
 
   character ( len = 80 ) :: csv_file_name = 'test_data.csv'
 
@@ -56,7 +60,7 @@ contains
 
   call csv_file_open_read ( csv_file_name, csv_file_unit )
 
-  read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
+  read ( IUNIT_TEMP, '(a)', iostat = csv_file_status ) record
 
   call csv_value_count ( record, csv_record_status, value_count )
 
@@ -67,7 +71,7 @@ contains
 
   do i = 1, line_num - 1
 
-    read ( csv_file_unit, '(a)', iostat = csv_file_status ) record
+    read ( IUNIT_TEMP, '(a)', iostat = csv_file_status ) record
 
 
     ! TODO: Need to add some error checking that throws a fit if any lines have less than the expected number of records
@@ -82,7 +86,7 @@ contains
     end do
   end do
 
-  call csv_file_close_read ( csv_file_name, csv_file_unit )
+  call csv_file_close_read ( csv_file_name )
 
 
 
@@ -301,7 +305,7 @@ subroutine csv_values_extract (csv_record, csv_record_status, value_count,array_
 end subroutine csv_values_extract
 
 
-subroutine csv_file_close_read ( csv_file_name, csv_file_unit )
+subroutine csv_file_close_read ( csv_file_name )
 
 !*****************************************************************************80
 !
@@ -328,9 +332,9 @@ subroutine csv_file_close_read ( csv_file_name, csv_file_unit )
   implicit none
 
   character ( len = * ) csv_file_name
-  integer ( kind = 4 ) csv_file_unit
+!  integer ( kind = 4 ) csv_file_unit
 
-  close ( unit = csv_file_unit )
+  close (IUNIT_TEMP )
 
   return
 end subroutine csv_file_close_read
@@ -378,23 +382,23 @@ subroutine csv_file_line_count ( csv_file_name, line_num )
 
   line_num = -1
 
-  call get_unit ( input_unit )
+!  call get_unit ( input_unit )
 
-  open ( unit = input_unit, file = csv_file_name, status = 'old', &
+  open (IUNIT_TEMP, file = csv_file_name, status = 'old', &
     iostat = input_status )
 
-  if ( input_status /= 0 ) then
+!  if ( input_status /= 0 ) then
 !    write ( *, '(a)' ) ' '
 !    write ( *, '(a)' ) 'CSV_FILE_LINE_COUNT - Fatal error!'
 !    write ( *, '(a,i8)' ) '  Could not open "' // trim ( csv_file_name ) // '".'
-    stop
-  end if
+!    stop
+!  end if
 
   line_num = 0
 
   do
 
-    read ( input_unit, '(a)', iostat = input_status ) line
+    read ( IUNIT_TEMP, '(a)', iostat = input_status ) line
 
     if ( input_status /= 0 ) then
       ierror = line_num
@@ -405,7 +409,7 @@ subroutine csv_file_line_count ( csv_file_name, line_num )
 
   end do
 
-  close ( unit = input_unit )
+  close ( IUNIT_TEMP )
 
   return
 end subroutine csv_file_line_count
@@ -441,10 +445,11 @@ subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
   character ( len = * ) csv_file_name
   integer ( kind = 4 ) csv_file_status
   integer ( kind = 4 ) csv_file_unit
+!  integer ( kind = 4 ) unit 
 
-  call get_unit ( csv_file_unit )
-
-  open ( unit = csv_file_unit, file = csv_file_name, status = 'old', &
+!  call get_unit ( csv_file_unit )
+!  csv_file_unit = 86
+  open (IUNIT_TEMP, file = csv_file_name, status = 'old', &
     iostat = csv_file_status )
 
   if ( csv_file_status /= 0 ) then
@@ -641,7 +646,7 @@ subroutine knnr_init()
   f(5) = log10(conc(4)) ! Env_H2
   f(6) = log10(rad0)
 
-  print *,f(1),conc(1),conc(2),conc(3),conc(4),rad0
+!  print *,f(1),conc(1),conc(2),conc(3),conc(4),rad0
   
   nn=7
 
@@ -657,7 +662,7 @@ subroutine knnr_init()
 
   do i_d = 1,nn
      myresult = results(i_d)
-     print *,'my result', myresult
+!     print *,'my result', myresult
 
      qoi_i = table_data(myresult%idx,d+1)
  !    print *, qoi_i
