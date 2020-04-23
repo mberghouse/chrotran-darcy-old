@@ -573,7 +573,7 @@ subroutine knnr_init()
        if (i_d == 1) then
           my_array(i_d,i_n) = table_data(i_n,i_d)
        else
-          my_array(i_d,i_n) = log(table_data(i_n,i_d))
+          my_array(i_d,i_n) = log10(table_data(i_n,i_d))
        endif     
     end do
  end do
