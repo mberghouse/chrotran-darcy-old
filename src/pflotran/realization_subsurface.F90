@@ -291,6 +291,11 @@ subroutine RealizationCreateDiscretization(realization)
 
     endif
 
+    if (option%flow%scale_all_pressure) then
+      call DiscretizationDuplicateVector(discretization,field%flow_xx, &
+                                         field%flow_scaled_xx)  
+    endif
+
   endif
 
   if (option%ntrandof > 0) then

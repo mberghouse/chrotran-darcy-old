@@ -411,6 +411,7 @@ subroutine PMSubsurfaceFlowSetRealization(this,realization)
   ! Date: 04/21/14
 
   use Realization_Subsurface_class
+  use Option_module
   use Grid_module
 
   implicit none
@@ -421,7 +422,12 @@ subroutine PMSubsurfaceFlowSetRealization(this,realization)
   this%realization => realization
   this%realization_base => realization
 
-  this%solution_vec = realization%field%flow_xx
+  ! scale pressures down to the range near saturation (0 to 1)
+  if (this%option%flow%scale_all_pressure) then 
+    this%solution_vec = realization%field%flow_scaled_xx
+  else
+    this%solution_vec = realization%field%flow_xx
+  endif
   this%residual_vec = realization%field%flow_r
   
 end subroutine PMSubsurfaceFlowSetRealization
@@ -854,11 +860,20 @@ subroutine PMSubsurfaceFlowPreSolve(this)
 
   use Global_module
   use Data_Mediator_module
+  use Option_module
 
   implicit none
   
   class(pm_subsurface_flow_type) :: this
   
+  PetscErrorCode :: ierr
+  
+  if (this%option%flow%scale_all_pressure) then
+    call VecCopy(this%realization%field%flow_xx, &
+                 this%realization%field%flow_scaled_xx,ierr);CHKERRQ(ierr)
+    !call VecLog(this%realization%field%tran_log_xx,ierr);CHKERRQ(ierr)
+  endif 
+
   call DataMediatorUpdate(this%realization%flow_data_mediator_list, &
                           this%realization%field%flow_mass_transfer, &
                           this%realization%option)

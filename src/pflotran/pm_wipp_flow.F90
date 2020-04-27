@@ -70,7 +70,6 @@ module PM_WIPP_Flow_class
                                      ! just before the PETSc solver.
     PetscBool :: scale_pressure ! pressure solution itself is scaled 
                                 ! this is used for advanced nonlinear methods
-    PetscReal :: pressure_scaling_factor ! user set parameter (default 1.d7)
     Vec :: scaling_vec
     ! When reading Dirichlet 2D Flared BC
     PetscInt, pointer :: dirichlet_dofs_ghosted(:) ! this array is zero-based indexing
@@ -203,7 +202,6 @@ subroutine PMWIPPFloInitObject(this)
   this%linear_system_scaling_factor = 1.d7
   this%scale_linear_system = PETSC_TRUE
   this%scale_pressure = PETSC_FALSE
-  this%pressure_scaling_factor = 1.d7
   this%scaling_vec = PETSC_NULL_VEC
   nullify(this%dirichlet_dofs_ghosted)
   nullify(this%dirichlet_dofs_ints)
@@ -386,12 +384,6 @@ subroutine PMWIPPFloReadSimOptionsBlock(this,input)
       case('AUTO_PRESS_SHALLOW_ORIGIN')
         call InputReadNDoubles(input,option,this%auto_press_shallow_origin,THREE_INTEGER)
         call InputErrorMsg(input,option,keyword,error_string)
-      case('SCALE_PRESSURE') ! This option will scale solution, residual, and Jacobian
-        this%scale_pressure = PETSC_TRUE
-        this%scale_linear_system = PETSC_TRUE
-        call InputReadDouble(input,option,this%pressure_scaling_factor)
-        call InputErrorMsg(input,option,keyword,error_string)
-        this%linear_system_scaling_factor = this%pressure_scaling_factor
       case('2D_FLARED_DIRICHLET_BCS')
         icount = 0
         do
@@ -634,6 +626,12 @@ subroutine PMWIPPFloReadNewtonSelectCase(this,input,keyword,found, &
       this%scale_linear_system = PETSC_TRUE
     case('DO_NOT_SCALE_JACOBIAN')
       this%scale_linear_system = PETSC_FALSE
+    case('SCALE_PRESSURE') ! This option will scale solution, residual, and Jacobian
+      option%flow%scale_all_pressure = PETSC_TRUE
+      this%scale_linear_system = PETSC_TRUE
+      call InputReadDouble(input,option,option%flow%pressure_scaling_factor)
+      call InputErrorMsg(input,option,keyword,error_string)
+      this%linear_system_scaling_factor = option%flow%pressure_scaling_factor
     case default
       found = PETSC_FALSE
 
