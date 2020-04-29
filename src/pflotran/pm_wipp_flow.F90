@@ -1432,6 +1432,7 @@ subroutine PMWIPPFloCheckUpdatePre(this,snes,X,dX,changed,ierr)
   Vec :: dX
   PetscBool :: changed
   PetscErrorCode :: ierr
+  PetscReal :: inverse_factor
   
   this%convergence_flags = 0
   this%convergence_reals = 0.d0
@@ -1442,7 +1443,13 @@ subroutine PMWIPPFloCheckUpdatePre(this,snes,X,dX,changed,ierr)
     call VecStrideScale(dX,ZERO_INTEGER,this%linear_system_scaling_factor, &
                         ierr);CHKERRQ(ierr)
   endif
-  
+
+  if (this%option%flow%scale_all_pressure) then
+    changed = PETSC_TRUE
+    inverse_factor = this%option%flow%pressure_scaling_factor**(-1.d0)
+    call VecStrideScale(dX,ZERO_INTEGER,inverse_factor, ierr);CHKERRQ(ierr)
+  endif 
+
 end subroutine PMWIPPFloCheckUpdatePre
 
 ! ************************************************************************** !
