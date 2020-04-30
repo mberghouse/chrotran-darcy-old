@@ -1438,18 +1438,21 @@ subroutine PMWIPPFloCheckUpdatePre(this,snes,X,dX,changed,ierr)
   this%convergence_reals = 0.d0
   changed = PETSC_FALSE
 
-  if (this%scale_linear_system) then
-    changed = PETSC_TRUE
-    call VecStrideScale(dX,ZERO_INTEGER,this%linear_system_scaling_factor, &
-                        ierr);CHKERRQ(ierr)
+  if (this%linear_system_scaling_factor /= &
+     this%option%flow%pressure_scaling_factor) then
+    if (this%scale_linear_system) then
+      changed = PETSC_TRUE
+      call VecStrideScale(dX,ZERO_INTEGER,this%linear_system_scaling_factor, &
+        ierr);CHKERRQ(ierr)
+    endif
+
+    if (this%option%flow%scale_all_pressure) then
+      changed = PETSC_TRUE
+      inverse_factor = this%option%flow%pressure_scaling_factor**(-1.d0)
+      call VecStrideScale(dX,ZERO_INTEGER,inverse_factor, ierr);CHKERRQ(ierr)
+    endif
   endif
-
-  if (this%option%flow%scale_all_pressure) then
-    changed = PETSC_TRUE
-    inverse_factor = this%option%flow%pressure_scaling_factor**(-1.d0)
-    call VecStrideScale(dX,ZERO_INTEGER,inverse_factor, ierr);CHKERRQ(ierr)
-  endif 
-
+    
 end subroutine PMWIPPFloCheckUpdatePre
 
 ! ************************************************************************** !
