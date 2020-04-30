@@ -930,10 +930,9 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
   ! must be called before WIPPFloUpdateAuxVars()
   if (option%flow%scale_all_pressure) then
     ! have to convert the log concentration to non-log form
-    call VecGetSize(xx,vecsize,ierr);CHKERRQ(ierr)
     call VecGetArrayF90(field%flow_xx,xx_p,ierr);CHKERRQ(ierr)
     call VecGetArrayReadF90(xx,scaled_xx_p,ierr);CHKERRQ(ierr)
-    do irow = 1, vecsize, 2
+    do irow = 1, size(xx_p), 2
       xx_p(irow) = scaled_xx_p(irow) * option%flow%pressure_scaling_factor
       xx_p(irow+1) = scaled_xx_p(irow+1)
     enddo
@@ -944,8 +943,6 @@ subroutine WIPPFloResidual(snes,xx,r,realization,pmwss_ptr,ierr)
   else
     call DiscretizationGlobalToLocal(discretization,xx,field%flow_xx_loc,&
                                      NFLOWDOF)
-    call VecGetArrayReadF90(xx,xx_p,ierr);CHKERRQ(ierr)
-    call VecRestoreArrayReadF90(xx,xx_p,ierr);CHKERRQ(ierr)
   endif
   
   call WIPPFloUpdateAuxVars(realization)

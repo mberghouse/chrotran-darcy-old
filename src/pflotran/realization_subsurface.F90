@@ -266,6 +266,11 @@ subroutine RealizationCreateDiscretization(realization)
     ! ndof degrees of freedom, global
     call DiscretizationCreateVector(discretization,NFLOWDOF,field%flow_xx, &
                                     GLOBAL,option)
+    ! for scaling pressure in the range of saturation
+    if (option%flow%scale_all_pressure) then
+      call DiscretizationDuplicateVector(discretization,field%flow_xx, &
+                                         field%flow_scaled_xx)
+    endif
     call DiscretizationDuplicateVector(discretization,field%flow_xx, &
                                        field%flow_yy)
     call DiscretizationDuplicateVector(discretization,field%flow_xx, &
@@ -289,11 +294,6 @@ subroutine RealizationCreateDiscretization(realization)
       call DiscretizationCreateVector(discretization,NFLOWDOF,field%flow_xxdot_loc, &
                                       LOCAL,option)
 
-    endif
-
-    if (option%flow%scale_all_pressure) then
-      call DiscretizationDuplicateVector(discretization,field%flow_xx, &
-                                         field%flow_scaled_xx)  
     endif
 
   endif
