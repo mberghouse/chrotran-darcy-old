@@ -510,8 +510,6 @@ module kdtree2_module
   public :: kdtree2_r_count, kdtree2_r_count_around_point
   ! Count points within a fixed ball of arb vector/extant point
   !
-  public :: kdtree2_n_nearest_brute_force, kdtree2_r_nearest_brute_force
-  ! brute force of kdtree2_[n|r]_nearest
   !----------------------------------------------------------------
 
 
@@ -1370,22 +1368,6 @@ contains
     return
   end subroutine validate_query_storage
 
-  function square_distance(d, iv,qv) result (res)
-    ! distance between iv[1:n] and qv[1:n]
-    ! .. Function Return Value ..
-    ! re-implemented to improve vectorization.
-    real(kdkind) :: res
-    ! ..
-    ! ..
-    ! .. Scalar Arguments ..
-    integer :: d
-    ! ..
-    ! .. Array Arguments ..
-    real(kdkind) :: iv(:),qv(:)
-    ! ..
-    ! ..
-    res = sum( (iv(1:d)-qv(1:d))**2 )
-  end function square_distance
 
   recursive subroutine search(node)
     !
@@ -1486,37 +1468,7 @@ contains
     return
   end function dis2_from_bnd
 
-  logical function box_in_search_range(node, sr) result(res)
-    !
-    ! Return the distance from 'qv' to the CLOSEST corner of node's
-    ! bounding box
-    ! for all coordinates outside the box.   Coordinates inside the box
-    ! contribute nothing to the distance.
-    !
-    type (tree_node), pointer :: node
-    type (tree_search_record), pointer :: sr
-
-    integer :: dimen, i
-    real(kdkind)    :: dis, ballsize
-    real(kdkind)    :: l, u
-
-    dimen = sr%dimen
-    ballsize = sr%ballsize
-    dis = 0.0
-    res = .true.
-    do i=1,dimen
-       l = node%box(i)%lower
-       u = node%box(i)%upper
-       dis = dis + (dis2_from_bnd(sr%qv(i),l,u))
-       if (dis > ballsize) then
-          res = .false.
-          return
-       endif
-    end do
-    res = .true.
-    return
-  end function box_in_search_range
-
+  
 
   subroutine process_terminal_node(node)
     !
@@ -1714,84 +1666,6 @@ contains
     sr%nfound = nfound
   end subroutine process_terminal_node_fixedball
 
-  subroutine kdtree2_n_nearest_brute_force(tp,qv,nn,results)
-    ! find the 'n' nearest neighbors to 'qv' by exhaustive search.
-    ! only use this subroutine for testing, as it is SLOW!  The
-    ! whole point of a k-d tree is to avoid doing what this subroutine
-    ! does.
-    type (kdtree2), pointer :: tp
-    real(kdkind), intent (In)       :: qv(:)
-    integer, intent (In)    :: nn
-    type(kdtree2_result)    :: results(:)
-
-    integer :: i, j, k
-    real(kdkind), allocatable :: all_distances(:)
-    ! ..
-    allocate (all_distances(tp%n))
-    do i = 1, tp%n
-       all_distances(i) = square_distance(tp%dimen,qv,tp%the_data(:,i))
-    end do
-    ! now find 'n' smallest distances
-    do i = 1, nn
-       results(i)%dis =  huge(1.0)
-       results(i)%idx = -1
-    end do
-    do i = 1, tp%n
-       if (all_distances(i)<results(nn)%dis) then
-          ! insert it somewhere on the list
-          do j = 1, nn
-             if (all_distances(i)<results(j)%dis) exit
-          end do
-          ! now we know 'j'
-          do k = nn - 1, j, -1
-             results(k+1) = results(k)
-          end do
-          results(j)%dis = all_distances(i)
-          results(j)%idx = i
-       end if
-    end do
-    deallocate (all_distances)
-  end subroutine kdtree2_n_nearest_brute_force
-
-
-  subroutine kdtree2_r_nearest_brute_force(tp,qv,r2,nfound,results)
-    ! find the nearest neighbors to 'qv' with distance**2 <= r2 by exhaustive search.
-    ! only use this subroutine for testing, as it is SLOW!  The
-    ! whole point of a k-d tree is to avoid doing what this subroutine
-    ! does.
-    type (kdtree2), pointer :: tp
-    real(kdkind), intent (In)       :: qv(:)
-    real(kdkind), intent (In)       :: r2
-    integer, intent(out)    :: nfound
-    type(kdtree2_result)    :: results(:)
-
-    integer :: i, nalloc
-    real(kdkind), allocatable :: all_distances(:)
-    ! ..
-    allocate (all_distances(tp%n))
-    do i = 1, tp%n
-       all_distances(i) = square_distance(tp%dimen,qv,tp%the_data(:,i))
-    end do
-
-    nfound = 0
-    nalloc = size(results,1)
-
-    do i = 1, tp%n
-       if (all_distances(i)< r2) then
-          ! insert it somewhere on the list
-          if (nfound .lt. nalloc) then
-             nfound = nfound+1
-             results(nfound)%dis = all_distances(i)
-             results(nfound)%idx = i
-          endif
-       end if
-    enddo
-    deallocate (all_distances)
-
-    call kdtree2_sort_results(nfound,results)
-
-
-  end subroutine kdtree2_r_nearest_brute_force
 
   subroutine kdtree2_sort_results(nfound,results)
     !  Use after search to sort results(1:nfound) in order of increasing

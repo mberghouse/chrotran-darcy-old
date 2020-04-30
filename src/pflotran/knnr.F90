@@ -1,26 +1,19 @@
-!module table_data_mod
-  
-!end module table_data_mod
-
-!*****************************************************************************80
-
-
 !************************************************************
 module kNNr_module
 
 #include "petsc/finclude/petscsys.h"
-!  use table_data_mod
+
   use kdtree2_module
-!  use time_kdtree
+
   use petscvec
  
-  use petscsnes
+ ! use petscsnes
 
   use PFLOTRAN_Constants_module
 
   implicit none
 
-  type(kdtree2), pointer :: tree, tree2, tree3
+  type(kdtree2), pointer :: tree
   real(kdkind), dimension(:,:), allocatable :: my_array
   integer :: n, d
   real ( kind = 8 ), allocatable :: table_data(:,:)
@@ -33,12 +26,12 @@ contains
 !! reads a CSV table data file, with one header line, and real valued entries after that.
 !
 !*****************************************************************************80
-!  use table_data_mod
+
   implicit none
 
   
 
-  character ( len = 80 ) :: csv_file_name = 'test_data.csv'
+  character ( len = 80 ) :: csv_file_name = 'rosie_test_data.csv'
 
   integer   ( kind = 4 ) csv_file_status
   integer   ( kind = 4 ) csv_file_unit
@@ -226,13 +219,6 @@ subroutine csv_values_extract (csv_record, csv_record_status, value_count,array_
 
   character (len = 30) word  ! one word / value in record
 
-  ! write(*,*) 'Testing array of strings:'
-  !
-  !
-  ! word = '235'
-  ! array_of_values(1) = 'abc'
-  ! write(*,*) array_of_values(1)
-
   ! Start with assumption there is at least 1 value
   value_count = 1
 
@@ -298,7 +284,6 @@ subroutine csv_values_extract (csv_record, csv_record_status, value_count,array_
 
   end do
 
-  ! write(*,*) 'Assigning the word ',trim(word), ' to the array'
   array_of_values(value_count) = trim(word) ! Add the last word to the array
 
   return
@@ -327,12 +312,10 @@ subroutine csv_file_close_read ( csv_file_name )
 !
 !    Input, character ( len = * ) CSV_FILE_NAME, the name of the file.
 !
-!    Input, integer ( kind = 4 ) CSV_FILE_UNIT, the unit number
-!
+
   implicit none
 
   character ( len = * ) csv_file_name
-!  integer ( kind = 4 ) csv_file_unit
 
   close (IUNIT_TEMP )
 
@@ -382,7 +365,6 @@ subroutine csv_file_line_count ( csv_file_name, line_num )
 
   line_num = -1
 
-!  call get_unit ( input_unit )
 
   open (IUNIT_TEMP, file = csv_file_name, status = 'old', &
     iostat = input_status )
@@ -438,17 +420,13 @@ subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
 !
 !    Input, character ( len = * ) CSV_FILE_NAME, the name of the file.
 !
-!    Output, integer ( kind = 4 ) CSV_FILE_UNIT, the unit number
 !
   implicit none
 
   character ( len = * ) csv_file_name
   integer ( kind = 4 ) csv_file_status
   integer ( kind = 4 ) csv_file_unit
-!  integer ( kind = 4 ) unit 
 
-!  call get_unit ( csv_file_unit )
-!  csv_file_unit = 86
   open (IUNIT_TEMP, file = csv_file_name, status = 'old', &
     iostat = csv_file_status )
 
@@ -463,75 +441,6 @@ subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
   return
 end subroutine csv_file_open_read
 
-subroutine get_unit ( iunit )
-
-!*****************************************************************************80
-!
-!! GET_UNIT returns a free FORTRAN unit number.
-!
-!  Discussion:
-!
-!    A "free" FORTRAN unit number is an integer between 1 and 99 which
-!    is not currently associated with an I/O device.  A free FORTRAN unit
-!    number is needed in order to open a file with the OPEN command.
-!
-!    If IUNIT = 0, then no free FORTRAN unit could be found, although
-!    all 99 units were checked (except for units 5, 6 and 9, which
-!    are commonly reserved for console I/O).
-!
-!    Otherwise, IUNIT is an integer between 1 and 99, representing a
-!    free FORTRAN unit.  Note that GET_UNIT assumes that units 5 and 6
-!    are special, and will never return those values.
-!
-!  Licensing:
-!
-!    This code is distributed under the GNU LGPL license.
-!
-!  Modified:
-!
-!    26 October 2008
-!
-!  Author:
-!
-!    John Burkardt
-!
-!  Parameters:
-!
-!    Output, integer ( kind = 4 ) IUNIT, the free unit number.
-!
-  implicit none
-
-  integer ( kind = 4 ) i
-  integer ( kind = 4 ) ios
-  integer ( kind = 4 ) iunit
-  logical lopen
-
-  iunit = 0
-
-  do i = 1, 99
-
-    if ( i /= 5 .and. i /= 6 .and. i /= 9 ) then
-
-      inquire ( unit = i, opened = lopen, iostat = ios )
-
-      if ( ios == 0 ) then
-        if ( .not. lopen ) then
-          iunit = i
-          return
-        end if
-      end if
-
-    end if
-
-  end do
-
-  return
-end subroutine get_unit
-
-
-
-
-
 !***********************************
 !***********************************
 !***********************************
@@ -540,8 +449,6 @@ end subroutine get_unit
 subroutine knnr_init()
 
 
- 
- 
   real(kdkind), allocatable :: query_vec(:)
 
 
@@ -555,18 +462,13 @@ subroutine knnr_init()
 
 
   call read_my_csv_data ()
-
-
-
-  
+ 
 
   data_array_shape = shape(table_data)
   n = data_array_shape(1)
   d = data_array_shape(2)-1 ! Quantities of Interest (QoI) is not part of the search query of the search query.
 
   allocate(my_array(d,n))
-
-  print *, 'populating array'
 
   do i_d = 1, d
     do i_n = 1, n
@@ -579,8 +481,7 @@ subroutine knnr_init()
  end do
 
 
-
- tree => kdtree2_create(my_array,sort=.false.,rearrange=.false.)  ! this is how you create a tree.
+ tree => kdtree2_create(my_array,sort=.false.,rearrange=.false.) 
 
 
   end subroutine knnr_init
@@ -599,26 +500,23 @@ subroutine knnr_init()
     PetscReal, intent(out) :: fuelDisRate
 
       ! features
-    PetscReal, dimension(6) :: f !!!change!!
+    PetscReal, dimension(6) :: f
     PetscReal :: yTme
     PetscReal :: f1, f2, f3, f4, f5
     PetscReal :: AOF, rad0a, rad0
 
-   integer   :: nnbrute, rind, nn, i_d
-  real      :: t0, t1, sps, avgnum, maxdeviation
-  real(kdkind) :: rv, qoi_i, qoi_sum, qoi_ave, qoi_int
+   integer   :: nn, i_d
+ 
+  real(kdkind) :: qoi_i, qoi_sum, qoi_ave, qoi_int
 
-  real(kdkind), allocatable :: query_vec(:)
-
-  integer, parameter  :: nnn = 3
-  integer   :: nnarray(nnn)
-  data nnarray / 1, 5, 10 /
       
-  type(kdtree2_result),allocatable :: results(:), resultsb(:)
+  type(kdtree2_result),allocatable :: results(:)
   type(kdtree2_result)::myresult
 
-  !create query vector! ???
-  print *, 'inside success'
+  !Testing parameters
+  integer   :: rind
+
+  real(kdkind) :: rv
 
   
   yTme = sTme/60.0d0/60.0d0/24.0d0/365.0d0   !DAYS_PER_YEAR
@@ -639,47 +537,117 @@ subroutine knnr_init()
 
   
 
-  f(1) = current_temp_C + 273.15d0
-  f(2) = log10(conc(1)) ! Env_CO3_2n
-  f(3) = log10(conc(2)) ! Env_O2
-  f(4) = log10(conc(3)) ! Env_Fe_2p
-  f(5) = log10(conc(4)) ! Env_H2
-  f(6) = log10(rad0)
+!  f(1) = current_temp_C + 273.15d0
+!  f(2) = log10(conc(1)) ! Env_CO3_2n
+!  f(3) = log10(conc(2)) ! Env_O2
+!  f(4) = log10(conc(3)) ! Env_Fe_2p
+!  f(5) = log10(conc(4)) ! Env_H2
+!  f(6) = log10(rad0)
 
-!  print *,f(1),conc(1),conc(2),conc(3),conc(4),rad0
+  !  print *,f(1),conc(1),conc(2),conc(3),conc(4),rad0
+
+  !Testing Purposes
+  call random_number(rv)
+  rind = floor(rv*tree%n)+1
+  f = tree%the_data(:,rind)
+
   
   nn=7
 
   allocate(results(nn))
 
-!  allocate(query_vec(6))
-!  query_vec = f
 
   call kdtree2_n_nearest(tp=tree,qv=f,nn=nn,results=results)
 
+  call inverse_distance(results,nn,qoi_ave)
 
-    qoi_sum = 0.d0 
+!    qoi_sum = 0.d0 
 
-  do i_d = 1,nn
-     myresult = results(i_d)
-!     print *,'my result', myresult
+!  do i_d = 1,nn
+!     myresult = results(i_d)
+!     qoi_i = table_data(myresult%idx,d+1)
+!    qoi_sum = qoi_sum + qoi_i
+!  end do
 
-     qoi_i = table_data(myresult%idx,d+1)
- !    print *, qoi_i
- !    print *,myresult%dis
-    qoi_sum = qoi_sum + qoi_i
-  end do
+!  fuelDisRate = (qoi_sum/float(nn))*270.0
+  fuelDisRate = (qoi_ave)*270.0
 
-  fuelDisRate = (qoi_sum/float(nn))*270.0
-
-  print *, 'mol/m/yr', fuelDisRate/270.0
+  print *, 'mol/m2/yr', fuelDisRate/270.0
+  print *, 'known value', table_data(rind,d+1)
 
 end subroutine knnr_query
 
 subroutine knnr_close()
    deallocate(table_data)
    deallocate(my_array)
-end subroutine knnr_close
+ end subroutine knnr_close
+
+subroutine inverse_distance(results,nn,qoi_ave)
+
+   real(kdkind) :: rv, qoi_i, qoi_sum, qoi_ave, qoi_int, qoi_weights,weight,dis
+   type(kdtree2_result)::myresult
+   type(kdtree2_result),allocatable :: results(:), resultsb(:)
+
+    integer   :: nnbrute, rind, nn, i_d
+
+   
+   do i_d = 1,nn
+      myresult = results(i_d)
+      qoi_i = table_data(myresult%idx,d+1)
+      dis = myresult%dis
+!      dis =  tiny(0.0d0) 
+      print *, 'dis=',dis
+      if (dis == 0.0) then
+         qoi_weights = 1.0
+         qoi_sum = qoi_i
+         print *,'inside1'
+         exit
+      elseif (isinfinite(1/dis)) then
+         qoi_weights = 1.0
+         qoi_sum = qoi_i
+         print *,'inside2'
+         exit
+      else 
+      !if dis is zero or close to zero => weight = 1 qoi_sum = qoi_i, qoi_weights = 1 => two if statements one for if dis equals exactly zero or if close to zero
+      weight = 1 / dis
+!      print *,'weight=',weight
+      qoi_sum = qoi_sum +qoi_i *weight
+      
+!      print *, 'dis =',dis
+!      print *, 'qoi=',qoi_i
+      qoi_weights = qoi_weights+weight
+      endif
+
+   end do
+ 
+   print *,'qoi_sum=',qoi_sum
+   print *, 'qoi_weights=',qoi_weights
+   qoi_ave = qoi_sum/qoi_weights
+   
+
+ end subroutine inverse_distance
+
+  function isinfinite(value1)
+
+   implicit none
+
+   logical :: isinfinite
+   real(kdkind) :: value1
+   real(kdkind) :: infinity
+
+   isinfinite = .false.
+   
+  
+   infinity = huge(0.0d0)
+ 
+
+   if (value1 >= infinity) then
+      isinfinite =.true.
+   endif
+
+   
+
+ end function isinfinite
 
 end module kNNr_module
 
