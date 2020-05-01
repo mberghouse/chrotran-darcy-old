@@ -7,9 +7,9 @@ module kNNr_module
 
   use petscvec
  
- ! use petscsnes
 
   use PFLOTRAN_Constants_module
+  use Utility_module
 
   implicit none
 
@@ -17,6 +17,7 @@ module kNNr_module
   real(kdkind), dimension(:,:), allocatable :: my_array
   integer :: n, d
   real ( kind = 8 ), allocatable :: table_data(:,:)
+  real(kdkind) :: eps = tiny(0.0d0)
 
 contains
   
@@ -44,8 +45,6 @@ contains
 
   vl = 30 !value length in my_values array
   al = 10 !length of array my_values
-
-
 
 
   call csv_file_line_count ( csv_file_name, line_num )
@@ -354,6 +353,7 @@ subroutine csv_file_line_count ( csv_file_name, line_num )
 !
 !    Output, integer ( kind = 4 ) LINE_NUM, the number of lines.
 !
+!  use Option_module
   implicit none
 
   character ( len = * ) csv_file_name
@@ -362,19 +362,20 @@ subroutine csv_file_line_count ( csv_file_name, line_num )
   integer ( kind = 4 ) input_unit
   character ( len = 1023 ) line
   integer ( kind = 8 ) line_num
+!  type(option_type) :: option
 
   line_num = -1
-
 
   open (IUNIT_TEMP, file = csv_file_name, status = 'old', &
     iostat = input_status )
 
-!  if ( input_status /= 0 ) then
-!    write ( *, '(a)' ) ' '
-!    write ( *, '(a)' ) 'CSV_FILE_LINE_COUNT - Fatal error!'
-!    write ( *, '(a,i8)' ) '  Could not open "' // trim ( csv_file_name ) // '".'
-!    stop
-!  end if
+  if ( input_status /= 0 ) then
+     print *,'CSV file ' // trim(csv_file_name) // 'not found.'
+!     option%io_buffer = 'CSV file ' !// trim(csv_file_name) // ' not found.'
+!     call PrintErrMsg(option,'csv file wrong')
+
+    stop
+  end if
 
   line_num = 0
 
@@ -420,23 +421,25 @@ subroutine csv_file_open_read ( csv_file_name, csv_file_unit )
 !
 !    Input, character ( len = * ) CSV_FILE_NAME, the name of the file.
 !
-!
+  !
+
   implicit none
 
   character ( len = * ) csv_file_name
   integer ( kind = 4 ) csv_file_status
   integer ( kind = 4 ) csv_file_unit
 
+
   open (IUNIT_TEMP, file = csv_file_name, status = 'old', &
     iostat = csv_file_status )
 
-  if ( csv_file_status /= 0 ) then
-!    write ( *, '(a)' ) ' '
-!    write ( *, '(a)' ) 'CSV_FILE_OPEN_READ - Fatal error!'
-!    write ( *, '(a,i8)' ) '  Could not open "' // trim ( csv_file_name ) // '".'
-    csv_file_unit = - 1
-    stop
-  end if
+  
+!  if ( csv_file_status /= 0 ) then
+!     option%io_buffer = 'CSV file ' !// trim(csv_file_name) // 'not found.'
+!     call PrintErrMsg(option)
+
+!    stop
+!  end if
 
   return
 end subroutine csv_file_open_read
@@ -458,7 +461,6 @@ subroutine knnr_init()
 
 
   integer, dimension(2) :: data_array_shape
-
 
 
   call read_my_csv_data ()
@@ -537,19 +539,19 @@ subroutine knnr_init()
 
   
 
-!  f(1) = current_temp_C + 273.15d0
-!  f(2) = log10(conc(1)) ! Env_CO3_2n
-!  f(3) = log10(conc(2)) ! Env_O2
-!  f(4) = log10(conc(3)) ! Env_Fe_2p
-!  f(5) = log10(conc(4)) ! Env_H2
-!  f(6) = log10(rad0)
+  f(1) = current_temp_C + 273.15d0
+  f(2) = log10(conc(1)) ! Env_CO3_2n
+  f(3) = log10(conc(2)) ! Env_O2
+  f(4) = log10(conc(3)) ! Env_Fe_2p
+  f(5) = log10(conc(4)) ! Env_H2
+  f(6) = log10(rad0)
 
-  !  print *,f(1),conc(1),conc(2),conc(3),conc(4),rad0
+
 
   !Testing Purposes
-  call random_number(rv)
-  rind = floor(rv*tree%n)+1
-  f = tree%the_data(:,rind)
+!  call random_number(rv)
+!  rind = floor(rv*tree%n)+1
+!  f = tree%the_data(:,rind)
 
   
   nn=7
@@ -561,19 +563,10 @@ subroutine knnr_init()
 
   call inverse_distance(results,nn,qoi_ave)
 
-!    qoi_sum = 0.d0 
+  fuelDisRate = (qoi_ave)*270.0 !convert units
 
-!  do i_d = 1,nn
-!     myresult = results(i_d)
-!     qoi_i = table_data(myresult%idx,d+1)
-!    qoi_sum = qoi_sum + qoi_i
-!  end do
-
-!  fuelDisRate = (qoi_sum/float(nn))*270.0
-  fuelDisRate = (qoi_ave)*270.0
-
-  print *, 'mol/m2/yr', fuelDisRate/270.0
-  print *, 'known value', table_data(rind,d+1)
+!  print *, 'mol/m2/yr', fuelDisRate/270.0
+!  print *, 'known value', table_data(rind,d+1)
 
 end subroutine knnr_query
 
@@ -595,33 +588,31 @@ subroutine inverse_distance(results,nn,qoi_ave)
       myresult = results(i_d)
       qoi_i = table_data(myresult%idx,d+1)
       dis = myresult%dis
-!      dis =  tiny(0.0d0) 
-      print *, 'dis=',dis
-      if (dis == 0.0) then
+      dis = 1.0d-20
+      if (abs(dis) <= eps) then
          qoi_weights = 1.0
          qoi_sum = qoi_i
-         print *,'inside1'
+
          exit
-      elseif (isinfinite(1/dis)) then
+      elseif (isinfinite(abs(1/dis))) then
          qoi_weights = 1.0
          qoi_sum = qoi_i
-         print *,'inside2'
+         
          exit
       else 
-      !if dis is zero or close to zero => weight = 1 qoi_sum = qoi_i, qoi_weights = 1 => two if statements one for if dis equals exactly zero or if close to zero
-      weight = 1 / dis
-!      print *,'weight=',weight
-      qoi_sum = qoi_sum +qoi_i *weight
+
+         weight = 1 / dis
+
+         qoi_sum = qoi_sum +qoi_i *weight
       
-!      print *, 'dis =',dis
-!      print *, 'qoi=',qoi_i
-      qoi_weights = qoi_weights+weight
+
+         qoi_weights = qoi_weights+weight
       endif
 
    end do
  
-   print *,'qoi_sum=',qoi_sum
-   print *, 'qoi_weights=',qoi_weights
+!   print *,'qoi_sum=',qoi_sum
+!   print *, 'qoi_weights=',qoi_weights
    qoi_ave = qoi_sum/qoi_weights
    
 

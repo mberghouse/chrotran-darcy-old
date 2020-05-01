@@ -4044,7 +4044,7 @@ subroutine WFMechFMDMSurrogateDissolution(this,waste_form,pm,ierr)
                           this%scaler_variances, this%dissolution_rate)
   endif
 
-  print *,this%dissolution_rate
+!  print *,this%dissolution_rate
 
   ! convert total component concentration from mol/m3 back to mol/L (/1.d3)
   this%concentration = this%concentration/1.d3
