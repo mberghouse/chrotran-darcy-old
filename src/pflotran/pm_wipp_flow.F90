@@ -70,6 +70,7 @@ module PM_WIPP_Flow_class
                                      ! just before the PETSc solver.
     PetscBool :: scale_pressure ! pressure solution itself is scaled 
                                 ! this is used for advanced nonlinear methods
+    PetscBool :: scale_for_newtontr
     Vec :: scaling_vec
     ! When reading Dirichlet 2D Flared BC
     PetscInt, pointer :: dirichlet_dofs_ghosted(:) ! this array is zero-based indexing
@@ -202,6 +203,7 @@ subroutine PMWIPPFloInitObject(this)
   this%linear_system_scaling_factor = 1.d7
   this%scale_linear_system = PETSC_TRUE
   this%scale_pressure = PETSC_FALSE
+  this%scale_for_newtontr = PETSC_FALSE
   this%scaling_vec = PETSC_NULL_VEC
   nullify(this%dirichlet_dofs_ghosted)
   nullify(this%dirichlet_dofs_ints)
@@ -626,12 +628,37 @@ subroutine PMWIPPFloReadNewtonSelectCase(this,input,keyword,found, &
       this%scale_linear_system = PETSC_TRUE
     case('DO_NOT_SCALE_JACOBIAN')
       this%scale_linear_system = PETSC_FALSE
-    case('SCALE_PRESSURE') ! This option will scale solution, residual, and Jacobian
+    case('SCALE_PRESSURE')
       option%flow%scale_all_pressure = PETSC_TRUE
       this%scale_linear_system = PETSC_TRUE
-      call InputReadDouble(input,option,option%flow%pressure_scaling_factor)
-      call InputErrorMsg(input,option,keyword,error_string)
-      this%linear_system_scaling_factor = option%flow%pressure_scaling_factor
+      input%ierr = 0
+      call InputPushBlock(input,option)
+      do
+        call InputReadPflotranString(input,option)
+        if (InputCheckExit(input,option)) exit
+
+        call InputReadCard(input,option,keyword)
+        call InputErrorMsg(input,option,'keyword','SCALE_PRESSURE')
+        call StringToUpper(keyword)
+
+        select case(trim(keyword))
+          case('SCALE_JACOBIAN')
+            this%scale_linear_system = PETSC_TRUE
+          case('DO_NOT_SCALE_JACOBIAN')
+            this%scale_linear_system = PETSC_FALSE
+          case('SCALE_FACTOR')
+            call InputReadDouble(input,option, &
+                                 option%flow%pressure_scaling_factor)
+            call InputErrorMsg(input,option,keyword,error_string)
+            this%linear_system_scaling_factor = &
+                                        option%flow%pressure_scaling_factor
+          case default
+            option%io_buffer  = 'SCALE_PRESSURE option: ' // trim(word) // &
+                              ' unknown.'
+            call PrintErrMsg(option)
+        end select
+      enddo
+      call InputPopBlock(input,option)
     case default
       found = PETSC_FALSE
 
@@ -1272,7 +1299,7 @@ subroutine PMWIPPFloResidual(this,snes,xx,r,ierr)
   if (this%realization%debug%vecview_solution) then
     string = 'WFxx'
     call DebugCreateViewer(this%realization%debug,string,this%option,viewer)
-    call VecView(xx,viewer,ierr);CHKERRQ(ierr)
+!    call VecView(xx,viewer,ierr);CHKERRQ(ierr)
     call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
   endif
 
@@ -1311,8 +1338,9 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   PetscReal :: array(1,1)
   PetscReal, pointer :: vec_p(:)
 
-
-  call WIPPFloJacobian(snes,xx,A,B,this%realization,this%pmwss_ptr,ierr)
+  if (.not.this%scale_for_newtontr) then
+    call WIPPFloJacobian(snes,xx,A,B,this%realization,this%pmwss_ptr,ierr)
+  endif
 
   ! cell-centered dirichlet BCs
   if (associated(this%dirichlet_dofs_ghosted)) then
@@ -1352,12 +1380,10 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
 
   call SNESGetFunction(snes,residual_vec,PETSC_NULL_FUNCTION, &
                        PETSC_NULL_INTEGER,ierr);CHKERRQ(ierr)
-  if (this%scale_linear_system) then
-!    if (this%option%mycommsize > 1) then
-!      this%option%io_buffer = 'WIPP FLOW matrix scaling not allowed in &
-!        &parallel.'
-!      call PrintErrMsg(this%option)
-!    endif
+  if (this%scale_linear_system .or. this%scale_for_newtontr) then
+    if (this%scale_for_newtontr) then
+      this%scale_for_newtontr = PETSC_FALSE
+    endif
     call VecGetLocalSize(this%scaling_vec,matsize,ierr);CHKERRQ(ierr)
     call VecSet(this%scaling_vec,1.d0,ierr);CHKERRQ(ierr)
     call VecGetArrayF90(this%scaling_vec,vec_p,ierr);CHKERRQ(ierr)
@@ -1433,23 +1459,27 @@ subroutine PMWIPPFloCheckUpdatePre(this,snes,X,dX,changed,ierr)
   PetscBool :: changed
   PetscErrorCode :: ierr
   PetscReal :: inverse_factor
-  
+
   this%convergence_flags = 0
   this%convergence_reals = 0.d0
   changed = PETSC_FALSE
 
-  if (this%linear_system_scaling_factor /= &
-     this%option%flow%pressure_scaling_factor) then
+  if (this%scale_linear_system .neqv. &
+      this%option%flow%scale_all_pressure) then
     if (this%scale_linear_system) then
       changed = PETSC_TRUE
       call VecStrideScale(dX,ZERO_INTEGER,this%linear_system_scaling_factor, &
-        ierr);CHKERRQ(ierr)
+                          ierr);CHKERRQ(ierr)
     endif
 
     if (this%option%flow%scale_all_pressure) then
       changed = PETSC_TRUE
       inverse_factor = this%option%flow%pressure_scaling_factor**(-1.d0)
       call VecStrideScale(dX,ZERO_INTEGER,inverse_factor, ierr);CHKERRQ(ierr)
+      if (.not.this%scale_linear_system) then
+        changed = PETSC_FALSE
+        this%scale_for_newtontr = PETSC_TRUE
+      endif
     endif
   endif
     
