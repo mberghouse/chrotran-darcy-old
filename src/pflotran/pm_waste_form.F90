@@ -408,7 +408,7 @@ module PM_Waste_Form_class
   contains
     procedure, public :: SetRealization => PMWFSetRealization
     procedure, public :: Setup => PMWFSetup
-    procedure, public :: ReadPMBlock => PMWFReadBlock
+    procedure, public :: ReadPMBlock => PMWFReadPMBlock
     procedure, public :: InitializeRun => PMWFInitializeRun
     procedure, public :: InitializeTimestep => PMWFInitializeTimestep
     procedure, public :: FinalizeTimestep => PMWFFinalizeTimestep
@@ -972,7 +972,7 @@ end function PMWFCreate
 
 ! ************************************************************************** !
 
-subroutine PMWFReadBlock(this,input)
+subroutine PMWFReadPMBlock(this,input)
   ! 
   ! Reads input file parameters associated with the waste form process model
   ! 
@@ -1182,7 +1182,7 @@ subroutine PMWFReadBlock(this,input)
     cur_waste_form => cur_waste_form%next
   enddo
     
-end subroutine PMWFReadBlock
+end subroutine PMWFReadPMBlock
 
 ! ************************************************************************** !
 
@@ -4528,13 +4528,13 @@ subroutine PMWFOutputHeader(this)
                              icolumn)
     do i = 1, cur_waste_form%mechanism%num_species
       variable_string = trim(cur_waste_form%mechanism%rad_species_list(i)%name) &
-                        // ' Cum. Mass Flux'
+                        // ' Cum. Release'
       ! cumulative
       units_string = 'mol'
       call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                                icolumn)
       variable_string = trim(cur_waste_form%mechanism%rad_species_list(i)%name) &
-                        // ' Inst. Mass Flux'
+                        // ' Release Rate'
       ! instantaneous
       units_string = 'mol/s' !// trim(adjustl(output_option%tunit))
       call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
@@ -4553,11 +4553,11 @@ subroutine PMWFOutputHeader(this)
     units_string = 'm^3'
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
-    variable_string = 'WF Vitality Degradation Rate'
+    variable_string = 'Canister Vitality Deg. Rate'
     units_string = '1/yr'
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
-    variable_string = 'WF Canister Vitality'
+    variable_string = 'Canister Vitality'
     units_string = '%' 
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
