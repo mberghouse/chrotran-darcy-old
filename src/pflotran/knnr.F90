@@ -588,7 +588,7 @@ subroutine inverse_distance(results,nn,qoi_ave)
       myresult = results(i_d)
       qoi_i = table_data(myresult%idx,d+1)
       dis = myresult%dis
-      dis = 1.0d-20
+     
       if (abs(dis) <= eps) then
          qoi_weights = 1.0
          qoi_sum = qoi_i
