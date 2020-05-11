@@ -215,10 +215,14 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
       if (associated(condition%temperature)) then
         if (associated(DatasetCommonHDF5Cast(condition%&
                                              temperature%dataset))) then
-          option%io_buffer = 'HDF5-type datasets for temperature are not &
-            &supported in combination with hydrostatic, seepage, or &
-            &conductance boundary conditions for pressure.'
-          call PrintErrMsg(option)
+       !############# Pin changed these ####################! 
+        temperature_at_datum = condition%temperature%dataset%rarray(1)
+        
+        ! option%io_buffer = 'HDF5-type datasets for temperature are not &
+          !  &supported in combination with hydrostatic, seepage, or &
+          !  &conductance boundary conditions for pressure.'
+         ! call PrintErrMsg(option)
+       !#############################################!
         endif
         if (condition%temperature%itype == DIRICHLET_BC) then
 #ifndef THDIRICHLET_TEMP_BC_HACK
@@ -228,6 +232,21 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
           if (associated(condition%temperature%dataset%rarray)) then
             temperature_at_datum = &
               condition%temperature%dataset%rarray(1)
+          
+ !########################################Dipankar added these ####################################################
+          else if  (associated(DatasetCommonHDF5Cast(condition%&
+                                   temperature%dataset))) then
+           class is (dataset_gridded_hdf5_type)
+                   temperature_at_datum = condition%temperature%dataset%rarray(1)
+
+                call EOSWaterDensityExt(temperature,pressure,aux,rho_one,dummy,ierr)
+                     if (ierr /= 0) then
+                       call PrintMsgByCell(option,-1, &
+                                'Error in HydrostaticUpdateCoupler->EOSWaterDensity')
+                   endif
+
+!################################################################################################################
+
           else
             temperature_at_datum = option%reference_temperature
           endif
