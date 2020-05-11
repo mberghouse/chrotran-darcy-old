@@ -1288,6 +1288,7 @@ subroutine PMWIPPFloResidual(this,snes,xx,r,ierr)
     enddo
     call VecRestoreArrayF90(r, r_p, ierr);CHKERRQ(ierr)
   endif
+
   call VecCopy(r,this%stored_residual_vec,ierr);CHKERRQ(ierr)
 
   if (this%realization%debug%vecview_residual) then
@@ -1380,7 +1381,7 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
 
   call SNESGetFunction(snes,residual_vec,PETSC_NULL_FUNCTION, &
                        PETSC_NULL_INTEGER,ierr);CHKERRQ(ierr)
-  if (this%scale_linear_system .or. this%scale_for_newtontr) then
+  if (PETSC_FALSE) then !this%scale_linear_system .or. this%scale_for_newtontr) then
     if (this%scale_for_newtontr) then
       this%scale_for_newtontr = PETSC_FALSE
     endif
@@ -1464,6 +1465,15 @@ subroutine PMWIPPFloCheckUpdatePre(this,snes,X,dX,changed,ierr)
   this%convergence_reals = 0.d0
   changed = PETSC_FALSE
 
+  changed = PETSC_TRUE
+  inverse_factor = this%option%flow%pressure_scaling_factor**(-1.d0)
+  call VecStrideScale(dX,ZERO_INTEGER,inverse_factor, ierr);CHKERRQ(ierr)
+
+#if 0
+  changed = PETSC_TRUE
+  call VecStrideScale(dX,ZERO_INTEGER,this%linear_system_scaling_factor, &
+                      ierr);CHKERRQ(ierr)
+
   if (this%scale_linear_system .neqv. &
       this%option%flow%scale_all_pressure) then
     if (this%scale_linear_system) then
@@ -1482,7 +1492,8 @@ subroutine PMWIPPFloCheckUpdatePre(this,snes,X,dX,changed,ierr)
       endif
     endif
   endif
-    
+#endif
+
 end subroutine PMWIPPFloCheckUpdatePre
 
 ! ************************************************************************** !
