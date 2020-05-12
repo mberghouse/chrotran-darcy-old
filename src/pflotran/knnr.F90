@@ -14,10 +14,11 @@ module kNNr_module
   implicit none
 
   type(kdtree2), pointer :: tree
-  real(kdkind), dimension(:,:), allocatable :: my_array
-  integer :: n, d
-  real ( kind = 8 ), allocatable :: table_data(:,:)
-  real(kdkind) :: eps = tiny(0.0d0)
+  PetscReal, dimension(:,:), allocatable :: my_array
+  PetscInt :: n,d
+  PetscReal, allocatable :: table_data(:,:)
+  PetscReal :: eps = tiny(0.0d0)
+
 
 contains
   
@@ -452,15 +453,13 @@ end subroutine csv_file_open_read
 subroutine knnr_init()
 
 
-  real(kdkind), allocatable :: query_vec(:)
-
 
   ! this is how you declare a tree in your main program
 
-  integer :: i_n,i_d,k
+  PetscInt :: i_n,i_d
 
 
-  integer, dimension(2) :: data_array_shape
+  PetscInt, dimension(2) :: data_array_shape
 
 
   call read_my_csv_data ()
@@ -507,13 +506,12 @@ subroutine knnr_init()
     PetscReal :: f1, f2, f3, f4, f5
     PetscReal :: AOF, rad0a, rad0
 
-   integer   :: nn, i_d
- 
-  real(kdkind) :: qoi_i, qoi_sum, qoi_ave, qoi_int
+    PetscInt :: nn
 
+    PetscReal :: qoi_ave
       
   type(kdtree2_result),allocatable :: results(:)
-  type(kdtree2_result)::myresult
+
 
   !Testing parameters
   integer   :: rind
@@ -577,18 +575,18 @@ subroutine knnr_close()
 
 subroutine inverse_distance(results,nn,qoi_ave)
 
-   real(kdkind) :: rv, qoi_i, qoi_sum, qoi_ave, qoi_int, qoi_weights,weight,dis
+   PetscReal :: qoi_i, qoi_sum, qoi_ave, qoi_weights, weight, dis
    type(kdtree2_result)::myresult
    type(kdtree2_result),allocatable :: results(:), resultsb(:)
 
-    integer   :: nnbrute, rind, nn, i_d
+   PetscInt :: i_d,nn
 
    
    do i_d = 1,nn
       myresult = results(i_d)
       qoi_i = table_data(myresult%idx,d+1)
       dis = myresult%dis
-      dis = 1.0d-20
+     
       if (abs(dis) <= eps) then
          qoi_weights = 1.0
          qoi_sum = qoi_i
@@ -620,11 +618,12 @@ subroutine inverse_distance(results,nn,qoi_ave)
 
   function isinfinite(value1)
 
-   implicit none
+    implicit none
 
-   logical :: isinfinite
-   real(kdkind) :: value1
-   real(kdkind) :: infinity
+    PetscBool :: isinfinite
+    PetscReal :: value1
+    PetscReal :: infinity
+
 
    isinfinite = .false.
    
