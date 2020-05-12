@@ -1284,7 +1284,7 @@ subroutine PMWIPPFloResidual(this,snes,xx,r,ierr)
   if (this%realization%debug%vecview_solution) then
     string = 'WFxx'
     call DebugCreateViewer(this%realization%debug,string,this%option,viewer)
-!    call VecView(xx,viewer,ierr);CHKERRQ(ierr)
+    call VecView(xx,viewer,ierr);CHKERRQ(ierr)
     call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
   endif
 
