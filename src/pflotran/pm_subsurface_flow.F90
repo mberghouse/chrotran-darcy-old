@@ -264,10 +264,11 @@ subroutine PMSubsurfaceFlowReadNewtonSelectCase(this,input,keyword,found, &
   
   class(pm_subsurface_flow_type) :: this
   type(input_type), pointer :: input
-  character(len=MAXWORDLENGTH) :: keyword
+  character(len=MAXWORDLENGTH) :: keyword, word
   PetscBool :: found
-  character(len=MAXSTRINGLENGTH) :: error_string
+  character(len=MAXSTRINGLENGTH) :: error_string, string
   type(option_type), pointer :: option
+  PetscErrorCode :: ierr
 
 !  found = PETSC_FALSE
 !  call PMBaseReadNewtonSelectCase(this,input,keyword,found,error_string,option)
@@ -275,7 +276,114 @@ subroutine PMSubsurfaceFlowReadNewtonSelectCase(this,input,keyword,found, &
 
   found = PETSC_TRUE
   select case(trim(keyword))
-  
+
+    case ('NEWTONTR','NEWTON_TRUST_REGION_DOGLEG', &
+          'NEWTON_TRUST_REGION','NEWTON_TR')
+      string = '-snes_type'
+      call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                trim(string),trim('newtontr'), &
+                                ierr);CHKERRQ(ierr)
+      input%ierr = 0
+      call InputPushBlock(input,option)
+      do
+        call InputReadPflotranString(input,option)
+        if (InputCheckExit(input,option)) exit
+
+        call InputReadCard(input,option,keyword)
+        call InputErrorMsg(input,option,'keyword','NEWTON_TRUST_REGION')
+        call StringToUpper(keyword)
+
+        select case(trim(keyword))
+          case('TR_TOL')
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_trtol'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('ETA1') ! 0 =< ETA1 <= ETA2, ETA3 = 0.75
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_tr_eta1'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('ETA2')
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_tr_eta2'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('ETA3')
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_tr_eta3'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('T1') ! SHRINK BY THIS FACTOR 0.25
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_tr_t1'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('T2') ! EXPAND BY THIS FACTOR 2.00
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_tr_t2'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('DELTA_M','DELTAM')
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_tr_deltaM'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('DELTA_0','DELTA0')
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_tr_delta0'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case('USE_CAUCHY')
+            call InputReadWord(input,option,word,PETSC_TRUE)
+            call InputErrorMsg(input,option, &
+                               'BoomerAMG convergence tolerance', &
+                               'CPR OPTIONS, HYPRE options')
+            string = '-flow_snes_use_cauchy'
+            call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
+                                      trim(string),trim(word), &
+                                      ierr);CHKERRQ(ierr)
+          case default
+            option%io_buffer  = 'NEWTON_TRUST_REGION option: ' // trim(word) // &
+                              ' unknown.'
+            call PrintErrMsg(option)
+        end select
+      enddo
+      call InputPopBlock(input,option)
+
+
     case('PRESSURE_DAMPENING_FACTOR')
       call InputReadDouble(input,option,this%pressure_dampening_factor)
       call InputErrorMsg(input,option,keyword,error_string)
