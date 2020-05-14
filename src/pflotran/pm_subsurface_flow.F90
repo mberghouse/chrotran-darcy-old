@@ -279,6 +279,7 @@ subroutine PMSubsurfaceFlowReadNewtonSelectCase(this,input,keyword,found, &
 
     case ('NEWTONTR','NEWTON_TRUST_REGION_DOGLEG', &
           'NEWTON_TRUST_REGION','NEWTON_TR')
+      this%option%flow%using_newtontrd = PETSC_TRUE
       string = '-snes_type'
       call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                 trim(string),trim('newtontr'), &

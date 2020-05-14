@@ -25,6 +25,7 @@ module Option_Flow_module
     PetscBool :: only_energy_eq
     PetscBool :: scale_all_pressure
     PetscReal :: pressure_scaling_factor
+    PetscBool :: using_newtontrd
 
   end type flow_option_type
   
@@ -115,6 +116,7 @@ subroutine OptionFlowInitRealization(option)
   option%only_energy_eq = PETSC_FALSE
   option%scale_all_pressure = PETSC_FALSE
   option%pressure_scaling_factor = 1.d7
+  option%using_newtontrd = PETSC_FALSE
 
 end subroutine OptionFlowInitRealization
 
