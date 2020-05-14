@@ -16,7 +16,7 @@ module kNNr_module
   type(kdtree2), pointer :: tree
   PetscReal, dimension(:,:), allocatable :: my_array
   PetscInt :: n,d
-  PetscReal, allocatable :: table_data(:,:)
+  real, allocatable :: table_data(:,:)
   PetscReal :: eps = tiny(0.0d0)
 
 
@@ -447,6 +447,175 @@ end subroutine csv_file_open_read
 
 !***********************************
 !***********************************
+
+subroutine read_my_h5_file()
+
+  use hdf5
+  use HDF5_Aux_module
+
+  implicit none
+
+  character(len=MAXSTRINGLENGTH) :: h5_name = 'test.h5'
+  character(len=MAXSTRINGLENGTH) :: string
+  character(len=MAXSTRINGLENGTH) :: group_name = '/'
+  character(len=MAXSTRINGLENGTH) :: dataset_name1 = 'Temp'
+  character(len=MAXSTRINGLENGTH) :: dataset_name2 = 'Env_CO3_2n'
+  character(len=MAXSTRINGLENGTH) :: dataset_name3 = 'Env_O2'
+  character(len=MAXSTRINGLENGTH) :: dataset_name4 = 'Env_Fe_2p'
+  character(len=MAXSTRINGLENGTH) :: dataset_name5 = 'Env_H2'
+  character(len=MAXSTRINGLENGTH) :: dataset_name6 = 'Dose Rate d0'
+  character(len=MAXSTRINGLENGTH) :: dataset_name7 = 'UO2 Surface Flux'
+
+  integer(HID_T) :: prop_id
+  integer(HID_T) :: file_id
+  integer(HID_T) :: parent_id
+  integer(HID_T) :: group_id
+  integer(HID_T) :: dataset_id
+  integer(HID_T) :: file_space_id
+
+  integer(HSIZE_T), allocatable :: dims_h5(:), max_dims_h5(:)
+
+  integer :: ndims_h5
+!  integer :: 
+  real, dimension(:), allocatable :: dset_data
+  
+  PetscMPIInt :: hdf5_err
+  PetscErrorCode :: ierr
+
+ 
+  call h5open_f(hdf5_err)
+ 
+  call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
+ 
+  !hdf5openfilereadonlt
+  call h5fopen_f(h5_name,H5F_ACC_RDONLY_F,file_id,hdf5_err,prop_id)
+ 
+  if (hdf5_err /= 0) then
+     print *, 'h5 file not found'
+     stop
+  endif
+
+  call h5pclose_f(prop_id,hdf5_err)
+
+  !hdf5groupopen
+  string = adjustl(group_name)
+  call h5gopen_f(file_id,trim(string),group_id,hdf5_err)
+  if (hdf5_err < 0) then
+    print *, 'HDF5 Group "' // trim(string) // '" not found.'
+    stop
+  endif
+
+  !!!!!!!!!!!!!!!!!!! Repeat
+  call h5dopen_f(group_id,dataset_name1,dataset_id,hdf5_err)
+ 
+  if (hdf5_err < 0) then
+    print *, "dataset not found"
+    stop
+  endif
+ 
+  ! get dataspace ID
+  call h5dget_space_f(dataset_id,file_space_id,hdf5_err)
+ 
+  ! 366 ???
+  call h5sget_simple_extent_ndims_f(file_space_id,ndims_h5,hdf5_err)
+
+  allocate(dims_h5(ndims_h5))
+  allocate(max_dims_h5(ndims_h5))
+  
+  call h5sget_simple_extent_dims_f(file_space_id,dims_h5,max_dims_h5,hdf5_err)
+  !
+ 
+  allocate(dset_data(dims_h5(1)))
+  allocate(table_data(7,dims_h5(1)))
+  ! 501
+  
+  !dset_data
+  call h5dread_f(dataset_id,H5T_NATIVE_REAL, table_data(1,:), dims_h5, &
+       hdf5_err)!, memory_space_id, file_space_id,prop_id)
+
+  !  print *,log10(table_data(1,:))
+ ! print *,dset_data(1)
+  
+  call h5dclose_f(dataset_id,hdf5_err)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+  call get_h5_dataset(group_id,dims_h5,dataset_name3,2)
+  call get_h5_dataset(group_id,dims_h5,dataset_name3,3)
+  call get_h5_dataset(group_id,dims_h5,dataset_name4,4)
+  call get_h5_dataset(group_id,dims_h5,dataset_name5,5)
+  call get_h5_dataset(group_id,dims_h5,dataset_name6,6)
+  call get_h5_dataset(group_id,dims_h5,dataset_name7,7)
+  
+  call h5gclose_f(group_id,hdf5_err)
+  call h5fclose_f(file_id,hdf5_err)
+  call h5close_f(hdf5_err)
+
+
+  table_data(2,:) = log10(table_data(2,:))
+  table_data(3,:) = log10(table_data(3,:))
+  table_data(4,:) = log10(table_data(4,:))
+  table_data(5,:) = log10(table_data(5,:))
+  table_data(6,:) = log10(table_data(6,:))
+
+  !testing purposes
+!  deallocate(table_data)
+end subroutine read_my_h5_file
+
+
+subroutine get_h5_dataset(group_id,dims_h5,dataset_name,i)
+
+  use hdf5
+  use HDF5_Aux_module
+
+  implicit none
+
+  integer(HID_T) :: group_id
+  integer(HID_T) :: dataset_id
+  integer(HID_T) :: file_space_id
+
+   integer :: ndims_h5
+
+
+  integer(HSIZE_T),allocatable :: dims_h5(:), max_dims_h5(:)
+
+  PetscInt :: i
+
+  character(len=MAXSTRINGLENGTH) :: dataset_name
+  PetscMPIInt :: hdf5_err
+
+
+    !!!!!!!!!!!!!!!!!!! Repeat
+  call h5dopen_f(group_id,dataset_name,dataset_id,hdf5_err)
+ 
+  if (hdf5_err < 0) then
+    print *, "dataset not found"
+    stop
+  endif
+ 
+  ! get dataspace ID
+  call h5dget_space_f(dataset_id,file_space_id,hdf5_err)
+
+!    call h5sget_simple_extent_ndims_f(file_space_id,ndims_h5,hdf5_err)
+
+!  allocate(dims_h5(ndims_h5))
+!  allocate(max_dims_h5(ndims_h5))
+  
+!  call h5sget_simple_extent_dims_f(file_space_id,dims_h5,max_dims_h5,hdf5_err)
+ 
+  
+  !dset_data
+  call h5dread_f(dataset_id,H5T_NATIVE_REAL, table_data(i,:), dims_h5, &
+       hdf5_err)!, memory_space_id, file_space_id,prop_id)
+
+  !  print *,log10(table_data(1,:))
+  !print *, tabl
+  
+  call h5dclose_f(dataset_id,hdf5_err)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+end subroutine get_h5_dataset
+
 !***********************************
 !***********************************
 
@@ -461,27 +630,42 @@ subroutine knnr_init()
 
   PetscInt, dimension(2) :: data_array_shape
 
-
-  call read_my_csv_data ()
+  call read_my_h5_file()
+!  call read_my_csv_data ()
  
 
+!  data_array_shape = shape(table_data)
+!  n = data_array_shape(1)
+!  d = data_array_shape(2)-1 ! Quantities of Interest (QoI) is not part of the search query of the search query.
+
+!  allocate(my_array(d,n))
+!  print *, 'n= ', n
+!  print *, 'd= ', d
+  
+!  do i_d = 1, d
+!    do i_n = 1, n
+!       if (i_d == 1) then
+!          my_array(i_d,i_n) = table_data(i_n,i_d)
+!       else
+!          my_array(i_d,i_n) = log10(table_data(i_n,i_d))
+!       endif     
+!    end do
+! end do
+
   data_array_shape = shape(table_data)
-  n = data_array_shape(1)
-  d = data_array_shape(2)-1 ! Quantities of Interest (QoI) is not part of the search query of the search query.
+  n = data_array_shape(1)-1
+  d = data_array_shape(2) ! Quantities of Interest (QoI) is not part of the search query of the search query.
 
-  allocate(my_array(d,n))
-
-  do i_d = 1, d
-    do i_n = 1, n
-       if (i_d == 1) then
-          my_array(i_d,i_n) = table_data(i_n,i_d)
-       else
-          my_array(i_d,i_n) = log10(table_data(i_n,i_d))
-       endif     
-    end do
- end do
-
-
+  allocate(my_array(n,d))
+  my_array(1,:) = table_data(1,:)
+  my_array(2,:) = table_data(2,:)
+  my_array(3,:) = table_data(3,:)
+  my_array(4,:) = table_data(4,:)
+  my_array(5,:) = table_data(5,:)
+  my_array(6,:) = table_data(6,:)
+  
+!  print *, my_array
+ !my_array
  tree => kdtree2_create(my_array,sort=.false.,rearrange=.false.) 
 
 

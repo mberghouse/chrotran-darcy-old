@@ -232,35 +232,6 @@ bigloop:  do
     return
   end subroutine heapify
 
-  subroutine pq_max(a,e)
-    !
-    ! return the priority and its payload of the maximum priority element
-    ! on the queue, which should be the first one, if it is
-    ! in heapified form.
-    !
-    type(pq),pointer :: a
-    type(kdtree2_result),intent(out)  :: e
-
-    if (a%heap_size .gt. 0) then
-       e = a%elems(1)
-    else
-       write (*,*) 'PQ_MAX: ERROR, heap_size < 1'
-       stop
-    endif
-    return
-  end subroutine pq_max
-
-  real(kdkind) function pq_maxpri(a)
-    type(pq), pointer :: a
-
-    if (a%heap_size .gt. 0) then
-       pq_maxpri = a%elems(1)%dis
-    else
-       write (*,*) 'PQ_MAX_PRI: ERROR, heapsize < 1'
-       stop
-    endif
-    return
-  end function pq_maxpri
 
   subroutine pq_extract_max(a,e)
     !
@@ -336,47 +307,6 @@ bigloop:  do
 
   end function pq_insert
 
-  subroutine pq_adjust_heap(a,i)
-    type(pq),pointer  :: a
-    integer, intent(in) :: i
-    !
-    ! nominally arguments (a,i), but specialize for a=1
-    !
-    ! This routine assumes that the trees with roots 2 and 3 are already heaps, i.e.
-    ! the children of '1' are heaps.  When the procedure is completed, the
-    ! tree rooted at 1 is a heap.
-    real(kdkind) :: prichild
-    integer :: parent, child, N
-
-    type(kdtree2_result) :: e
-
-    e = a%elems(i)
-
-    parent = i
-    child = 2*i
-    N = a%heap_size
-
-    do while (child .le. N)
-       if (child .lt. N) then
-          if (a%elems(child)%dis .lt. a%elems(child+1)%dis) then
-             child = child+1
-          endif
-       endif
-       prichild = a%elems(child)%dis
-       if (e%dis .ge. prichild) then
-          exit
-       else
-          ! move child into parent.
-          a%elems(parent) = a%elems(child)
-          parent = child
-          child = 2*parent
-       end if
-    end do
-    a%elems(parent) = e
-    return
-  end subroutine pq_adjust_heap
-
-
   real(kdkind) function pq_replace_max(a,dis,idx)
     !
     ! Replace the extant maximum priority element
@@ -448,26 +378,6 @@ bigloop:  do
     return
   end function pq_replace_max
 
-  subroutine pq_delete(a,i)
-    !
-    ! delete item with index 'i'
-    !
-    type(pq),pointer :: a
-    integer           :: i
-
-    if ((i .lt. 1) .or. (i .gt. a%heap_size)) then
-       write (*,*) 'PQ_DELETE: error, attempt to remove out of bounds element.'
-       stop
-    endif
-
-    ! swap the item to be deleted with the last element
-    ! and shorten heap by one.
-    a%elems(i) = a%elems(a%heap_size)
-    a%heap_size = a%heap_size - 1
-
-    call heapify(a,i)
-
-  end subroutine pq_delete
 
 end module kdtree2_priority_queue_module
 
@@ -497,18 +407,13 @@ module kdtree2_module
   public :: kdtree2, kdtree2_result, tree_node, kdtree2_create, kdtree2_destroy
   !---------------------------------------------------------------
   !-------------------SEARCH ROUTINES-----------------------------
-  public :: kdtree2_n_nearest,kdtree2_n_nearest_around_point
+  public :: kdtree2_n_nearest !,kdtree2_n_nearest_around_point
   ! Return fixed number of nearest neighbors around arbitrary vector,
   ! or extant point in dataset, with decorrelation window.
   !
-!  public :: kdtree2_r_nearest !, kdtree2_r_nearest_around_point
-  ! Return points within a fixed ball of arb vector/extant point
-  !
+
   public :: kdtree2_sort_results
-  ! Sort, in order of increasing distance, results from above.
-  !
-!  public :: kdtree2_r_count!, kdtree2_r_count_around_point
-  ! Count points within a fixed ball of arb vector/extant point
+  
   !
   !----------------------------------------------------------------
 
@@ -718,18 +623,7 @@ contains
       logical :: recompute
       real(kdkind)    :: average
 
-!!$      If (.False.) Then
-!!$         If ((l .Lt. 1) .Or. (l .Gt. tp%n)) Then
-!!$            Stop 'illegal L value in build_tree_for_range'
-!!$         End If
-!!$         If ((u .Lt. 1) .Or. (u .Gt. tp%n)) Then
-!!$            Stop 'illegal u value in build_tree_for_range'
-!!$         End If
-!!$         If (u .Lt. l) Then
-!!$            Stop 'U is less than L, thats illegal.'
-!!$         End If
-!!$      Endif
-!!$
+
       ! first compute min and max
       dimen = tp%dimen
       allocate (res)
@@ -1084,49 +978,7 @@ contains
     return
   end subroutine kdtree2_n_nearest
 
-  subroutine kdtree2_n_nearest_around_point(tp,idxin,correltime,nn,results)
-    ! Find the 'nn' vectors in the tree nearest to point 'idxin',
-    ! with correlation window 'correltime', returing results in
-    ! results(:), which must be pre-allocated upon entry.
-    type (kdtree2), pointer        :: tp
-    integer, intent (In)           :: idxin, correltime, nn
-    type(kdtree2_result), target   :: results(:)
-
-    allocate (sr%qv(tp%dimen))
-    sr%qv = tp%the_data(:,idxin) ! copy the vector
-    sr%ballsize = huge(1.0)       ! the largest real(kdkind) number
-    sr%centeridx = idxin
-    sr%correltime = correltime
-
-    sr%nn = nn
-    sr%nfound = 0
-
-    sr%dimen = tp%dimen
-    sr%nalloc = nn
-
-    sr%results => results
-
-    sr%ind => tp%ind
-    sr%rearrange = tp%rearrange
-
-    if (sr%rearrange) then
-       sr%Data => tp%rearranged_data
-    else
-       sr%Data => tp%the_data
-    endif
-
-    call validate_query_storage(nn)
-    sr%pq = pq_create(results)
-
-    call search(tp%root)
-
-    if (tp%sort) then
-       call kdtree2_sort_results(nn, results)
-    endif
-    deallocate (sr%qv)
-    return
-  end subroutine kdtree2_n_nearest_around_point
-  
+ 
 
 
   subroutine validate_query_storage(n)
