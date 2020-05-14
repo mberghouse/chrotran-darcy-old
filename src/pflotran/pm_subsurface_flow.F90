@@ -277,8 +277,7 @@ subroutine PMSubsurfaceFlowReadNewtonSelectCase(this,input,keyword,found, &
   found = PETSC_TRUE
   select case(trim(keyword))
 
-    case ('NEWTONTR','NEWTON_TRUST_REGION_DOGLEG', &
-          'NEWTON_TRUST_REGION','NEWTON_TR')
+    case ('NEWTONTRD','NEWTON_TRUST_REGION_DOGLEG','NEWTON_TRD')
       this%option%flow%using_newtontrd = PETSC_TRUE
       string = '-snes_type'
       call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
@@ -291,7 +290,7 @@ subroutine PMSubsurfaceFlowReadNewtonSelectCase(this,input,keyword,found, &
         if (InputCheckExit(input,option)) exit
 
         call InputReadCard(input,option,keyword)
-        call InputErrorMsg(input,option,'keyword','NEWTON_TRUST_REGION')
+        call InputErrorMsg(input,option,'keyword','NEWTON_TRUST_REGION_DOGLEG')
         call StringToUpper(keyword)
 
         select case(trim(keyword))
