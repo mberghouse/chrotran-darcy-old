@@ -6,6 +6,8 @@
 !
 module kdtree2_precision_module
 
+  implicit none
+
   integer, parameter :: sp = kind(0.0)
   integer, parameter :: dp = kind(0.0d0)
 
@@ -26,7 +28,12 @@ module kdtree2_precision_module
 end module kdtree2_precision_module
 
 module kdtree2_priority_queue_module
+
+ 
+  
   use kdtree2_precision_module
+
+  
   !
   ! maintain a priority queue (PQ) of data, pairs of 'priority/payload',
   ! implemented with a binary heap.  This is the type, and the 'dis' field
@@ -37,39 +44,8 @@ module kdtree2_priority_queue_module
       real(kdkind)    :: dis!=0.0
       integer :: idx!=-1   Initializers cause some bugs in compilers.
   end type kdtree2_result
-  !
-  ! A heap-based priority queue lets one efficiently implement the following
-  ! operations, each in log(N) time, as opposed to linear time.
-  !
-  ! 1)  add a datum (push a datum onto the queue, increasing its length)
-  ! 2)  return the priority value of the maximum priority element
-  ! 3)  pop-off (and delete) the element with the maximum priority, decreasing
-  !     the size of the queue.
-  ! 4)  replace the datum with the maximum priority with a supplied datum
-  !     (of either higher or lower priority), maintaining the size of the
-  !     queue.
-  !
-  !
-  ! In the k-d tree case, the 'priority' is the square distance of a point in
-  ! the data set to a reference point.   The goal is to keep the smallest M
-  ! distances to a reference point.  The tree algorithm searches terminal
-  ! nodes to decide whether to add points under consideration.
-  !
-  ! A priority queue is useful here because it lets one quickly return the
-  ! largest distance currently existing in the list.  If a new candidate
-  ! distance is smaller than this, then the new candidate ought to replace
-  ! the old candidate.  In priority queue terms, this means removing the
-  ! highest priority element, and inserting the new one.
-  !
-  ! Algorithms based on Cormen, Leiserson, Rivest, _Introduction
-  ! to Algorithms_, 1990, with further optimization by the author.
-  !
-  ! Originally informed by a C implementation by Sriranga Veeraraghavan.
-  !
-  ! This module is not written in the most clear way, but is implemented such
-  ! for speed, as it its operations will be called many times during searches
-  ! of large numbers of neighbors.
-  !
+
+
   type pq
       !
       ! The priority queue consists of elements
@@ -82,6 +58,9 @@ module kdtree2_priority_queue_module
       type(kdtree2_result), pointer :: elems(:)
   end type pq
 
+
+!  implicit none
+  
   public :: kdtree2_result
 
   public :: pq
@@ -449,17 +428,6 @@ module kdtree2_module
       ! dimensionality and total # of points
       real(kdkind), pointer :: the_data(:,:) => null()
       ! pointer to the actual data array
-      !
-      !  IMPORTANT NOTE:  IT IS DIMENSIONED   the_data(1:d,1:N)
-      !  which may be opposite of what may be conventional.
-      !  This is, because in Fortran, the memory layout is such that
-      !  the first dimension is in sequential order.  Hence, with
-      !  (1:d,1:N), all components of the vector will be in consecutive
-      !  memory locations.  The search time is dominated by the
-      !  evaluation of distances in the terminal nodes.  Putting all
-      !  vector components in consecutive memory location improves
-      !  memory cache locality, and hence search speed, and may enable
-      !  vectorization on some processors and compilers.
 
       integer, pointer :: ind(:) => null()
       ! permuted index into the data, so that indexes[l..u] of some
@@ -511,29 +479,9 @@ module kdtree2_module
 contains
 
   function kdtree2_create(input_data,dim,sort,rearrange) result (mr)
-    !
-    ! create the actual tree structure, given an input array of data.
-    !
-    ! Note, input data is input_data(1:d,1:N), NOT the other way around.
-    ! THIS IS THE REVERSE OF THE PREVIOUS VERSION OF THIS MODULE.
-    ! The reason for it is cache friendliness, improving performance.
-    !
-    ! Optional arguments:  If 'dim' is specified, then the tree
-    !                      will only search the first 'dim' components
-    !                      of input_data, otherwise, dim is inferred
-    !                      from SIZE(input_data,1).
-    !
-    !                      if sort .eqv. .true. then output results
-    !                      will be sorted by increasing distance.
-    !                      default=.false., as it is faster to not sort.
-    !
-    !                      if rearrange .eqv. .true. then an internal
-    !                      copy of the data, rearranged by terminal node,
-    !                      will be made for cache friendliness.
-    !                      default=.true., as it speeds searches, but
-    !                      building takes longer, and extra memory is used.
-    !
-    ! .. Function Return Cut_value ..
+
+    
+
     type (kdtree2), pointer :: mr
     integer, intent(in), optional      :: dim
     logical, intent(in), optional      :: sort
@@ -1318,7 +1266,11 @@ contains
     ! Sort a(1:n) in ascending order
     !
     !
+
+!    implicit none
+    
     integer,intent(in)                 :: n
+!    PetscInt :: n
     type(kdtree2_result),intent(inout) :: a(:)
 
     !
@@ -1331,10 +1283,6 @@ contains
     ileft=n/2+1
     iright=n
 
-    !    do i=1,n
-    !       ind(i)=i
-    ! Generate initial idum array
-    !    end do
 
     if(n.eq.1) return
 
