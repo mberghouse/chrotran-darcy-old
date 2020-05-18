@@ -287,6 +287,7 @@ subroutine inverse_distance(results,nn,qoi_ave)
   type(kdtree2_result) :: myresult
   type(kdtree2_result),allocatable :: results(:)
 
+
   PetscInt :: i_d,nn
   
   do i_d = 1,nn
@@ -297,6 +298,7 @@ subroutine inverse_distance(results,nn,qoi_ave)
     if ( abs(dis) <= eps ) then
       qoi_weights = 1.0
       qoi_sum = qoi_i
+
 
       exit
     elseif ( isinfinite(abs(1/dis)) ) then
