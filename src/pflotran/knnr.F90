@@ -1,4 +1,3 @@
-!************************************************************
 module kNNr_module
 
 #include "petsc/finclude/petscsys.h"
@@ -46,7 +45,7 @@ subroutine read_my_h5_file()
 
   integer :: ndims_h5
 
-  real, dimension(:), allocatable :: dset_data
+  real, allocatable :: dset_data(:)
   
   PetscMPIInt :: hdf5_err
   PetscErrorCode :: ierr
@@ -95,7 +94,7 @@ subroutine read_my_h5_file()
   allocate(table_data(7,dims_h5(1)))
 
   call h5dread_f(dataset_id,H5T_NATIVE_REAL, table_data(1,:), dims_h5, &
-       hdf5_err)
+                 hdf5_err)
   
   call h5dclose_f(dataset_id,hdf5_err)
 
@@ -126,6 +125,7 @@ subroutine read_my_h5_file()
   table_data(5,:) = log10(table_data(5,:))
   table_data(6,:) = log10(table_data(6,:))
 
+  print *, 'table7=', table_data(7,6)
 
 end subroutine read_my_h5_file
 
@@ -177,8 +177,9 @@ subroutine knnr_init()
   call read_my_h5_file()
 
   data_array_shape = shape(table_data)
+  ! Quantities of Interest (QoI) is not part of the search query of the search query.
   n = data_array_shape(1)-1
-  d = data_array_shape(2) ! Quantities of Interest (QoI) is not part of the search query of the search query.
+  d = data_array_shape(2)
 
   allocate(my_array(n,d))
 
@@ -192,7 +193,7 @@ end subroutine knnr_init
 
 ! ************************************************************************** !
 
-subroutine knnr_query (burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
+subroutine knnr_query(burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
 
   implicit none
 
@@ -205,7 +206,7 @@ subroutine knnr_query (burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
   PetscReal, intent(out) :: fuelDisRate
 
   ! features
-  PetscReal, dimension(6) :: f
+  PetscReal :: f(6)
   PetscReal :: yTme
   PetscReal :: f1, f2, f3, f4, f5
   PetscReal :: AOF, rad0a, rad0
@@ -218,9 +219,9 @@ subroutine knnr_query (burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
   type(kdtree2_result),allocatable :: results(:)
 
   !Testing parameters
-  integer   :: rind
+  PetscInt   :: rind
 
-  real(kdkind) :: rv
+  PetscReal :: rv
  
   yTme = sTme/60.0d0/60.0d0/24.0d0/DAYS_PER_YEAR  
 
@@ -285,32 +286,38 @@ subroutine inverse_distance(results,nn,qoi_ave)
 
   PetscReal :: qoi_i, qoi_sum, qoi_ave, qoi_weights, weight, dis
   type(kdtree2_result) :: myresult
-  type(kdtree2_result),allocatable :: results(:)
+  type(kdtree2_result), allocatable :: results(:)
 
 
   PetscInt :: i_d,nn
   
   do i_d = 1,nn
     myresult = results(i_d)
-    qoi_i = table_data(myresult%idx,d+1)
+    
+    qoi_i = table_data(n+1,myresult%idx)
+    print *, qoi_i
     dis = myresult%dis
+    print *, dis
      
-    if ( abs(dis) <= eps ) then
+    if (abs(dis) <= eps) then
       qoi_weights = 1.0
       qoi_sum = qoi_i
 
 
       exit
-    elseif ( isinfinite(abs(1/dis)) ) then
+    elseif (isinfinite(abs(1/dis))) then
       qoi_weights = 1.0
       qoi_sum = qoi_i
          
       exit
     else 
 
-      weight = 1 / dis
-      qoi_sum = qoi_sum + qoi_i * weight
-      qoi_weights = qoi_weights+weight
+       weight = 1 / dis
+!       print *, 'weight =', weight
+       qoi_sum = qoi_sum + qoi_i * weight
+       print *, 'sum =', qoi_sum
+       qoi_weights = qoi_weights+weight
+       print *, 'weights=', qoi_weights
 
     endif
 
@@ -319,6 +326,8 @@ subroutine inverse_distance(results,nn,qoi_ave)
 !   print *,'qoi_sum=',qoi_sum
 !   print *, 'qoi_weights=',qoi_weights
   qoi_ave = qoi_sum/qoi_weights
+
+  print *, "avg = ",qoi_ave
    
 end subroutine inverse_distance
 
@@ -337,7 +346,7 @@ function isinfinite(value1)
   
   infinity = huge(0.0d0)
  
-  if ( value1 >= infinity ) then
+  if (value1 >= infinity) then
     isinfinite = PETSC_TRUE
   endif
  
