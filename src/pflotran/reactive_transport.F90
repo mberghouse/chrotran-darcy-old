@@ -2340,6 +2340,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
   use Coupler_module  
   use Debug_module
   use Secondary_Continuum_Aux_module
+  use WIPP_Flow_Aux_module
   
   implicit none
 
@@ -2366,8 +2367,10 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
   type(reactive_transport_param_type), pointer :: rt_parameter
   type(reactive_transport_auxvar_type), pointer :: rt_auxvars(:), rt_auxvars_bc(:)
   type(global_auxvar_type), pointer :: global_auxvars(:), global_auxvars_bc(:) 
+  type(wippflo_auxvar_type), pointer :: wippflo_auxvars(:,:)
   
   PetscReal, pointer :: face_fluxes_p(:)
+  PetscReal :: area
 
   type(coupler_type), pointer :: boundary_condition
   type(connection_set_list_type), pointer :: connection_set_list
@@ -2413,6 +2416,10 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
   if (option%use_mc) then
     rt_sec_transport_vars => patch%aux%SC_RT%sec_transport_vars
   endif
+  nullify(wippflo_auxvars)
+  if (associated(patch%aux%WIPPFlo)) then
+    wippflo_auxvars => patch%aux%WIPPFlo%auxvars
+  endif
 
   if (reaction%act_coef_update_frequency == &
       ACT_COEF_FREQUENCY_NEWTON_ITER) then
@@ -2457,13 +2464,19 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
       if (option%use_mc) then
         vol_frac_prim = rt_sec_transport_vars(local_id_up)%epsilon
       endif  
-      
+
+      area = cur_connection_set%area(iconn)
+      if (associated(wippflo_auxvars)) then
+        area = area * 0.5d0 * &
+               (wippflo_auxvars(ZERO_INTEGER,ghosted_id_up)%alpha + &
+                wippflo_auxvars(ZERO_INTEGER,ghosted_id_dn)%alpha)
+      endif
       
 #ifndef CENTRAL_DIFFERENCE        
       call TFluxCoef(rt_parameter, &
                 global_auxvars(ghosted_id_up), &
                 global_auxvars(ghosted_id_dn), &
-                option,cur_connection_set%area(iconn), &
+                option,area, &
                 patch%internal_velocities(:,sum_connection), &
                 patch%internal_tran_coefs(:,:,sum_connection)*vol_frac_prim, &
                 cur_connection_set%dist(-1,iconn), &
@@ -2497,7 +2510,7 @@ subroutine RTResidualFlux(snes,xx,r,realization,ierr)
       call TFluxCoef_CD(rt_parameter,option, &
                  global_auxvars(ghosted_id_up), &
                  global_auxvars(ghosted_id_dn), &
-                 cur_connection_set%area(iconn), &
+                 area, &
                  patch%internal_velocities(:,sum_connection), &
                  patch%internal_tran_coefs(:,:,sum_connection)*vol_frac_prim, &
                  cur_connection_set%dist(-1,iconn), &
