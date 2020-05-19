@@ -14,6 +14,7 @@ module NW_Transport_Aux_module
   PetscReal, public :: nwt_itol_scaled_res = UNINITIALIZED_DOUBLE
   PetscReal, public :: nwt_itol_rel_update = UNINITIALIZED_DOUBLE
   PetscReal, public :: nwt_min_saturation = 0.d0
+  PetscReal, parameter, public :: DRY_OUT_LIQ_SAT = 1.d-20
     
   type, public :: nw_transport_auxvar_type
     ! total mass as bulk concentration

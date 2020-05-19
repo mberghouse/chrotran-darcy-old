@@ -65,8 +65,7 @@ subroutine NWTEquilibrateConstraint(reaction_nw,constraint,nwt_auxvar, &
     cur_species => cur_species%next
   enddo
   
-  !TODO(jenn) Why do I get weird PETSC_FALSE/TRUE compile error here?
-  if (sat > 0.d0) then
+  if (sat > DRY_OUT_LIQ_SAT) then
     dry_out = PETSC_FALSE
   else
     dry_out = PETSC_TRUE
@@ -233,9 +232,9 @@ subroutine NWTEqDissPrecipSorb(solubility,material_auxvar,global_auxvar, &
     endif
   else
   !---- Cell is dry ---!
-    ppt_mass_conc = total_bulk_conc
-    sorb_mass_conc = 0.d0
-    aqueous_eq_conc = 0.d0
+    ppt_mass_conc = total_bulk_conc ! [mol/m^3-bulk]
+    sorb_mass_conc = 0.d0           ! [mol/m^3-bulk]
+    aqueous_eq_conc = 0.d0          ! [mol/m^3-liq]
   endif
 
 end subroutine NWTEqDissPrecipSorb

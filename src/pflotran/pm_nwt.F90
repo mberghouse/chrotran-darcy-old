@@ -757,20 +757,23 @@ subroutine PMNWTCheckUpdatePre(this,snes,X,dX,changed,ierr)
   
   PetscReal, pointer :: C_p(:)  ! CURRENT SOLUTION
   PetscReal, pointer :: dC_p(:) ! SOLUTION UPDATE STEP
+  PetscReal, pointer :: lin_C_p(:)  ! CURRENT SOLUTION
+  PetscReal, pointer :: lin_dC_p(:) ! SOLUTION UPDATE STEP
   type(grid_type), pointer :: grid
   class(reaction_nw_type), pointer :: reaction_nw
   PetscReal :: ratio, min_ratio
   PetscReal, parameter :: min_allowable_scale = 1.d-10
   character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i, n
+  PetscInt :: istart, iend, offset, nspecies, local_id ! for debugging
   
   grid => this%realization%patch%grid
   reaction_nw => this%realization%reaction_nw
+
+  nspecies = reaction_nw%params%nspecies
   
   call VecGetArrayF90(dX,dC_p,ierr);CHKERRQ(ierr)
   
-  !WRITE(*,*)  '         dC_p = ', dC_p(:)
-
   if (reaction_nw%use_log_formulation) then
     ! C and dC are actually lnC and dlnC
     dC_p = dsign(1.d0,dC_p)*min(dabs(dC_p),this%controls%max_dlnC)
@@ -783,11 +786,28 @@ subroutine PMNWTCheckUpdatePre(this,snes,X,dX,changed,ierr)
       dC_p = min(C_p-log(reaction_nw%params%truncated_concentration),dC_p)
       call VecRestoreArrayReadF90(X,C_p,ierr);CHKERRQ(ierr)
     endif
+    ! NOTE: I don't think this is actually working:
+    call VecGetArrayReadF90(X,lin_C_p,ierr);CHKERRQ(ierr)
+    call VecGetArrayF90(dX,lin_dC_p,ierr);CHKERRQ(ierr)
+    lin_dC_p(:) = exp(lin_C_p(:)) - exp(lin_C_p(:) + lin_dC_p(:))
+    lin_C_p(:) = exp(lin_C_p(:))
+
+    offset = (grid%nG2L(652)-1)*nspecies
+    istart = offset + 1
+    iend = offset + nspecies
+ 
+    WRITE(*,*)  '         dC_p = ', lin_dC_p(istart:iend), '  loc = ', 652
+    WRITE(*,*)  '          C_p = ', lin_C_p(istart:iend), '  loc = ', 652
+    
+    !lin_dC_p(:) = log(lin_dC_p(:))
+    call VecRestoreArrayReadF90(dX,lin_dC_p,ierr);CHKERRQ(ierr)
+    lin_C_p(:) = log(lin_C_p(:))
+    call VecRestoreArrayReadF90(X,lin_C_p,ierr);CHKERRQ(ierr)
+
+
   else
     call VecGetLocalSize(X,n,ierr);CHKERRQ(ierr)
     call VecGetArrayReadF90(X,C_p,ierr);CHKERRQ(ierr)
-    
-    !WRITE(*,*)  '          C_p = ', C_p(:)
     
     if (Initialized(reaction_nw%params%truncated_concentration)) then
       dC_p = min(dC_p,C_p-reaction_nw%params%truncated_concentration)
@@ -836,6 +856,11 @@ subroutine PMNWTCheckUpdatePre(this,snes,X,dX,changed,ierr)
         changed = PETSC_TRUE
       endif
     endif
+    offset = (grid%nG2L(4)-1)*nspecies
+    istart = offset + 1
+    iend = offset + nspecies
+    WRITE(*,*)  '         dC_p = ', dC_p(istart:iend), '  loc = ', 4
+    WRITE(*,*)  '          C_p = ', C_p(istart:iend), '  loc = ', 4
     call VecRestoreArrayReadF90(X,C_p,ierr);CHKERRQ(ierr)
   endif
 
