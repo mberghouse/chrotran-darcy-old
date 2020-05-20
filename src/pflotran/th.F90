@@ -4339,7 +4339,11 @@ subroutine THResidualAccumulation(r,realization,ierr)
   vol_frac_prim = 1.d0
 
   ! Accumulation terms ------------------------------------
-  r_p = r_p - accum_p
+  ! This is a kludge for Intel which fails when the problem size
+  ! is greater than ~1.5M dofs
+  do i = 1, grid%nlmax*option%nflowdof
+    r_p(i) = r_p(i) - accum_p(i)
+  enddo
 
   do local_id = 1, grid%nlmax  ! For each local node do...
     ghosted_id = grid%nL2G(local_id)
