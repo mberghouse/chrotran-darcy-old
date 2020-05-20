@@ -12,14 +12,14 @@ module PFLOTRAN_Constants_module
   private
 
 #define VMAJOR 3
-#define VMINOR 11
-#define VSUBMINOR 3
+#define VMINOR 13
+#define VSUBMINOR 0
 #if (PETSC_VERSION_MAJOR < VMAJOR ||                    \
      (PETSC_VERSION_MAJOR == VMAJOR &&                  \
       (PETSC_VERSION_MINOR < VMINOR ||                  \
        (PETSC_VERSION_MINOR == VMINOR &&                \
         (PETSC_VERSION_SUBMINOR < VSUBMINOR)))))
-#error "Please use PETSc version 3.11.3: 'git checkout v3.11.3' in $PETSC_DIR"
+#error "Please use PETSc version 3.13: 'git checkout v3.13' in $PETSC_DIR"
 #endif
   ! MUST INCREMENT THIS NUMBER EVERYTIME A CHECKPOINT FILE IS 
   ! MODIFIED TO PREVENT COMPATIBILITY ISSUES - geh.
@@ -111,6 +111,9 @@ module PFLOTRAN_Constants_module
   PetscInt, parameter, public :: X_DIRECTION = 1
   PetscInt, parameter, public :: Y_DIRECTION = 2
   PetscInt, parameter, public :: Z_DIRECTION = 3
+  PetscInt, parameter, public :: XY_DIRECTION = 4
+  PetscInt, parameter, public :: XZ_DIRECTION = 5
+  PetscInt, parameter, public :: YZ_DIRECTION = 6
   PetscInt, parameter, public :: LOWER = 1
   PetscInt, parameter, public :: UPPER = 2
   

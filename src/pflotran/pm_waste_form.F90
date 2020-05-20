@@ -2521,7 +2521,7 @@ subroutine PMWFSetup(this)
         species_name = 'O2(aq)'
         cur_mechanism%mapping_fmdm_to_pflotran(cur_mechanism%iO2) = &
           GetPrimarySpeciesIDFromName(species_name,reaction,option)
-        species_name = 'HCO3-'
+        species_name = 'CO3--'
         cur_mechanism%mapping_fmdm_to_pflotran(cur_mechanism%iCO3_2n) = &
           GetPrimarySpeciesIDFromName(species_name,reaction,option)
         species_name = 'H2(aq)'
@@ -2534,7 +2534,7 @@ subroutine PMWFSetup(this)
         species_name = 'O2(aq)'
         cur_mechanism%mapping_surrfmdm_to_pflotran(cur_mechanism%iO2) = &
           GetPrimarySpeciesIDFromName(species_name,reaction,option)
-        species_name = 'HCO3-'
+        species_name = 'CO3--'
         cur_mechanism%mapping_surrfmdm_to_pflotran(cur_mechanism%iCO3_2n) = &
           GetPrimarySpeciesIDFromName(species_name,reaction,option)
         species_name = 'H2(aq)'
@@ -2961,6 +2961,12 @@ subroutine PMWFInitializeTimestep(this)
         cur_waste_form%inst_release_amount(k) = &
            (cwfm%rad_species_list(k)%inst_release_fraction * &
             cur_waste_form%rad_concentration(k))
+
+        ! Update cumulative release (mol) to include instantaneous release
+        cur_waste_form%cumulative_mass(k) = cur_waste_form% &
+                  cumulative_mass(k) + cur_waste_form%inst_release_amount(k) * &
+                  cur_waste_form%volume * cwfm%matrix_density * 1.d3
+
         cur_waste_form%rad_concentration(k) = &
            cur_waste_form%rad_concentration(k) - &
            cur_waste_form%inst_release_amount(k)
@@ -2989,7 +2995,9 @@ subroutine PMWFInitializeTimestep(this)
           xx_p(idof) = xx_p(idof) + & 
                        (inst_release_molality*cur_waste_form%scaling_factor(f))
         enddo
+
       enddo
+
       cur_waste_form%breached = PETSC_TRUE 
       cur_waste_form%breach_time = option%time
       call VecRestoreArrayF90(field%tran_xx,xx_p,ierr);CHKERRQ(ierr)
@@ -4314,13 +4322,13 @@ subroutine PMWFOutputHeader(this)
                              icolumn)
     do i = 1, cur_waste_form%mechanism%num_species
       variable_string = trim(cur_waste_form%mechanism%rad_species_list(i)%name) &
-                        // ' Cum. Mass Flux'
+                        // ' Cum. Release'
       ! cumulative
       units_string = 'mol'
       call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                                icolumn)
       variable_string = trim(cur_waste_form%mechanism%rad_species_list(i)%name) &
-                        // ' Inst. Mass Flux'
+                        // ' Release Rate'
       ! instantaneous
       units_string = 'mol/s' !// trim(adjustl(output_option%tunit))
       call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
@@ -4339,11 +4347,11 @@ subroutine PMWFOutputHeader(this)
     units_string = 'm^3'
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
-    variable_string = 'WF Vitality Degradation Rate'
+    variable_string = 'Canister Vitality Deg. Rate'
     units_string = '1/yr'
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
-    variable_string = 'WF Canister Vitality'
+    variable_string = 'Canister Vitality'
     units_string = '%' 
     call OutputWriteToHeader(fid,variable_string,units_string,cell_string, &
                              icolumn)
@@ -5148,6 +5156,7 @@ subroutine PMWFDestroy(this)
   write(word,'(f12.1)') this%cumulative_time
   
   write(*,'(/,a)') 'PM Waste Form time = ' // trim(adjustl(word)) // ' seconds'
+  call PMBaseDestroy(this)
   call PMWFStrip(this)
   
 end subroutine PMWFDestroy

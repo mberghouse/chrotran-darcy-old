@@ -168,8 +168,7 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
   call SolverCreateSNES(solver,option%mycomm)
   call SNESGetLineSearch(solver%snes,linesearch, &
                          ierr);CHKERRQ(ierr)
-  ! set solver pointer within pm for convergence purposes
-  call this%pm_ptr%pm%SetupSolvers(solver)
+
   select type(pm => this%pm_ptr%pm)
   ! ----- subsurface flow
     class is(pm_subsurface_flow_type)
@@ -205,15 +204,8 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
           case(TOIL_IMS_MODE)   
         end select
       endif
-
-      select case(option%iflowmode)
-        case(G_MODE)
-          call SNESGetType(solver%snes,snes_type,ierr);CHKERRQ(ierr)
-          if (trim(snes_type) == 'newtontr') then
-            general_using_newtontr = PETSC_TRUE
-          endif
-      end select
-
+      
+      call SNESGetType(solver%snes,snes_type,ierr);CHKERRQ(ierr)
       call SNESSetOptionsPrefix(solver%snes, "flow_",ierr);CHKERRQ(ierr)
       call SolverCheckCommandLine(solver)
 
@@ -282,7 +274,6 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
       endif
 
       ! by default turn off line search
-!geh: remove
       call SNESGetLineSearch(solver%snes, linesearch, ierr);CHKERRQ(ierr)
       call SNESLineSearchSetType(linesearch, SNESLINESEARCHBASIC,  &
                                   ierr);CHKERRQ(ierr)
@@ -314,10 +305,18 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
                                   PETSC_NULL_FUNCTION,ierr);CHKERRQ(ierr)
 
       if (pm%check_post_convergence) then
-        call SNESLineSearchSetPostCheck(linesearch, &
-                                        PMCheckUpdatePostPtr, &
-                                        this%pm_ptr, &
-                                        ierr);CHKERRQ(ierr)
+        select case(snes_type)
+          case(SNESNEWTONTR)
+            call SNESNewtonTRSetPostCheck(solver%snes, &
+                                          PMCheckUpdatePostTRPtr, &
+                                          this%pm_ptr, &
+                                          ierr);CHKERRQ(ierr)
+          case default
+            call SNESLineSearchSetPostCheck(linesearch, &
+                                            PMCheckUpdatePostPtr, &
+                                            this%pm_ptr, &
+                                            ierr);CHKERRQ(ierr)
+        end select
         !geh: it is possible that the other side has not been set
         pm%check_post_convergence = PETSC_TRUE
       endif
@@ -345,12 +344,20 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
           endif
       end select
 
-        if (add_pre_check) then
+      if (add_pre_check) then
+        select case(snes_type)
+          case(SNESNEWTONTR)
+            call SNESNewtonTRSetPreCheck(solver%snes, &
+                                         PMCheckUpdatePreTRPtr, &
+                                         this%pm_ptr, &
+                                         ierr);CHKERRQ(ierr)
+          case default
             call SNESLineSearchSetPreCheck(linesearch, &
                                            PMCheckUpdatePrePtr, &
                                            this%pm_ptr, &
                                            ierr);CHKERRQ(ierr)
-        endif
+        end select
+      endif
 
       call PrintMsg(option,"  Finished setting up FLOW SNES ")
   ! ----- subsurface reactive transport
@@ -445,7 +452,6 @@ subroutine PMCSubsurfaceSetupSolvers_TimestepperBE(this)
       ! this could be changed in the future if there is a way to 
       ! ensure that the linesearch update does not perturb 
       ! concentrations negative.
-!geh: remove
       call SNESGetLineSearch(solver%snes, linesearch, &
                              ierr);CHKERRQ(ierr)
       call SNESLineSearchSetType(linesearch, SNESLINESEARCHBASIC,  &
@@ -555,9 +561,6 @@ subroutine PMCSubsurfaceSetupSolvers_TS(this)
                         ierr);CHKERRQ(ierr)
 
   call TSSetType(solver%ts, TSBEULER, ierr); CHKERRQ(ierr)
-
-  ! set solver pointer within pm for convergence purposes
-  call this%pm_ptr%pm%SetupSolvers(solver)
 
   select type(pm => this%pm_ptr%pm)
 
