@@ -214,7 +214,13 @@ subroutine PMGeneralReadSimOptionsBlock(this,input)
     
     select case(trim(keyword))
       case('UPDATE_DRZ_PERM')
-        GENERAL_UPDATE_DRZ_PERM = PETSC_TRUE
+        if (option%global_commsize > 1) then
+          option%io_buffer = 'DRZ permeability evolution functionality ' // &
+                       'not currently supported in parallel.'
+          call PrintErrMsg(option)
+        else
+          GENERAL_UPDATE_DRZ_PERM = PETSC_TRUE
+        endif
       case('DIFFUSE_XMASS')
         general_diffuse_xmol = PETSC_FALSE
       case('ARITHMETIC_GAS_DIFFUSIVE_DENSITY')
