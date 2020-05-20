@@ -953,19 +953,21 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
         
         gen_auxvar%effective_porosity = &
           creep_closure%Evaluate(creep_closure_time,cell_pressure)
-      else if (associated(material_auxvar%fracture)) then
+      elseif (associated(material_auxvar%fracture)) then
           call FracturePoroEvaluate(material_auxvar,cell_pressure, &
                                 gen_auxvar%effective_porosity,dpor_dp)
-      else if (soil_compressibility_index > 0) then
+      elseif (soil_compressibility_index > 0) then
           call MaterialCompressSoil(material_auxvar,cell_pressure, &
                                 gen_auxvar%effective_porosity,dpor_dp)
       endif
-    else if (associated(material_auxvar%fracture)) then
+    elseif (associated(material_auxvar%fracture)) then
       call FracturePoroEvaluate(material_auxvar,cell_pressure, &
                                 gen_auxvar%effective_porosity,dpor_dp)
-    else if (soil_compressibility_index > 0) then
+    elseif (soil_compressibility_index > 0) then
       call MaterialCompressSoil(material_auxvar,cell_pressure, &
                                 gen_auxvar%effective_porosity,dpor_dp)
+    elseif (Initialized(MATERIAL_PHI_TO_PERM_MODEL)) then
+      call MaterialPermToPhi(material_auxvar)
     endif
     if (option%iflag /= GENERAL_UPDATE_FOR_DERIVATIVE) then
       material_auxvar%porosity = gen_auxvar%effective_porosity

@@ -77,6 +77,7 @@ module Material_module
     PetscReal :: soft_material_const_alpha
     PetscReal :: soft_material_const_m
     PetscReal :: soft_fraction
+    PetscReal :: k_0
 
     ! ice properties
     PetscReal :: thermal_conductivity_frozen
@@ -227,6 +228,7 @@ function MaterialPropertyCreate()
   material_property%soft_material_const_alpha = 0.d0
   material_property%soft_material_const_m = 0.d0
   material_property%soft_fraction = 0.d0
+  material_property%k_0 = UNINITIALIZED_DOUBLE
 
   material_property%thermal_conductivity_frozen = UNINITIALIZED_DOUBLE
   material_property%alpha_fr = 0.95d0
@@ -440,6 +442,8 @@ subroutine MaterialPropertyRead(material_property,input,option)
                              material_property%thermal_expansitivity)
         call InputErrorMsg(input,option,'thermal expansitivity', &
                            'MATERIAL_PROPERTY')
+      case('POROSITY_FUNCTION_OF_PERM')
+        MATERIAL_PHI_TO_PERM_MODEL = ONE_INTEGER
       case('POROSITY')
         call DatasetReadDoubleOrDataset(input,material_property%porosity, &
                                         material_property%porosity_dataset, &
@@ -1685,6 +1689,7 @@ subroutine MaterialAssignPropertyToAux(material_auxvar,material_property, &
   material_auxvar%soft_material_const_m = material_property% &
                                         soft_material_const_m
   material_auxvar%soft_fraction = material_property%soft_fraction
+  material_auxvar%k_0 = material_property%k_0
 
 !  if (soil_heat_capacity_index > 0) then
 !    material_auxvar%soil_properties(soil_heat_capacity_index) = &

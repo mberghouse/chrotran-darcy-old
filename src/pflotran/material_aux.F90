@@ -41,6 +41,9 @@ module Material_Aux_class
   ! flag to determine which model to use for tensor to scalar conversion 
   ! of permeability
   PetscInt :: perm_tens_to_scal_model = TENSOR_TO_SCALAR_LINEAR
+
+  ! porosity - to - permeability model  
+  PetscInt, public :: MATERIAL_PHI_TO_PERM_MODEL = UNINITIALIZED_INTEGER
   
 !  PetscInt, public :: soil_thermal_conductivity_index
 !  PetscInt, public :: soil_heat_capacity_index
@@ -81,6 +84,7 @@ module Material_Aux_class
     PetscReal :: soft_material_const_alpha
     PetscReal :: soft_material_const_m
     PetscReal :: soft_fraction
+    PetscReal :: k_0
 
 !    procedure(SaturationFunction), nopass, pointer :: SaturationFunction
   contains
@@ -137,7 +141,8 @@ module Material_Aux_class
             MaterialCompressSoilLinear, &
             MaterialCompressSoilQuadratic, &
             MaterialFractureCompress, &
-            MaterialSwell
+            MaterialSwell, &
+            MaterialPermToPhi
   
   public :: MaterialAuxCreate, &
             MaterialAuxVarInit, &
@@ -976,6 +981,28 @@ subroutine MaterialSwell(sat_init,sat,bulk_mod,swelling_coeff,swelling_stress)
 
 end subroutine MaterialSwell
 
+! ************************************************************************** !
+subroutine MaterialPermToPhi(material_aux)
+
+  implicit none
+
+  class(material_auxvar_type) :: material_aux
+
+  PetscReal :: gamma
+
+  ! Neuzil 2019 Permeability of Clays and Shales model
+  ! Doesn't account for permeability anisotropy, so taking
+  ! x-perm
+  gamma = 8.0d0
+  if (Uninitialized(material_aux%k_0)) then
+    material_aux%k_0 = exp(log(material_aux%permeability(ONE_INTEGER)) - &
+                       gamma * material_aux%porosity_0)
+  endif
+
+  material_aux%porosity = log(material_aux%permeability(ONE_INTEGER) / &
+                              material_aux%k_0) * 1/gamma
+
+end subroutine MaterialPermToPhi
 ! ************************************************************************** !
 
 function MaterialAuxIndexToPropertyName(i)
