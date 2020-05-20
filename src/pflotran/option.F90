@@ -299,6 +299,7 @@ module Option_module
             OptionCreateProcessorGroups, &
             OptionBeginTiming, &
             OptionEndTiming, &
+            OptionPrintPFLOTRANHeader, &
             OptionSetBlocking, &
             OptionCheckNonBlockingError, &
             OptionFinalize, &
@@ -715,7 +716,12 @@ subroutine PrintErrMsg2(option,string)
     if (petsc_initialized) then
       call PetscFinalize(ierr);CHKERRQ(ierr)
     endif
-    call exit(EXIT_USER_ERROR)
+    select case(option%exit_code)
+      case(EXIT_FAILURE)
+        call exit(option%exit_code)
+      case default
+        call exit(EXIT_USER_ERROR)
+    end select
   else
     option%error_while_nonblocking = PETSC_TRUE
   endif
@@ -1388,6 +1394,40 @@ subroutine OptionInitPetsc(option)
   call LoggingCreate()
 
 end subroutine OptionInitPetsc
+
+! ************************************************************************** !
+
+subroutine OptionPrintPFLOTRANHeader(option)
+  !
+  ! Start outer timing.
+  !
+  ! Author: Glenn Hammond
+  ! Date: 04/20/20
+  !
+
+  implicit none
+
+  type(option_type) :: option
+
+  character(len=MAXWORDLENGTH) :: version
+  character(len=MAXSTRINGLENGTH) :: string
+
+  version = GetVersion()
+  if (option%myrank == option%io_rank) then
+    write(string,*) len_trim(version)+4
+    string = trim(adjustl(string)) // '("=")'
+    string = '(/,' // trim(string) // ',/,"  '// &
+             trim(version) // &
+             '",/,' // trim(string) // ',/)'
+    if (option%print_to_screen) then
+      write(*,string)
+    endif
+    if (option%print_to_file) then
+      write(option%fid_out,string)
+    endif
+  endif
+
+end subroutine OptionPrintPFLOTRANHeader
 
 ! ************************************************************************** !
 

@@ -37,7 +37,9 @@ module PM_RT_class
     PetscBool :: operator_split
   contains
     procedure, public :: Setup => PMRTSetup
-    procedure, public :: ReadSimulationBlock => PMRTRead
+    procedure, public :: ReadSimulationOptionsBlock => PMRTReadSimOptionsBlock
+    procedure, public :: ReadTSBlock => PMRTReadTSSelectCase
+    procedure, public :: ReadNewtonBlock => PMRTReadNewtonSelectCase
     procedure, public :: SetRealization => PMRTSetRealization
     procedure, public :: InitializeRun => PMRTInitializeRun
     procedure, public :: FinalizeRun => PMRTFinalizeRun
@@ -140,7 +142,7 @@ end subroutine PMRTInit
 
 ! ************************************************************************** !
 
-subroutine PMRTRead(this,input)
+subroutine PMRTReadSimOptionsBlock(this,input)
   ! 
   ! Reads input file parameters associated with the reactive transport 
   ! process model
@@ -180,49 +182,113 @@ subroutine PMRTRead(this,input)
     call StringToUpper(keyword)
     
     found = PETSC_FALSE
-    call PMBaseReadSelectCase(this,input,keyword,found,error_string,option)
+    call PMBaseReadSimOptionsSelectCase(this,input,keyword,found, &
+                                        error_string,option)
     if (found) cycle
 
     select case(trim(keyword))
-      case('GLOBAL_IMPLICIT')
-        this%operator_split = PETSC_FALSE
-        option%transport%reactive_transport_coupling = OPERATOR_SPLIT
-      case('OPERATOR_SPLIT','OPERATOR_SPLITTING')
-        this%operator_split = PETSC_TRUE
-        option%transport%reactive_transport_coupling = GLOBAL_IMPLICIT
-      case('MAX_VOLUME_FRACTION_CHANGE')
-        call InputReadDouble(input,option,this%volfrac_change_governor)
-        call InputDefaultMsg(input,option,'maximum volume fraction change')
-      case('ITOL_RELATIVE_UPDATE')
-        call InputReadDouble(input,option,rt_itol_rel_update)
-        call InputErrorMsg(input,option,'rt_itol_rel_update', &
-                           'SUBSURFACE_TRANSPORT OPTIONS')
-        this%check_post_convergence = PETSC_TRUE
-      case('MINIMUM_SATURATION')
-        call InputReadDouble(input,option,rt_min_saturation)
-        call InputErrorMsg(input,option,'min_saturation', &
-                           'SUBSURFACE_TRANSPORT OPTIONS')
-      case('NUMERICAL_JACOBIAN')
-        option%transport%numerical_derivatives = PETSC_TRUE
       case('INCLUDE_GAS_PHASE')
         option%io_buffer = 'INCLUDE_GAS_PHASE under SUBSURFACE_TRANSPORT &
                            &has been deprecated.'
         call PrintErrMsg(option)
-      case('TEMPERATURE_DEPENDENT_DIFFUSION')
-        this%temperature_dependent_diffusion = PETSC_TRUE
-      case('MAX_CFL')
-        call InputReadDouble(input,option,this%cfl_governor)
-        call InputErrorMsg(input,option,'MAX_CFL', &
-                           'SUBSURFACE_TRANSPORT OPTIONS')
+      case('MINIMUM_SATURATION')
+        call InputReadDouble(input,option,rt_min_saturation)
+        call InputErrorMsg(input,option,keyword,error_string)
       case('MULTIPLE_CONTINUUM')
         option%use_mc = PETSC_TRUE
+      case('TEMPERATURE_DEPENDENT_DIFFUSION')
+        this%temperature_dependent_diffusion = PETSC_TRUE
       case default
         call InputKeywordUnrecognized(input,keyword,error_string,option)
     end select
   enddo
   call InputPopBlock(input,option)
   
-end subroutine PMRTRead
+end subroutine PMRTReadSimOptionsBlock
+
+! ************************************************************************** !
+
+subroutine PMRTReadTSSelectCase(this,input,keyword,found, &
+                                error_string,option)
+  ! 
+  ! Read timestepper settings specific to this process model
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 03/23/20
+
+  use Input_Aux_module
+  use Option_module
+ 
+  implicit none
+  
+  class(pm_rt_type) :: this
+  type(input_type), pointer :: input
+  character(len=MAXWORDLENGTH) :: keyword
+  PetscBool :: found
+  character(len=MAXSTRINGLENGTH) :: error_string
+  type(option_type), pointer :: option
+
+!  found = PETSC_TRUE
+!  call PMBaseReadSelectCase(this,input,keyword,found,error_string,option)
+!  if (found) return
+
+  found = PETSC_TRUE
+  select case(trim(keyword))
+    case('CFL_GOVERNOR')
+      call InputReadDouble(input,option,this%cfl_governor)
+      call InputErrorMsg(input,option,keyword,error_string)
+    case('VOLUME_FRACTION_CHANGE_GOVERNOR')
+      call InputReadDouble(input,option,this%volfrac_change_governor)
+      call InputErrorMsg(input,option,keyword,error_string)
+    case default
+      found = PETSC_FALSE
+  end select  
+  
+end subroutine PMRTReadTSSelectCase
+
+! ************************************************************************** !
+
+subroutine PMRTReadNewtonSelectCase(this,input,keyword,found, &
+                                    error_string,option)
+  ! 
+  ! Reads input file parameters associated with the RT process model
+  ! Newton solver convergence
+  ! 
+  ! Author: Glenn Hammond
+  ! Date: 03/25/20
+
+  use Input_Aux_module
+  use Option_module
+  use Reactive_Transport_Aux_module
+ 
+  implicit none
+  
+  class(pm_rt_type) :: this
+  type(input_type), pointer :: input
+  character(len=MAXWORDLENGTH) :: keyword
+  character(len=MAXSTRINGLENGTH) :: error_string
+  type(option_type), pointer :: option
+
+  PetscBool :: found
+
+!  found = PETSC_TRUE
+!  call PMBaseReadSelectCase(this,input,keyword,found,error_string,option)
+!  if (found) return
+    
+  found = PETSC_TRUE
+  select case(trim(keyword))
+    case('NUMERICAL_JACOBIAN')
+      option%transport%numerical_derivatives = PETSC_TRUE
+    case('ITOL_RELATIVE_UPDATE')
+      call InputReadDouble(input,option,rt_itol_rel_update)
+      call InputErrorMsg(input,option,keyword,error_string)
+      this%check_post_convergence = PETSC_TRUE
+    case default
+      found = PETSC_FALSE
+
+  end select
+  
+end subroutine PMRTReadNewtonSelectCase
 
 ! ************************************************************************** !
 
@@ -333,6 +399,8 @@ recursive subroutine PMRTInitializeRun(this)
   use Variables_module, only : POROSITY
   use Material_Aux_class, only : POROSITY_BASE 
   use Material_module, only : MaterialGetAuxVarVecLoc
+  use String_module, only : StringWrite
+  use Utility_module, only : Equal
 
   implicit none
   
@@ -366,7 +434,9 @@ recursive subroutine PMRTInitializeRun(this)
   
   ! update boundary concentrations so that activity coefficients can be 
   ! calculated at first time step
-  call RTUpdateAuxVars(this%realization,PETSC_FALSE,PETSC_TRUE,PETSC_FALSE)
+  !geh: need to update cells also, as the flow solution may have changed
+  !     during restart and transport may have been skipped
+  call RTUpdateAuxVars(this%realization,PETSC_TRUE,PETSC_TRUE,PETSC_FALSE)
   ! pass PETSC_FALSE to turn off update of kinetic state variables
   call PMRTUpdateSolution2(this,PETSC_FALSE)
   
@@ -385,6 +455,13 @@ recursive subroutine PMRTInitializeRun(this)
   endif
   ! check on MAX_STEPS < 0 to quit after initialization.
 #endif  
+
+  ! ensure that time step size was set to zero
+  if (.not.Equal(this%option%tran_dt,0.d0)) then
+    this%option%io_buffer = 'Non-zero transport time step (' // &
+      trim(StringWrite(this%option%tran_dt)) // ') during initialization.'
+    call PrintErrMsg(this%option)
+  endif
     
 end subroutine PMRTInitializeRun
 
@@ -1909,11 +1986,11 @@ subroutine PMRTStrip(this)
   call DeallocateArray(this%max_concentration_change)
   call DeallocateArray(this%max_volfrac_change)
 
+  call PMBaseDestroy(this)
   call RTDestroy(this%realization)
   ! destroyed in realization
+  nullify(this%realization)
   nullify(this%comm1)
-  nullify(this%option)
-  nullify(this%output_option)
   call this%commN%Destroy()
   if (associated(this%commN)) deallocate(this%commN)
   nullify(this%commN)  
