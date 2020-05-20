@@ -125,7 +125,7 @@ subroutine read_my_h5_file()
   table_data(5,:) = log10(table_data(5,:))
   table_data(6,:) = log10(table_data(6,:))
 
-  print *, 'table7=', table_data(7,6)
+!  print *, 'table7=', table_data(7,6)
 
 end subroutine read_my_h5_file
 
@@ -295,9 +295,9 @@ subroutine inverse_distance(results,nn,qoi_ave)
     myresult = results(i_d)
     
     qoi_i = table_data(n+1,myresult%idx)
-    print *, qoi_i
+!    print *, qoi_i
     dis = myresult%dis
-    print *, dis
+!    print *, dis
      
     if (abs(dis) <= eps) then
       qoi_weights = 1.0
@@ -315,7 +315,7 @@ subroutine inverse_distance(results,nn,qoi_ave)
        weight = 1 / dis
 !       print *, 'weight =', weight
        qoi_sum = qoi_sum + qoi_i * weight
-       print *, 'sum =', qoi_sum
+!       print *, 'sum =', qoi_sum
        qoi_weights = qoi_weights+weight
        print *, 'weights=', qoi_weights
 
