@@ -284,21 +284,25 @@ subroutine inverse_distance(results,nn,qoi_ave)
 
   implicit none
 
-  PetscReal :: qoi_i, qoi_sum, qoi_ave, qoi_weights, weight, dis
+  real(kdkind) :: qoi_i, qoi_sum, qoi_ave, qoi_weights, weight, dis
   type(kdtree2_result) :: myresult
   type(kdtree2_result), allocatable :: results(:)
 
 
   PetscInt :: i_d,nn
+
+  qoi_weights = 0.0
+  qoi_sum = 0.0
   
   do i_d = 1,nn
     myresult = results(i_d)
     
     qoi_i = table_data(n+1,myresult%idx)
-!    print *, qoi_i
+
     dis = myresult%dis
-!    print *, dis
-     
+
+
+
     if (abs(dis) <= eps) then
       qoi_weights = 1.0
       qoi_sum = qoi_i
@@ -313,11 +317,11 @@ subroutine inverse_distance(results,nn,qoi_ave)
     else 
 
        weight = 1 / dis
-!       print *, 'weight =', weight
+
        qoi_sum = qoi_sum + qoi_i * weight
-!       print *, 'sum =', qoi_sum
+
        qoi_weights = qoi_weights+weight
-       print *, 'weights=', qoi_weights
+
 
     endif
 
