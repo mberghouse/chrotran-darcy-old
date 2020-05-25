@@ -187,7 +187,8 @@ subroutine knnr_init()
     my_array(i_d,:) = table_data(i_d,:)
   end do
  
-  tree => kdtree2_create(my_array,sort=.false.,rearrange=.false.) 
+  tree => kdtree2_create(my_array,sort=PETSC_FALSE,rearrange=PETSC_FALSE) 
+!    tree => kdtree2_create(my_array,sort=.false.,rearrange=.false.) 
 
 end subroutine knnr_init
 
@@ -284,7 +285,7 @@ subroutine inverse_distance(results,nn,qoi_ave)
 
   implicit none
 
-  real(kdkind) :: qoi_i, qoi_sum, qoi_ave, qoi_weights, weight, dis
+  PetscReal :: qoi_i, qoi_sum, qoi_ave, qoi_weights, weight, dis
   type(kdtree2_result) :: myresult
   type(kdtree2_result), allocatable :: results(:)
 
