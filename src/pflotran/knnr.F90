@@ -22,13 +22,16 @@ contains
   
 ! ************************************************************************** !
 
-subroutine read_my_h5_file()
+subroutine read_my_h5_file(option)
 
   use hdf5
- ! use HDF5_Aux_module
+  use Option_module
+  use HDF5_Aux_module
 
   implicit none
 
+  type(option_type) :: option
+  
   character(len=MAXSTRINGLENGTH) :: h5_name = 'test.h5'
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXSTRINGLENGTH) :: group_name = '/'
@@ -55,35 +58,25 @@ subroutine read_my_h5_file()
  
   call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
  
-  call h5fopen_f(h5_name,H5F_ACC_RDONLY_F,file_id,hdf5_err,prop_id)
- 
-  if (hdf5_err /= 0) then
-     print *, 'h5 file not found'
-     stop
-  endif
+  call HDF5OpenFileReadOnly(h5_name,file_id,prop_id,option)
 
   call h5pclose_f(prop_id,hdf5_err)
 
   !hdf5groupopen
-  string = adjustl(group_name)
-  call h5gopen_f(file_id,trim(string),group_id,hdf5_err)
-  if (hdf5_err < 0) then
-    print *, 'HDF5 Group "' // trim(string) // '" not found.'
-    stop
-  endif
+  call HDF5GroupOpen(file_id,group_name,group_id,option)
 
   dataset_name = 'Temp'
   call h5dopen_f(group_id,dataset_name,dataset_id,hdf5_err)
  
   if (hdf5_err < 0) then
-    print *, "dataset not found"
-    stop
+    option%io_buffer = 'A dataset named "' // trim(dataset_name) // '" not found in HDF5 file "' // &
+    trim(h5_name) // '".'
+    call PrintErrMsg(option)
   endif
  
   ! get dataspace ID
   call h5dget_space_f(dataset_id,file_space_id,hdf5_err)
  
-
   call h5sget_simple_extent_ndims_f(file_space_id,ndims_h5,hdf5_err)
 
   allocate(dims_h5(ndims_h5))
@@ -99,17 +92,17 @@ subroutine read_my_h5_file()
   call h5dclose_f(dataset_id,hdf5_err)
 
   dataset_name = 'Env_CO3_2n'
-  call get_h5_dataset(group_id,dims_h5,dataset_name,2)
+  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,2)
   dataset_name = 'Env_O2'
-  call get_h5_dataset(group_id,dims_h5,dataset_name,3)
+  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,3)
   dataset_name = 'Env_Fe_2p'
-  call get_h5_dataset(group_id,dims_h5,dataset_name,4)
+  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,4)
   dataset_name = 'Env_H2'
-  call get_h5_dataset(group_id,dims_h5,dataset_name,5)
+  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,5)
   dataset_name = 'Dose Rate d0'
-  call get_h5_dataset(group_id,dims_h5,dataset_name,6)
+  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,6)
   dataset_name = 'UO2 Surface Flux'
-  call get_h5_dataset(group_id,dims_h5,dataset_name,7)
+  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,7)
 
   deallocate(dims_h5)
   deallocate(max_dims_h5)
@@ -131,12 +124,15 @@ end subroutine read_my_h5_file
 
 ! ************************************************************************** !
 
-subroutine get_h5_dataset(group_id,dims_h5,dataset_name,i)
+subroutine get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,i)
 
   use hdf5
-
+  use Option_module
+  
   implicit none
 
+  type(option_type) :: option
+  
   integer(HID_T) :: group_id
   integer(HID_T) :: dataset_id
   integer(HID_T) :: file_space_id
@@ -146,13 +142,20 @@ subroutine get_h5_dataset(group_id,dims_h5,dataset_name,i)
   PetscInt :: i
 
   character(len=MAXSTRINGLENGTH) :: dataset_name
+  character(len=MAXSTRINGLENGTH) :: h5_name
   PetscMPIInt :: hdf5_err
 
   call h5dopen_f(group_id,dataset_name,dataset_id,hdf5_err)
  
+!  if (hdf5_err < 0) then
+!    print *, "dataset not found"
+!    stop
+! endif
+
   if (hdf5_err < 0) then
-    print *, "dataset not found"
-    stop
+    option%io_buffer = 'A dataset named "' // trim(dataset_name) // '" not found in HDF5 file "' // &
+    trim(h5_name) // '".'
+    call PrintErrMsg(option)
   endif
  
   ! get dataspace ID
@@ -167,14 +170,17 @@ end subroutine get_h5_dataset
 
 ! ************************************************************************** !
 
-subroutine knnr_init()
+subroutine knnr_init(option)
 
+  use Option_module
+  
   implicit none
 
+  type(option_type) :: option
   PetscInt :: i_n,i_d
   PetscInt :: data_array_shape(2)
 
-  call read_my_h5_file()
+  call read_my_h5_file(option)
 
   data_array_shape = shape(table_data)
   ! Quantities of Interest (QoI) is not part of the search query of the search query.

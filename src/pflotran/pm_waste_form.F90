@@ -687,14 +687,18 @@ end function PMWFMechanismFMDMCreate
 
 ! ************************************************************************** !
 
-function PMWFMechanismFMDMSurrogateCreate()
+function PMWFMechanismFMDMSurrogateCreate(option)
   ! 
   ! Creates the FMDM surrogate waste form mechanism package
   ! 
   ! Author: Tom Seidl
   ! Date: 03/05/2019
 
+  use Option_module
+  
   implicit none
+
+  type(option_type) :: option
 
 ! LOCAL VARIABLES:
 ! ================
@@ -732,7 +736,7 @@ function PMWFMechanismFMDMSurrogateCreate()
        surrfmdm%iH2,surrfmdm%iFe_2p]
 
   if (knnr) then
-    call knnr_init( )
+    call knnr_init(option)
   else
 
     allocate(surrfmdm%outer_weights(101))
@@ -812,7 +816,7 @@ function PMWFMechanismFMDMkNNrCreate()
 
   print *, 'begin knnr_init'
 
-  call knnr_init( )
+!  call knnr_init(option)
 
   
 
@@ -1293,13 +1297,13 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
        case('FMDM_SURROGATE')
           error_string = trim(error_string) // ' FMDM_SURROGATE'
           allocate(new_mechanism)
-          new_mechanism => PMWFMechanismFMDMSurrogateCreate()
+          new_mechanism => PMWFMechanismFMDMSurrogateCreate(option)
       !---------------------------------
         case('FMDM_KNNR')
           knnr = PETSC_TRUE
           error_string = trim(error_string) // ' FMDM_KNNR'
           allocate(new_mechanism)
-          new_mechanism => PMWFMechanismFMDMSurrogateCreate()
+          new_mechanism => PMWFMechanismFMDMSurrogateCreate(option)
       !---------------------------------
         case('CUSTOM')
           error_string = trim(error_string) // ' CUSTOM'

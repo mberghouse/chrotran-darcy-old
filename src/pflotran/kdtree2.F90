@@ -5,315 +5,9 @@
 ! with additional provisions found in that same file.
 
 
-module kdtree2_priority_queue_module
-
-  ! maintain a priority queue (PQ) of data, pairs of 'priority/payload',
-  ! implemented with a binary heap.  This is the type, and the 'dis' field
-  ! is the priority.
-  !
-#include "petsc/finclude/petscsys.h"  
-!  use kdtree2_precision_module
-  use petscsnes
-
-  implicit none
-
-  public :: kdtree2_result
-
-  public :: pq, pq_create, pq_insert, pq_extract_max, pq_replace_max
-
-!  integer, parameter :: sp = kind(0.0)
-!  integer, parameter :: dp = kind(0.0d0)
-  !DELETE
-!  PetscInt :: kdkind = dp
-!  public :: kdkind
-  !
-  ! a pair of distances, indexes
-  type kdtree2_result
-    PetscReal :: dis
-    PetscInt :: idx 
-  end type kdtree2_result
-
-  ! The priority queue consists of elements
-  ! priority(1:heap_size), with associated payload(:).
-  !
-  ! There are heap_size active elements.
-  ! Assumes the allocation is always sufficient.  Will NOT increase it
-  ! to match.
-  type pq
-    PetscInt :: heap_size = 0
-     
-!      integer :: heap_size = 0
-      type(kdtree2_result), pointer :: elems(:)
-  end type pq
-
-contains
-
-!************************************************************************** !
-
-function pq_create(results_in) result(res)
-  !
-  ! Create a priority queue from ALREADY allocated
-  ! array pointers for storage.  NOTE! It will NOT
-  ! add any alements to the heap, i.e. any existing
-  ! data in the input arrays will NOT be used and may
-  ! be overwritten.
-  !
-
-  implicit none
-  
-  type(kdtree2_result), target:: results_in(:)
-  type(pq) :: res
-  PetscInt :: nalloc
-    !
-    !
-!    integer :: nalloc
-
-  nalloc = size(results_in,1)
-  if (nalloc < 1) then
-      print *, 'PQ_CREATE: error, input arrays must be allocated.'
-  end if
-  res%elems => results_in
-  res%heap_size = 0
-  return
-end function pq_create
-
-!************************************************************************** !
-
-subroutine heapify(a,i_in)
-  !
-  ! take a heap rooted at 'i' and force it to be in the
-  ! heap canonical form.   This is performance critical
-  ! and has been tweaked a little to reflect this.
-  !
-  
-  type(pq),pointer   :: a
-  PetscInt :: i_in
-  PetscInt :: i, l, r, largest
-  PetscReal :: pri_i, pri_l, pri_r, pri_largest
-  type(kdtree2_result) :: temp
-
-  i = i_in
-
-  bigloop:  do
-              ! left(i)
-              l = 2 * i
-              ! right(i)
-              r = l + 1
-       !
-       ! set 'largest' to the index of either i, l, r
-       ! depending on whose priority is largest.
-       !
-       ! note that l or r can be larger than the heap size
-       ! in which case they do not count.
-
-              if (l > a%heap_size) then
-                ! we know that i is the largest as both l and r are invalid.
-                exit
-              else
-                pri_i = a%elems(i)%dis
-                pri_l = a%elems(l)%dis
-                if (pri_l > pri_i) then
-                  largest = l
-                  pri_largest = pri_l
-                else
-                  largest = i
-                  pri_largest = pri_i
-                endif
-
-          !
-          ! between i and l we have a winner
-          ! now choose between that and r.
-          !
-                if (r < a%heap_size) then
-                  pri_r = a%elems(r)%dis
-                  if (pri_r > pri_largest) then
-                    largest = r
-                  endif
-                endif
-              endif
-
-              if (largest /= i) then
-          ! swap data in nodes largest and i, then heapify
-
-                temp = a%elems(i)
-                a%elems(i) = a%elems(largest)
-                a%elems(largest) = temp
-          !
-          ! Canonical heapify() algorithm has tail-ecursive call:
-          !
-          !        call heapify(a,largest)
-          ! we will simulate with cycle
-          !
-                i = largest
-                cycle bigloop ! continue the loop
-              else
-                return   ! break from the loop
-              end if
-            enddo bigloop
-  return
-end subroutine heapify
-
-!************************************************************************** !
-
-subroutine pq_extract_max(a,e)
-  !
-  ! return the priority and payload of maximum priority
-  ! element, and remove it from the queue.
-  ! (equivalent to 'pop()' on a stack)
-  !
-
-  implicit none
-  
-  type(pq),pointer :: a
-  type(kdtree2_result), intent(out) :: e
-
-  if (a%heap_size >= 1) then
-    !
-    ! return max as first element
-    !
-    e = a%elems(1)
-
-    !
-    ! move last element to first
-    !
-    a%elems(1) = a%elems(a%heap_size)
-    a%heap_size = a%heap_size-1
-    call heapify(a,1)
-    return
-  else
-    print *, 'PQ_EXTRACT_MAX: error, attempted to pop non-positive PQ'
-    stop
-  end if
-
-end subroutine pq_extract_max
-
-!************************************************************************** !
-
-function pq_insert(a,dis,idx)
-  !
-  ! Insert a new element and return the new maximum priority,
-  ! which may or may not be the same as the old maximum priority.
-  !
-  implicit none
-  
-  type(pq),pointer  :: a
-  PetscReal :: dis
-  PetscInt :: idx
-  PetscInt :: i, isparent
-  PetscReal:: parentdis
-  PetscReal :: pq_insert
-    !
-
-    !    if (a%heap_size .ge. a%max_elems) then
-    !       write (*,*) 'PQ_INSERT: error, attempt made to insert element on full PQ'
-    !       stop
-    !    else
-  a%heap_size = a%heap_size + 1
-  i = a%heap_size
-
-  do while (i > 1)
-    isparent = int(i/2)
-    parentdis = a%elems(isparent)%dis
-    if (dis > parentdis) then
-      ! move what was in i's parent into i.
-      a%elems(i)%dis = parentdis
-      a%elems(i)%idx = a%elems(isparent)%idx
-      i = isparent
-    else
-      exit
-    endif
-  end do
-
-  ! insert the element at the determined position
-  a%elems(i)%dis = dis
-  a%elems(i)%idx = idx
-
-  pq_insert = a%elems(1)%dis
-  return
-
-end function pq_insert
-
-!************************************************************************** !
-
-function pq_replace_max(a,dis,idx)
-  !
-  ! Replace the extant maximum priority element
-  ! in the PQ with (dis,idx).  Return
-  ! the new maximum priority, which may be larger
-  ! or smaller than the old one.
-  !
-
-  implicit none
-  
-  type(pq), pointer :: a
-  PetscReal :: dis
-  PetscInt :: idx
-  PetscInt :: parent, child, N
-  PetscReal :: prichild, prichildp1
-
-  type(kdtree2_result) :: etmp
-  PetscReal :: pq_replace_max
-
-  if (PETSC_TRUE) then
-    N = a%heap_size
-    if (N >= 1) then
-      parent = 1
-      child = 2
-
-      loop: do while (child <= N)
-              prichild = a%elems(child)%dis
-
-              ! posibly child+1 has higher priority, and if
-              ! so, get it, and increment child.
-
-              if (child < N) then
-                prichildp1 = a%elems(child + 1)%dis
-                if (prichild < prichildp1) then
-                  child = child + 1
-                  prichild = prichildp1
-                endif
-              endif
-
-              if (dis >= prichild) then
-                exit loop
-                ! we have a proper place for our new element,
-                ! bigger than either children's priority.
-              else
-                ! move child into parent.
-                a%elems(parent) = a%elems(child)
-                parent = child
-                child = 2 * parent
-              end if
-            end do loop
-      a%elems(parent)%dis = dis
-      a%elems(parent)%idx = idx
-      pq_replace_max = a%elems(1)%dis
-    else
-      a%elems(1)%dis = dis
-      a%elems(1)%idx = idx
-      pq_replace_max = dis
-    endif
-  else
-       !
-       ! slower version using elementary pop and push operations.
-       !
-    call pq_extract_max(a,etmp)
-    etmp%dis = dis
-    etmp%idx = idx
-    pq_replace_max = pq_insert(a,dis,idx)
-  endif
-  return
-end function pq_replace_max
-
-end module kdtree2_priority_queue_module
-
-
 module kdtree2_module
 
 #include "petsc/finclude/petscsys.h"
-  
-!  use kdtree2_precision_module
-  use kdtree2_priority_queue_module
  
   use petscsnes
 
@@ -336,10 +30,29 @@ module kdtree2_module
   public :: kdtree2, kdtree2_result, tree_node, kdtree2_create, kdtree2_destroy
   public :: kdtree2_n_nearest
   public :: kdtree2_sort_results
+  public :: pq, pq_create, pq_insert, pq_extract_max, pq_replace_max
 
   ! The maximum number of points to keep in a terminal node.
   PetscInt :: bucket_size = 12   
 
+  type kdtree2_result
+    PetscReal :: dis
+    PetscInt :: idx 
+  end type kdtree2_result
+
+  ! The priority queue consists of elements
+  ! priority(1:heap_size), with associated payload(:).
+  !
+  ! There are heap_size active elements.
+  ! Assumes the allocation is always sufficient.  Will NOT increase it
+  ! to match.
+  type pq
+    PetscInt :: heap_size = 0
+     
+!      integer :: heap_size = 0
+      type(kdtree2_result), pointer :: elems(:)
+   end type pq
+   
   type interval
     PetscReal :: lower, upper 
   end type interval
@@ -843,7 +556,6 @@ subroutine kdtree2_n_nearest(tp,qv,nn,results)
   endif
   sr%dimen = tp%dimen
 
-  call validate_query_storage(nn)
   sr%pq = pq_create(results)
 
   call search(tp%root)   
@@ -855,26 +567,6 @@ subroutine kdtree2_n_nearest(tp,qv,nn,results)
   return
 end subroutine kdtree2_n_nearest
 
-! ************************************************************************** !
-
-subroutine validate_query_storage(n)
-  
-  !
-  ! make sure we have enough storage for n
-  !
-
-  implicit none
-  PetscInt :: n
-!    integer, intent(in) :: n
-
-  if (size(sr%results,1) < n) then
-      print *, 'KD_TREE_TRANS:  you did not provide enough storage for results(1:n)'
-       stop
-       return
-  endif
-
-  return
-end subroutine validate_query_storage
 
 ! ************************************************************************** !
 
@@ -894,11 +586,7 @@ recursive subroutine search(node)
   PetscInt :: cut_dim, i
   PetscReal :: qval, dis, ballsize
   PetscReal, pointer :: qv(:)
-!    integer                            :: cut_dim, i
-    ! ..
-!    real(kdkind)                               :: qval, dis
-!    real(kdkind)                               :: ballsize
-!    real(kdkind), pointer           :: qv(:)
+
   type(interval), pointer :: box(:)
 
   if ((associated(node%left) .and. associated(node%right)) .eqv. PETSC_FALSE) then
@@ -994,18 +682,11 @@ subroutine process_terminal_node(node)
   !
   PetscReal, pointer :: qv(:), data(:,:)
   PetscInt, pointer :: ind(:)
-!    real(kdkind), pointer          :: qv(:)
- !   integer, pointer       :: ind(:)
-!    real(kdkind), pointer          :: data(:,:)
-    !
-!    integer                :: dimen, i, indexofi, k, centeridx, correltime
-!    real(kdkind)                   :: ballsize, sd, newpri
-!    logical                :: rearrange
 
   PetscInt :: dimen, i , indexofi, k, centeridx, correltime
   PetscReal :: ballsize, sd, newpri
   PetscBool :: rearrange
-  type(pq), pointer      :: pqp
+  type(pq), pointer :: pqp
     
   ! copy values from sr to local variables
   ! Notice, making local pointers with an EXPLICIT lower bound
@@ -1045,8 +726,6 @@ subroutine process_terminal_node(node)
               if (centeridx > 0) then ! doing correlation interval?
                 if (abs(indexofi-centeridx) < correltime) cycle mainloop
               endif
-
-
        
        ! two choices for any point.  The list so far is either undersized,
        ! or it is not.
@@ -1107,22 +786,11 @@ subroutine process_terminal_node_fixedball(node)
 
   PetscReal, pointer :: qv(:), data(:,:)
   PetscInt, pointer :: ind(:)
-  
- !   real(kdkind), pointer          :: qv(:)
- !   integer, pointer       :: ind(:)
- !   real(kdkind), pointer          :: data(:,:)
-  !
 
   PetscInt :: nfound, dimen, i, indexofi, k
   PetscInt :: centeridx, correltime, nn
   PetscReal :: ballsize, sd
   PetscBool :: rearrange
-!    integer                :: nfound
-!    integer                :: dimen, i, indexofi, k
-!    integer                :: centeridx, correltime, nn
-!    real(kdkind)                   :: ballsize, sd
-!    logical                :: rearrange
-
     
   ! copy values from sr to local variables
     
@@ -1261,5 +929,256 @@ subroutine heapsort_struct(a,n)
       a(i) = value
     end do
 end subroutine heapsort_struct
+
+!************************************************************************** !
+
+function pq_create(results_in) result(res)
+  !
+  ! Create a priority queue from ALREADY allocated
+  ! array pointers for storage.  NOTE! It will NOT
+  ! add any alements to the heap, i.e. any existing
+  ! data in the input arrays will NOT be used and may
+  ! be overwritten.
+  !
+
+  implicit none
+  
+  type(kdtree2_result), target:: results_in(:)
+  type(pq) :: res
+  PetscInt :: nalloc
+
+  nalloc = size(results_in,1)
+  res%elems => results_in
+  res%heap_size = 0
+  return
+end function pq_create
+
+!************************************************************************** !
+
+subroutine heapify(a,i_in)
+  !
+  ! take a heap rooted at 'i' and force it to be in the
+  ! heap canonical form.   This is performance critical
+  ! and has been tweaked a little to reflect this.
+  !
+  
+  type(pq),pointer   :: a
+  PetscInt :: i_in
+  PetscInt :: i, l, r, largest
+  PetscReal :: pri_i, pri_l, pri_r, pri_largest
+  type(kdtree2_result) :: temp
+
+  i = i_in
+
+  bigloop:  do
+              ! left(i)
+              l = 2 * i
+              ! right(i)
+              r = l + 1
+       !
+       ! set 'largest' to the index of either i, l, r
+       ! depending on whose priority is largest.
+       !
+       ! note that l or r can be larger than the heap size
+       ! in which case they do not count.
+
+              if (l > a%heap_size) then
+                ! we know that i is the largest as both l and r are invalid.
+                exit
+              else
+                pri_i = a%elems(i)%dis
+                pri_l = a%elems(l)%dis
+                if (pri_l > pri_i) then
+                  largest = l
+                  pri_largest = pri_l
+                else
+                  largest = i
+                  pri_largest = pri_i
+                endif
+
+          !
+          ! between i and l we have a winner
+          ! now choose between that and r.
+          !
+                if (r < a%heap_size) then
+                  pri_r = a%elems(r)%dis
+                  if (pri_r > pri_largest) then
+                    largest = r
+                  endif
+                endif
+              endif
+
+              if (largest /= i) then
+          ! swap data in nodes largest and i, then heapify
+
+                temp = a%elems(i)
+                a%elems(i) = a%elems(largest)
+                a%elems(largest) = temp
+          !
+          ! Canonical heapify() algorithm has tail-ecursive call:
+          !
+          !        call heapify(a,largest)
+          ! we will simulate with cycle
+          !
+                i = largest
+                cycle bigloop ! continue the loop
+              else
+                return   ! break from the loop
+              end if
+            enddo bigloop
+  return
+end subroutine heapify
+
+!************************************************************************** !
+
+subroutine pq_extract_max(a,e)
+  !
+  ! return the priority and payload of maximum priority
+  ! element, and remove it from the queue.
+  ! (equivalent to 'pop()' on a stack)
+  !
+
+  implicit none
+  
+  type(pq),pointer :: a
+  type(kdtree2_result), intent(out) :: e
+
+  if (a%heap_size >= 1) then
+    !
+    ! return max as first element
+    !
+    e = a%elems(1)
+
+    !
+    ! move last element to first
+    !
+    a%elems(1) = a%elems(a%heap_size)
+    a%heap_size = a%heap_size-1
+    call heapify(a,1)
+    return
+  else
+    print *, 'PQ_EXTRACT_MAX: error, attempted to pop non-positive PQ'
+    stop
+  end if
+
+end subroutine pq_extract_max
+
+!************************************************************************** !
+
+function pq_insert(a,dis,idx)
+  !
+  ! Insert a new element and return the new maximum priority,
+  ! which may or may not be the same as the old maximum priority.
+  !
+  implicit none
+  
+  type(pq),pointer  :: a
+  PetscReal :: dis
+  PetscInt :: idx
+  PetscInt :: i, isparent
+  PetscReal:: parentdis
+  PetscReal :: pq_insert
+    !
+
+    !    if (a%heap_size .ge. a%max_elems) then
+    !       write (*,*) 'PQ_INSERT: error, attempt made to insert element on full PQ'
+    !       stop
+    !    else
+  a%heap_size = a%heap_size + 1
+  i = a%heap_size
+
+  do while (i > 1)
+    isparent = int(i/2)
+    parentdis = a%elems(isparent)%dis
+    if (dis > parentdis) then
+      ! move what was in i's parent into i.
+      a%elems(i)%dis = parentdis
+      a%elems(i)%idx = a%elems(isparent)%idx
+      i = isparent
+    else
+      exit
+    endif
+  end do
+
+  ! insert the element at the determined position
+  a%elems(i)%dis = dis
+  a%elems(i)%idx = idx
+
+  pq_insert = a%elems(1)%dis
+  return
+
+end function pq_insert
+
+!************************************************************************** !
+
+function pq_replace_max(a,dis,idx)
+  !
+  ! Replace the extant maximum priority element
+  ! in the PQ with (dis,idx).  Return
+  ! the new maximum priority, which may be larger
+  ! or smaller than the old one.
+  !
+
+  implicit none
+  
+  type(pq), pointer :: a
+  PetscReal :: dis
+  PetscInt :: idx
+  PetscInt :: parent, child, N
+  PetscReal :: prichild, prichildp1
+
+  type(kdtree2_result) :: etmp
+  PetscReal :: pq_replace_max
+
+  if (PETSC_TRUE) then
+    N = a%heap_size
+    if (N >= 1) then
+      parent = 1
+      child = 2
+
+      loop: do while (child <= N)
+              prichild = a%elems(child)%dis
+
+              ! posibly child+1 has higher priority, and if
+              ! so, get it, and increment child.
+
+              if (child < N) then
+                prichildp1 = a%elems(child + 1)%dis
+                if (prichild < prichildp1) then
+                  child = child + 1
+                  prichild = prichildp1
+                endif
+              endif
+
+              if (dis >= prichild) then
+                exit loop
+                ! we have a proper place for our new element,
+                ! bigger than either children's priority.
+              else
+                ! move child into parent.
+                a%elems(parent) = a%elems(child)
+                parent = child
+                child = 2 * parent
+              end if
+            end do loop
+      a%elems(parent)%dis = dis
+      a%elems(parent)%idx = idx
+      pq_replace_max = a%elems(1)%dis
+    else
+      a%elems(1)%dis = dis
+      a%elems(1)%idx = idx
+      pq_replace_max = dis
+    endif
+  else
+       !
+       ! slower version using elementary pop and push operations.
+       !
+    call pq_extract_max(a,etmp)
+    etmp%dis = dis
+    etmp%idx = idx
+    pq_replace_max = pq_insert(a,dis,idx)
+  endif
+  return
+end function pq_replace_max
 
 end module kdtree2_module
