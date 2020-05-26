@@ -2,7 +2,7 @@ module kNNr_module
 
 #include "petsc/finclude/petscsys.h"
 
-  use kdtree2_module
+  use Kdtree_module
   use PFLOTRAN_Constants_module
 
   use petscvec
@@ -22,7 +22,7 @@ contains
   
 ! ************************************************************************** !
 
-subroutine read_my_h5_file(option)
+subroutine KnnrReadH5File(option)
 
   use hdf5
   use Option_module
@@ -92,17 +92,17 @@ subroutine read_my_h5_file(option)
   call h5dclose_f(dataset_id,hdf5_err)
 
   dataset_name = 'Env_CO3_2n'
-  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,2)
+  call KnnrReadH5Dataset(group_id,dims_h5,option,h5_name,dataset_name,2)
   dataset_name = 'Env_O2'
-  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,3)
+  call KnnrReadH5Dataset(group_id,dims_h5,option,h5_name,dataset_name,3)
   dataset_name = 'Env_Fe_2p'
-  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,4)
+  call KnnrReadH5Dataset(group_id,dims_h5,option,h5_name,dataset_name,4)
   dataset_name = 'Env_H2'
-  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,5)
+  call KnnrReadH5Dataset(group_id,dims_h5,option,h5_name,dataset_name,5)
   dataset_name = 'Dose Rate d0'
-  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,6)
+  call KnnrReadH5Dataset(group_id,dims_h5,option,h5_name,dataset_name,6)
   dataset_name = 'UO2 Surface Flux'
-  call get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,7)
+  call KnnrReadH5Dataset(group_id,dims_h5,option,h5_name,dataset_name,7)
 
   deallocate(dims_h5)
   deallocate(max_dims_h5)
@@ -120,11 +120,11 @@ subroutine read_my_h5_file(option)
 
 !  print *, 'table7=', table_data(7,6)
 
-end subroutine read_my_h5_file
+end subroutine KnnrReadH5File
 
 ! ************************************************************************** !
 
-subroutine get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,i)
+subroutine KnnrReadH5Dataset(group_id,dims_h5,option,h5_name,dataset_name,i)
 
   use hdf5
   use Option_module
@@ -146,11 +146,6 @@ subroutine get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,i)
   PetscMPIInt :: hdf5_err
 
   call h5dopen_f(group_id,dataset_name,dataset_id,hdf5_err)
- 
-!  if (hdf5_err < 0) then
-!    print *, "dataset not found"
-!    stop
-! endif
 
   if (hdf5_err < 0) then
     option%io_buffer = 'A dataset named "' // trim(dataset_name) // '" not found in HDF5 file "' // &
@@ -166,11 +161,11 @@ subroutine get_h5_dataset(group_id,dims_h5,option,h5_name,dataset_name,i)
   
   call h5dclose_f(dataset_id,hdf5_err)
 
-end subroutine get_h5_dataset
+end subroutine KnnrReadH5Dataset
 
 ! ************************************************************************** !
 
-subroutine knnr_init(option)
+subroutine KnnrInit(option)
 
   use Option_module
   
@@ -180,7 +175,7 @@ subroutine knnr_init(option)
   PetscInt :: i_n,i_d
   PetscInt :: data_array_shape(2)
 
-  call read_my_h5_file(option)
+  call KnnrReadH5File(option)
 
   data_array_shape = shape(table_data)
   ! Quantities of Interest (QoI) is not part of the search query of the search query.
@@ -193,14 +188,13 @@ subroutine knnr_init(option)
     my_array(i_d,:) = table_data(i_d,:)
   end do
  
-  tree => kdtree2_create(my_array,sort=PETSC_FALSE,rearrange=PETSC_FALSE) 
-!    tree => kdtree2_create(my_array,sort=.false.,rearrange=.false.) 
+  tree => KdtreeCreate(my_array,sort=PETSC_FALSE,rearrange=PETSC_FALSE)  
 
-end subroutine knnr_init
+end subroutine KnnrInit
 
 ! ************************************************************************** !
 
-subroutine knnr_query(burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
+subroutine KnnrQuery(nn,burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
 
   implicit none
 
@@ -209,6 +203,7 @@ subroutine knnr_query(burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
   PetscReal, intent(in) :: conc(:)
   PetscReal, intent(in) :: burnup
   PetscReal, intent(in) :: sTme
+  PetscInt, intent(in) :: nn
 
   PetscReal, intent(out) :: fuelDisRate
 
@@ -218,12 +213,12 @@ subroutine knnr_query(burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
   PetscReal :: f1, f2, f3, f4, f5
   PetscReal :: AOF, rad0a, rad0
 
-  PetscInt :: nn
+!  PetscInt :: nn
 
   PetscReal :: qoi_ave
   PetscReal, parameter :: UO2_molar_mass = 270.0d0 !g/mol
       
-  type(kdtree2_result),allocatable :: results(:)
+  type(kdtree2_result), allocatable :: results(:)
 
   !Testing parameters
   PetscInt   :: rind
@@ -258,43 +253,40 @@ subroutine knnr_query(burnup,sTme,current_temp_C,decay_time,conc,fuelDisRate)
 !  rind = floor(rv*tree%n)+1
 !  f = tree%the_data(:,rind)
 
-  !Nearest Neighbor 
-  nn = 7
-
   allocate(results(nn))
 
-  call kdtree2_n_nearest(tp=tree,qv=f,nn=nn,results=results)
+  call kdtreeNNearest(tp=tree,qv=f,nn=nn,results=results)
 
-  call inverse_distance(results,nn,qoi_ave)
+  call KnnrInverseDistance(results,nn,qoi_ave)
 
   fuelDisRate = (qoi_ave) * UO2_molar_mass !convert units
 
 !  print *, 'mol/m2/yr', fuelDisRate/270.0
 !  print *, 'known value', table_data(rind,d+1)
 
-end subroutine knnr_query
+end subroutine KnnrQuery
 
 ! ************************************************************************** !
 
-subroutine knnr_close()
+subroutine KnnrClose()
 
   implicit none
-  
+
+  call KdtreeDestroy(tree)
   deallocate(table_data)
   deallocate(my_array)
    
-end subroutine knnr_close
+end subroutine KnnrClose
 
 ! ************************************************************************** !
 
-subroutine inverse_distance(results,nn,qoi_ave)
+subroutine KnnrInverseDistance(results,nn,qoi_ave)
 
   implicit none
 
   PetscReal :: qoi_i, qoi_sum, qoi_ave, qoi_weights, weight, dis
   type(kdtree2_result) :: myresult
   type(kdtree2_result), allocatable :: results(:)
-
 
   PetscInt :: i_d,nn
 
@@ -308,15 +300,12 @@ subroutine inverse_distance(results,nn,qoi_ave)
 
     dis = myresult%dis
 
-
-
     if (abs(dis) <= eps) then
       qoi_weights = 1.0
       qoi_sum = qoi_i
 
-
       exit
-    elseif (isinfinite(abs(1/dis))) then
+    elseif (KnnrIsInfinite(abs(1/dis))) then
       qoi_weights = 1.0
       qoi_sum = qoi_i
          
@@ -329,7 +318,6 @@ subroutine inverse_distance(results,nn,qoi_ave)
 
        qoi_weights = qoi_weights+weight
 
-
     endif
 
   end do
@@ -340,28 +328,28 @@ subroutine inverse_distance(results,nn,qoi_ave)
 
   print *, "avg = ",qoi_ave
    
-end subroutine inverse_distance
+end subroutine KnnrInverseDistance
 
 ! ************************************************************************** !
 
-function isinfinite(value1)
+function KnnrIsInfinite(value1)
 
   implicit none
 
-  PetscBool :: isinfinite
+  PetscBool :: KnnrIsInfinite
   PetscReal :: value1
   PetscReal :: infinity
 
-  isinfinite = PETSC_FALSE
+  KnnrIsInfinite = PETSC_FALSE
    
   
   infinity = huge(0.0d0)
  
   if (value1 >= infinity) then
-    isinfinite = PETSC_TRUE
+    KnnrIsInfinite = PETSC_TRUE
   endif
  
-end function isinfinite
+end function KnnrIsInfinite
 
 end module kNNr_module
 

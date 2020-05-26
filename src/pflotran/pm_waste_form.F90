@@ -23,7 +23,7 @@ module PM_Waste_Form_class
   use Region_module
   use Checkpoint_module
   use kNNr_module
-  use kdtree2_module
+!  use kdtree_module
  
   use PFLOTRAN_Constants_module
   use Utility_module, only : Equal
@@ -267,6 +267,7 @@ module PM_Waste_Form_class
     PetscReal :: frac_dissolution_rate
     PetscReal :: burnup
     PetscReal :: decay_time ! specific to this waste form
+    PetscInt :: nearest_neighbor
     PetscInt, pointer :: mapping_surrfmdm(:)
     PetscInt, pointer :: mapping_surrfmdm_to_pflotran(:)
     PetscReal, pointer :: concentration(:)
@@ -717,6 +718,7 @@ function PMWFMechanismFMDMSurrogateCreate(option)
   surrfmdm%frac_dissolution_rate = UNINITIALIZED_DOUBLE  ! 1/day
   surrfmdm%burnup = UNINITIALIZED_DOUBLE                 ! GWd/MTHM
   surrfmdm%decay_time = UNINITIALIZED_DOUBLE    ! K
+  surrfmdm%nearest_neighbor = 7
   ! TS - may want to change to C later
 
   surrfmdm%num_concentrations = 4  ! hardwired
@@ -736,7 +738,7 @@ function PMWFMechanismFMDMSurrogateCreate(option)
        surrfmdm%iH2,surrfmdm%iFe_2p]
 
   if (knnr) then
-    call knnr_init(option)
+    call KnnrInit(option)
   else
 
     allocate(surrfmdm%outer_weights(101))
@@ -1626,6 +1628,20 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
                   option)
               class default
                 option%io_buffer = 'ERROR: DECAY_TIME cannot be &
+                                   &specified for ' // trim(error_string)
+                call PrintMsg(option)
+                num_errors = num_errors + 1
+             end select
+         !--------------------------
+          case('NEAREST_NEIGHBOR')
+            select type(new_mechanism)
+              type is(wf_mechanism_fmdm_surrogate_type)
+                call InputReadInt(input,option, &
+                                     new_mechanism%nearest_neighbor)
+                call InputErrorMsg(input,option,'NEAREST_NEIGHBOR', &
+                                   error_string)
+              class default
+                option%io_buffer = 'ERROR: NEAREST_NEIGHBOR cannot be &
                                    &specified for ' // trim(error_string)
                 call PrintMsg(option)
                 num_errors = num_errors + 1
@@ -4037,8 +4053,9 @@ subroutine WFMechFMDMSurrogateDissolution(this,waste_form,pm,ierr)
   enddo
   call CalcParallelSUM(option,waste_form%rank_list,avg_temp_local, &
                        avg_temp_global)
+
   if (knnr) then
-     call knnr_query(this%burnup, time,avg_temp_global,this%decay_time,this%concentration, &
+     call KnnrQuery(this%nearest_neighbor,this%burnup, time,avg_temp_global,this%decay_time,this%concentration, &
           this%dissolution_rate)
   else
      call AMP_surrogate_step(this%burnup, time, avg_temp_global, &
@@ -4169,8 +4186,8 @@ subroutine WFMechFMDMSurrogatekNNr(this,waste_form,pm,ierr)
 
   print *, 'begin knnr_query'
 
-  call knnr_query(this%burnup, time,avg_temp_global,this%decay_time,this%concentration, &
-       this%dissolution_rate)
+ ! call knnr_query(this%burnup, time,avg_temp_global,this%decay_time,this%concentration, &
+ !      this%dissolution_rate)
 
 !  call knnr_close()
 
@@ -5302,7 +5319,7 @@ subroutine PMWFMechanismStrip(this)
         call DeallocateArray(prev_mechanism%mapping_surrfmdm)
         call DeallocateArray(prev_mechanism%mapping_surrfmdm_to_pflotran)
         if (knnr) then
-           call knnr_close()
+           call KnnrClose()
         else
          call DeallocateArray(prev_mechanism%outer_weights)
          call DeallocateArray(prev_mechanism%inner_weights)
