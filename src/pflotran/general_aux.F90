@@ -966,20 +966,23 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
     elseif (soil_compressibility_index > 0) then
       call MaterialCompressSoil(material_auxvar,cell_pressure, &
                                 gen_auxvar%effective_porosity,dpor_dp)
-    elseif (Initialized(MATERIAL_PHI_TO_PERM_MODEL)) then
-      call MaterialPermToPhi(material_auxvar)
     endif
     if (option%iflag /= GENERAL_UPDATE_FOR_DERIVATIVE) then
       material_auxvar%porosity = gen_auxvar%effective_porosity
     endif
-    
+
     ! MAN: coupling DRZ permeability with buffer swelling pressure via 
     ! water saturation in the buffer for nearfield modeling integration.
     if (GENERAL_UPDATE_DRZ_PERM .and. material_auxvar%material_flag > 0.d0) then
       if (material_auxvar%material_flag == DRZ_INT) then
         call MaterialFractureCompress(material_auxvar,general_avg_buffer_stress)
       endif
-    endif 
+    endif
+
+    if (Initialized(MATERIAL_PHI_TO_PERM_MODEL)) then
+      call MaterialPermToPhi(material_auxvar)
+    endif
+ 
 
 
   endif
