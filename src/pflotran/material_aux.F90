@@ -996,7 +996,7 @@ subroutine MaterialPermToPhi(material_aux)
   gamma = 8.0d0
   if (Uninitialized(material_aux%k_0)) then
     material_aux%k_0 = exp(log(material_aux%permeability(ONE_INTEGER)) - &
-                       gamma * material_aux%porosity)
+                       gamma * material_aux%porosity_0)
   endif
 
   material_aux%porosity = log(material_aux%permeability(ONE_INTEGER) / &
