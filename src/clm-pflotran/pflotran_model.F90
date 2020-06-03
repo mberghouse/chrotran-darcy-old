@@ -20,11 +20,13 @@ module pflotran_model_module
 #include "petsc/finclude/petsclog.h"
 #include "petsc/finclude/petscvec.h"
 #include "petsc/finclude/petscviewer.h"
+#include "petsc/finclude/petscmat.h"
 !#include "finclude/petscvec.h90"
  
   use petscsys
   use petscvec
-  
+  use petscmat
+
   implicit none
 
 
@@ -729,6 +731,7 @@ end subroutine pflotranModelSetICs
     use Saturation_Function_module
     use Characteristic_Curves_module
     use Characteristic_Curves_Common_module
+    use Material_Aux_class, only : material_auxvar_type
 
     implicit none
 
@@ -744,6 +747,7 @@ end subroutine pflotranModelSetICs
     type(simulation_base_type), pointer       :: simulation
     type(saturation_function_type)            :: saturation_function
     class(characteristic_curves_type), pointer:: characteristic_curve
+    class(material_auxvar_type), pointer :: material_auxvars(:)
 
     PetscErrorCode     :: ierr
     PetscInt           :: ghosted_id, local_id
@@ -753,6 +757,12 @@ end subroutine pflotranModelSetICs
     PetscReal, pointer :: perm_xx_loc_p(:), perm_yy_loc_p(:), perm_zz_loc_p(:)
     PetscReal          :: bc_lambda, bc_alpha
     Vec                :: porosity_loc, perm_xx_loc, perm_yy_loc, perm_zz_loc
+    PetscInt :: ii,jj,kk
+    PetscReal :: sum
+    PetscInt, pointer :: index(:)
+    PetscScalar, pointer :: s2d_wts(:)
+    Mat :: mat4prop
+    type(mapping_type), pointer :: map
 
     PetscScalar, pointer :: hksat_x2_pf_loc(:) ! hydraulic conductivity in x-dir at saturation (mm H2O /s)
     PetscScalar, pointer :: hksat_y2_pf_loc(:) ! hydraulic conductivity in y-dir at saturation (mm H2O /s)
@@ -761,6 +771,7 @@ end subroutine pflotranModelSetICs
     PetscScalar, pointer :: sucsat2_pf_loc(:)  ! volumetric soil water at saturation (porosity)
     PetscScalar, pointer :: bsw2_pf_loc(:)     ! Clapp and Hornberger "b"
     PetscScalar, pointer :: thetares2_pf_loc(:)! residual soil mosture = sat_res * por
+    PetscScalar, pointer :: area_pf_loc(:)     ! area of top face
 
     den = 998.2d0       ! [kg/m^3]  @ 20 degC
     vis = 0.001002d0    ! [N s/m^2] @ 20 degC
@@ -780,6 +791,7 @@ end subroutine pflotranModelSetICs
     patch           => realization%patch
     grid            => patch%grid
     field           => realization%field
+    material_auxvars=> patch%aux%Material%auxvars
 
     select case(pflotran_model%option%iflowmode)
       case(RICHARDS_MODE)
@@ -812,6 +824,7 @@ end subroutine pflotranModelSetICs
     call VecGetArrayF90(clm_pf_idata%watsat2_pf,  watsat2_pf_loc,  ierr)
     call VecGetArrayF90(clm_pf_idata%bsw2_pf,     bsw2_pf_loc,     ierr)
     call VecGetArrayF90(clm_pf_idata%thetares2_pf,thetares2_pf_loc,ierr)
+    call VecGetArrayF90(clm_pf_idata%area_top_face_pf, area_pf_loc, ierr)
 
     call VecGetArrayF90(porosity_loc, porosity_loc_p, ierr)
     call VecGetArrayF90(perm_xx_loc,  perm_xx_loc_p,  ierr)
@@ -890,39 +903,77 @@ end subroutine pflotranModelSetICs
     call VecRestoreArrayF90(clm_pf_idata%watsat2_pf,  watsat2_pf_loc,  ierr)
     call VecRestoreArrayF90(clm_pf_idata%bsw2_pf,     bsw2_pf_loc,     ierr)
     call VecRestoreArrayF90(clm_pf_idata%thetares2_pf,thetares2_pf_loc,ierr)
+    call VecRestoreArrayF90(clm_pf_idata%area_top_face_pf, area_pf_loc, ierr)
 
     call VecRestoreArrayF90(porosity_loc, porosity_loc_p, ierr)
     call VecRestoreArrayF90(perm_xx_loc,  perm_xx_loc_p,  ierr)
     call VecRestoreArrayF90(perm_yy_loc,  perm_yy_loc_p,  ierr)
     call VecRestoreArrayF90(perm_zz_loc,  perm_zz_loc_p,  ierr)
 
-    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+    map => pflotran_model%map_pf_sub_to_clm_sub
+
+    allocate(index(map%s2d_s_ncells))
+    allocate(s2d_wts(map%s2d_s_ncells))
+
+    kk = 0
+    do ii = 1,map%d_ncells_ghd
+       sum = 0.d0
+       do jj = 1,map%s2d_nonzero_rcount_csr(ii)
+          kk = kk + 1
+          index(kk) = ii - 1
+          sum = sum + map%s2d_wts(kk)
+       enddo
+       kk = kk - map%s2d_nonzero_rcount_csr(ii)
+       do jj = 1,map%s2d_nonzero_rcount_csr(ii)
+          kk = kk + 1
+          s2d_wts(kk) = map%s2d_wts(kk)/sum
+       enddo
+    enddo
+
+    !
+    ! size(wts_mat) = [d_ncells_ghd x s2d_s_ncells_dis]
+    !
+    call MatCreateSeqAIJ(PETSC_COMM_SELF, &
+         map%d_ncells_ghd,                & ! m
+         map%s2d_s_ncells_dis,            & ! n
+         PETSC_DEFAULT_INTEGER,           & ! nz
+         map%s2d_nonzero_rcount_csr,      & ! nnz
+         mat4prop, ierr)
+
+    do ii = 1,map%s2d_s_ncells
+       call MatSetValues(mat4prop,1,index(ii),1,map%s2d_jcsr(ii), &
+          s2d_wts(ii),INSERT_VALUES,ierr)
+    enddo
+    call MatAssemblyBegin(mat4prop,MAT_FINAL_ASSEMBLY,ierr)
+    call MatAssemblyEnd(  mat4prop,MAT_FINAL_ASSEMBLY,ierr)
+
+    call MappingSourceToDestinationWithMat(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%hksat_x2_pf, &
-                                    clm_pf_idata%hksat_x2_clm)
+                                    clm_pf_idata%hksat_x2_clm, mat4prop)
 
-    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+    call MappingSourceToDestinationWithMat(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%hksat_y2_pf, &
-                                    clm_pf_idata%hksat_y2_clm)
+                                    clm_pf_idata%hksat_y2_clm, mat4prop)
 
-    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+    call MappingSourceToDestinationWithMat(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%hksat_z2_pf, &
-                                    clm_pf_idata%hksat_z2_clm)
+                                    clm_pf_idata%hksat_z2_clm, mat4prop)
 
-    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+    call MappingSourceToDestinationWithMat(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%sucsat2_pf, &
-                                    clm_pf_idata%sucsat2_clm)
+                                    clm_pf_idata%sucsat2_clm, mat4prop)
 
-    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+    call MappingSourceToDestinationWithMat(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%bsw2_pf, &
-                                    clm_pf_idata%bsw2_clm)
+                                    clm_pf_idata%bsw2_clm, mat4prop)
 
-    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+    call MappingSourceToDestinationWithMat(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%watsat2_pf, &
-                                    clm_pf_idata%watsat2_clm)
+                                    clm_pf_idata%watsat2_clm, mat4prop)
 
-    call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
+    call MappingSourceToDestinationWithMat(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%thetares2_pf, &
-                                    clm_pf_idata%thetares2_clm)
+                                    clm_pf_idata%thetares2_clm, mat4prop)
 
     call VecDestroy(porosity_loc, ierr)
     call VecDestroy(perm_xx_loc, ierr)
@@ -2816,7 +2867,6 @@ end subroutine pflotranModelSetICs
     call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%sat_pf, &
                                     clm_pf_idata%sat_clm)
-
     call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%mass_pf, &
                                     clm_pf_idata%mass_clm)
@@ -3176,6 +3226,7 @@ end subroutine pflotranModelSetICs
     type(discretization_type), pointer :: discretization
     type(patch_type), pointer :: patch
     type(grid_type), pointer :: grid
+    Vec :: rowsum_clm
     !type(point_type) :: point1, point2, point3, point4
 
     PetscInt :: local_id
@@ -3188,6 +3239,7 @@ end subroutine pflotranModelSetICs
     PetscReal :: area1
 
     PetscScalar, pointer :: area_p(:)
+    PetscScalar, pointer :: rowsum_p(:)
     PetscErrorCode :: ierr
 
     option => pflotran_model%option
@@ -3249,6 +3301,19 @@ end subroutine pflotranModelSetICs
     call MappingSourceToDestination(pflotran_model%map_pf_sub_to_clm_sub, &
                                     clm_pf_idata%area_top_face_pf, &
                                     clm_pf_idata%area_top_face_clm)
+
+    call VecCreateSeq(PETSC_COMM_SELF, pflotran_model%map_pf_sub_to_clm_sub%d_ncells_ghd, rowsum_clm, ierr)
+    call MatGetRowSum(pflotran_model%map_pf_sub_to_clm_sub%wts_mat, rowsum_clm, ierr)
+    call VecGetArrayF90(clm_pf_idata%area_top_face_clm, area_p, ierr)
+    call VecGetArrayF90(rowsum_clm, rowsum_p, ierr)
+
+    do local_id = 1,pflotran_model%map_pf_sub_to_clm_sub%d_ncells_ghd
+       area_p(local_id) = area_p(local_id)/rowsum_p(local_id)
+    enddo
+    call VecRestoreArrayF90(clm_pf_idata%area_top_face_clm, area_p, ierr)
+    call VecRestoreArrayF90(rowsum_clm, rowsum_p, ierr)
+
+    call VecDestroy(rowsum_clm, ierr)
 
   end subroutine pflotranModelGetTopFaceArea
 

@@ -105,6 +105,7 @@ module Mapping_module
             MappingCreateWeightMatrix, &
             MappingCreateScatterOfSourceMesh, &
             MappingSourceToDestination, &
+            MappingSourceToDestinationWithMat, &
             MappingListCreate, &
             MappingListAddToList, &
             MappingDestroy
@@ -319,6 +320,7 @@ contains
     if(option%myrank == option%io_rank) then
 
       input => InputCreate(20,map_filename,option)
+      write(*,*)'map_filename: ',trim(map_filename)
 
       nwts     = -1
       prev_row = -1
@@ -328,6 +330,7 @@ contains
         call InputReadPflotranString(input,option)
         call InputReadWord(input,option,card,PETSC_TRUE)
         call StringToLower(card)
+        write(*,*)' card: ',trim(card)
 
         select case (trim(card))
           case('clm_nlevsoi')
@@ -357,7 +360,7 @@ contains
             write(*,*),'nwts = ',nwts
           case default
             option%io_buffer = 'Unrecognized keyword "' // trim(card) // &
-              '" in explicit grid file.'
+              '" in mapping file.'
             call printErrMsgByRank(option)
         end select
       enddo
@@ -1527,24 +1530,24 @@ contains
 ! ************************************************************************** !
 
   subroutine MappingSourceToDestination(map,s_vec,d_vec)
-  ! 
+  !
   ! This routine maps the data from source to destination grid.
-  ! 
+  !
   ! Author: Gautam Bisht, ORNL
   ! Date: 2011
-  ! 
-  
+  !
+
     implicit none
-    
+
     ! argument
     type(mapping_type), pointer :: map
     Vec                         :: s_vec ! MPI
     Vec                         :: d_vec ! Seq
-    
+
     ! local variables
     PetscErrorCode              :: ierr
-    
-    if (map%s2d_s_ncells > 0) then  
+
+    if (map%s2d_s_ncells > 0) then
        ! Initialize local vector
        call VecSet(map%s_disloc_vec, 0.d0, ierr)
     end if
@@ -1554,12 +1557,52 @@ contains
          INSERT_VALUES, SCATTER_FORWARD, ierr)
     call VecScatterEnd(map%s2d_scat_s_gb2disloc, s_vec, map%s_disloc_vec, &
          INSERT_VALUES, SCATTER_FORWARD, ierr)
-    
-    if (map%s2d_s_ncells > 0) then  
+
+    if (map%s2d_s_ncells > 0) then
        ! Perform Matrix-Vector product
        call MatMult(map%wts_mat, map%s_disloc_vec, d_vec, ierr)
     end if
   end subroutine
+
+! ************************************************************************** !
+
+  subroutine MappingSourceToDestinationWithMat(map,s_vec,d_vec,wts_mat)
+  !
+  ! This routine maps the data from source to destination grid using the
+  ! provided weight matrix
+  !
+  ! Author: Gautam Bisht, PNNL
+  ! Date: 2020
+  !
+
+    implicit none
+
+    ! argument
+    type(mapping_type), pointer :: map
+    Vec                         :: s_vec ! MPI
+    Vec                         :: d_vec ! Seq
+    Mat                         :: wts_mat
+
+    ! local variables
+    PetscErrorCode              :: ierr
+
+    if (map%s2d_s_ncells > 0) then
+       ! Initialize local vector
+       call VecSet(map%s_disloc_vec, 0.d0, ierr)
+    end if
+
+    ! Scatter the source vector
+    call VecScatterBegin(map%s2d_scat_s_gb2disloc, s_vec, map%s_disloc_vec, &
+         INSERT_VALUES, SCATTER_FORWARD, ierr)
+    call VecScatterEnd(map%s2d_scat_s_gb2disloc, s_vec, map%s_disloc_vec, &
+         INSERT_VALUES, SCATTER_FORWARD, ierr)
+
+    if (map%s2d_s_ncells > 0) then
+       ! Perform Matrix-Vector product
+       call MatMult(wts_mat, map%s_disloc_vec, d_vec, ierr)
+    end if
+
+  end subroutine MappingSourceToDestinationWithMat
 
 ! ************************************************************************** !
 
