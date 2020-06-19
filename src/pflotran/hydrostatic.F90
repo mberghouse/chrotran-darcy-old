@@ -613,6 +613,9 @@ subroutine HydrostaticUpdateCoupler(coupler,option,grid)
                     temperature_gradient(Z_DIRECTION)*dist_z
         coupler%flow_aux_real_var(TH_TEMPERATURE_DOF,iconn) = temperature
         coupler%flow_aux_int_var(TH_PRESSURE_DOF,iconn) = condition%iphase
+if (grid%nG2A(ghosted_id) == 88280) then
+  print *, 'hydrostatic: ', pressure, temperature
+endif
       case(MIS_MODE)
         temperature = temperature_at_datum + &
                     ! gradient in K/m

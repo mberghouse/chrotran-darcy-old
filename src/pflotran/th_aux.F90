@@ -527,6 +527,9 @@ subroutine THAuxVarComputeNoFreezing(x,auxvar,global_auxvar, &
   call EOSWaterEnthalpy(global_auxvar%temp,pw,hw,hw_dp,hw_dT,ierr)
   if (.not.option%flow%density_depends_on_salinity) then
     call EOSWaterDensity(global_auxvar%temp,pw,dw_kg,dw_mol,dw_dp,dw_dT,ierr)
+    if (option%iflag == 1) then
+      write(*,'(a,3es13.5)') 'density ', pw, global_auxvar%temp, dw_kg
+    endif
     if (ierr /= 0) then
       call PrintMsgByCell(option,natural_id, &
                        'Error in THAuxVarComputeNoFreezing->EOSWaterDensity')

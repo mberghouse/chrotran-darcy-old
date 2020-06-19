@@ -11,6 +11,7 @@ module TH_module
   implicit none
   
   private 
+PetscInt, parameter :: problem_cell = 88280
 
 ! Cutoff parameters
   PetscReal, parameter :: eps       = 1.D-8
@@ -741,6 +742,10 @@ subroutine THUpdateAuxVarsPatch(realization)
             TH_parameter, ithrm, &
             grid%nG2A(ghosted_id),PETSC_TRUE,option)
     else
+    option%iflag = 0
+    if (grid%nG2A(ghosted_id) == problem_cell) then
+      option%iflag = 1
+    endif
        call THAuxVarComputeNoFreezing(xx_loc_p(istart:iend), &
             TH_auxvars(ghosted_id),global_auxvars(ghosted_id), &
             material_auxvars(ghosted_id), &
@@ -2355,6 +2360,16 @@ subroutine THFlux(auxvar_up,global_auxvar_up, &
     !call InterfaceApprox(auxvar_up%h, auxvar_dn%h, dphi, &
     !                     option%rel_perm_aveg, uh)
 
+  if (option%iflag == 1) then
+    print *, 'global_auxvar_up%den(1): ', global_auxvar_up%den(1)
+    print *, 'global_auxvar_dn%den(1): ', global_auxvar_dn%den(1)
+!    print *, 'density_ave: ', density_ave
+!    print *, 'gravity: ', gravity
+!    print *, 'dphi: ', dphi
+!    print *, 'ukvr: ', ukvr
+!    print *, 'Dq: ', Dq
+  endif
+
     if (ukvr > floweps) then
       v_darcy = Dq * ukvr * dphi
    
@@ -2445,6 +2460,11 @@ subroutine THFlux(auxvar_up,global_auxvar_up, &
 
   Res(1:option%nflowdof-1) = fluxm
   Res(option%nflowdof) = fluxe
+
+  if (option%iflag == 1) then
+!    print *, 'fluxm: ', fluxm
+!    print *, 'fluxe: ', fluxe
+  endif
   
  ! note: Res is the flux contribution, for node 1 R = R + Res_FL
  !                                              2 R = R - Res_FL  
@@ -3685,6 +3705,11 @@ subroutine THBCFlux(ibndtype,auxvars,auxvar_up,global_auxvar_up, &
         '" not implemented in TH mode.'
       call PrintErrMsg(option)
   end select
+  if (option%iflag == 1) then
+    write(*,'(a,4es12.4)') 'vDarcy: ', v_darcy, Dq, ukvr, dphi
+    print *, 'pres: ', global_auxvar_up%pres(1), global_auxvar_dn%pres(1)
+    print *, 'temp: ', global_auxvar_up%temp, global_auxvar_dn%temp
+  endif
 
   ! If only solving the energy equation, set Res(1) is 0.d0
   if (option%flow%only_energy_eq) fluxm = 0.d0
@@ -4037,6 +4062,7 @@ subroutine THResidualInternalConn(r,realization,ierr)
          alpha_fr_dn = alpha_dn
       endif
 
+    option%iflag = 0
       call THFlux(auxvars(ghosted_id_up),global_auxvars(ghosted_id_up), &
                   material_auxvars(ghosted_id_up), &
                   D_up, &
@@ -4051,6 +4077,12 @@ subroutine THResidualInternalConn(r,realization,ierr)
                   Dk_dry_dn,Dk_ice_up,Dk_ice_dn, &
                   alpha_up,alpha_dn,alpha_fr_up,alpha_fr_dn, &
                   Res)
+
+    if (grid%nG2A(ghosted_id_up) == problem_cell) then
+      print *, 'Flux (+)', Res
+    else if (grid%nG2A(ghosted_id_dn) == problem_cell) then
+      print *, 'Flux (-)', -Res
+    endif
 
       patch%internal_velocities(1,sum_connection) = v_darcy
       patch%internal_flow_fluxes(:,sum_connection) = Res(:)
@@ -4218,6 +4250,10 @@ subroutine THResidualBoundaryConn(r,realization,ierr)
 
       icap_dn = int(icap_loc_p(ghosted_id))
   
+    option%iflag = 0
+    if (grid%nG2A(ghosted_id) == problem_cell) then
+      option%iflag = 1
+    endif
       call THBCFlux(boundary_condition%flow_condition%itype, &
                     boundary_condition%flow_aux_real_var(:,iconn), &
                     auxvars_bc(sum_connection), &
@@ -4248,6 +4284,9 @@ subroutine THResidualBoundaryConn(r,realization,ierr)
       iend = local_id*option%nflowdof
       istart = iend-option%nflowdof+1
       r_p(istart:iend)= r_p(istart:iend) - Res(1:option%nflowdof)
+    if (grid%nG2A(ghosted_id) == problem_cell) then
+      print *, 'THBCFlux (-): ', -Res
+    endif
     enddo
     boundary_condition => boundary_condition%next
   enddo
@@ -4355,6 +4394,9 @@ subroutine THResidualAccumulation(r,realization,ierr)
                         material_auxvars(ghosted_id), &
                         TH_parameter%dencpr(int(ithrm_loc_p(ghosted_id))), &
                         option,vol_frac_prim,Res)
+    if (grid%nG2A(ghosted_id) == problem_cell) then
+      print *, 'Accum (+): ', Res
+    endif
     r_p(istart:iend) = r_p(istart:iend) + Res
     accum2_p(istart:iend) = Res
   enddo
@@ -4612,6 +4654,9 @@ subroutine THResidualSourceSink(r,realization,ierr)
       endif
 
       r_p(istart:iend) = r_p(istart:iend) - Res_src
+    if (grid%nG2A(ghosted_id) == problem_cell) then
+      print *, 'Src (-): ', -Res_src
+    endif
 
       if (option%compute_mass_balance_new) then
         global_auxvars_ss(sum_connection)%mass_balance_delta(1,1) = &
