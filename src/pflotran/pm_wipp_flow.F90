@@ -1334,6 +1334,8 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   PetscReal :: array(1,1)
   PetscReal, pointer :: vec_p(:)
 
+! goes along with petsc-heeho v1.0_speed_tested tag
+
   if (this%option%flow%using_newtontrd) then
     if (.not.this%newtontrd_jacobian_calculated) then
       call WIPPFloJacobian(snes,xx,A,B,this%realization,this%pmwss_ptr,ierr)
