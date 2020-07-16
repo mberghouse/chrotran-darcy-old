@@ -366,7 +366,7 @@ subroutine PMSubsurfaceFlowReadNewtonSelectCase(this,input,keyword,found, &
             call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                       trim(string),trim(word), &
                                       ierr);CHKERRQ(ierr)
-          case('USE_CAUCHY')
+          case('USE_CAUCHY','CAUCHY')
             call InputReadWord(input,option,word,PETSC_TRUE)
             call InputErrorMsg(input,option, &
                                'BoomerAMG convergence tolerance', &

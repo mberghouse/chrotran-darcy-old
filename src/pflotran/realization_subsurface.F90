@@ -268,8 +268,10 @@ subroutine RealizationCreateDiscretization(realization)
                                     GLOBAL,option)
     ! for scaling pressure in the range of saturation
     if (option%flow%scale_all_pressure) then
-      call DiscretizationDuplicateVector(discretization,field%flow_xx, &
-                                         field%flow_scaled_xx)
+    call DiscretizationDuplicateVector(discretization,field%flow_xx, &
+                                       field%flow_scaled_xx)
+    call DiscretizationDuplicateVector(discretization,field%flow_xx, &
+                                       field%flow_work_loc)
     endif
     call DiscretizationDuplicateVector(discretization,field%flow_xx, &
                                        field%flow_yy)

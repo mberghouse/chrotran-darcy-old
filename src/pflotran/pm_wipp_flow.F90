@@ -70,8 +70,6 @@ module PM_WIPP_Flow_class
                                      ! just before the PETSc solver.
     PetscInt :: newtontrd_inner_iter_num ! True: inside inner iteration.
     PetscInt :: newtontrd_prev_iter_num
-    PetscBool :: newtontrd_scale_diagonal ! newtontrd experiment purpose only. do not use
-    PetscBool :: newtontrd_jacobian_calculated
     
     Vec :: scaling_vec
     ! When reading Dirichlet 2D Flared BC
@@ -203,11 +201,9 @@ subroutine PMWIPPFloInitObject(this)
   this%auto_pressure_Pb_0 = UNINITIALIZED_DOUBLE !make user put this in
   this%auto_press_shallow_origin = UNINITIALIZED_DOUBLE !this will default to dip rotation origin later
   this%linear_system_scaling_factor = 1.d7
-  this%scale_linear_system = PETSC_TRUE
+  this%scale_linear_system = PETSC_FALSE
   this%newtontrd_inner_iter_num = 0
   this%newtontrd_prev_iter_num = 0
-  this%newtontrd_jacobian_calculated = PETSC_FALSE
-  this%newtontrd_scale_diagonal = PETSC_FALSE
   this%scaling_vec = PETSC_NULL_VEC
   nullify(this%dirichlet_dofs_ghosted)
   nullify(this%dirichlet_dofs_ints)
@@ -641,11 +637,6 @@ subroutine PMWIPPFloReadNewtonSelectCase(this,input,keyword,found, &
       option%flow%scale_all_pressure = PETSC_TRUE
       call InputReadDouble(input,option,option%flow%pressure_scaling_factor)
       call InputErrorMsg(input,option,keyword,error_string)
-! is not proven to assist newtontrd in performance (disabled)
-!   case('SCALE_DIAGONAL')
-!     this%newtontrd_scale_diagonal = PETSC_TRUE
-!   case('DO_NOT_SCALE_DIAGONAL')
-!     this%newtontrd_scale_diagonal = PETSC_FALSE
     case default
       found = PETSC_FALSE
 
@@ -1314,6 +1305,7 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   use WIPP_Flow_module, only : WIPPFloJacobian
   use Debug_module
   use Option_module
+  use Field_module
 
   implicit none
   
@@ -1322,7 +1314,10 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   Vec :: xx
   Mat :: A, B
   PetscErrorCode :: ierr
-
+  
+  type(field_type), pointer :: field
+  type(option_type), pointer :: option
+  
   PetscViewer :: viewer
   character(len=MAXSTRINGLENGTH) :: string
   Vec :: residual_vec
@@ -1334,16 +1329,10 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
   PetscReal :: array(1,1)
   PetscReal, pointer :: vec_p(:)
 
-! goes along with petsc-heeho v1.0_speed_tested tag
+  option => this%option
+  field => this%realization%field
 
-  if (this%option%flow%using_newtontrd) then
-    if (.not.this%newtontrd_jacobian_calculated) then
-      call WIPPFloJacobian(snes,xx,A,B,this%realization,this%pmwss_ptr,ierr)
-    endif
-    this%newtontrd_inner_iter_num = 0
-  else  
-    call WIPPFloJacobian(snes,xx,A,B,this%realization,this%pmwss_ptr,ierr)
-  endif
+  call WIPPFloJacobian(snes,xx,A,B,this%realization,this%pmwss_ptr,ierr)
   
   ! cell-centered dirichlet BCs
   if (associated(this%dirichlet_dofs_ghosted)) then
@@ -1383,6 +1372,20 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
 
   call SNESGetFunction(snes,residual_vec,PETSC_NULL_FUNCTION, &
                        PETSC_NULL_INTEGER,ierr);CHKERRQ(ierr)
+
+  if (option%flow%scale_all_pressure) then
+    call VecSet(field%flow_work_loc,1.d0,ierr);CHKERRQ(ierr)
+    call VecGetArrayF90(field%flow_work_loc,vec_p,ierr);CHKERRQ(ierr)
+    do irow = 1, size(vec_p), 2
+      vec_p(irow) = option%flow%pressure_scaling_factor  ! scale pressure
+    ! vec_p(irow+1) = vec_p(irow+1)  ! keep saturation as is. -hdp
+    enddo
+    call VecRestoreArrayF90(field%flow_work_loc,vec_p,ierr);CHKERRQ(ierr)
+    !call MatDiagonalScaleLocal(A,field%flow_work_loc,ierr);CHKERRQ(ierr)
+    call MatDiagonalScale(A,PETSC_NULL_VEC,field%flow_work_loc, &
+                          ierr);CHKERRQ(ierr)
+  endif 
+
   if (this%scale_linear_system) then
     call VecGetLocalSize(this%scaling_vec,matsize,ierr);CHKERRQ(ierr)
     call VecSet(this%scaling_vec,1.d0,ierr);CHKERRQ(ierr)
@@ -1402,35 +1405,6 @@ subroutine PMWIPPFloJacobian(this,snes,xx,A,B,ierr)
     call VecPointwiseMult(residual_vec,residual_vec, &
                           this%scaling_vec,ierr);CHKERRQ(ierr)
 
-    if (this%realization%debug%matview_Jacobian) then
-      string = 'WFscale_vec'
-      call DebugCreateViewer(this%realization%debug,string,this%option,viewer)
-      call VecView(this%scaling_vec,viewer,ierr);CHKERRQ(ierr)
-      call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
-      string = 'WFjacobian_scaled'
-      call DebugCreateViewer(this%realization%debug,string,this%option,viewer)
-      call MatView(A,viewer,ierr);CHKERRQ(ierr)
-      call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
-    endif
-    if (this%realization%debug%vecview_residual) then
-      string = 'WFresidual_scaled'
-      call DebugCreateViewer(this%realization%debug,string,this%option,viewer)
-      call VecView(residual_vec,viewer,ierr);CHKERRQ(ierr)
-      call PetscViewerDestroy(viewer,ierr);CHKERRQ(ierr)
-    endif
-  endif
-
-  if (this%newtontrd_scale_diagonal .and. this%newtontrd_jacobian_calculated) then
-    ! only used for newtontrd algorithm - Heeho
-    call VecGetLocalSize(this%scaling_vec,matsize,ierr);CHKERRQ(ierr)
-    call VecSet(this%scaling_vec,1.d0,ierr);CHKERRQ(ierr)
-    call MatGetRowMaxAbs(A,this%scaling_vec,PETSC_NULL_INTEGER, &
-                         ierr);CHKERRQ(ierr)
-    call VecReciprocal(this%scaling_vec,ierr);CHKERRQ(ierr)
-    call MatDiagonalScale(A,this%scaling_vec,PETSC_NULL_VEC, &
-                          ierr);CHKERRQ(ierr)
-    call VecPointwiseMult(residual_vec,residual_vec, &
-                          this%scaling_vec,ierr);CHKERRQ(ierr)
     if (this%realization%debug%matview_Jacobian) then
       string = 'WFscale_vec'
       call DebugCreateViewer(this%realization%debug,string,this%option,viewer)
@@ -1497,16 +1471,6 @@ subroutine PMWIPPFloCheckUpdatePre(this,snes,X,dX,changed,ierr)
     changed = PETSC_TRUE
     call VecStrideScale(dX,ZERO_INTEGER,this%linear_system_scaling_factor, &
                         ierr);CHKERRQ(ierr)
-  endif
-
-  if (this%option%flow%scale_all_pressure) then
-    changed = PETSC_TRUE
-    inverse_factor = this%option%flow%pressure_scaling_factor**(-1.d0)
-    call VecStrideScale(dX,ZERO_INTEGER,inverse_factor, ierr);CHKERRQ(ierr)
-  endif  
-
-  if (this%option%flow%using_newtontrd) then
-    this%newtontrd_jacobian_calculated = PETSC_TRUE
   endif
 
 end subroutine PMWIPPFloCheckUpdatePre
@@ -1583,8 +1547,9 @@ subroutine PMWIPPFloCheckUpdatePost(this,snes,X0,dX,X1,dX_changed, &
   PetscReal :: pressure_outside_limits
   PetscReal :: saturation_outside_limits
   PetscReal :: max_gas_sat_outside_lim
+  PetscReal :: pressure_scale_factor
   PetscInt :: max_gas_sat_outside_lim_cell
-  PetscInt :: i
+  PetscInt :: i, irow
   ! dX_p is subtracted to update the solution.  The max values need to be 
   ! scaled by this delta_scale for proper screen output.
   PetscReal, parameter :: delta_scale = -1.d0
@@ -1617,6 +1582,17 @@ subroutine PMWIPPFloCheckUpdatePost(this,snes,X0,dX,X1,dX_changed, &
     close(IUNIT_TEMP)
   endif
   call VecGetArrayF90(X1,X1_p,ierr);CHKERRQ(ierr)
+  
+  ! if the solution is scaled, then it must be scaled back
+  if (option%flow%scale_all_pressure) then
+    pressure_scale_factor = option%flow%pressure_scaling_factor
+    do irow = 1, size(dX_p), 2
+      dX_p(irow) = dX_p(irow)*pressure_scale_factor ! pressure
+      X0_p(irow) = X0_p(irow)*pressure_scale_factor ! pressure
+      X1_p(irow) = X1_p(irow)*pressure_scale_factor ! pressure
+    enddo
+  endif
+
   ! max change variables: [LIQUID_PRESSURE, GAS_PRESSURE, GAS_SATURATION]
   call VecGetArrayReadF90(field%max_change_vecs(1),press_ptr,ierr);CHKERRQ(ierr)
   call VecGetArrayReadF90(field%max_change_vecs(3),sat_ptr,ierr);CHKERRQ(ierr)
@@ -1819,6 +1795,16 @@ subroutine PMWIPPFloCheckUpdatePost(this,snes,X0,dX,X1,dX_changed, &
   this%convergence_reals(MIN_LIQ_PRES) = min_liq_pressure
   this%convergence_reals(FORCE_ITERATION) = max_gas_sat_outside_lim
 
+  ! if the solution is scaled, then it must be scaled back
+  if (option%flow%scale_all_pressure) then
+    pressure_scale_factor = option%flow%pressure_scaling_factor**(-1.d0)
+    do irow = 1, size(dX_p), 2
+      dX_p(irow) = dX_p(irow)*pressure_scale_factor ! pressure
+      X0_p(irow) = X0_p(irow)*pressure_scale_factor ! pressure
+      X1_p(irow) = X1_p(irow)*pressure_scale_factor ! pressure
+    enddo
+  endif
+
   call VecRestoreArrayF90(dX,dX_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayReadF90(X0,X0_p,ierr);CHKERRQ(ierr)
   call VecRestoreArrayF90(X1,X1_p,ierr);CHKERRQ(ierr)
@@ -1915,11 +1901,14 @@ subroutine PMWIPPFloCheckConvergence(this,snes,it,xnorm,unorm, &
   material_auxvars => patch%aux%Material%auxvars
 
   if (this%option%flow%using_newtontrd) then
+    ! if (option%flow%scale_all_pressure) then
+    ! as I do not change residual values when scaling pressure
+    ! the residual should be okay unlike linear system scaling.
+    ! endif
     if (this%newtontrd_prev_iter_num == it) then
       this%newtontrd_inner_iter_num = this%newtontrd_inner_iter_num + 1
     endif
     this%newtontrd_prev_iter_num = it
-    this%newtontrd_jacobian_calculated = PETSC_FALSE
   endif
 
   ! check residual terms
