@@ -192,7 +192,7 @@ subroutine OutputObservationTecplotColumnTXT(realization_base)
   if (open_file) then
     write(string,'(i6)') option%myrank
     filename = trim(option%global_prefix) // trim(option%group_prefix) // &
-               '-obs-' // trim(adjustl(string)) // '.tec'
+               '-obs-' // trim(adjustl(string)) // '.pft'
   
     ! open file
     fid = 86
@@ -359,7 +359,7 @@ subroutine OutputAggregateToFile(realization_base)
         write(string2,'(i6)') aggregate%id
         filename = trim(option%global_prefix) // trim(option%group_prefix) // &
                '-obs-' // trim(adjustl(string)) // '-agg-' // &
-               trim(adjustl(string2)) // '.tec'
+               trim(adjustl(string2)) // '.pft'
         fid = 86
 
         if (observation_aggregate_first .or. .not.FileExists(filename)) then
@@ -409,7 +409,7 @@ subroutine OutputAggregateToFile(realization_base)
         write(string2,'(i6)') aggregate%id
         filename = trim(option%global_prefix) // trim(option%group_prefix) // &
                '-obs-' // trim(adjustl(string)) // '-agg-' // &
-               trim(adjustl(string2)) // '.tec'
+               trim(adjustl(string2)) // '.pft'
         fid = 86
 
         ! Compute the aggregate metric on each process
@@ -679,7 +679,7 @@ subroutine OutputObservationTecplotSecTXT(realization_base)
   if (open_file) then
     write(string,'(i6)') option%myrank
     filename = trim(option%global_prefix) // trim(option%group_prefix) // &
-               '-obs-sec-' // trim(adjustl(string)) // '.tec'
+               '-obs-sec-' // trim(adjustl(string)) // '.pft'
   
     ! open file
     fid = 86

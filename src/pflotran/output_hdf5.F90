@@ -400,7 +400,7 @@ subroutine OutputHDF5OpenFile(option, output_option, var_list_type, file_id, &
   if (output_option%print_single_h5_file) then
     first = hdf5_first
     filename = trim(option%global_prefix) // trim(option%group_prefix) // &
-               trim(string2) // '.h5'
+               trim(string2) // '-plt.h5'
   else
     string = OutputHDF5FilenameID(output_option,option,var_list_type)
     select case (var_list_type)
@@ -422,7 +422,7 @@ subroutine OutputHDF5OpenFile(option, output_option, var_list_type, file_id, &
     end select
 
     filename = trim(option%global_prefix) // trim(option%group_prefix) // &
-                '-' // trim(string) // trim(string2) // '.h5'
+                '-' // trim(string) // trim(string2) // '-plt.h5'
   endif
 
   call h5pcreate_f(H5P_FILE_ACCESS_F,prop_id,hdf5_err)
@@ -570,11 +570,11 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
   if (output_option%print_single_h5_file) then
     first = hdf5_first
     !filename = trim(option%global_prefix) // trim(string2) // &
-    !           trim(option%group_prefix) // '.h5'
+    !           trim(option%group_prefix) // '-plt.h5'
     filename_path = trim(option%global_prefix) // trim(string2) // &
-               trim(option%group_prefix) // '.h5'
+               trim(option%group_prefix) // '-plt.h5'
     filename_header = trim(option%output_file_name_prefix) //  &
-                      trim(string2) // trim(option%group_prefix) // '.h5'
+                      trim(string2) // trim(option%group_prefix) // '-plt.h5'
   else
     string = OutputHDF5FilenameID(output_option,option,var_list_type)
     select case (var_list_type)
@@ -596,13 +596,13 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
     end select
 
     !filename = trim(option%global_prefix) // trim(option%group_prefix) // &
-    !           trim(string2) // '-' // trim(string) // '.h5'
+    !           trim(string2) // '-' // trim(string) // '-plt.h5'
     filename_path = trim(option%global_prefix) // & 
                     trim(option%group_prefix) // &
-                    trim(string2) // '-' // trim(string) // '.h5'
+                    trim(string2) // '-' // trim(string) // '-plt.h5'
     filename_header = trim(option%output_file_name_prefix) // & 
                     trim(option%group_prefix) // &
-                    trim(string2) // '-' // trim(string) // '.h5'
+                    trim(string2) // '-' // trim(string) // '-plt.h5'
   endif
 
   grid => patch%grid
@@ -969,11 +969,11 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
   if (output_option%print_single_h5_file) then
     first = hdf5_first
     !filename = trim(option%global_prefix) // trim(string2) // &
-    !           trim(option%group_prefix) // '.h5'
+    !           trim(option%group_prefix) // '-plt.h5'
     filename_path = trim(option%global_prefix) // trim(string2) // &
-               trim(option%group_prefix) // '.h5'
+               trim(option%group_prefix) // '-plt.h5'
     filename_header = trim(option%output_file_name_prefix) & 
-               // trim(string2) // trim(option%group_prefix) // '.h5'
+               // trim(string2) // trim(option%group_prefix) // '-plt.h5'
   else
     string = OutputHDF5FilenameID(output_option,option,var_list_type)
     select case (var_list_type)
@@ -995,13 +995,13 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
     end select
 
     !filename = trim(option%global_prefix) // trim(option%group_prefix) // &
-    !           trim(string2) // '-' // trim(string) // '.h5'
+    !           trim(string2) // '-' // trim(string) // '-plt.h5'
     filename_path = trim(option%global_prefix) // &
                     trim(option%group_prefix) // &
-                    trim(string2) // '-' // trim(string) // '.h5'
+                    trim(string2) // '-' // trim(string) // '-plt.h5'
     filename_header = trim(option%output_file_name_prefix) // &
                     trim(option%group_prefix) // &
-                    trim(string2) // '-' // trim(string) // '.h5'
+                    trim(string2) // '-' // trim(string) // '-plt.h5'
   endif
 
   grid => patch%grid
