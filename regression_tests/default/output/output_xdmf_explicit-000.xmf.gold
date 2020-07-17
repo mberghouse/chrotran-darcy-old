@@ -6,27 +6,27 @@
       <Time Value = "0.00000E+00" />
       <Topology Type="Mixed" NumberOfElements="3">
         <DataItem Format="HDF" DataType="Int" Dimensions="27">
-          output_xdmf.h5:/Domain/Cells
+          output_xdmf-plt.h5:/Domain/Cells
         </DataItem>
       </Topology>
       <Geometry GeometryType="XYZ">
         <DataItem Format="HDF" Dimensions="16 3">
-          output_xdmf.h5:/Domain/Vertices
+          output_xdmf-plt.h5:/Domain/Vertices
         </DataItem>
       </Geometry>
       <Attribute Name="XC" AttributeType="Scalar"  Center="Cell">
         <DataItem Dimensions="3 1" Format="HDF">
-          output_xdmf.h5:/Domain/XC
+          output_xdmf-plt.h5:/Domain/XC
         </DataItem>
       </Attribute>
       <Attribute Name="YC" AttributeType="Scalar"  Center="Cell">
         <DataItem Dimensions="3 1" Format="HDF">
-          output_xdmf.h5:/Domain/YC
+          output_xdmf-plt.h5:/Domain/YC
         </DataItem>
       </Attribute>
       <Attribute Name="ZC" AttributeType="Scalar"  Center="Cell">
         <DataItem Dimensions="3 1" Format="HDF">
-          output_xdmf.h5:/Domain/ZC
+          output_xdmf-plt.h5:/Domain/ZC
         </DataItem>
       </Attribute>
       <Attribute Name="Liquid Pressure [Pa]" AttributeType="Scalar"  Center="Node">

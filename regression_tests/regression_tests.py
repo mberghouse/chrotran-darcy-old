@@ -755,7 +755,7 @@ class RegressionTest(object):
 
         """
 
-        filename="{0}.h5".format(self.name())
+        filename="{0}-plt.h5".format(self.name())
         try:
             h5_current = h5py.File(filename, 'r')
         except Exception as e:
