@@ -41,6 +41,7 @@ module Reaction_Mineral_Aux_module
     character(len=MAXWORDLENGTH) :: armor_min_name
     PetscReal :: armor_pwr
     PetscReal :: armor_crit_vol_frac
+    !TODO(dapo): add new variables here (a)
     type(transition_state_prefactor_type), pointer :: prefactor
     type(transition_state_rxn_type), pointer :: next
   end type transition_state_rxn_type
@@ -130,6 +131,7 @@ module Reaction_Mineral_Aux_module
     PetscReal, pointer :: kinmnrl_armor_crit_vol_frac(:)
     PetscReal, pointer :: kinmnrl_armor_pwr(:)
     PetscInt, pointer :: kinmnrl_irreversible(:)
+    !TODO(dapo): add new variables here (b)
    
   end type mineral_type
   
@@ -227,6 +229,8 @@ function MineralCreate()
   nullify(mineral%kinmnrl_armor_crit_vol_frac)
   nullify(mineral%kinmnrl_armor_pwr)
 
+  !TODO(dapo): add new variables here (c)
+
   MineralCreate => mineral
   
 end function MineralCreate
@@ -291,6 +295,9 @@ function TransitionStateTheoryRxnCreate()
   tstrxn%armor_pwr = 0.d0
   tstrxn%armor_crit_vol_frac = 0.d0
   tstrxn%rate = 0.d0
+  !TODO(dapo): add new variables here (d)
+  ! please use tstrxn%xyz = UNINITIALIZED_DOUBLE (instead of -999.d0)
+  
   nullify(tstrxn%prefactor)
   nullify(tstrxn%next)
   
@@ -800,6 +807,8 @@ subroutine MineralDestroy(mineral)
   call DeallocateArray(mineral%kinmnrl_armor_crit_vol_frac)
   call DeallocateArray(mineral%kinmnrl_irreversible)
   
+  !TODO(dapo): add new variables here (e)
+
   deallocate(mineral)
   nullify(mineral)
 

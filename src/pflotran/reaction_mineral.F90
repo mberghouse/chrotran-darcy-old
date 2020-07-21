@@ -140,6 +140,7 @@ subroutine MineralReadKinetics(mineral,input,option)
         tstrxn => TransitionStateTheoryRxnCreate()
         ! initialize to UNINITIALIZED_INTEGER to ensure that it is set
         tstrxn%rate = UNINITIALIZED_DOUBLE
+        !TODO(dapo): add new code here (a1). Please use UNINITIALIZED_DOUBLE instead of -999.d0
         call InputPushBlock(input,option)
         do
           call InputReadPflotranString(input,option)
@@ -340,6 +341,8 @@ subroutine MineralReadKinetics(mineral,input,option)
                 enddo
               endif
               error_string = 'CHEMISTRY,MINERAL_KINETICS'
+            !TODO(dapo): add new code here (a2).
+            ! case(NEW_CASE_HERE
             case default
               call InputKeywordUnrecognized(input,word, &
                       'CHEMISTRY,MINERAL_KINETICS',option)
@@ -639,6 +642,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
 #ifdef SOLID_SOLUTION
   use Reaction_Solid_Soln_Aux_module
 #endif
+  !TODO(dapo): add new code here (b1)
   
   implicit none
   
@@ -674,6 +678,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
   PetscReal :: denominator
   PetscInt ::  icplx
   PetscReal :: ln_gam_m_beta
+  !TODO(dapo): add new code here (b2)
   
 #ifdef SOLID_SOLUTION
   PetscBool :: cycle_
@@ -761,6 +766,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
     
     QK = exp(lnQK)
     
+    !TODO(dapo): add new code here (b3)
     if (associated(mineral%kinmnrl_Temkin_const)) then
       if (associated(mineral%kinmnrl_min_scale_factor)) then
         affinity_factor = 1.d0-QK**(1.d0/ &
@@ -825,6 +831,8 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
             ln_prefactor = ln_prefactor - ln_denominator
             ln_prefactor_spec(ipref_species,ipref) = ln_numerator - ln_denominator
           enddo
+          !TODO(dapo): add new code here (b4)
+          ! use "if (Initialized(xyz))" instead of "if (.not.Equal(xyz,-999.))"
           prefactor(ipref) = exp(ln_prefactor)
         ! Arrhenius factor
           arrhenius_factor = 1.d0
@@ -840,6 +848,8 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
                                arrhenius_factor
         enddo
       else
+        !TODO(dapo): add new code here (b4)
+        ! use "if (Initialized(xyz))" instead of "if (.not.Equal(xyz,-999.))"
         ! Arrhenius factor
         arrhenius_factor = 1.d0
         if (mineral%kinmnrl_activation_energy(imnrl) > 0.d0) then
@@ -850,6 +860,8 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
         sum_prefactor_rate = mineral%kinmnrl_rate_constant(imnrl)* &
                              arrhenius_factor
       endif
+
+      !TODO(dapo): b5 and b6 go somewhere between here and b4 above
 
       ! compute rate
       ! rate: mol/m^2 mnrl/sec
