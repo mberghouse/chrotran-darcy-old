@@ -2017,7 +2017,7 @@ subroutine BasisInit(reaction,option)
       endif
     endif
     
-    !TODO(dabo): Implement 3.b here
+    !TODO(dapo): Implement 3.b here
 
     ! Determine whether mineral scale factor is used in any TST reactions
     cur_mineral => mineral%mineral_list
@@ -2111,7 +2111,7 @@ subroutine BasisInit(reaction,option)
       mineral%kinmnrl_surf_area_porosity_pwr = 0.d0    
     endif
 
-    !TODO(dabo): Implement 3.c-3.f here by mimicking one of the loops above
+    !TODO(dapo): Implement 3.c-3.f here by mimicking one of the loops above
     ! note that you can check on 
 
     ! if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_diss) .or. &
@@ -2361,7 +2361,7 @@ subroutine BasisInit(reaction,option)
             mineral%kinmnrl_surf_area_porosity_pwr(ikinmnrl) = &
               tstrxn%surf_area_porosity_pwr
           endif
-          !TODO(dabo): 3.e-3.f goes here
+          !TODO(dapo): 3.e-3.f goes here
         endif ! associated(tstrxn)
 
         mineral%kinmnrl_molar_vol(ikinmnrl) = cur_mineral%molar_volume
