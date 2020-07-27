@@ -41,7 +41,8 @@ PFLOTRAN_OBJS = \
 	$(EXE_DIR)/string.o \
 	$(EXE_DIR)/units.o \
 	$(EXE_DIR)/utility.o \
-	$(EXE_DIR)/variables.o
+	$(EXE_DIR)/variables.o \
+	$(EXE_DIR)/wipp.o 
 
 FFLAGS = -g -I. -I$(EXE_DIR) -I$(PFUNIT_DIR)/source -I$(PFUNIT_DIR)/include
 LIBS   =

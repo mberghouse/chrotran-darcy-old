@@ -1,0 +1,127 @@
+module Test_Klinkenberg_module
+
+#include "petsc/finclude/petscsys.h"
+  use petscsys
+  use pFUnit_mod
+  use Klinkenberg_module
+
+  implicit none
+
+  public :: Test_Klinkenberg
+
+  interface Test_Klinkenberg
+     module procedure newTest_Klinkenberg
+  end interface Test_Klinkenberg
+
+  @TestCase
+  type, extends(TestCase) :: Test_Klinkenberg
+     procedure(runMethod), pointer :: userMethod => null()
+     class(klinkenberg_type), pointer :: klink_1
+     class(klinkenberg_type), pointer :: klink_2
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: runMethod
+  end type Test_Klinkenberg
+
+contains
+
+! ************************************************************************** !
+
+  function newTest_Klinkenberg(name, userMethod) result(test)
+
+    implicit none
+
+    character(len=*), intent(in) :: name
+    procedure(runMethod) :: userMethod
+
+    type(Test_Klinkenberg) :: test
+
+    call test%setName(name)
+    test%userMethod => userMethod
+
+  end function newTest_Klinkenberg
+
+! ************************************************************************** !
+
+  subroutine setUp(this)
+    implicit none
+    class (Test_Klinkenberg), intent(inout) :: this
+
+    this%klink_1 => KlinkenbergCreate()
+    this%klink_1%a = 1.0
+    this%klink_1%b = 1.0
+
+    this%klink_2 => KlinkenbergCreate()
+    this%klink_2%a = -3.410000d-01
+    this%klink_2%b = 2.710000d-01
+
+  end subroutine setUp
+
+! ************************************************************************** !
+
+  subroutine tearDown(this)
+    implicit none
+    class (Test_Klinkenberg), intent(inout) :: this
+
+    call KlinkenbergDestroy(this%klink_1)
+    call KlinkenbergDestroy(this%klink_2)
+
+  end subroutine tearDown
+
+! ************************************************************************** !
+
+  subroutine runMethod(this)
+    implicit none
+    class (Test_Klinkenberg), intent(inout) :: this
+    call this%userMethod()
+  end subroutine runMethod
+
+! ************************************************************************** !
+
+  @Test
+  subroutine testKlinkenberg(this)
+    !
+    ! verify that the Klinkenberg module is calculating the gas permeability
+    ! given the liquid permeability and the gas pressure
+    !
+    use PFLOTRAN_Constants_module, only : MAXSTRINGLENGTH
+
+    implicit none
+
+    class (Test_Klinkenberg), intent(inout) :: this
+
+    PetscReal :: liquid_permeability(3) ! [m2]
+    PetscReal :: gas_pressure           ! [Pa]
+    PetscReal :: gas_perm(3)            ! [m2]
+    PetscReal :: correct_gas_perm(3)    ! [m2]
+    PetscReal, parameter :: tolerance = 1.d-12
+
+    liquid_permeability(:) = 1.d-14
+    gas_pressure = 2.d6
+
+    correct_gas_perm(:) = 1.d-14
+    !call this%klink_1%Test(liquid_permeability,gas_pressure)
+    gas_perm = this%klink_1%Evaluate(liquid_permeability,gas_pressure)
+    @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
+
+    correct_gas_perm(:) = 1.0080526587492411d-014
+    !call this%klink_2%Test(liquid_permeability,gas_pressure)
+    gas_perm = this%klink_2%Evaluate(liquid_permeability,gas_pressure)
+    @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
+
+    liquid_permeability(:) = 1.3d-15
+    gas_pressure = 2.76d6
+
+    correct_gas_perm(:) = 1.3152106886918994d-015
+    !call this%klink_2%Test(liquid_permeability,gas_pressure)
+    gas_perm = this%klink_2%Evaluate(liquid_permeability,gas_pressure)
+    @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
+
+  end subroutine testKlinkenberg
+
+! ************************************************************************** !
+
+
+end module Test_Klinkenberg_module
+

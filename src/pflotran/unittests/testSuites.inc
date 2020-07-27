@@ -1,3 +1,4 @@
+ADD_TEST_SUITE(Test_Klinkenberg_module_suite)
 ADD_TEST_SUITE(Test_Characteristic_curves_module_suite)
 ADD_TEST_SUITE(Test_EOS_Gas_module_suite)
 ADD_TEST_SUITE(Test_EOS_Water_module_suite)
