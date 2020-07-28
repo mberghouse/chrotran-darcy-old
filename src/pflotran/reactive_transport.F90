@@ -4150,7 +4150,7 @@ subroutine RTUpdateAuxVars(realization,update_cells,update_bcs, &
                   1000.d0
               endif
             case(DIRICHLET_ZERO_GRADIENT_BC,ZERO_GRADIENT_BC)
-              if (patch%boundary_velocities(iphase,sum_connection) < 0.d0) then
+              if (patch%boundary_velocities(iphase,sum_connection) <= 0.d0) then
                 ! with outflow, these boundary concentrations are ignored,
                 ! for zero-gradient, but we still have to set them as other
                 ! PMs such as salinity use the concentrations for calculating 
@@ -4215,7 +4215,7 @@ subroutine RTUpdateAuxVars(realization,update_cells,update_bcs, &
                     xx_loc_p(istartaq:iendaq)
               endif
             case(DIRICHLET_ZERO_GRADIENT_BC)
-              if (patch%boundary_velocities(iphase,sum_connection) >= 0.d0) then
+              if (patch%boundary_velocities(iphase,sum_connection) > 0.d0) then
                   ! don't need to do anything as the constraint below 
                   ! provides all the concentrations, etc.
                   

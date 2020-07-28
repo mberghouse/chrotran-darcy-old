@@ -387,7 +387,7 @@ subroutine TDispersionBC(ibndtype, &
     select case(ibndtype)
       case(DIRICHLET_BC,DIRICHLET_ZERO_GRADIENT_BC)
         ! if outflow, skip
-        if (ibndtype == DIRICHLET_ZERO_GRADIENT_BC .and. q < 0.d0) cycle
+        if (ibndtype == DIRICHLET_ZERO_GRADIENT_BC .and. q <= 0.d0) cycle
         ! hydrodynamic dispersion = mechanical disperson + &
         !   saturation * porosity * tortuosity * molecular diffusion
         hydrodynamic_dispersion(:) = &
