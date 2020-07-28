@@ -1,0 +1,228 @@
+module Test_WIPP_Compressibility_module
+
+#include "petsc/finclude/petscsys.h"
+  use petscsys
+  use pFUnit_mod
+  use Option_module
+  use Material_Aux_class
+
+  implicit none
+
+  public :: WIPP_Compressibility
+
+  interface WIPP_Compressibility
+     module procedure newWIPP_Compressibility
+  end interface WIPP_Compressibility
+
+  @TestCase
+  type, extends(TestCase) :: WIPP_Compressibility
+     procedure(runMethod), pointer :: userMethod => null()
+     type(option_type), pointer :: option
+     class(material_auxvar_type), pointer :: material_auxvar_1
+     class(material_auxvar_type), pointer :: material_auxvar_2
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: runMethod
+  end type WIPP_Compressibility
+
+contains
+
+! ************************************************************************** !
+
+  function newWIPP_Compressibility(name, userMethod) result(test)
+
+    implicit none
+
+    character(len=*), intent(in) :: name
+    procedure(runMethod) :: userMethod
+
+    type(WIPP_Compressibility) :: test
+
+    call test%setName(name)
+    test%userMethod => userMethod
+
+  end function newWIPP_Compressibility
+
+! ************************************************************************** !
+
+  subroutine setUp(this)
+
+    implicit none
+
+    class (WIPP_Compressibility), intent(inout) :: this
+
+    this%option => OptionCreate()
+    MaterialCompressSoilPtr => MaterialCompressSoilBRAGFLO
+
+    allocate(this%material_auxvar_1)
+    allocate(this%material_auxvar_1%soil_properties(2))
+
+    ! set the soil compressibility (soil_properties(1)):
+    this%material_auxvar_1%soil_properties(1) = 2.027273d-9  
+    ! set the soil reference pressure (soil_properties(2)):
+    this%material_auxvar_1%soil_properties(2) = 101325.d0 
+    this%material_auxvar_1%porosity_base = 0.047
+
+
+    allocate(this%material_auxvar_2)
+    allocate(this%material_auxvar_2%soil_properties(2))
+
+    ! set the soil compressibility (soil_properties(1)):
+    this%material_auxvar_2%soil_properties(1) = 1.0824366d-8  
+    ! set the soil reference pressure (soil_properties(2)):
+    this%material_auxvar_2%soil_properties(2) = 101325.d0
+    this%material_auxvar_2%porosity_base = 0.060
+
+  end subroutine setUp
+
+! ************************************************************************** !
+
+  subroutine tearDown(this)
+
+    implicit none
+    class (WIPP_Compressibility), intent(inout) :: this
+
+    ! this is where calls to Destroy() go
+
+  end subroutine tearDown
+
+! ************************************************************************** !
+
+  subroutine runMethod(this)
+
+    implicit none
+    class (WIPP_Compressibility), intent(inout) :: this
+    call this%userMethod()
+
+  end subroutine runMethod
+
+! ************************************************************************** !
+
+  @Test
+  subroutine testCompressSoilBRAGFLO(this)
+    !
+    ! verify that the WIPP compressibility function, 
+    ! MaterialCompressSoilBRAGFLO is calculating compressed_porosity and
+    ! dcompressed_porosity_dp correctly
+    !
+
+    implicit none
+
+    class (WIPP_Compressibility), intent(inout) :: this
+
+    PetscReal :: pressure                   ! [Pa]
+    PetscReal :: compressed_porosity        ! [-]
+    PetscReal :: dcompressed_porosity_dp    ! [1/Pa]
+    PetscReal :: correct_comp_porosity      ! [-]
+    PetscReal :: correct_dcomp_porosity_dp  ! [1/Pa]
+    PetscReal, parameter :: tolerance = 1.d-12
+
+    !------------ TEST 1 -------------------!
+    pressure = 1.9d5
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 4.7180111057273141d-2
+    correct_dcomp_porosity_dp = 2.0350418842224660d-9
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call MaterialCompressSoilBRAGFLO(this%material_auxvar_1,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST1!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST1!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+    pressure = 1.9d5
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 6.0967568029935776d-2
+    correct_dcomp_porosity_dp = 1.0998921420610449d-8
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call MaterialCompressSoilBRAGFLO(this%material_auxvar_2,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST1!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST1!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+
+    !------------ TEST 2 -------------------!
+    pressure = 3.0d6
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 5.3259568434160125d-2
+    correct_dcomp_porosity_dp = 2.2972699739421285d-9
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call MaterialCompressSoilBRAGFLO(this%material_auxvar_1,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST2!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST2!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+    pressure = 3.0d6
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 0.10121866771980206d0
+    correct_dcomp_porosity_dp = 1.8260465498678593d-8
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call MaterialCompressSoilBRAGFLO(this%material_auxvar_2,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST2!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST2!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+
+    !------------ TEST 3 -------------------!
+    pressure = 4.0d7
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 0.26272710007324718d0
+    correct_dcomp_porosity_dp = 1.1332331374131933d-8
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call MaterialCompressSoilBRAGFLO(this%material_auxvar_1,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST3!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST3!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+    pressure = 4.0d7
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 80.202426794103616d0
+    correct_dcomp_porosity_dp = 1.4469007351867253d-5
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call MaterialCompressSoilBRAGFLO(this%material_auxvar_2,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST3!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST3!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+  end subroutine testCompressSoilBRAGFLO
+
+! ************************************************************************** !
+
+
+end module Test_WIPP_Compressibility_module
+
