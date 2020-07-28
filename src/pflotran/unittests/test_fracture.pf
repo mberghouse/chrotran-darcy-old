@@ -1,0 +1,330 @@
+module Test_Fracture_module
+
+#include "petsc/finclude/petscsys.h"
+  use petscsys
+  use pFUnit_mod
+  use Fracture_module
+  use Option_module
+  use Material_Aux_class
+
+  implicit none
+
+  public :: Test_Fracture
+
+  interface Test_Fracture
+     module procedure newTest_Fracture
+  end interface Test_Fracture
+
+  @TestCase
+  type, extends(TestCase) :: Test_Fracture
+     procedure(runMethod), pointer :: userMethod => null()
+     type(option_type), pointer :: option
+     class(material_auxvar_type), pointer :: material_auxvar_1
+     class(material_auxvar_type), pointer :: material_auxvar_2
+     class(fracture_type), pointer :: frac_1
+     class(fracture_type), pointer :: frac_2
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: runMethod
+  end type Test_Fracture
+
+contains
+
+! ************************************************************************** !
+
+  function newTest_Fracture(name, userMethod) result(test)
+
+    implicit none
+
+    character(len=*), intent(in) :: name
+    procedure(runMethod) :: userMethod
+
+    type(Test_Fracture) :: test
+
+    call test%setName(name)
+    test%userMethod => userMethod
+
+  end function newTest_Fracture
+
+! ************************************************************************** !
+
+  subroutine setUp(this)
+
+    implicit none
+
+    class (Test_Fracture), intent(inout) :: this
+
+    this%option => OptionCreate()
+    MaterialCompressSoilPtr => MaterialCompressSoilBRAGFLO
+
+    allocate(this%material_auxvar_1)
+    nullify(this%material_auxvar_1%fracture)
+    allocate(this%material_auxvar_1%soil_properties(2))
+
+    this%frac_1 => FractureCreate()
+    this%frac_1%init_pressure = 2.000000d+05
+    this%frac_1%altered_pressure = 3.800000d+06
+    this%frac_1%maximum_porosity = 4.638239d-02
+    this%frac_1%porosity_exponent = 1.013380d+01
+    this%frac_1%change_perm_x = 1.d0
+    this%frac_1%change_perm_y = 1.d0
+    this%frac_1%change_perm_z = 1.d0
+
+    call FractureAuxVarInit(this%material_auxvar_1)
+    call FracturePropertytoAux(this%material_auxvar_1%fracture,this%frac_1)
+    this%material_auxvar_1%fracture%initial_pressure = &
+               this%frac_1%init_pressure + 0.10*(this%frac_1%init_pressure)
+
+    ! set the soil compressibility (soil_properties(1)):
+    this%material_auxvar_1%soil_properties(1) = 2.027273E-09   ! Ci
+    this%material_auxvar_1%porosity_base = 0.047
+
+
+    allocate(this%material_auxvar_2)
+    nullify(this%material_auxvar_2%fracture)
+    allocate(this%material_auxvar_2%soil_properties(2))
+
+    this%frac_2 => FractureCreate()
+    this%frac_2%init_pressure = 2.300000d+05
+    this%frac_2%altered_pressure = 4.100000d+06
+    this%frac_2%maximum_porosity = 7.123456d-02
+    this%frac_2%porosity_exponent = 2.052938d+01
+    this%frac_2%change_perm_x = 1.d0
+    this%frac_2%change_perm_y = 1.d0
+    this%frac_2%change_perm_z = 1.d0
+
+    call FractureAuxVarInit(this%material_auxvar_2)
+    call FracturePropertytoAux(this%material_auxvar_2%fracture,this%frac_2)
+    this%material_auxvar_2%fracture%initial_pressure = &
+               this%frac_2%init_pressure + 0.30*(this%frac_2%init_pressure)
+
+    ! set the soil compressibility (soil_properties(1)):
+    this%material_auxvar_2%soil_properties(1) = 1.0824366E-08   ! Ci
+    this%material_auxvar_2%porosity_base = 0.060
+
+  end subroutine setUp
+
+! ************************************************************************** !
+
+  subroutine tearDown(this)
+
+    implicit none
+    class (Test_Fracture), intent(inout) :: this
+
+    call FractureDestroy(this%frac_1)
+
+  end subroutine tearDown
+
+! ************************************************************************** !
+
+  subroutine runMethod(this)
+
+    implicit none
+    class (Test_Fracture), intent(inout) :: this
+    call this%userMethod()
+
+  end subroutine runMethod
+
+! ************************************************************************** !
+
+  @Test
+  subroutine testFracturePoroEvaluate(this)
+    !
+    ! verify that the Fracture module is calculating porosity induced by 
+    ! fracture, according to BRAGFLO_6.02_UM Eq. (136) 
+    ! 4.10 Pressure-Induced Fracture Treatment
+    !
+
+    implicit none
+
+    class (Test_Fracture), intent(inout) :: this
+
+    PetscReal :: pressure                   ! [Pa]
+    PetscReal :: compressed_porosity        ! [-]
+    PetscReal :: dcompressed_porosity_dp    ! [1/Pa]
+    PetscReal :: correct_comp_porosity      ! [-]
+    PetscReal :: correct_dcomp_porosity_dp  ! [1/Pa]
+    PetscReal, parameter :: tolerance = 1.d-12
+
+    !------------ TESTS if (pressure < Pi) --------------!
+    pressure = 1.9d5
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 4.6939219532113961d-2
+    correct_dcomp_porosity_dp = 0.d0
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call FracturePoroEvaluate(this%material_auxvar_1,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+    pressure = 1.9d5
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 5.8831667538158196d-2
+    correct_dcomp_porosity_dp = 0.d0
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call FracturePoroEvaluate(this%material_auxvar_2,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+
+    !------------ TESTS if (pressure < Pa) --------------!
+    pressure = 3.0d6
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 4.6382390000000003d-2
+    correct_dcomp_porosity_dp = -1.1306995079603146d-9
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call FracturePoroEvaluate(this%material_auxvar_1,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+    pressure = 3.0d6
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 7.1234560000000002d-2
+    correct_dcomp_porosity_dp = 9.4780262069756662d-11
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call FracturePoroEvaluate(this%material_auxvar_2,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+
+    !------------ TESTS else if (pressure >= Pa) then --------------!
+    pressure = 4.0d7
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 4.6382390000000003d-2
+    correct_dcomp_porosity_dp = 0.d0
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call FracturePoroEvaluate(this%material_auxvar_1,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+    pressure = 4.0d7
+    compressed_porosity = 0.d0
+    dcompressed_porosity_dp = 0.d0
+    correct_comp_porosity = 7.1234560000000002d-2
+    correct_dcomp_porosity_dp = 0.d0
+
+    ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
+    call FracturePoroEvaluate(this%material_auxvar_2,pressure, &
+                              compressed_porosity,dcompressed_porosity_dp)
+    !WRITE(*,*) 'TEST!!! compressed_porosity = ', compressed_porosity
+    !WRITE(*,*) 'TEST!!! dcompressed_porosity_dp = ', dcompressed_porosity_dp
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
+    @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
+
+  end subroutine testFracturePoroEvaluate
+
+! ************************************************************************** !
+
+  @Test
+  subroutine testFracturePermScale(this)
+    !
+    ! verify that the Fracture module is calculating permeability induced by 
+    ! fracture, according to BRAGFLO_6.02_UM Eq. (136) 
+    ! 4.10 Pressure-Induced Fracture Treatment
+    !
+
+    implicit none
+
+    class (Test_Fracture), intent(inout) :: this
+
+    PetscReal :: liq_pressure                ! [Pa]
+    PetscReal :: effective_porosity          ! [-]
+    PetscReal :: perm_scaling_factor         ! [-]
+    PetscReal :: correct_perm_scaling_factor ! [-]
+    PetscReal, parameter :: tolerance = 1.d-12
+
+    ! TESTS if (pressure < Pi)
+    liq_pressure = 1.9d5
+    perm_scaling_factor = 0.d0
+    correct_perm_scaling_factor = 1.d0
+
+    ! this routine calculates perm_scaling_factor:
+    call FracturePermScale(this%material_auxvar_1,liq_pressure, &
+                           effective_porosity,perm_scaling_factor)
+    !WRITE(*,*) 'TEST!!! perm_scaling_factor = ', perm_scaling_factor
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_perm_scaling_factor,perm_scaling_factor,dabs(correct_perm_scaling_factor)*tolerance)
+
+    liq_pressure = 1.9d5
+    perm_scaling_factor = 0.d0
+    correct_perm_scaling_factor = 1.d0
+
+    ! this routine calculates perm_scaling_factor:
+    call FracturePermScale(this%material_auxvar_2,liq_pressure, &
+                           effective_porosity,perm_scaling_factor)
+    !WRITE(*,*) 'TEST!!! perm_scaling_factor = ', perm_scaling_factor
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_perm_scaling_factor,perm_scaling_factor,dabs(correct_perm_scaling_factor)*tolerance)
+
+
+    ! TESTS if (pressure >= Pa)
+    liq_pressure = 3.0d6
+    perm_scaling_factor = 0.d0
+    correct_perm_scaling_factor = 0.d0
+
+    ! this routine calculates perm_scaling_factor:
+    call FracturePermScale(this%material_auxvar_1,liq_pressure, &
+                           effective_porosity,perm_scaling_factor)
+    !WRITE(*,*) 'TEST!!! perm_scaling_factor = ', perm_scaling_factor
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_perm_scaling_factor,perm_scaling_factor,dabs(correct_perm_scaling_factor)*tolerance)
+
+    liq_pressure = 3.0d6
+    perm_scaling_factor = 0.d0
+    correct_perm_scaling_factor = 0.d0
+
+    ! this routine calculates perm_scaling_factor:
+    call FracturePermScale(this%material_auxvar_2,liq_pressure, &
+                           effective_porosity,perm_scaling_factor)
+    !WRITE(*,*) 'TEST!!! perm_scaling_factor = ', perm_scaling_factor
+
+    ! note: the assertEqual calls must be on a single line
+    @assertEqual(correct_perm_scaling_factor,perm_scaling_factor,dabs(correct_perm_scaling_factor)*tolerance)
+
+  end subroutine testFracturePermScale
+
+! ************************************************************************** !
+
+
+end module Test_Fracture_module
+
