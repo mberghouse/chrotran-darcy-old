@@ -26,6 +26,8 @@ module Option_Flow_module
     PetscBool :: scale_all_pressure
     PetscReal :: pressure_scaling_factor
     PetscBool :: using_newtontrd
+    PetscBool :: full_perm_tensor
+
 
   end type flow_option_type
   
@@ -117,6 +119,7 @@ subroutine OptionFlowInitRealization(option)
   option%scale_all_pressure = PETSC_FALSE
   option%pressure_scaling_factor = 1.d7
   option%using_newtontrd = PETSC_FALSE
+  option%full_perm_tensor = PETSC_FALSE
 
 end subroutine OptionFlowInitRealization
 
