@@ -49,8 +49,8 @@ contains
     class (Test_Klinkenberg), intent(inout) :: this
 
     this%klink_1 => KlinkenbergCreate()
-    this%klink_1%a = 1.0
-    this%klink_1%b = 1.0
+    this%klink_1%a = -2.340000d-01
+    this%klink_1%b = 5.230000d-01
 
     this%klink_2 => KlinkenbergCreate()
     this%klink_2%a = -3.410000d-01
@@ -98,20 +98,25 @@ contains
     PetscReal, parameter :: tolerance = 1.d-12
 
     liquid_permeability(:) = 1.d-14
-    gas_pressure = 2.d6
+    gas_pressure = 1.9d5
 
-    correct_gas_perm(:) = 1.d-14
+    correct_gas_perm(:) = 1.0051969446083019d-014
     !call this%klink_1%Test(liquid_permeability,gas_pressure)
     gas_perm = this%klink_1%Evaluate(liquid_permeability,gas_pressure)
     @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
 
-    correct_gas_perm(:) = 1.0080526587492411d-014
+    correct_gas_perm(:) = 1.0847648289393792d-014
     !call this%klink_2%Test(liquid_permeability,gas_pressure)
     gas_perm = this%klink_2%Evaluate(liquid_permeability,gas_pressure)
     @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
 
     liquid_permeability(:) = 1.3d-15
     gas_pressure = 2.76d6
+
+    correct_gas_perm(:) = 1.3007496753216588d-015
+    !call this%klink_1%Test(liquid_permeability,gas_pressure)
+    gas_perm = this%klink_1%Evaluate(liquid_permeability,gas_pressure)
+    @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
 
     correct_gas_perm(:) = 1.3152106886918994d-015
     !call this%klink_2%Test(liquid_permeability,gas_pressure)
