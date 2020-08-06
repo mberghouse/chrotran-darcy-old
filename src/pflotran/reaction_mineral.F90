@@ -141,6 +141,17 @@ subroutine MineralReadKinetics(mineral,input,option)
         ! initialize to UNINITIALIZED_INTEGER to ensure that it is set
         tstrxn%rate = UNINITIALIZED_DOUBLE
         !TODO(dapo): add new code here (a1). Please use UNINITIALIZED_DOUBLE instead of -999.d0
+        tstrxn%rate_diss = UNINITIALIZED_DOUBLE
+        tstrxn%rate_ppt = UNINITIALIZED_DOUBLE
+        tstrxn%activation_energy_diss = UNINITIALIZED_DOUBLE
+        tstrxn%activation_energy_ppt = UNINITIALIZED_DOUBLE
+        tstrxn%affinity_factor_sigma = UNINITIALIZED_DOUBLE
+        tstrxn%affinity_factor_beta = UNINITIALIZED_DOUBLE
+        tstrxn%affinity_factor_sigma_diss = UNINITIALIZED_DOUBLE
+        tstrxn%affinity_factor_sigma_ppt = UNINITIALIZED_DOUBLE
+        tstrxn%affinity_factor_beta_diss = UNINITIALIZED_DOUBLE
+        tstrxn%affinity_factor_beta_ppt = UNINITIALIZED_DOUBLE
+
         call InputPushBlock(input,option)
         do
           call InputReadPflotranString(input,option)
@@ -343,6 +354,73 @@ subroutine MineralReadKinetics(mineral,input,option)
               error_string = 'CHEMISTRY,MINERAL_KINETICS'
             !TODO(dapo): add new code here (a2).
             ! case(NEW_CASE_HERE
+            case('RATE_CONSTANT_DISS')
+!             read rate constant for dissolution
+              call InputReadDouble(input,option,tstrxn%rate_diss)
+              if (tstrxn%rate_diss < 0.d0) then
+                tstrxn%rate_diss = 10.d0**tstrxn%rate_diss
+              endif
+              call InputErrorMsg(input,option,'rate_diss',error_string)
+              ! read units if they exist
+              internal_units = 'mol/m^2-sec'
+              call InputReadWord(input,option,word,PETSC_TRUE)
+              if (InputError(input)) then
+                input%err_buf = trim(cur_mineral%name) // ' RATE_DISS UNITS'
+                call InputDefaultMsg(input,option)
+              else
+                tstrxn%rate_diss = tstrxn%rate_diss * & 
+                                  UnitsConvertToInternal(word,internal_units,option)
+              endif
+            case('RATE_CONSTANT_PPT')
+!             read rate constant for precipitation
+              call InputReadDouble(input,option,tstrxn%rate_ppt)
+              if (tstrxn%rate_ppt < 0.d0) then
+                tstrxn%rate_ppt = 10.d0**tstrxn%rate_ppt
+              endif
+              call InputErrorMsg(input,option,'rate_ppt',error_string)
+              ! read units if they exist
+              internal_units = 'mol/m^2-sec'
+              call InputReadWord(input,option,word,PETSC_TRUE)
+              if (InputError(input)) then
+                input%err_buf = trim(cur_mineral%name) // ' RATE_PPT UNITS'
+                call InputDefaultMsg(input,option)
+              else
+                tstrxn%rate_ppt = tstrxn%rate_ppt * & 
+                                  UnitsConvertToInternal(word,internal_units,option)
+              endif
+            case('ACTIVATION_ENERGY_DISS')
+!             read activation energy for Arrhenius law for dissolution
+              call InputReadDouble(input,option,tstrxn%activation_energy_diss)
+              call InputErrorMsg(input,option,'activation_diss',error_string)
+            case('ACTIVATION_ENERGY_PPT')
+!             read activation energy for Arrhenius law for precipitation
+              call InputReadDouble(input,option,tstrxn%activation_energy_ppt)
+              call InputErrorMsg(input,option,'activation_ppt',error_string)
+            case('TEMKINS_CONSTANT_DISS')
+!             reads exponent on affinity term for dissolution
+              call InputReadDouble(input,option, & 
+                                   tstrxn%affinity_factor_sigma_diss)
+              call InputErrorMsg(input,option,"Temkin's constant diss", & 
+                                   error_string)
+            case('TEMKINS_CONSTANT_PPT')
+!             reads exponent on affinity term for precipitation
+              call InputReadDouble(input,option, & 
+                                   tstrxn%affinity_factor_sigma_ppt)
+              call InputErrorMsg(input,option,"Temkin's constant ppt", &
+                                   error_string)
+            case('AFFINITY_POWER_DISS')
+!             reads exponent on affinity term for dissolution
+              call InputReadDouble(input,option, & 
+                                   tstrxn%affinity_factor_beta_diss)
+              call InputErrorMsg(input,option,'affinity power diss', &
+                                 error_string)
+            case('AFFINITY_POWER_PPT')
+!             reads exponent on affinity term for precipitation
+              call InputReadDouble(input,option, & 
+                                   tstrxn%affinity_factor_beta_ppt)
+              call InputErrorMsg(input,option,'affinity power ppt', &
+                                 error_string)
+
             case default
               call InputKeywordUnrecognized(input,word, &
                       'CHEMISTRY,MINERAL_KINETICS',option)
@@ -643,6 +721,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
   use Reaction_Solid_Soln_Aux_module
 #endif
   !TODO(dapo): add new code here (b1)
+  use Utility_module
   
   implicit none
   
@@ -679,6 +758,10 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
   PetscInt ::  icplx
   PetscReal :: ln_gam_m_beta
   !TODO(dapo): add new code here (b2)
+  PetscReal :: rate_refTemp     ! rate constant at T = 25 C
+  PetscReal :: act_energy
+  PetscReal :: kinconst_Temp
+  PetscReal :: aff_power
   
 #ifdef SOLID_SOLUTION
   PetscBool :: cycle_
@@ -767,14 +850,25 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
     QK = exp(lnQK)
     
     !TODO(dapo): add new code here (b3)
-    if (associated(mineral%kinmnrl_Temkin_const)) then
+    if (associated(mineral%kinmnrl_Temkin_const) .or. &
+        associated(mineral%kinmnrl_Temkin_const_diss) .or. &
+        associated(mineral%kinmnrl_Temkin_const_ppt)) then
+      if (associated(mineral%kinmnrl_Temkin_const)) then
+        kinconst_Temp = mineral%kinmnrl_Temkin_const(imnrl)
+      endif
+      if (associated(mineral%kinmnrl_Temkin_const_diss) & 
+         .AND. sign_ > 0.d0) then
+        kinconst_Temp = mineral%kinmnrl_Temkin_const_diss(imnrl)
+      endif
+      if (associated(mineral%kinmnrl_Temkin_const_ppt) & 
+         .AND. sign_ < 0.d0) then
+        kinconst_Temp = mineral%kinmnrl_Temkin_const_ppt(imnrl)
+      endif 
+      affinity_factor = 1.d0-QK**(1.d0/kinconst_Temp)
       if (associated(mineral%kinmnrl_min_scale_factor)) then
         affinity_factor = 1.d0-QK**(1.d0/ &
           (mineral%kinmnrl_min_scale_factor(imnrl)* &
            mineral%kinmnrl_Temkin_const(imnrl)))
-      else
-        affinity_factor = 1.d0-QK**(1.d0/ &
-                                 mineral%kinmnrl_Temkin_const(imnrl))
       endif
     else if (associated(mineral%kinmnrl_min_scale_factor)) then
         affinity_factor = 1.d0-QK**(1.d0/ &
@@ -782,7 +876,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
     else
       affinity_factor = 1.d0-QK
     endif
-    
+   
     sign_ = sign(1.d0,affinity_factor)
 
     if (rt_auxvar%mnrl_volfrac(imnrl) > 0 .or. sign_ < 0.d0) then
@@ -836,6 +930,24 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
           prefactor(ipref) = exp(ln_prefactor)
         ! Arrhenius factor
           arrhenius_factor = 1.d0
+          if (mineral%kinmnrl_activation_energy(imnrl) > 0.d0 .or. &
+              mineral%kinmnrl_activation_energy_diss(imnrl) > 0.d0 .or. &
+              mineral%kinmnrl_activation_energy_ppt(imnrl) > 0.d0) then
+! 	    assign to act_energy, 7.Otc.2013, X.-Z Kong
+            act_energy = mineral%kinmnrl_activation_energy(imnrl)
+            if ((Initialized(mineral%kinmnrl_activation_energy_diss(imnrl))) .AND. & 
+                sign_ > 0.d0) then
+              act_energy = mineral%kinmnrl_activation_energy_diss(imnrl)
+            endif
+            if ((Initialized(mineral%kinmnrl_activation_energy_ppt(imnrl))) .AND. & 
+                sign_ < 0.d0) then
+              act_energy = mineral%kinmnrl_activation_energy_ppt(imnrl)
+            endif
+            arrhenius_factor = exp(act_energy/IDEAL_GAS_CONSTANT &
+             *(1.d0/(25.d0+273.15d0)-1.d0/(global_auxvar%temp+273.15d0)))
+          endif
+
+          arrhenius_factor = 1.d0
           if (mineral%kinmnrl_pref_activation_energy(ipref,imnrl) > 0.d0) then
             arrhenius_factor = &
               exp(mineral%kinmnrl_pref_activation_energy(ipref,imnrl)/ &
@@ -852,13 +964,33 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
         ! use "if (Initialized(xyz))" instead of "if (.not.Equal(xyz,-999.))"
         ! Arrhenius factor
         arrhenius_factor = 1.d0
-        if (mineral%kinmnrl_activation_energy(imnrl) > 0.d0) then
-          arrhenius_factor = exp(mineral%kinmnrl_activation_energy(imnrl)/ &
-                                 IDEAL_GAS_CONSTANT &
-            *(1.d0/(25.d0+273.15d0)-1.d0/(global_auxvar%temp+273.15d0)))
+        if (mineral%kinmnrl_activation_energy(imnrl) > 0.d0 .or. &
+            mineral%kinmnrl_activation_energy_diss(imnrl) > 0.d0 .or. &
+            mineral%kinmnrl_activation_energy_ppt(imnrl) > 0.d0) then
+! 	assign to act_energy, 7.Otc.2013, X.-Z Kong
+          act_energy = mineral%kinmnrl_activation_energy(imnrl)
+          if ((Initialized(mineral%kinmnrl_activation_energy_diss(imnrl))) .AND. & 
+              sign_ > 0.d0) then
+            act_energy = mineral%kinmnrl_activation_energy_diss(imnrl)
+          endif
+          if ((Initialized(mineral%kinmnrl_activation_energy_ppt(imnrl))) .AND. & 
+              sign_ < 0.d0) then
+            act_energy = mineral%kinmnrl_activation_energy_ppt(imnrl)
+          endif
+          arrhenius_factor = exp(act_energy/IDEAL_GAS_CONSTANT &
+           *(1.d0/(25.d0+273.15d0)-1.d0/(global_auxvar%temp+273.15d0)))
         endif
-        sum_prefactor_rate = mineral%kinmnrl_rate_constant(imnrl)* &
-                             arrhenius_factor
+        !TODO(dapo): b5  
+        rate_refTemp = mineral%kinmnrl_rate_constant(imnrl)
+        if ((Initialized(mineral%kinmnrl_rate_diss(imnrl))) .AND. &
+             sign_ > 0.d0) then
+           rate_refTemp =  mineral%kinmnrl_rate_diss(imnrl)
+        endif
+        if ((Initialized(mineral%kinmnrl_rate_ppt(imnrl))) .AND. &
+             sign_ < 0.d0) then
+          rate_refTemp =  mineral%kinmnrl_rate_ppt(imnrl)
+        endif    
+        sum_prefactor_rate = rate_refTemp*arrhenius_factor
       endif
 
       !TODO(dapo): b5 and b6 go somewhere between here and b4 above
@@ -873,11 +1005,25 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
       endif
       
       ! units: mol/sec/m^3 bulk
-      if (associated(mineral%kinmnrl_affinity_power)) then
+      if (associated(mineral%kinmnrl_affinity_power) .or. &
+          associated(mineral%kinmnrl_affinity_power_diss) .or. &
+          associated(mineral%kinmnrl_affinity_power_ppt)) then
+!     assign to aff_power, 7.Otc.2013, X.-Z. Kong
+        if (associated(mineral%kinmnrl_affinity_power)) then
+          aff_power = mineral%kinmnrl_affinity_power(imnrl)
+        endif
+        if (associated(mineral%kinmnrl_affinity_power_diss) & 
+           .AND. sign_ > 0.d0) then
+          aff_power =  mineral%kinmnrl_affinity_power_diss(imnrl)
+        endif
+        if (associated(mineral%kinmnrl_affinity_power_ppt) & 
+           .AND. sign_ < 0.d0) then
+          aff_power =  mineral%kinmnrl_affinity_power_ppt(imnrl)
+        endif
         ! Im_const: m^2 mnrl/m^3 bulk
         ! sum_prefactor_rate: mol/m^2 mnrl/sec
         Im = Im_const*sign_* &
-             abs(affinity_factor)**mineral%kinmnrl_affinity_power(imnrl)* &
+             abs(affinity_factor)**aff_power* &
              sum_prefactor_rate
       else
         Im = Im_const*sign_*abs(affinity_factor)*sum_prefactor_rate

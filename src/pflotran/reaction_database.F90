@@ -2018,6 +2018,14 @@ subroutine BasisInit(reaction,option)
     endif
     
     !TODO(dapo): Implement 3.b here
+    allocate(mineral%kinmnrl_rate_diss(mineral%nkinmnrl))
+    mineral%kinmnrl_rate_diss = 0.d0
+    allocate(mineral%kinmnrl_rate_ppt(mineral%nkinmnrl))
+    mineral%kinmnrl_rate_ppt = 0.d0
+    allocate(mineral%kinmnrl_activation_energy_diss(mineral%nkinmnrl))
+    mineral%kinmnrl_activation_energy_diss = 0.d0
+    allocate(mineral%kinmnrl_activation_energy_ppt(mineral%nkinmnrl))
+    mineral%kinmnrl_activation_energy_ppt = 0.d0 
 
     ! Determine whether mineral scale factor is used in any TST reactions
     cur_mineral => mineral%mineral_list
@@ -2119,6 +2127,62 @@ subroutine BasisInit(reaction,option)
     !   found = PETSC_TRUE
     
     ! no need to create a found_diss and found_ppt    
+
+    ! Determine whether Temkin's constant is used in any TST reactions
+    cur_mineral => mineral%mineral_list
+    found = PETSC_FALSE
+    do
+      if (.not.associated(cur_mineral)) exit
+      if (associated(cur_mineral%tstrxn)) then 
+!       Add if statement to initialize Temkins constant for diss/ppt, 7.Otc.2013, X.-Z. Kong
+        if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_diss) .or. & 
+            Initialized(cur_mineral%tstrxn%affinity_factor_sigma_ppt)) then
+          found = PETSC_TRUE
+          exit
+        endif
+      endif
+      cur_mineral => cur_mineral%next
+    enddo
+    if (found) then
+!     Add if statement to initialize Temkins constant for diss/ppt, 7.Otc.2013, X.-Z. Kong
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_diss) then
+        allocate(mineral%kinmnrl_Temkin_const_diss(mineral%nkinmnrl))
+        mineral%kinmnrl_Temkin_const_diss = 1.d0    
+      endif
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_ppt) then
+        allocate(mineral%kinmnrl_Temkin_const_ppt(mineral%nkinmnrl))
+        mineral%kinmnrl_Temkin_const_ppt = 1.d0    
+      endif
+    endif
+
+    ! Determine whether affinity factor has power
+    cur_mineral => mineral%mineral_list
+    found = PETSC_FALSE
+!   Add new flags, 7.Otc.2013, X.-Z. Kong
+    do
+      if (.not.associated(cur_mineral)) exit
+      if (associated(cur_mineral%tstrxn)) then 
+!       Add if statement to initialize affinity power for diss/ppt, 7.Otc.2013, X.-Z. Kong
+        if (Initialized(cur_mineral%tstrxn%affinity_factor_beta_diss) .or. &
+            Initialized(cur_mineral%tstrxn%affinity_factor_beta_ppt)) then
+          found = PETSC_TRUE
+          exit
+        endif
+      endif
+      cur_mineral => cur_mineral%next
+    enddo
+    if (found) then
+!     Add if statement to initialize affinity power for diss/ppt, 7.Otc.2013, X.-Z. Kong
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_beta_diss) then
+        allocate(mineral%kinmnrl_affinity_power_diss(mineral%nkinmnrl))
+        mineral%kinmnrl_affinity_power_diss = 1.d0    
+      endif
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_beta_ppt) then
+        allocate(mineral%kinmnrl_affinity_power_ppt(mineral%nkinmnrl))
+        mineral%kinmnrl_affinity_power_ppt = 1.d0    
+      endif
+    endif
+
 
 #if 0
     ! Determine whether armor mineral name defined
@@ -2333,11 +2397,19 @@ subroutine BasisInit(reaction,option)
           mineral%kinmnrl_armor_crit_vol_frac(ikinmnrl) = &
             tstrxn%armor_crit_vol_frac
 
+          ! Assignment of rate constant and activation energy
           if (mineral%kinmnrl_num_prefactors(ikinmnrl) == 0) then
             ! no prefactors, rates stored in upper level
             mineral%kinmnrl_rate_constant(ikinmnrl) = tstrxn%rate
             mineral%kinmnrl_activation_energy(ikinmnrl) = &
               tstrxn%activation_energy
+            !TODO(dapo): 3.e -- added here
+            mineral%kinmnrl_rate_diss(ikinmnrl) = tstrxn%rate_diss
+            mineral%kinmnrl_rate_ppt(ikinmnrl) = tstrxn%rate_ppt
+            mineral%kinmnrl_activation_energy_diss(ikinmnrl) = & 
+                    tstrxn%activation_energy_diss
+            mineral%kinmnrl_activation_energy_ppt(ikinmnrl) = & 
+                    tstrxn%activation_energy_ppt
           endif
           if (Initialized(tstrxn%min_scale_factor)) then
             mineral%kinmnrl_min_scale_factor(ikinmnrl) = &
@@ -2362,6 +2434,22 @@ subroutine BasisInit(reaction,option)
               tstrxn%surf_area_porosity_pwr
           endif
           !TODO(dapo): 3.e-3.f goes here
+          if (Initialized(tstrxn%affinity_factor_sigma_diss)) then
+            mineral%kinmnrl_Temkin_const_diss(ikinmnrl) = &
+              tstrxn%affinity_factor_sigma_diss
+          endif
+          if (Initialized(tstrxn%affinity_factor_sigma_ppt)) then
+            mineral%kinmnrl_Temkin_const_ppt(ikinmnrl) = &
+              tstrxn%affinity_factor_sigma_ppt
+          endif
+          if (Initialized(tstrxn%affinity_factor_beta_diss)) then
+            mineral%kinmnrl_affinity_power_diss(ikinmnrl) = &
+              tstrxn%affinity_factor_beta_diss
+          endif
+          if (Initialized(tstrxn%affinity_factor_beta_ppt)) then
+            mineral%kinmnrl_affinity_power_ppt(ikinmnrl) = &
+              tstrxn%affinity_factor_beta_ppt
+          endif
         endif ! associated(tstrxn)
 
         mineral%kinmnrl_molar_vol(ikinmnrl) = cur_mineral%molar_volume

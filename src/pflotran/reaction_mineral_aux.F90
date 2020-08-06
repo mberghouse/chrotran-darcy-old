@@ -42,6 +42,15 @@ module Reaction_Mineral_Aux_module
     PetscReal :: armor_pwr
     PetscReal :: armor_crit_vol_frac
     !TODO(dapo): add new variables here (a)
+    PetscReal :: rate_diss
+    PetscReal :: rate_ppt
+    PetscReal :: activation_energy_diss
+    PetscReal :: activation_energy_ppt
+    PetscReal :: affinity_factor_sigma_diss
+    PetscReal :: affinity_factor_sigma_ppt
+    PetscReal :: affinity_factor_beta_diss
+    PetscReal :: affinity_factor_beta_ppt   
+
     type(transition_state_prefactor_type), pointer :: prefactor
     type(transition_state_rxn_type), pointer :: next
   end type transition_state_rxn_type
@@ -132,6 +141,14 @@ module Reaction_Mineral_Aux_module
     PetscReal, pointer :: kinmnrl_armor_pwr(:)
     PetscInt, pointer :: kinmnrl_irreversible(:)
     !TODO(dapo): add new variables here (b)
+    PetscReal, pointer :: kinmnrl_rate_diss(:)
+    PetscReal, pointer :: kinmnrl_rate_ppt(:)
+    PetscReal, pointer :: kinmnrl_activation_energy_diss(:)
+    PetscReal, pointer :: kinmnrl_activation_energy_ppt(:)
+    PetscReal, pointer :: kinmnrl_Temkin_const_diss(:)
+    PetscReal, pointer :: kinmnrl_Temkin_const_ppt(:)
+    PetscReal, pointer :: kinmnrl_affinity_power_diss(:)
+    PetscReal, pointer :: kinmnrl_affinity_power_ppt(:)
    
   end type mineral_type
   
@@ -230,6 +247,12 @@ function MineralCreate()
   nullify(mineral%kinmnrl_armor_pwr)
 
   !TODO(dapo): add new variables here (c)
+  nullify(mineral%kinmnrl_rate_diss)
+  nullify(mineral%kinmnrl_rate_ppt)
+  nullify(mineral%kinmnrl_Temkin_const_diss)
+  nullify(mineral%kinmnrl_Temkin_const_ppt)
+  nullify(mineral%kinmnrl_affinity_power_diss)
+  nullify(mineral%kinmnrl_affinity_power_ppt)  
 
   MineralCreate => mineral
   
@@ -297,6 +320,14 @@ function TransitionStateTheoryRxnCreate()
   tstrxn%rate = 0.d0
   !TODO(dapo): add new variables here (d)
   ! please use tstrxn%xyz = UNINITIALIZED_DOUBLE (instead of -999.d0)
+  tstrxn%rate_diss = 0.d0
+  tstrxn%rate_ppt = 0.d0
+  tstrxn%activation_energy_diss = 0.d0
+  tstrxn%activation_energy_ppt = 0.d0
+  tstrxn%affinity_factor_sigma_diss = UNINITIALIZED_DOUBLE
+  tstrxn%affinity_factor_sigma_ppt = UNINITIALIZED_DOUBLE
+  tstrxn%affinity_factor_beta_diss = UNINITIALIZED_DOUBLE
+  tstrxn%affinity_factor_beta_ppt = UNINITIALIZED_DOUBLE
   
   nullify(tstrxn%prefactor)
   nullify(tstrxn%next)
@@ -808,6 +839,12 @@ subroutine MineralDestroy(mineral)
   call DeallocateArray(mineral%kinmnrl_irreversible)
   
   !TODO(dapo): add new variables here (e)
+  call DeallocateArray(mineral%kinmnrl_rate_diss)
+  call DeallocateArray(mineral%kinmnrl_rate_ppt)
+  call DeallocateArray(mineral%kinmnrl_activation_energy_diss)
+  call DeallocateArray(mineral%kinmnrl_activation_energy_ppt)
+  call DeallocateArray(mineral%kinmnrl_Temkin_const_diss)
+  call DeallocateArray(mineral%kinmnrl_Temkin_const_ppt)
 
   deallocate(mineral)
   nullify(mineral)
