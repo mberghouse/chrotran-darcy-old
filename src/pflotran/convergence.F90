@@ -182,7 +182,7 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   if (option%force_newton_iteration) then
     reason = 0
 !   reason = -1
-    return
+!    return
   endif
   
 ! Checking if norm exceeds divergence tolerance

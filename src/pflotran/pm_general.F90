@@ -1205,6 +1205,13 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
   grid => patch%grid
   global_auxvars => patch%aux%Global%auxvars
 
+  if (this%option%flow%using_newtontrd) then
+    if (general_newtontrd_prev_iter_num == it) then
+      general_sub_newton_iter_num = general_sub_newton_iter_num + 1
+    endif
+    general_newtontrd_prev_iter_num = it
+  endif
+
   if (this%check_post_convergence) then
     call VecGetArrayReadF90(field%flow_r,r_p,ierr);CHKERRQ(ierr)
     call VecGetArrayReadF90(field%flow_accum2,accum2_p,ierr);CHKERRQ(ierr)
@@ -1362,22 +1369,23 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
       option%convergence = CONVERGENCE_CUT_TIMESTEP
     endif
 
-    if (general_using_newtontr .and. general_state_changed) then
+    if (option%flow%using_newtontrd .and. &
+        general_state_changed) then
         ! if we reach convergence in an inner newton iteration of TR
         ! then we must force an outer iteration to allow state change
         ! in case the solutions are out-of-bounds of the states -hdp
         general_force_iteration = PETSC_TRUE
     endif
 
-    if (general_using_newtontr .and. &
-        general_sub_newton_iter_num > 1 .and. &
-        general_force_iteration .and. &
-        option%convergence == CONVERGENCE_CONVERGED) then
+!    if (option%flow%using_newtontrd .and. &
+!        general_sub_newton_iter_num > 1 .and. &
+!        general_force_iteration .and. &
+!        option%convergence == CONVERGENCE_CONVERGED) then
         ! This is a complicated case but necessary.
         ! right now PFLOTRAN declares convergence with a negative rho in tr.c
         ! this should not be happening thus cutting timestep.
-        option%convergence = CONVERGENCE_CUT_TIMESTEP
-    endif
+!        option%convergence = CONVERGENCE_CUT_TIMESTEP
+!    endif
  
     call MPI_Allreduce(MPI_IN_PLACE,general_force_iteration,ONE_INTEGER, &
                        MPI_LOGICAL,MPI_LOR,option%mycomm,ierr)
