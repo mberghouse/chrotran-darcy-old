@@ -2145,11 +2145,11 @@ subroutine BasisInit(reaction,option)
     enddo
     if (found) then
 !     Add if statement to initialize Temkins constant for diss/ppt, 7.Otc.2013, X.-Z. Kong
-      if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_diss) then
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_diss)) then
         allocate(mineral%kinmnrl_Temkin_const_diss(mineral%nkinmnrl))
         mineral%kinmnrl_Temkin_const_diss = 1.d0    
       endif
-      if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_ppt) then
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_sigma_ppt)) then
         allocate(mineral%kinmnrl_Temkin_const_ppt(mineral%nkinmnrl))
         mineral%kinmnrl_Temkin_const_ppt = 1.d0    
       endif
@@ -2173,11 +2173,11 @@ subroutine BasisInit(reaction,option)
     enddo
     if (found) then
 !     Add if statement to initialize affinity power for diss/ppt, 7.Otc.2013, X.-Z. Kong
-      if (Initialized(cur_mineral%tstrxn%affinity_factor_beta_diss) then
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_beta_diss)) then
         allocate(mineral%kinmnrl_affinity_power_diss(mineral%nkinmnrl))
         mineral%kinmnrl_affinity_power_diss = 1.d0    
       endif
-      if (Initialized(cur_mineral%tstrxn%affinity_factor_beta_ppt) then
+      if (Initialized(cur_mineral%tstrxn%affinity_factor_beta_ppt)) then
         allocate(mineral%kinmnrl_affinity_power_ppt(mineral%nkinmnrl))
         mineral%kinmnrl_affinity_power_ppt = 1.d0    
       endif
