@@ -283,7 +283,9 @@ subroutine ReactionReadPass1(reaction,input,option)
         string = 'CHEMISTRY,ACTIVE_GAS_SPECIES'
         call RGasRead(reaction%gas%list,ACTIVE_GAS,string,input,option)
       !TODO(geh): remove GAS_SPECIES
-      case('PASSIVE_GAS_SPECIES','GAS_SPECIES')
+      case('GAS_SPECIES')
+        call InputKeywordDeprecated('GAS_SPECIES','PASSIVE_GAS_SPECIES',option)
+      case('PASSIVE_GAS_SPECIES')
         string = 'CHEMISTRY,PASSIVE_GAS_SPECIES'
         call RGasRead(reaction%gas%list,PASSIVE_GAS,string,input,option)
       case('IMMOBILE_SPECIES')
@@ -431,10 +433,26 @@ subroutine ReactionReadPass1(reaction,input,option)
               call InputReadDouble(input,option,general_rxn%forward_rate)  
               call InputErrorMsg(input,option,'forward rate', &
                                  'CHEMISTRY,GENERAL_REACTION') 
+              ! throw error if units exist after rate
+              call InputReadWord(input,option,word,PETSC_TRUE)
+              if (input%ierr == 0) then
+                option%io_buffer = 'Units conversion not supported for &
+                  &GENERAL_REACTION FORWARD_RATE. Please assume the &
+                  &documented units.'
+                call PrintErrMsg(option)
+              endif
             case('BACKWARD_RATE')
               call InputReadDouble(input,option,general_rxn%backward_rate)  
               call InputErrorMsg(input,option,'backward rate', &
                                  'CHEMISTRY,GENERAL_REACTION') 
+              ! throw error if units exist after rate
+              call InputReadWord(input,option,word,PETSC_TRUE)
+              if (input%ierr == 0) then
+                option%io_buffer = 'Units conversion not supported for &
+                  &GENERAL_REACTION BACKWARD_RATE. Please assume the &
+                  &documented units.'
+                call PrintErrMsg(option)
+              endif
           end select
         enddo   
         call InputPopBlock(input,option)
@@ -545,7 +563,6 @@ subroutine ReactionReadPass1(reaction,input,option)
         enddo
         call InputPopBlock(input,option)
       case('SORPTION')
-!geh        nullify(prev_srfcplx_rxn)
         call InputPushBlock(input,option)
         do
           call InputReadPflotranString(input,option)
@@ -694,7 +711,10 @@ subroutine ReactionReadPass1(reaction,input,option)
                       if (option%use_mc) then
                         sec_cont_kd_rxn%itype = kd_rxn%itype
                       endif
-                    case('DISTRIBUTION_COEFFICIENT','KD')
+                    case('KD')
+                      call InputKeywordDeprecated('KD', &
+                                           'DISTRIBUTION_COEFFICIENT',option)
+                    case('DISTRIBUTION_COEFFICIENT')
                       call InputReadDouble(input,option,kd_rxn%Kd)
                       call InputErrorMsg(input,option, &
                                          'DISTRIBUTION_COEFFICIENT', &
@@ -955,9 +975,8 @@ subroutine ReactionReadPass1(reaction,input,option)
       case('ACTIVITY_H2O','ACTIVITY_WATER')
         reaction%use_activity_h2o = PETSC_TRUE
       case('REDOX_SPECIES')
-        option%io_buffer = 'REDOX_SPECIES is no longer supported. Please &
-          &use DECOUPLED_EQULIBRIUM_REACTIONS instead.'
-        call PrintErrMsg(option)
+        call InputKeywordDeprecated('REDOX_SPECIES', &
+                                    'DECOUPLED_EQUILIBRIUM_REACTIONS',option)
       case('DECOUPLED_EQUILIBRIUM_REACTIONS')
         call InputSkipToEnd(input,option,word)
       case('OUTPUT')
@@ -1119,8 +1138,8 @@ subroutine ReactionReadPass2(reaction,input,option)
         call RSandboxSkipInput(input,option)
       case('CLM_REACTION')
         call RCLMRxnSkipInput(input,option)
-      case('SOLID_SOLUTIONS')
 #ifdef SOLID_SOLUTION                
+      case('SOLID_SOLUTIONS')
         call SolidSolutionReadFromInputFile(reaction%solid_solution_list, &
                                             input,option)
 #endif
@@ -1252,7 +1271,7 @@ subroutine ReactionReadDecoupledSpecies(reaction,input,option)
     enddo
     
     if (.not.associated(cur_species)) then
-      option%io_buffer = 'Decoupled equlibrium reaction species "' // &
+      option%io_buffer = 'Decoupled equilibrium reaction species "' // &
         trim(name) // '" not found among primary species.'
       call PrintErrMsg(option)
     endif
@@ -1631,8 +1650,7 @@ subroutine ReactionEquilibrateConstraint(rt_auxvar,global_auxvar, &
     ! when reaction%initialize_with_molality is true, regardless of whether
     ! free or total component.
     aq_species_constraint%basis_molarity = conc * convert_molal_to_molar
-    rt_auxvar%pri_molal = aq_species_constraint%basis_molarity* &
-                          convert_molar_to_molal
+    rt_auxvar%pri_molal = conc * convert_molar_to_molal
     rt_auxvar%total(:,iphase) = aq_species_constraint%basis_molarity
     return
   endif
@@ -3608,7 +3626,7 @@ subroutine RReact(tran_xx,rt_auxvar,global_auxvar,material_auxvar, &
       call RActivityCoefficients(rt_auxvar,global_auxvar,reaction,option)
     endif
     call RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction, &
-                         option)
+                         natural_id,option)
     
     ! Accumulation
     ! residual is overwritten in RTAccumulation()
@@ -3706,7 +3724,8 @@ subroutine RReact(tran_xx,rt_auxvar,global_auxvar,material_auxvar, &
   enddo
 
   ! one last update
-  call RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction,option)
+  call RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction, &
+                       natural_id,option)
 
   num_iterations_ = num_iterations
   
@@ -5298,7 +5317,7 @@ end subroutine RAge
 ! ************************************************************************** !
 
 subroutine RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction, &
-                           option)
+                           natural_id,option)
   ! 
   ! Computes secondary variables for each grid cell
   ! 
@@ -5315,6 +5334,7 @@ subroutine RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction, &
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
+  PetscInt :: natural_id
   
 #if 0  
   PetscReal :: Res_orig(reaction%ncomp)
@@ -5388,6 +5408,9 @@ subroutine RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction, &
   if (reaction%neqsorb > 0) rt_auxvar%dtotal_sorb_eq = dtotalsorb
   call RTAuxVarStrip(rt_auxvar_pert)
 #endif
+
+!  call RTPrintAuxVar(STDOUT_UNIT,rt_auxvar,global_auxvar,material_auxvar, &
+!                     reaction,natural_id,'',option)
   
 end subroutine RTAuxVarCompute
 
@@ -5569,7 +5592,7 @@ end subroutine RTAccumulationDerivative
 ! ************************************************************************** !
 
 subroutine RCalculateCompression(global_auxvar,rt_auxvar,material_auxvar, &
-                                 reaction,option)
+                                 reaction,natural_id,option)
   ! 
   ! Calculates the compression for the Jacobian block
   ! 
@@ -5590,6 +5613,7 @@ subroutine RCalculateCompression(global_auxvar,rt_auxvar,material_auxvar, &
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
   class(material_auxvar_type) :: material_auxvar
+  PetscInt :: natural_id
   
   PetscInt :: i, jj
   PetscReal :: vol = 1.d0
@@ -5601,7 +5625,8 @@ subroutine RCalculateCompression(global_auxvar,rt_auxvar,material_auxvar, &
   J = 0.d0
   residual = 0.d0
 
-  call RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction,option)
+  call RTAuxVarCompute(rt_auxvar,global_auxvar,material_auxvar,reaction, &
+                       natural_id,option)
   call RTAccumulationDerivative(rt_auxvar,global_auxvar, &
                                 material_auxvar,reaction,option,J)
     
@@ -5858,101 +5883,81 @@ end subroutine RUpdateTempDependentCoefs
 
 ! ************************************************************************** !
 
-subroutine RTPrintAuxVar(rt_auxvar,reaction,option)
-  ! 
+subroutine RTPrintAuxVar(file_unit,rt_auxvar,global_auxvar,material_auxvar,&
+                         reaction,natural_id,header_string,option)
+
   ! PrintRTAuxVar: Prints data from RTAuxVar object
   ! 
   ! Author: Glenn Hammond
-  ! Date: 05/18/2011
-  ! 
+  ! Date: 05/18/11, 07/18/20
 
+  use Global_Aux_module
+  use Material_Aux_class
   use Option_module
 
   implicit none
-  
-  type(reactive_transport_auxvar_type) :: rt_auxvar
+
+  PetscInt :: file_unit
   class(reaction_rt_type) :: reaction
+  type(reactive_transport_auxvar_type) :: rt_auxvar
+  type(global_auxvar_type) :: global_auxvar
+  class(material_auxvar_type) :: material_auxvar
+  PetscInt :: natural_id
+  character(len=*) :: header_string
   type(option_type) :: option
 
-  character(len=MAXSTRINGLENGTH) :: string
   PetscInt :: i
-  
+  character(len=MAXSTRINGLENGTH) :: string
+  character(len=MAXWORDLENGTH) :: word
+
   10 format(a20,':',10es19.11)
   20 format(a20,':',a20)
   30 format(/)
 
-  if (OptionPrintToScreen(option)) write(*,30)
-  if (OptionPrintToFile(option)) write(option%fid_out,30)
+  write(file_unit,*) '--------------------------------------------------------'
+  if (len_trim(header_string) > 0) write(file_unit,*) trim(header_string)
+  write(file_unit,*) '                  cell id: ', natural_id
+  write(file_unit,*) '          liquid pressure: ', global_auxvar%pres(1)
+  write(file_unit,*) '      liquid_density [kg]: ', global_auxvar%den_kg(1)
+  write(file_unit,*) '          temperature [C]: ', global_auxvar%temp
+  write(file_unit,*) '                porosity : ', material_auxvar%porosity
+  write(file_unit,*) '             volume [m^3]: ', material_auxvar%volume
+  write(file_unit,30)
 
-  if (OptionPrintToScreen(option)) &
-    write(*,20) 'Primary', 'free molal., total molar., act. coef.'
-  if (OptionPrintToFile(option)) &
-    write(option%fid_out,20) 'Primary', 'free molal., total molar., act. coef.'
+  write(file_unit,20) 'Primary', 'free molal., total molar., act. coef.'
   do i = 1, reaction%naqcomp  
-    if (OptionPrintToScreen(option)) &
-      write(*,10) reaction%primary_species_names(i), &
-        rt_auxvar%pri_molal(i), &
-        rt_auxvar%total(i,1), &
-        rt_auxvar%pri_act_coef(i)
-    if (OptionPrintToFile(option)) &
-      write(option%fid_out,10) reaction%primary_species_names(i), &
-        rt_auxvar%pri_molal(i), &
-        rt_auxvar%total(i,1), &
-        rt_auxvar%pri_act_coef(i)
+    write(file_unit,10) reaction%primary_species_names(i), &
+                  rt_auxvar%pri_molal(i),rt_auxvar%total(i,1), &
+                  rt_auxvar%pri_act_coef(i)
   enddo
-  if (OptionPrintToScreen(option)) write(*,30)
-  if (OptionPrintToFile(option)) write(option%fid_out,30)
+  write(file_unit,30)
 
   if (reaction%neqcplx > 0) then
-    if (OptionPrintToScreen(option)) &
-      write(*,20) 'Secondary Complex', 'molal., act. coef.'
-    if (OptionPrintToFile(option)) &
-      write(option%fid_out,20) 'Secondary Complex', 'molal., act. coef.'
+    write(file_unit,20) 'Secondary Complex', 'molal., act. coef.'
     do i = 1, reaction%neqcplx  
-      if (OptionPrintToScreen(option)) &
-        write(*,10) reaction%secondary_species_names(i), &
-          rt_auxvar%sec_molal(i), &
-          rt_auxvar%sec_act_coef(i)
-      if (OptionPrintToFile(option)) &
-        write(option%fid_out,10) reaction%secondary_species_names(i), &
-          rt_auxvar%sec_molal(i), &
-          rt_auxvar%sec_act_coef(i)
+      write(file_unit,10) reaction%secondary_species_names(i), &
+                    rt_auxvar%sec_molal(i), rt_auxvar%sec_act_coef(i)
     enddo
-    if (OptionPrintToScreen(option)) write(*,30)
-    if (OptionPrintToFile(option)) write(option%fid_out,30)
+    write(file_unit,30)
   endif
 
   if (reaction%neqsorb > 0) then  
-    if (OptionPrintToScreen(option)) &
-      write(*,20) 'Total Sorbed EQ', 'mol/m^3'
-    if (OptionPrintToFile(option)) &
-      write(option%fid_out,20) 'Total Sorbed EQ', 'mol/m^3'
+    write(file_unit,20) 'Total Sorbed EQ', 'mol/m^3'
     do i = 1, reaction%naqcomp  
-      if (OptionPrintToScreen(option)) &
-        write(*,10) reaction%primary_species_names(i), rt_auxvar%total_sorb_eq(i)
-      if (OptionPrintToFile(option)) &
-        write(option%fid_out,10) reaction%primary_species_names(i), &
-          rt_auxvar%total_sorb_eq(i)
+      write(file_unit,10) reaction%primary_species_names(i), &
+                    rt_auxvar%total_sorb_eq(i)
     enddo
-    if (OptionPrintToScreen(option)) write(*,30)
-    if (OptionPrintToFile(option)) write(option%fid_out,30)
+    write(file_unit,30)
   endif    
 
 #if 0  
   if (reaction%surface_complexation%neqsrfcplx > 0) then
-    if (OptionPrintToScreen(option)) &
-      write(*,20) 'EQ Surface Complex Conc.', 'mol/m^3'
-    if (OptionPrintToFile(option)) &
-      write(option%fid_out,20) 'EQ Surface Complex Conc.', 'mol/m^3'
+    write(file_unit,20) 'EQ Surface Complex Conc.', 'mol/m^3'
     do i = 1, reaction%surface_complexation%neqsrfcplx
-      if (OptionPrintToScreen(option)) &
-        write(*,10) reaction%eqsrfcplx_names(i), rt_auxvar%eqsrfcplx_conc(i)
-      if (OptionPrintToFile(option)) &
-        write(option%fid_out,10) reaction%eqsrfcplx_names(i), &
-          rt_auxvar%eqsrfcplx_conc(i)
+      write(file_unit,10) reaction%eqsrfcplx_names(i), &
+                    rt_auxvar%eqsrfcplx_conc(i)
     enddo
-    if (OptionPrintToScreen(option)) write(*,30)
-    if (OptionPrintToFile(option)) write(option%fid_out,30)
+    write(file_unit,30)
   endif
 #endif  
 
@@ -5966,26 +5971,15 @@ subroutine RTPrintAuxVar(rt_auxvar,reaction,option)
   endif
   
   if (reaction%mineral%nkinmnrl > 0) then
-    if (OptionPrintToScreen(option)) &
-      write(*,20) 'Kinetic Minerals', 'vol frac, area, rate'
-    if (OptionPrintToFile(option)) &
-      write(option%fid_out,20) 'Kinetic Minerals', 'vol frac, area, rate'
+    write(file_unit,20) 'Kinetic Minerals', 'vol frac, area, rate'
     do i = 1, reaction%mineral%nkinmnrl
-      if (OptionPrintToScreen(option)) &
-        write(*,10) reaction%mineral%kinmnrl_names(i), &
-          rt_auxvar%mnrl_volfrac(i), &
-          rt_auxvar%mnrl_area(i), &
-          rt_auxvar%mnrl_rate(i)
-
-      if (OptionPrintToFile(option)) &
-        write(option%fid_out,10) reaction%mineral%kinmnrl_names(i), &
-          rt_auxvar%mnrl_volfrac(i), &
-          rt_auxvar%mnrl_area(i), &
-          rt_auxvar%mnrl_rate(i)
+      write(file_unit,10) reaction%mineral%kinmnrl_names(i), &
+                    rt_auxvar%mnrl_volfrac(i), rt_auxvar%mnrl_area(i), &
+                    rt_auxvar%mnrl_rate(i)
     enddo
-    if (OptionPrintToScreen(option)) write(*,30)
-    if (OptionPrintToFile(option)) write(option%fid_out,30)
+    write(file_unit,30)
   endif
+  write(file_unit,*) '--------------------------------------------------------'
 
 end subroutine RTPrintAuxVar
 
@@ -6195,12 +6189,12 @@ subroutine RTSetPlotVariables(list,reaction,option,time_unit)
   endif
   
   if (reaction%mineral%print_surface_area) then
-    do i=1,reaction%mineral%nmnrl
-      if (reaction%mineral%mnrl_print(i)) then
-        name = trim(reaction%mineral%mineral_names(i)) // ' Area'
+    do i=1,reaction%mineral%nkinmnrl
+      if (reaction%mineral%kinmnrl_print(i)) then
+        name = trim(reaction%mineral%kinmnrl_names(i)) // ' Area'
         units = 'm^2/m^3'
-        call OutputVariableAddToList(list,name,OUTPUT_GENERIC,units, &
-                                     MINERAL_SURFACE_AREA,i)    
+        call OutputVariableAddToList(list,name,OUTPUT_VOLUME_FRACTION,units, &
+                                     MINERAL_SURFACE_AREA,i,i)     
       endif
     enddo
   endif
