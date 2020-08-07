@@ -72,6 +72,7 @@ module PM_WIPP_Flow_class
     PetscInt :: newtontrd_prev_iter_num
     PetscBool :: newtontrd_scale_diagonal ! newtontrd experiment purpose only. do not use
     PetscBool :: newtontrd_jacobian_calculated
+    PetscReal :: newtontrd_auto_pres_scale_fac 
     
     Vec :: scaling_vec
     ! When reading Dirichlet 2D Flared BC
@@ -646,6 +647,9 @@ subroutine PMWIPPFloReadNewtonSelectCase(this,input,keyword,found, &
 !     this%newtontrd_scale_diagonal = PETSC_TRUE
 !   case('DO_NOT_SCALE_DIAGONAL')
 !     this%newtontrd_scale_diagonal = PETSC_FALSE
+    case('AUTO_SCALE_PRESSURE')
+      option%flow%scale_all_pressure = PETSC_TRUE
+      option%flow%pressure_scaling_factor = 1.d0
     case default
       found = PETSC_FALSE
 
