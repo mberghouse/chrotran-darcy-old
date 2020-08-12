@@ -382,7 +382,7 @@ subroutine PMSubsurfaceFlowReadNewtonSelectCase(this,input,keyword,found, &
             call InputErrorMsg(input,option, &
                                'auto scale multiphase flow modes', &
                                'NEWTON TRD options')
-            string = '-flow_snes_auto_scale'
+            string = '-flow_snes_auto_scale_multiphase'
             call PetscOptionsSetValue(PETSC_NULL_OPTIONS, &
                                       trim(string),trim(word), &
                                       ierr);CHKERRQ(ierr)
