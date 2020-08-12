@@ -97,6 +97,7 @@ contains
     PetscReal :: correct_gas_perm(3)    ! [m2]
     PetscReal, parameter :: tolerance = 1.d-12
 
+    !-------- TEST #1 ----------------------!
     liquid_permeability(:) = 1.d-14
     gas_pressure = 1.9d5
 
@@ -110,6 +111,7 @@ contains
     gas_perm = this%klink_2%Evaluate(liquid_permeability,gas_pressure)
     @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
 
+    !-------- TEST #2 ----------------------!
     liquid_permeability(:) = 1.3d-15
     gas_pressure = 2.76d6
 
@@ -119,6 +121,15 @@ contains
     @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
 
     correct_gas_perm(:) = 1.3152106886918994d-015
+    !call this%klink_2%Test(liquid_permeability,gas_pressure)
+    gas_perm = this%klink_2%Evaluate(liquid_permeability,gas_pressure)
+    @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)
+
+    !-------- TEST #3 ----------------------!
+    liquid_permeability(:) = 1.0d-15
+    gas_pressure = 6.8d6
+
+    correct_gas_perm(:) = 1.0051935028964792d-015
     !call this%klink_2%Test(liquid_permeability,gas_pressure)
     gas_perm = this%klink_2%Evaluate(liquid_permeability,gas_pressure)
     @assertEqual(correct_gas_perm(1), gas_perm(1), dabs(correct_gas_perm(1))*tolerance)

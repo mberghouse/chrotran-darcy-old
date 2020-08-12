@@ -58,6 +58,7 @@ contains
     this%option => OptionCreate()
     MaterialCompressSoilPtr => MaterialCompressSoilBRAGFLO
 
+    !--- represents S_MB138 ---!
     allocate(this%material_auxvar_1)
     nullify(this%material_auxvar_1%fracture)
     allocate(this%material_auxvar_1%soil_properties(2))
@@ -65,7 +66,7 @@ contains
     this%frac_1 => FractureCreate()
     this%frac_1%init_pressure = 2.000000d+05
     this%frac_1%altered_pressure = 3.800000d+06
-    this%frac_1%maximum_porosity = 4.638239d-02
+    this%frac_1%maximum_porosity = 0.04
     this%frac_1%porosity_exponent = 1.013380d+01
     this%frac_1%change_perm_x = 1.d0
     this%frac_1%change_perm_y = 1.d0
@@ -83,14 +84,15 @@ contains
     this%material_auxvar_1%porosity_base = 0.047
 
 
+    !--- represents S_ANH_AB ---!
     allocate(this%material_auxvar_2)
     nullify(this%material_auxvar_2%fracture)
     allocate(this%material_auxvar_2%soil_properties(2))
 
     this%frac_2 => FractureCreate()
-    this%frac_2%init_pressure = 2.300000d+05
-    this%frac_2%altered_pressure = 4.100000d+06
-    this%frac_2%maximum_porosity = 7.123456d-02
+    this%frac_2%init_pressure = 2.000000d+05
+    this%frac_2%altered_pressure = 3.800000d+06
+    this%frac_2%maximum_porosity = 0.24
     this%frac_2%porosity_exponent = 2.052938d+01
     this%frac_2%change_perm_x = 1.d0
     this%frac_2%change_perm_y = 1.d0
@@ -171,7 +173,7 @@ contains
     pressure = 1.9d5
     compressed_porosity = 0.d0
     dcompressed_porosity_dp = 0.d0
-    correct_comp_porosity = 5.8831667538158196d-2
+    correct_comp_porosity = 5.9247057232341090d-2
     correct_dcomp_porosity_dp = 0.d0
 
     ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
@@ -189,8 +191,8 @@ contains
     pressure = 3.0d6
     compressed_porosity = 0.d0
     dcompressed_porosity_dp = 0.d0
-    correct_comp_porosity = 4.6382390000000003d-2
-    correct_dcomp_porosity_dp = -1.1306995079603146d-9
+    correct_comp_porosity = 3.9999999105930328d-2
+    correct_dcomp_porosity_dp = -3.4594309536527355d-9
 
     ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
     call FracturePoroEvaluate(this%material_auxvar_1,pressure, &
@@ -205,8 +207,8 @@ contains
     pressure = 3.0d6
     compressed_porosity = 0.d0
     dcompressed_porosity_dp = 0.d0
-    correct_comp_porosity = 7.1234560000000002d-2
-    correct_dcomp_porosity_dp = 9.4780262069756662d-11
+    correct_comp_porosity = 0.13237290297885507d0
+    correct_dcomp_porosity_dp = 5.4833801430749208d-8
 
     ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
     call FracturePoroEvaluate(this%material_auxvar_2,pressure, &
@@ -220,10 +222,10 @@ contains
 
 
     !------------ TESTS else if (pressure >= Pa) then --------------!
-    pressure = 4.0d7
+    pressure = 1.0d7
     compressed_porosity = 0.d0
     dcompressed_porosity_dp = 0.d0
-    correct_comp_porosity = 4.6382390000000003d-2
+    correct_comp_porosity = 3.9999999105930328d-2
     correct_dcomp_porosity_dp = 0.d0
 
     ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
@@ -236,10 +238,10 @@ contains
     @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
     @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
 
-    pressure = 4.0d7
+    pressure = 1.0d7
     compressed_porosity = 0.d0
     dcompressed_porosity_dp = 0.d0
-    correct_comp_porosity = 7.1234560000000002d-2
+    correct_comp_porosity = 0.23999999463558197d0
     correct_dcomp_porosity_dp = 0.d0
 
     ! this routine calculates compressed_porosity and dcompressed_porosity_dp:

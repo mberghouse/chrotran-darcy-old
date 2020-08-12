@@ -187,11 +187,11 @@ contains
 
 
     !------------ TEST 3 -------------------!
-    pressure = 4.0d7
+    pressure = 1.0d7
     compressed_porosity = 0.d0
     dcompressed_porosity_dp = 0.d0
-    correct_comp_porosity = 0.26272710007324718d0
-    correct_dcomp_porosity_dp = 1.1332331374131933d-8
+    correct_comp_porosity = 7.2032093610094758d-2
+    correct_dcomp_porosity_dp = 3.1069941172208977d-9
 
     ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
     call MaterialCompressSoilBRAGFLO(this%material_auxvar_1,pressure, &
@@ -203,11 +203,11 @@ contains
     @assertEqual(correct_comp_porosity,compressed_porosity,dabs(correct_comp_porosity)*tolerance)
     @assertEqual(correct_dcomp_porosity_dp,dcompressed_porosity_dp,dabs(correct_dcomp_porosity_dp)*tolerance)
 
-    pressure = 4.0d7
+    pressure = 1.0d7
     compressed_porosity = 0.d0
     dcompressed_porosity_dp = 0.d0
-    correct_comp_porosity = 80.202426794103616d0
-    correct_dcomp_porosity_dp = 1.4469007351867253d-5
+    correct_comp_porosity = 0.35785430407340635d0
+    correct_dcomp_porosity_dp = 6.4559100809105705d-8
 
     ! this routine calculates compressed_porosity and dcompressed_porosity_dp:
     call MaterialCompressSoilBRAGFLO(this%material_auxvar_2,pressure, &
