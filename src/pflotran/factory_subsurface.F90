@@ -933,6 +933,7 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
       option%iflowmode = RICHARDS_MODE
       option%nphase = 1
       option%liquid_phase = 1
+      option%gas_phase = 2 ! still set gas phase to 2 for transport
       option%nflowdof = 1
       option%nflowspec = 1
       option%use_isothermal = PETSC_TRUE
@@ -940,7 +941,7 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
       option%iflowmode = TH_MODE
       option%nphase = 1
       option%liquid_phase = 1
-      option%gas_phase = 2
+      option%gas_phase = 2 ! still set gas phase to 2 for transport
       option%nflowdof = 2
       option%nflowspec = 1
       option%use_isothermal = PETSC_FALSE
@@ -949,6 +950,7 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
       option%iflowmode = RICHARDS_TS_MODE
       option%nphase = 1
       option%liquid_phase = 1
+      option%gas_phase = 2 ! still set gas phase to 2 for transport
       option%nflowdof = 1
       option%nflowspec = 1
       option%use_isothermal = PETSC_TRUE
@@ -956,7 +958,7 @@ subroutine SubsurfaceSetFlowMode(pm_flow,option)
       option%iflowmode = TH_TS_MODE
       option%nphase = 1
       option%liquid_phase = 1
-      option%gas_phase = 2
+      option%gas_phase = 2 ! still set gas phase to 2 for transport
       option%nflowdof = 2
       option%nflowspec = 1
       option%use_isothermal = PETSC_FALSE

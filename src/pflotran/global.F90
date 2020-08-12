@@ -702,6 +702,7 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
   class(realization_subsurface_type) :: realization
   PetscReal :: time
   PetscInt :: time_level
+  PetscErrorCode :: ierr
   
   type(field_type), pointer :: field
   type(option_type), pointer :: option
@@ -729,6 +730,28 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
   call realization%comm1%GlobalToLocal(field%work,field%work_loc)
   call GlobalSetAuxVarVecLoc(realization,field%work_loc,LIQUID_SATURATION, &
                              time_level)
+
+  ! gas saturation
+  select case(option%iflowmode)
+    case(RICHARDS_MODE,TH_MODE,TH_TS_MODE)
+      if (option%transport%nphase > 1) then
+        ! we cannot access GAS_SATURATION through RealizationGetVariable
+        call RealizationGetVariable(realization,field%work,LIQUID_SATURATION, &
+                                    ZERO_INTEGER)
+        call VecShift(field%work,-1.d0,ierr);CHKERRQ(ierr)
+        call VecAbs(field%work,ierr);CHKERRQ(ierr)
+        call realization%comm1%GlobalToLocal(field%work,field%work_loc)
+        call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_SATURATION, &
+                                   time_level)                         
+      endif
+    case default
+      call RealizationGetVariable(realization,field%work,GAS_SATURATION, &
+                                  ZERO_INTEGER)
+      call realization%comm1%GlobalToLocal(field%work,field%work_loc)
+      call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_SATURATION, &
+                                 time_level)                         
+  end select
+
   select case(option%iflowmode)
     case(MPH_MODE,FLASH2_MODE)
       ! Gas density
@@ -743,14 +766,6 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
       call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_DENSITY_MOL, &
                                  time_level)
  
- 
-      ! Gas saturation
-      call RealizationGetVariable(realization,field%work,GAS_SATURATION, &
-                                  ZERO_INTEGER)
-      call realization%comm1%GlobalToLocal(field%work,field%work_loc)
-      call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_SATURATION, &
-                                 time_level)                         
-   
       ! liquid pressure
       call RealizationGetVariable(realization,field%work,LIQUID_PRESSURE, &
                                   ZERO_INTEGER)
@@ -813,12 +828,6 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
       call realization%comm1%GlobalToLocal(field%work,field%work_loc)
       call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_DENSITY, &
                                  time_level)
-      ! Gas saturation
-      call RealizationGetVariable(realization,field%work,GAS_SATURATION, &
-                                  ZERO_INTEGER)
-      call realization%comm1%GlobalToLocal(field%work,field%work_loc)
-      call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_SATURATION, &
-                                 time_level)                         
     case(IMS_MODE)
       ! Gas density
       call RealizationGetVariable(realization,field%work,GAS_DENSITY, &
@@ -830,14 +839,6 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
                                  ZERO_INTEGER)
       call realization%comm1%GlobalToLocal(field%work,field%work_loc)
       call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_DENSITY_MOL, &
-                                 time_level)
- 
- 
-      ! Gas saturation
-      call RealizationGetVariable(realization,field%work,GAS_SATURATION, &
-                                 ZERO_INTEGER)
-      call realization%comm1%GlobalToLocal(field%work,field%work_loc)
-      call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_SATURATION, &
                                  time_level)
    
       ! pressure
@@ -866,14 +867,6 @@ subroutine GlobalUpdateAuxVars(realization,time_level,time)
       call realization%comm1%GlobalToLocal(field%work,field%work_loc)
       call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_DENSITY_MOL, &
                                  time_level)
- 
- 
-      ! Gas saturation
-      call RealizationGetVariable(realization,field%work,GAS_SATURATION, &
-                                 ZERO_INTEGER)
-      call realization%comm1%GlobalToLocal(field%work,field%work_loc)
-      call GlobalSetAuxVarVecLoc(realization,field%work_loc,GAS_SATURATION, &
-                                 time_level)                  
    
       ! pressure
       call RealizationGetVariable(realization,field%work,LIQUID_PRESSURE, &
