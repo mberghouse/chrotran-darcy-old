@@ -96,7 +96,7 @@ subroutine MineralReadKinetics(mineral,input,option)
   
   character(len=MAXSTRINGLENGTH) :: string
   character(len=MAXSTRINGLENGTH) :: error_string
-  character(len=MAXWORDLENGTH) :: word
+  character(len=MAXWORDLENGTH) :: word, error_word
   character(len=MAXWORDLENGTH) :: name
   character(len=MAXWORDLENGTH) :: card
   character(len=MAXWORDLENGTH) :: internal_units
@@ -108,7 +108,7 @@ subroutine MineralReadKinetics(mineral,input,option)
   type(ts_prefactor_species_type), pointer :: prefactor_species, &
                                               cur_prefactor_species
   PetscBool :: found
-  PetscInt :: imnrl,icount
+  PetscInt :: imnrl, icount, i
   PetscReal :: temp_real
 
   cur_mineral => mineral%mineral_list
@@ -138,8 +138,9 @@ subroutine MineralReadKinetics(mineral,input,option)
         found = PETSC_TRUE
         cur_mineral%itype = MINERAL_KINETIC
         tstrxn => TransitionStateTheoryRxnCreate()
-        ! initialize to UNINITIALIZED_INTEGER to ensure that it is set
-        tstrxn%rate = UNINITIALIZED_DOUBLE
+        ! initialize rate to UNINITIALIZED_DOUBLE to ensure that it is set, as
+        ! it is set to 0. in TransitionStateTheoryRxnCreate
+        tstrxn%rate(1) = UNINITIALIZED_DOUBLE
         call InputPushBlock(input,option)
         do
           call InputReadPflotranString(input,option)
@@ -150,30 +151,46 @@ subroutine MineralReadKinetics(mineral,input,option)
           call InputErrorMsg(input,option,'word',error_string)
 
           select case(trim(word))
-            case('RATE_CONSTANT')
+            case('RATE_CONSTANT','RATE_CONSTANT_DISS','RATE_CONSTANT_PPT')
+              error_word = word
+              select case(word)
+                case('RATE_CONSTANT','RATE_CONSTANT_DISS')
+                  i = 1
+                case('RATE_CONSTANT_PPT')
+                  i = 2
+              end select
 !             read rate constant
-              call InputReadDouble(input,option,tstrxn%rate)
-              if (tstrxn%rate < 0.d0) then
-                tstrxn%rate = 10.d0**tstrxn%rate
+              call InputReadDouble(input,option,tstrxn%rate(i))
+              if (tstrxn%rate(i) < 0.d0) then
+                tstrxn%rate(i) = 10.d0**tstrxn%rate(i)
               endif
-              call InputErrorMsg(input,option,'rate',error_string)
+              call InputErrorMsg(input,option,error_word,error_string)
               ! read units if they exist
               internal_units = 'mol/m^2-sec'
               call InputReadWord(input,option,word,PETSC_TRUE)
               if (InputError(input)) then
-                input%err_buf = trim(cur_mineral%name) // ' RATE UNITS'
+                input%err_buf = trim(cur_mineral%name) // ' ' // &
+                                trim(error_word) // ' UNITS'
                 call InputDefaultMsg(input,option)
               else
-                tstrxn%rate = tstrxn%rate * &
+                tstrxn%rate(i) = tstrxn%rate(i) * &
                   UnitsConvertToInternal(word,internal_units,option)
               endif
-            case('ACTIVATION_ENERGY')
+            case('ACTIVATION_ENERGY','ACTIVATION_ENERGY_DISS', &
+                 'ACTIVATION_ENERGY_PPT')
+              error_word = word
+              select case(word)
+                case('ACTIVATION_ENERGY','ACTIVATION_ENERGY_DISS')
+                  i = 1
+                case('ACTIVATION_ENERGY_PPT')
+                  i = 2
+              end select
 !             read activation energy for Arrhenius law
-              call InputReadDouble(input,option,tstrxn%activation_energy)
-              call InputErrorMsg(input,option,'activation',error_string)
-              call InputReadAndConvertUnits(input,tstrxn%activation_energy, &
+              call InputReadDouble(input,option,tstrxn%activation_energy(i))
+              call InputErrorMsg(input,option,error_word,error_string)
+              call InputReadAndConvertUnits(input,tstrxn%activation_energy(i), &
                                             'J/mol', &
-                              trim(error_string)//',activation energy',option)
+                              trim(error_string)//','//trim(error_word),option)
             case('AFFINITY_THRESHOLD')
 !             read affinity threshold for precipitation
               call InputReadDouble(input,option,tstrxn%affinity_threshold)
@@ -188,11 +205,18 @@ subroutine MineralReadKinetics(mineral,input,option)
               call InputReadDouble(input,option,tstrxn%min_scale_factor)
               call InputErrorMsg(input,option,"Mineral scale fac", &
                                  error_string)
-            case('TEMKIN_CONSTANT')
+            case('TEMKIN_CONSTANT','TEMKIN_CONSTANT_DISS', &
+                 'TEMKIN_CONSTANT_PPT')
+              error_word = word
+              select case(word)
+                case('TEMKIN_CONSTANT','TEMKIN_CONSTANT_DISS')
+                  i = 1
+                case('TEMKIN_CONSTANT_PPT')
+                  i = 2
+              end select
 !             reads exponent on affinity term
-              call InputReadDouble(input,option,tstrxn%affinity_factor_sigma)
-              call InputErrorMsg(input,option,"Temkin's constant", &
-                                 error_string)
+              call InputReadDouble(input,option,tstrxn%affinity_factor_sigma(i))
+              call InputErrorMsg(input,option,error_word,error_string)
             case('SURFACE_AREA_POROSITY_POWER')
               call InputReadDouble(input,option,tstrxn%surf_area_porosity_pwr)
               call InputErrorMsg(input,option,'surface area porosity power', &
@@ -639,6 +663,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
 #ifdef SOLID_SOLUTION
   use Reaction_Solid_Soln_Aux_module
 #endif
+  use Utility_module
   
   implicit none
   
@@ -760,7 +785,7 @@ subroutine RKineticMineral(Res,Jac,compute_derivative,rt_auxvar, &
     enddo
     
     QK = exp(lnQK)
-    
+
     if (associated(mineral%kinmnrl_Temkin_const)) then
       if (associated(mineral%kinmnrl_min_scale_factor)) then
         affinity_factor = 1.d0-QK**(1.d0/ &

@@ -29,15 +29,16 @@ module Reaction_Mineral_Aux_module
 
   type, public :: transition_state_rxn_type
     PetscReal :: min_scale_factor
-    PetscReal :: affinity_factor_sigma
+    ! size to 2 for tutolo diss vs ppt
+    PetscReal :: rate(2) 
+    PetscReal :: activation_energy(2)
+    PetscReal :: affinity_factor_sigma(2)
     PetscReal :: affinity_factor_beta
     PetscReal :: affinity_threshold
     PetscReal :: rate_limiter
     PetscReal :: surf_area_vol_frac_pwr
     PetscReal :: surf_area_porosity_pwr
     PetscInt :: irreversible
-    PetscReal :: rate
-    PetscReal :: activation_energy
     character(len=MAXWORDLENGTH) :: armor_min_name
     PetscReal :: armor_pwr
     PetscReal :: armor_crit_vol_frac
@@ -279,6 +280,8 @@ function TransitionStateTheoryRxnCreate()
 
   allocate(tstrxn)
   tstrxn%min_scale_factor = UNINITIALIZED_DOUBLE
+  tstrxn%rate = 0.d0
+  tstrxn%activation_energy = 0.d0
   tstrxn%affinity_factor_sigma = UNINITIALIZED_DOUBLE
   tstrxn%affinity_factor_beta = UNINITIALIZED_DOUBLE
   tstrxn%affinity_threshold = 0.d0
@@ -286,11 +289,9 @@ function TransitionStateTheoryRxnCreate()
   tstrxn%surf_area_porosity_pwr = 0.d0
   tstrxn%rate_limiter = 0.d0
   tstrxn%irreversible = 0
-  tstrxn%activation_energy = 0.d0
   tstrxn%armor_min_name = ''
   tstrxn%armor_pwr = 0.d0
   tstrxn%armor_crit_vol_frac = 0.d0
-  tstrxn%rate = 0.d0
   nullify(tstrxn%prefactor)
   nullify(tstrxn%next)
   
