@@ -225,7 +225,12 @@ subroutine MineralReadKinetics(mineral,input,option)
                     ! read critical volume fraction
               call InputReadDouble(input,option,tstrxn%armor_crit_vol_frac)
               call InputErrorMsg(input,option,'armor_crit_vol_frac',error_string)
-
+            case('SURFACE_AREA_EPSILON')
+                    ! read critical volume fraction
+              call InputReadDouble(input,option,tstrxn%surf_area_epsilon)
+              call InputErrorMsg(input,option,word,error_string)
+              call InputReadAndConvertUnits(input,tstrxn%surf_area_epsilon, &
+                         'm^2/m^3',trim(error_string)//','//trim(word),option)
             case('PREFACTOR')
               error_string = 'CHEMISTRY,MINERAL_KINETICS,PREFACTOR'
               prefactor => TransitionStatePrefactorCreate()
