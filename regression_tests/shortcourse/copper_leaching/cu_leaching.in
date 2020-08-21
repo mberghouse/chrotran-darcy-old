@@ -167,6 +167,7 @@ CHEMISTRY
       RATE_CONSTANT 1.d-14 mol/cm^2-sec
     /
   /
+  UPDATE_POROSITY
   DATABASE ../../../database/hanford.dat
   LOG_FORMULATION
 #  OPERATOR_SPLITTING
@@ -205,12 +206,20 @@ MATERIAL_PROPERTY oxide-ore
   PERMEABILITY
     PERM_ISO 1.5d-13
   /
-  CHARACTERISTIC_CURVES default
+  CHARACTERISTIC_CURVES sf1
 END
 
 #=========================== characteristic curves ============================
-CHARACTERISTIC_CURVES default
-  DEFAULT
+CHARACTERISTIC_CURVES sf1
+  SATURATION_FUNCTION VAN_GENUCHTEN
+    M 0.5d0
+    ALPHA  1.d-4
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+  /
+  PERMEABILITY_FUNCTION MUALEM_VG_LIQ
+    M 0.5d0
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+  /
 END
 
 #=========================== output options ===================================
