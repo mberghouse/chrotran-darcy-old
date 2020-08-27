@@ -1189,6 +1189,9 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
   PetscMPIInt :: mpi_int
   PetscBool :: flags(37)
   character(len=MAXSTRINGLENGTH) :: string
+  
+  PetscBool :: rho_flag
+  
   character(len=12), parameter :: state_string(3) = &
     ['Liquid State','Gas State   ','2Phase State']
   character(len=17), parameter :: dof_string(3,3) = &
@@ -1205,12 +1208,16 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
   grid => patch%grid
   global_auxvars => patch%aux%Global%auxvars
 
+  call SNESNewtonTRGetRhoFlag(snes,rho_flag,ierr);CHKERRQ(ierr);
+
   if (this%option%flow%using_newtontrd) then
     if (general_newtontrd_prev_iter_num == it) then
       general_sub_newton_iter_num = general_sub_newton_iter_num + 1
     endif
     general_newtontrd_prev_iter_num = it
   endif
+
+
 
   if (this%check_post_convergence) then
     call VecGetArrayReadF90(field%flow_r,r_p,ierr);CHKERRQ(ierr)
@@ -1337,6 +1344,24 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
         enddo
       enddo
     enddo
+    
+    if (option%flow%using_newtontrd .and. &
+        general_state_changed .and. &
+        .not.rho_flag) then
+        ! if we reach convergence in an inner newton iteration of TR
+        ! then we must force an outer iteration to allow state change
+        ! in case the solutions are out-of-bounds of the states -hdp
+!        general_force_iteration = PETSC_TRUE
+        ! if we have state changes, we exit out of inner iteration
+        ! and go to the next newton iteration
+        ! inner iteration should only be used when there is no state
+        ! changes 
+        ! if rho is satisfied in inner iteration, the algorithm already
+        ! exited the inner iteration. -heeho
+        option%convergence = CONVERGENCE_BREAKOUT_INNER_ITER
+        general_state_changed = PETSC_FALSE
+    endif
+
     if (this%logging_verbosity > 0 .and. it > 0 .and. &
         option%convergence == CONVERGENCE_CONVERGED) then
       string = '   Converged'
@@ -1367,14 +1392,6 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
       string = '    Exceeded General Mode EOS max temperature'
       call OptionPrint(string,option)
       option%convergence = CONVERGENCE_CUT_TIMESTEP
-    endif
-
-    if (option%flow%using_newtontrd .and. &
-        general_state_changed) then
-        ! if we reach convergence in an inner newton iteration of TR
-        ! then we must force an outer iteration to allow state change
-        ! in case the solutions are out-of-bounds of the states -hdp
-        general_force_iteration = PETSC_TRUE
     endif
 
 !    if (option%flow%using_newtontrd .and. &

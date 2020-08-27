@@ -140,6 +140,8 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
 !              SNES_CONVERGED_SNORM_RELATIVE    =  4, /* Newton computed step size small; || delta x || < stol || x ||*/
 !              SNES_CONVERGED_ITS               =  5, /* maximum iterations reached */
 !              SNES_CONVERGED_TR_DELTA          =  7,
+!              SNES_BREAKOUT_INNER_ITER         =  6, /* Flag to break out of inner loop after checking custom convergence. */
+!                                                     /* it is used in multi-phase flow when state changes */
 !              /* diverged */
 !              SNES_DIVERGED_FUNCTION_DOMAIN     = -1, /* the new x location passed the function is not in the domain of F */
 !              SNES_DIVERGED_FUNCTION_COUNT      = -2,
@@ -150,7 +152,9 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
 !              SNES_DIVERGED_INNER               = -7, /* inner solve failed */
 !              SNES_DIVERGED_LOCAL_MIN           = -8, /* || J^T b || is small, implies converged to local minimum of F() */
 !              SNES_DIVERGED_DTOL                = -9, /* || F || > divtol*||F_initial|| */
-!
+!              SNES_DIVERGED_JACOBIAN_DOMAIN     = -10, /* Jacobian calculation does not make sense */
+!              SNES_DIVERGED_TR_DELTA            = -11,
+!              SNES_CONVERGED_TR_DELTA_DEPRECATED = -11,
 !              SNES_CONVERGED_ITERATING          =  0} SNESConvergedReason;
 !PETSC_EXTERN const char *const*SNESConvergedReasons;
   sec_reason = 0
@@ -210,6 +214,8 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
         reason = 0
       case(CONVERGENCE_CONVERGED)
         reason = 999
+      case(CONVERGENCE_BREAKOUT_INNER_ITER)
+        reason = 6
     end select
   endif
   ! must turn off after each convergence check as a subsequent process
@@ -260,7 +266,12 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
     
     ! force the minimum number of iterations
     if (i_iteration < solver%newton_min_iterations .and. reason /= -88) then
-      reason = 0
+      if (reason == 6) then
+        reason = 6  ! reason = 6 will also force the next iteration for TR.
+      else
+        reason = 0
+      endif
+      
     endif
 
     if (option%print_screen_flag .and. solver%print_convergence) then
@@ -511,6 +522,8 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
           string = "SNES_CONVERGED_SNORM_RELATIVE"
         case(SNES_CONVERGED_ITS)
           string = "SNES_CONVERGED_ITS"
+        case(6)
+          string = "SNES_BREAKOUT_INNER_ITER"
 #if PETSC_VERSION_GE(3,11,99)
         case(SNES_DIVERGED_TR_DELTA)
           string = "SNES_DIVERGED_TR_DELTA"
