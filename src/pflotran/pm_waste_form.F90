@@ -5406,6 +5406,12 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
               if (InputCheckExit(input,option)) exit
               call InputReadCard(input,option,word,PETSC_FALSE)
               select case(trim(word))
+                case('CONSTANT_HEAT')
+                  call InputReadDouble(input,option,new_crit_mech%crit_heat)
+                  call InputErrorMsg(input,option,'HEAT_OF_CRITICALITY',&
+                    error_string)
+                  call InputReadAndConvertUnits(input,new_crit_mech%crit_heat, &
+                    'MW',trim(error_string)//',HEAT_OF_CRITICALITY',option)
                 case('DATASET')
                   internal_units = 'kW'
                   call InputReadFilename(input,option,new_crit_mech% &
