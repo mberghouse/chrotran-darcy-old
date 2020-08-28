@@ -5659,14 +5659,18 @@ subroutine CriticalitySolve(this,realization,time,scaling_factor,ierr)
   PetscReal, pointer :: scaling_factor(:)
   PetscErrorCode :: ierr
 
-  PetscInt :: i,j
+  PetscInt :: i,j,k
   type(criticality_type), pointer :: cur_criticality
   PetscReal, pointer :: heat_source(:)
+  class(dataset_ascii_type), pointer :: dataset
+  PetscReal, pointer :: templist(:)
+  PetscReal :: tref, t_low, t_high
 
   call VecGetArrayF90(this%data_mediator%vec,heat_source, &
                       ierr);CHKERRQ(ierr)
 
   cur_criticality => this%criticality_list
+  dataset => cur_criticality%crit_mech%neutronics_dataset
   j = 0
   do
     if (.not. associated(cur_criticality)) exit
@@ -5679,7 +5683,37 @@ subroutine CriticalitySolve(this,realization,time,scaling_factor,ierr)
     endif
 
     call CriticalityCalc(cur_criticality%crit_mech,time,ierr)
-
+    
+    ! Unless constant power level is defined, 
+    ! find criticality power level from temperature
+    if (cur_criticality%crit_mech%crit_heat == 0.0d0) then
+      tref = cur_criticality%crit_mech%temperature
+      if (associated(dataset%time_storage)) then
+        templist => dataset%time_storage%times
+        k=1
+        t_low = templist(k)
+        t_high = t_low
+        do
+          if(tref < templist(k)) exit
+          if(j == size(templist)) exit
+          t_low = templist(k)
+          k = k+1
+          t_high = templist(k)
+        enddo
+        if (k == size(templist) .and. tref >= templist(k)) then
+          cur_criticality%crit_mech%crit_heat = dataset%rbuffer(k)
+        elseif (k==1) then
+          cur_criticality%crit_mech%crit_heat = 0.d0
+        else
+          cur_criticality%crit_mech%crit_heat = dataset%rbuffer(k-1) + &
+            (tref-t_low)/(t_high-t_low)* &
+            (dataset%rbuffer(k)-dataset%rbuffer(k-1))
+        endif
+      else
+        cur_criticality%crit_mech%crit_heat = 0.d0
+      endif
+    end if
+    
     do i = 1, cur_criticality%region%num_cells
       j = j + 1
       heat_source(j) = cur_criticality%crit_mech%decay_heat
