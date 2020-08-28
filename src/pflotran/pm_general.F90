@@ -1351,15 +1351,21 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
         ! if we reach convergence in an inner newton iteration of TR
         ! then we must force an outer iteration to allow state change
         ! in case the solutions are out-of-bounds of the states -hdp
-!        general_force_iteration = PETSC_TRUE
+        general_force_iteration = PETSC_TRUE
         ! if we have state changes, we exit out of inner iteration
         ! and go to the next newton iteration
         ! inner iteration should only be used when there is no state
         ! changes 
         ! if rho is satisfied in inner iteration, the algorithm already
         ! exited the inner iteration. -heeho
-        option%convergence = CONVERGENCE_BREAKOUT_INNER_ITER
         general_state_changed = PETSC_FALSE
+    endif
+
+    call MPI_Allreduce(MPI_IN_PLACE,general_force_iteration,ONE_INTEGER, &
+                       MPI_LOGICAL,MPI_LOR,option%mycomm,ierr)
+    if (general_force_iteration) then
+      option%convergence = CONVERGENCE_BREAKOUT_INNER_ITER
+      general_force_iteration = PETSC_FALSE
     endif
 
     if (this%logging_verbosity > 0 .and. it > 0 .and. &
@@ -1404,9 +1410,6 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
 !        option%convergence = CONVERGENCE_CUT_TIMESTEP
 !    endif
  
-    call MPI_Allreduce(MPI_IN_PLACE,general_force_iteration,ONE_INTEGER, &
-                       MPI_LOGICAL,MPI_LOR,option%mycomm,ierr)
-    option%force_newton_iteration = general_force_iteration
     if (general_sub_newton_iter_num > 20) then
       ! cut time step in case PETSC solvers are missing inner iterations
       option%convergence = CONVERGENCE_CUT_TIMESTEP
