@@ -439,6 +439,7 @@ module PM_Waste_Form_class
   type, public :: criticality_mechanism_type
     character(len=MAXWORDLENGTH) :: mech_name
     character(len=MAXSTRINGLENGTH) :: rad_dataset_name
+    character(len=MAXSTRINGLENGTH) :: neutronics_dataset_name
     character(len=MAXSTRINGLENGTH) :: heat_dataset_name
     PetscReal :: decay_heat
     PetscReal :: crit_heat
@@ -448,6 +449,7 @@ module PM_Waste_Form_class
     PetscReal :: k_effective
     PetscInt :: heat_source_cond
     class(dataset_ascii_type), pointer :: rad_dataset
+    class(dataset_ascii_type), pointer :: neutronics_dataset
     class(dataset_ascii_type), pointer :: heat_dataset
     type(criticality_mechanism_type), pointer :: next
   end type criticality_mechanism_type
@@ -5263,6 +5265,7 @@ subroutine CriticalityMechInit(this)
   this%k_effective = 0.d0
 
   this%rad_dataset => DatasetAsciiCreate()
+  this%neutronics_dataset => DatasetAsciiCreate()
   this%heat_dataset => DatasetAsciiCreate()
 
 end subroutine CriticalityMechInit
@@ -5394,8 +5397,27 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
             call StringToUpper(word)
             new_crit_mech%mech_name = trim(word)
           case('HEAT_OF_CRITICALITY')
-            call InputReadDouble(input,option,new_crit_mech%crit_heat)
-            call InputErrorMsg(input,option,'HEAT_OF_CRITICALITY',error_string)
+            ! call InputReadDouble(input,option,new_crit_mech%crit_heat)
+            ! call InputErrorMsg(input,option,'HEAT_OF_CRITICALITY',error_string)
+            call InputPushBlock(input,option)
+            do
+              call InputReadPflotranString(input,option)
+              if (InputError(input)) exit
+              if (InputCheckExit(input,option)) exit
+              call InputReadCard(input,option,word,PETSC_FALSE)
+              select case(trim(word))
+                case('DATASET')
+                  internal_units = 'kW'
+                  call InputReadFilename(input,option,new_crit_mech% &
+                          neutronics_dataset_name)
+                  call DatasetAsciiReadFile(new_crit_mech%neutronics_dataset, &
+                          new_crit_mech%neutronics_dataset_name,temp_string, &
+                          internal_units,error_string,option)
+                  new_crit_mech%neutronics_dataset%time_storage% &
+                          time_interpolation_method = 2
+              end select
+            enddo
+            call InputPopBlock(input,option)
           case('DECAY_HEAT')
             call InputReadCard(input,option,word)
             select case (trim(word))

@@ -158,7 +158,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
   character(len=*) :: error_string
   type(option_type) :: option
 
-  character(len=MAXWORDLENGTH) :: time_units
+  character(len=MAXWORDLENGTH) :: time_units, temperature_units
   character(len=MAXSTRINGLENGTH) :: string, data_units
   character(len=MAXSTRINGLENGTH), pointer :: internal_data_units_strings(:) 
   character(len=MAXWORDLENGTH) :: word, internal_units
@@ -173,6 +173,7 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
   PetscErrorCode :: ierr
   
   time_units = ''
+  temperature_units = ''
   data_units = ''
   is_cyclic = PETSC_FALSE
   max_size = 1000
@@ -210,6 +211,11 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
           call InputReadWord(string,time_units,PETSC_TRUE,ierr)
           input%ierr = ierr
           call InputErrorMsg(input,option,'TIME_UNITS',error_string)
+          cycle
+        case('TEMP_UNITS')
+          call InputReadWord(string,temperature_units,PETSC_TRUE,ierr)
+          input%ierr = ierr
+          call InputErrorMsg(input,option,'TEMP_UNITS',error_string)
           cycle
         case('INTERPOLATION')
           call InputReadWord(string,word,PETSC_TRUE,ierr)
@@ -296,6 +302,13 @@ subroutine DatasetAsciiReadList(this,input,data_external_units, &
     this%time_storage%times(:) = conversion * &
                                  this%time_storage%times(:)
   endif
+  ! temperature units conversion
+  if (len_trim(temperature_units) > 0) then
+    internal_units = 'C'
+    conversion = UnitsConvertToInternal(temperature_units,internal_units,option)
+    this%time_storage%times(:) = conversion * &
+                                 this%time_storage%times(:)
+  endif  
   ! data units conversion
   data_external_units = trim(data_units)
   if (len_trim(data_units) > 0) then
