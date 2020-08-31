@@ -3478,7 +3478,7 @@ subroutine PMWFSolve(this,time,ierr)
     !
     if (associated(this%criticality_mediator)) then
       call CriticalitySolve(this%criticality_mediator,this%realization,time, &
-                            cur_waste_form%scaling_factor,ierr)
+                            cur_waste_form,ierr)
     endif
     cur_waste_form => cur_waste_form%next
   enddo
@@ -5644,31 +5644,51 @@ end subroutine AssignCritMech
 
 ! ************************************************************************** !
 
-subroutine CriticalitySolve(this,realization,time,scaling_factor,ierr)
+subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   !
   !Author: Michael Nole
   !Date: 11/05/18
   !
+  !Modifications for neutronics surrogate model
+  !Author: Alex Salazar
+  !Date: 08/27/2020
+  !
   use Realization_Subsurface_class
+  use Global_Aux_module
+  use Grid_module 
 
   implicit none
 
   type(criticality_mediator_type), pointer :: this
   class(realization_subsurface_type), pointer :: realization
   PetscReal :: time
-  PetscReal, pointer :: scaling_factor(:)
+  class(waste_form_base_type), pointer :: waste_form
   PetscErrorCode :: ierr
 
-  PetscInt :: i,j,k
+  PetscInt :: i,j,k, ghosted_id
   type(criticality_type), pointer :: cur_criticality
-  PetscReal, pointer :: heat_source(:)
+  type(grid_type), pointer :: grid
+  type(global_auxvar_type), pointer :: global_auxvars(:)
   class(dataset_ascii_type), pointer :: dataset
+  PetscReal, pointer :: scaling_factor(:)
+  PetscReal, pointer :: heat_source(:)
   PetscReal, pointer :: templist(:)
-  PetscReal :: tref, t_low, t_high
+  PetscReal :: tref, t_low, t_high, avg_temp_local
 
   call VecGetArrayF90(this%data_mediator%vec,heat_source, &
                       ierr);CHKERRQ(ierr)
 
+  ! Get temperature of waste form
+  grid => realization%patch%grid
+  global_auxvars => realization%patch%aux%Global%auxvars
+  avg_temp_local = 0.d0
+  scaling_factor => waste_form%scaling_factor
+  do i = 1,waste_form%region%num_cells
+    ghosted_id = grid%nL2G(waste_form%region%cell_ids(i))
+    avg_temp_local = avg_temp_local + &  ! Celcius
+               (global_auxvars(ghosted_id)%temp * scaling_factor(i))
+  enddo
+  
   cur_criticality => this%criticality_list
   dataset => cur_criticality%crit_mech%neutronics_dataset
   j = 0
@@ -5687,7 +5707,7 @@ subroutine CriticalitySolve(this,realization,time,scaling_factor,ierr)
     ! Unless constant power level is defined, 
     ! find criticality power level from temperature
     if (cur_criticality%crit_mech%crit_heat == 0.0d0) then
-      tref = cur_criticality%crit_mech%temperature
+      tref = avg_temp_local
       if (associated(dataset%time_storage)) then
         templist => dataset%time_storage%times
         k=1
@@ -5719,6 +5739,7 @@ subroutine CriticalitySolve(this,realization,time,scaling_factor,ierr)
       heat_source(j) = cur_criticality%crit_mech%decay_heat
 
       if (cur_criticality%crit_event%crit_flag) then
+        cur_criticality%crit_mech%temperature = tref
         heat_source(j) = heat_source(j) + cur_criticality%crit_mech%crit_heat
       endif
 
