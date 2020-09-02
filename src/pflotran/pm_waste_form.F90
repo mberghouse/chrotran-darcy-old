@@ -5653,8 +5653,9 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   !
   use Realization_Subsurface_class
   use Global_Aux_module
-  use Grid_module 
-
+  use Grid_module
+  use Utility_module
+  
   implicit none
 
   type(criticality_mediator_type), pointer :: this
@@ -5671,7 +5672,8 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   PetscReal, pointer :: scaling_factor(:)
   PetscReal, pointer :: heat_source(:)
   PetscReal, pointer :: templist(:)
-  PetscReal :: tref, t_low, t_high, avg_temp_local
+  PetscReal :: tref, t_low, t_high, avg_temp_local, avg_temp_global
+  PetscReal :: avg_sat_local, avg_sat_global
 
   call VecGetArrayF90(this%data_mediator%vec,heat_source, &
                       ierr);CHKERRQ(ierr)
@@ -5679,13 +5681,21 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   ! Get temperature of waste form
   grid => realization%patch%grid
   global_auxvars => realization%patch%aux%Global%auxvars
-  avg_temp_local = 0.d0
   scaling_factor => waste_form%scaling_factor
+  avg_temp_local = 0.d0
+  avg_sat_local  = 0.d0
+  tref = 0.d0
   do i = 1,waste_form%region%num_cells
     ghosted_id = grid%nL2G(waste_form%region%cell_ids(i))
     avg_temp_local = avg_temp_local + &  ! Celcius
-               (global_auxvars(ghosted_id)%temp * scaling_factor(i))
+      (global_auxvars(ghosted_id)%temp * scaling_factor(i))
+    avg_sat_local  = avg_sat_local  + &  ! Liquid Saturation
+      (global_auxvars(ghosted_id)%sat(LIQUID_PHASE) * scaling_factor(i))
   enddo
+  call CalcParallelSUM(realization%option,waste_form%rank_list,avg_temp_local, &
+                       avg_temp_global)
+  call CalcParallelSUM(realization%option,waste_form%rank_list,avg_sat_local, &
+                        avg_sat_global)
   
   cur_criticality => this%criticality_list
   dataset => cur_criticality%crit_mech%neutronics_dataset
@@ -5737,8 +5747,9 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
       heat_source(j) = cur_criticality%crit_mech%decay_heat
 
       if (cur_criticality%crit_event%crit_flag) then
-        cur_criticality%crit_mech%temperature = tref
-        heat_source(j) = heat_source(j) + cur_criticality%crit_mech%crit_heat
+        cur_criticality%crit_mech%temperature = avg_temp_local
+        heat_source(j) = heat_source(j) + cur_criticality%crit_mech%crit_heat *&
+                         avg_sat_local
       endif
 
       ! Distribute heat source throughout all cells in a waste package
