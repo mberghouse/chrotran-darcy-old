@@ -1729,7 +1729,7 @@ subroutine WriteHDF5CoordinatesXDMFGeomech(geomech_realization, &
     do j=1,8
       if (vec_ptr((i-1)*8+j)>0) then
         vert_count=vert_count+1
-        int_array(vert_count) = INT(vec_ptr((i-1)*8+j))-1
+        int_array(vert_count) = int(vec_ptr((i-1)*8+j))-1
       endif
     enddo
   enddo

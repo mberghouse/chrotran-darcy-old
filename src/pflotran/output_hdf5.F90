@@ -1726,14 +1726,14 @@ subroutine WriteHDF5CoordinatesUGrid(grid,option,file_id)
   
   do i=1,local_size
     int_array((i-1)*9 + 1) = 0
-    int_array((i-1)*9 + 2) = INT(vec_ptr((i-1)*8+1))
-    int_array((i-1)*9 + 3) = INT(vec_ptr((i-1)*8+2))
-    int_array((i-1)*9 + 4) = INT(vec_ptr((i-1)*8+3))
-    int_array((i-1)*9 + 5) = INT(vec_ptr((i-1)*8+4))
-    int_array((i-1)*9 + 6) = INT(vec_ptr((i-1)*8+5))
-    int_array((i-1)*9 + 7) = INT(vec_ptr((i-1)*8+6))
-    int_array((i-1)*9 + 8) = INT(vec_ptr((i-1)*8+7))
-    int_array((i-1)*9 + 9) = INT(vec_ptr((i-1)*8+8))
+    int_array((i-1)*9 + 2) = int(vec_ptr((i-1)*8+1))
+    int_array((i-1)*9 + 3) = int(vec_ptr((i-1)*8+2))
+    int_array((i-1)*9 + 4) = int(vec_ptr((i-1)*8+3))
+    int_array((i-1)*9 + 5) = int(vec_ptr((i-1)*8+4))
+    int_array((i-1)*9 + 6) = int(vec_ptr((i-1)*8+5))
+    int_array((i-1)*9 + 7) = int(vec_ptr((i-1)*8+6))
+    int_array((i-1)*9 + 8) = int(vec_ptr((i-1)*8+7))
+    int_array((i-1)*9 + 9) = int(vec_ptr((i-1)*8+8))
     do j=2,9
       if (int_array((i-1)*9 + j)>0) int_array((i-1)*9 + 1)= int_array((i-1)*9 + 1) +1
     enddo
@@ -2021,7 +2021,7 @@ subroutine WriteHDF5CoordinatesUGridXDMF(realization_base,option,file_id)
     do j=1,8
       if (vec_ptr((i-1)*8+j)>0) then
         vert_count=vert_count+1
-        int_array(vert_count) = INT(vec_ptr((i-1)*8+j))-1
+        int_array(vert_count) = int(vec_ptr((i-1)*8+j))-1
       endif
     enddo
   enddo
@@ -2578,7 +2578,7 @@ subroutine WriteHDF5CoordinatesUGridXDMFExplicit(realization_base,option, &
     do j=1,8
       if (vec_ptr((i-1)*8+j)>0) then
         vert_count=vert_count+1
-        int_array(vert_count) = INT(vec_ptr((i-1)*8+j))-1
+        int_array(vert_count) = int(vec_ptr((i-1)*8+j))-1
       endif
     enddo
   enddo
