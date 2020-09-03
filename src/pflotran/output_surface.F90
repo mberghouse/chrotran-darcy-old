@@ -1218,7 +1218,7 @@ subroutine WriteHDF5CoordinatesUGridXDMFSurf(surf_realization,realization, &
     do j=1,FOUR_INTEGER
       if (vec_ptr((i-1)*FOUR_INTEGER+j)>0) then
         vert_count=vert_count+1
-        int_array(vert_count) = INT(vec_ptr((i-1)*FOUR_INTEGER+j))-1
+        int_array(vert_count) = int(vec_ptr((i-1)*FOUR_INTEGER+j))-1
       endif
     enddo
   enddo

@@ -262,8 +262,8 @@ subroutine RichardsSetupPatch(realization)
                                                              ghosted_id)
             maxz = maxz + grid%unstructured_grid%vertices(vertex_id)%z
           enddo
-          minz = minz/(DBLE(nvert))
-          maxz = maxz/(DBLE(nvert))
+          minz = minz/(dble(nvert))
+          maxz = maxz/(dble(nvert))
           patch%aux%InlineSurface%auxvars(region_id)%half_cell_height = &
             abs(0.5d0*(maxz-minz))
         end if
