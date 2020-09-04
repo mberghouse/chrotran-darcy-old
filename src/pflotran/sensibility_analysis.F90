@@ -2,7 +2,13 @@ module Sensibility_Analysis_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
+#include "petsc/finclude/petscsnes.h"
+  use petscsnes
   use Richards_Common_module
+  use Richards_Aux_module
+  use Global_Aux_module
+  use PFLOTRAN_Constants_module
+  use Material_Aux_class
   
   implicit none
 
@@ -11,22 +17,24 @@ module Sensibility_Analysis_module
   PetscInt, parameter :: PERMEABILITY = 1
   PetscInt, parameter :: POROSITY = 2
   
-
   ! Cutoff parameters
   PetscReal, parameter :: eps       = 1.D-8
   PetscReal, parameter :: floweps   = 1.D-24
   PetscReal, parameter :: perturbation_tolerance = 1.d-6
 
-
   public :: RichardsPermeabilitySensibility, &
             RichardsPorositySensibility
-
 
 contains
 
 ! ************************************************************************** !
 
 subroutine RichardsPermeabilitySensibility(realization,ierr)
+
+  use Realization_Subsurface_class
+  
+  type(realization_subsurface_type) :: realization
+  PetscErrorCode :: ierr
   
   call RichardsSensibility(realization,PERMEABILITY,ierr)
 
@@ -35,6 +43,12 @@ end subroutine
 ! ************************************************************************** !
 
 subroutine RichardsPorositySensibility(realization,ierr)
+
+  use Realization_Subsurface_class
+  
+  Mat :: J
+  type(realization_subsurface_type) :: realization
+  PetscErrorCode :: ierr
   
   call RichardsSensibility(realization,POROSITY,ierr)
 
@@ -60,7 +74,7 @@ subroutine RichardsSensibility(realization,ivar,ierr)
   use Option_module
   use Logging_module
   use Debug_module
-  use Sensibility_analysis_module
+  use Discretization_module
 
   implicit none
 
@@ -69,23 +83,38 @@ subroutine RichardsSensibility(realization,ivar,ierr)
   PetscErrorCode :: ierr
   
   Mat :: J
+  MatType :: J_mat_type
   PetscViewer :: viewer
   type(option_type), pointer :: option
   character(len=MAXSTRINGLENGTH) :: string
   
+  call PetscLogEventBegin(logging%event_r_jacobian,ierr);CHKERRQ(ierr)
+  
+  option => realization%option
+  
+  !prepare J matrix
+  J_mat_type = MATBAIJ
+  call DiscretizationCreateJacobian(realization%discretization, &
+                                    NFLOWDOF, J_mat_type, J, option)
+
+  call MatSetOptionsPrefix(J,"sensibility_",ierr);CHKERRQ(ierr)
+  
   call MatZeroEntries(J,ierr);CHKERRQ(ierr)
 
-  call RichardsSensibilityInternalConn(J,realization,ivar,ierr)
-  call RichardsSensibilityBoundaryConn(J,realization,ivar,ierr)
-  call RichardsSensibilitySourceSink(J,realization,ivar,ierr)
+  !call RichardsSensibilityInternalConn(J,realization,ivar,ierr)
+  !call RichardsSensibilityBoundaryConn(J,realization,ivar,ierr)
+  !call RichardsSensibilitySourceSink(J,realization,ivar,ierr)
   !update here when porosity ok
   !call RichardsSensibilityAccumulation(J,realization,ivar,ierr)
-  
+
   select case(ivar)
     case(PERMEABILITY)
       call DebugWriteFilename(realization%debug,string,'K_sensibility','', &
                               richards_ts_count,richards_ts_cut_count, &
                               richards_ni_count)
+      call DebugCreateViewer(realization%debug,string,option,viewer)
+      call MatView(J,viewer,ierr);CHKERRQ(ierr)
+      call DebugViewerDestroy(realization%debug,viewer)
     case(POROSITY)
       call DebugWriteFilename(realization%debug,string, &
                               'Porosity_sensibility', '', &
@@ -95,9 +124,8 @@ subroutine RichardsSensibility(realization,ivar,ierr)
       call PrintErrMsg(option, "Wrong value of ivar in RichardsSensibility")
   end select
   
-  call DebugCreateViewer(realization%debug,string,option,viewer)
-  call MatView(J,viewer,ierr);CHKERRQ(ierr)
-  call DebugViewerDestroy(realization%debug,viewer)
+  !destroy J
+  call MatDestroy(J,ierr);CHKERRQ(ierr)
     
 end subroutine
 
@@ -116,11 +144,11 @@ subroutine RichardsSensibilityInternalConn(A,realization,ivar,ierr)
   use Option_module
   use Patch_module
   use Grid_module
-  use Coupler_module
+  !use Coupler_module
   !use Field_module
   !use Debug_module
   use Material_Aux_class
-  use Region_module
+  !use Region_module
   
   implicit none
 
@@ -132,13 +160,14 @@ subroutine RichardsSensibilityInternalConn(A,realization,ivar,ierr)
   PetscInt :: icc_up,icc_dn
   PetscInt :: local_id_up, local_id_dn
   PetscInt :: ghosted_id_up, ghosted_id_dn
-  PetscInt :: region_id_up, region_id_dn
+  !PetscInt :: region_id_up, region_id_dn
   PetscInt :: istart_up, istart_dn, istart
 
   PetscReal :: Jup(realization%option%nflowdof,realization%option%nflowdof), &
                Jdn(realization%option%nflowdof,realization%option%nflowdof)
+  PetscReal :: unit_z(3) = [0.d0,0.d0,1.d0]
 
-  type(coupler_type), pointer :: boundary_condition, source_sink
+!  type(coupler_type), pointer :: boundary_condition, source_sink
   type(connection_set_list_type), pointer :: connection_set_list
   type(connection_set_type), pointer :: cur_connection_set
   PetscInt :: iconn
@@ -147,7 +176,7 @@ subroutine RichardsSensibilityInternalConn(A,realization,ivar,ierr)
   type(patch_type), pointer :: patch
   type(option_type), pointer :: option
   !type(field_type), pointer :: field
-  type(region_type), pointer :: region
+  !type(region_type), pointer :: region
   !type(material_parameter_type), pointer :: material_parameter
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -266,7 +295,7 @@ subroutine RichardsSensibilityInternalConn(A,realization,ivar,ierr)
     cur_connection_set => cur_connection_set%next
   enddo
 
-end subroutine RichardsJacobianInternalConn
+end subroutine RichardsSensibilityInternalConn
 
 ! ************************************************************************** !
 
@@ -337,7 +366,7 @@ subroutine RichardsFluxSensibility(rich_auxvar_up,global_auxvar_up, &
   select case (ivar)
     case (PERMEABILITY)
       ! TODO
-#if 0    
+   
 !    pert_up = x_up(ideriv)*perturbation_tolerance
   pert_up = max(dabs(x_up(ideriv)*perturbation_tolerance),0.1d0)
   if (x_up(ideriv) < option%reference_pressure) pert_up = -1.d0*pert_up
@@ -348,7 +377,7 @@ subroutine RichardsFluxSensibility(rich_auxvar_up,global_auxvar_up, &
   x_pert_dn = x_dn
   x_pert_up(ideriv) = x_pert_up(ideriv) + pert_up
   x_pert_dn(ideriv) = x_pert_dn(ideriv) + pert_dn
-#endif
+
     case (POROSITY)
     
     case default
@@ -416,7 +445,7 @@ subroutine RichardsSensibilityBoundaryConn(A,realization,ivar,ierr)
 
   Mat, intent(inout) :: A
   type(realization_subsurface_type) :: realization
-  PetscInt !! ivar
+  PetscInt :: ivar
   PetscErrorCode :: ierr
 
   PetscInt :: icc_up,icc_dn
@@ -481,7 +510,7 @@ subroutine RichardsSensibilityBoundaryConn(A,realization,ivar,ierr)
 
       icc_dn = patch%cc_id(ghosted_id) 
 
-      call RichardsBCFluxSensitivity(boundary_condition%flow_condition%itype, &
+      call RichardsBCFluxSensibility(boundary_condition%flow_condition%itype, &
                      boundary_condition%flow_aux_real_var(:,iconn), &
                      rich_auxvars_bc(sum_connection), &
                      global_auxvars_bc(sum_connection), &
@@ -533,7 +562,6 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
   ! 
   use Option_module
   use Characteristic_Curves_module
-  use Material_Aux_class
   use EOS_Water_module
   use Utility_module
  
@@ -604,7 +632,7 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
     case default
     
   end select
-#if 0  
+
   if (pressure_bc_type == ZERO_GRADIENT_BC) then
     x_pert_up = x_up
   endif
@@ -618,7 +646,7 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
   if (ibndtype(ideriv) == ZERO_GRADIENT_BC) then
     x_pert_up(ideriv) = x_pert_dn(ideriv)
   endif
-#endif   
+  
   
   call RichardsAuxVarCompute(x_pert_dn(1),rich_auxvar_pert_dn, &
                              global_auxvar_pert_dn, &
@@ -794,8 +822,8 @@ subroutine RichardsSensibilitySourceSink(A,realization,ivar,ierr)
     source_sink => source_sink%next
   enddo
 
-  call RichardsSSSandbox(null_vec,A,PETSC_TRUE,grid,material_auxvars, &
-                         global_auxvars,rich_auxvars,option)
+  !call RichardsSSSandbox(null_vec,A,PETSC_TRUE,grid,material_auxvars, &
+  !                       global_auxvars,rich_auxvars,option)
 
   if (realization%debug%matview_Jacobian_detailed) then
     call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
@@ -881,7 +909,7 @@ subroutine RichardsSensibilityAccumulation(A,realization,ivar,ierr)
   type(richards_auxvar_type), pointer :: rich_auxvars(:)
   type(global_auxvar_type), pointer :: global_auxvars(:)
   class(material_auxvar_type), pointer :: material_auxvars(:)
-  type(inlinesurface_auxvar_type), pointer :: inlinesurface_auxvars(:)
+  !type(inlinesurface_auxvar_type), pointer :: inlinesurface_auxvars(:)
   PetscViewer :: viewer
   character(len=MAXSTRINGLENGTH) :: string
 
@@ -1045,7 +1073,7 @@ subroutine RichardsAccumSensibility(rich_auxvar,global_auxvar, &
     call MaterialAuxVarStrip(material_auxvar_pert)  
   endif
    
-end subroutine RichardsAccumDerivative
+end subroutine RichardsAccumSensibility
 
 ! ************************************************************************** !
     
