@@ -20,12 +20,18 @@ module Sensibility_Analysis_module
   ! Cutoff parameters
   PetscReal, parameter :: eps       = 1.D-8
   PetscReal, parameter :: floweps   = 1.D-24
-  PetscReal, parameter :: perturbation_tolerance = 1.d-6
+  PetscReal, parameter :: perturbation_tolerance = 1.d-3
 
   public :: RichardsPermeabilitySensibility, &
             RichardsPorositySensibility
 
 contains
+
+! ************************************************************************** !
+
+subroutine SensibilityAnalysisCreate()
+
+end subroutine SensibilityAnalysisCreate
 
 ! ************************************************************************** !
 
@@ -95,17 +101,21 @@ subroutine RichardsSensibility(realization,ivar,ierr)
   !prepare J matrix
   J_mat_type = MATBAIJ
   call DiscretizationCreateJacobian(realization%discretization, &
-                                    NFLOWDOF, J_mat_type, J, option)
+                                    realization%option%nflowdof, &
+                                    J_mat_type, J, option)
 
   call MatSetOptionsPrefix(J,"sensibility_",ierr);CHKERRQ(ierr)
   
   call MatZeroEntries(J,ierr);CHKERRQ(ierr)
 
-  !call RichardsSensibilityInternalConn(J,realization,ivar,ierr)
-  !call RichardsSensibilityBoundaryConn(J,realization,ivar,ierr)
+  call RichardsSensibilityInternalConn(J,realization,ivar,ierr)
+  call RichardsSensibilityBoundaryConn(J,realization,ivar,ierr)
   !call RichardsSensibilitySourceSink(J,realization,ivar,ierr)
   !update here when porosity ok
   !call RichardsSensibilityAccumulation(J,realization,ivar,ierr)
+  
+  call MatAssemblyBegin(J,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
+  call MatAssemblyEnd(J,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
 
   select case(ivar)
     case(PERMEABILITY)
@@ -339,8 +349,12 @@ subroutine RichardsFluxSensibility(rich_auxvar_up,global_auxvar_up, &
   type(global_auxvar_type) :: global_auxvar_pert_up, global_auxvar_pert_dn
   ! leave as type
   type(material_auxvar_type) :: material_auxvar_pert_up, material_auxvar_pert_dn
-  PetscReal :: x_up(1), x_dn(1), x_pert_up(1), x_pert_dn(1), pert_up, pert_dn, &
-            res(1), res_pert_up(1), res_pert_dn(1), J_pert_up(1,1), J_pert_dn(1,1)
+  !PetscReal :: x_up(1), x_dn(1), x_pert_up(1), x_pert_dn(1), pert_up, pert_dn, &
+  !          res(1), res_pert_up(1), res_pert_dn(1), J_pert_up(1,1), J_pert_dn(1,1)
+  PetscReal :: pres_up(1), pres_dn(1), res(1), res_pert_up(1), res_pert_dn(1), &
+               J_pert_up(1,1), J_pert_dn(1,1), x_up, x_dn, pert_up, pert_dn
+               
+  PetscInt :: iperm
   
   v_darcy = 0.D0  
 
@@ -354,43 +368,42 @@ subroutine RichardsFluxSensibility(rich_auxvar_up,global_auxvar_up, &
   call GlobalAuxVarCopy(global_auxvar_dn,global_auxvar_pert_dn,option)
   call MaterialAuxVarCopy(material_auxvar_up,material_auxvar_pert_up,option)
   call MaterialAuxVarCopy(material_auxvar_dn,material_auxvar_pert_dn,option)
-  x_up(1) = global_auxvar_up%pres(1)
-  x_dn(1) = global_auxvar_dn%pres(1)
+  pres_up(1) = global_auxvar_up%pres(1)
+  pres_dn(1) = global_auxvar_dn%pres(1)
   call RichardsFlux(rich_auxvar_up,global_auxvar_up,material_auxvar_up, &
                     rich_auxvar_dn,global_auxvar_dn,material_auxvar_dn, &
                     area, dist, &
                     option,v_darcy,res)
   ideriv = 1
   
-  
+  !modify ivar
   select case (ivar)
     case (PERMEABILITY)
-      ! TODO
-   
-!    pert_up = x_up(ideriv)*perturbation_tolerance
-  pert_up = max(dabs(x_up(ideriv)*perturbation_tolerance),0.1d0)
-  if (x_up(ideriv) < option%reference_pressure) pert_up = -1.d0*pert_up
-!    pert_dn = x_dn(ideriv)*perturbation_tolerance
-  pert_dn = max(dabs(x_dn(ideriv)*perturbation_tolerance),0.1d0)
-  if (x_dn(ideriv) < option%reference_pressure) pert_dn = -1.d0*pert_dn
-  x_pert_up = x_up
-  x_pert_dn = x_dn
-  x_pert_up(ideriv) = x_pert_up(ideriv) + pert_up
-  x_pert_dn(ideriv) = x_pert_dn(ideriv) + pert_dn
-
+      call PerturbatePermeability(material_auxvar_up, &
+                                  material_auxvar_pert_up, &
+                                  pert_up, option)
+      call PerturbatePermeability(material_auxvar_dn, &
+                                  material_auxvar_pert_dn, &
+                                  pert_dn, option)
     case (POROSITY)
-    
+      ! TODO: add check for porosity update
+      x_up = material_auxvar_up%porosity
+      pert_up = perturbation_tolerance*x_up
+      material_auxvar_pert_up%porosity = x_up + pert_up
+      x_dn = material_auxvar_dn%porosity
+      pert_dn = perturbation_tolerance*x_dn
+      material_auxvar_pert_dn%porosity = x_dn + pert_dn
     case default
-      
+      ! TODO
   end select
   
-  call RichardsAuxVarCompute(x_pert_up(1),rich_auxvar_pert_up, &
+  call RichardsAuxVarCompute(pres_up(1),rich_auxvar_pert_up, &
                              global_auxvar_pert_up, &
                              material_auxvar_pert_up, &
                              characteristic_curves_up, &
                              -999, &
                              PETSC_TRUE,option)
-  call RichardsAuxVarCompute(x_pert_dn(1),rich_auxvar_pert_dn, &
+  call RichardsAuxVarCompute(pres_dn(1),rich_auxvar_pert_dn, &
                              global_auxvar_pert_dn, &
                              material_auxvar_pert_dn, &
                              characteristic_curves_dn, &
@@ -592,8 +605,8 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
   class(material_auxvar_type), allocatable :: material_auxvar_pert_dn, &
                                               material_auxvar_pert_up
   PetscReal :: perturbation
-  PetscReal :: x_dn(1), x_up(1), x_pert_dn(1), x_pert_up(1), pert_dn, res(1), &
-            res_pert_dn(1), J_pert_dn(1,1)
+  PetscReal :: pres_dn(1), pres_up(1), x_pert_dn(1), x_pert_up(1), pert_dn, &
+               res(1), res_pert_dn(1), J_pert_dn(1,1), x_dn
   PetscErrorCode :: ierr
 
   v_darcy = 0.d0
@@ -612,11 +625,12 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
                           option)
   call MaterialAuxVarCopy(material_auxvar_dn,material_auxvar_pert_dn, &
                           option)
-  x_up(1) = global_auxvar_up%pres(1)
-  x_dn(1) = global_auxvar_dn%pres(1)
+  
+  pres_up(1) = global_auxvar_up%pres(1)
+  pres_dn(1) = global_auxvar_dn%pres(1)
   ideriv = 1
   if (ibndtype(ideriv) == ZERO_GRADIENT_BC) then
-    x_up(ideriv) = x_dn(ideriv)
+    pres_up(ideriv) = pres_dn(ideriv)
   endif
   call RichardsBCFlux(ibndtype,auxvars, &
                       rich_auxvar_up,global_auxvar_up, &
@@ -624,37 +638,26 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
                       material_auxvar_dn, &
                       area,dist,option,v_darcy,res)
   
+  ideriv = 1
+  
   select case(ivar)
     case (PERMEABILITY)
-      ! TODO
+      call PerturbatePermeability(material_auxvar_dn, & 
+                                  material_auxvar_pert_dn, &
+                                  pert_dn, option)
     case (POROSITY)
     
     case default
     
   end select
-
-  if (pressure_bc_type == ZERO_GRADIENT_BC) then
-    x_pert_up = x_up
-  endif
-  ideriv = 1
-!    pert_dn = x_dn(ideriv)*perturbation_tolerance    
-  pert_dn = max(dabs(x_dn(ideriv)*perturbation_tolerance),0.1d0)
-  if (x_dn(ideriv) < option%reference_pressure) pert_dn = -1.d0*pert_dn
-  x_pert_dn = x_dn
-  x_pert_dn(ideriv) = x_pert_dn(ideriv) + pert_dn
-  x_pert_up = x_up
-  if (ibndtype(ideriv) == ZERO_GRADIENT_BC) then
-    x_pert_up(ideriv) = x_pert_dn(ideriv)
-  endif
   
-  
-  call RichardsAuxVarCompute(x_pert_dn(1),rich_auxvar_pert_dn, &
+  call RichardsAuxVarCompute(pres_dn(1),rich_auxvar_pert_dn, &
                              global_auxvar_pert_dn, &
                              material_auxvar_pert_dn, &
                              characteristic_curves_dn, &
                              -999, &
                              PETSC_TRUE,option)
-  call RichardsAuxVarCompute(x_pert_up(1),rich_auxvar_pert_up, &
+  call RichardsAuxVarCompute(pres_up(1),rich_auxvar_pert_up, &
                              global_auxvar_pert_up, &
                              material_auxvar_pert_up, &
                              characteristic_curves_dn, &
@@ -1074,6 +1077,52 @@ subroutine RichardsAccumSensibility(rich_auxvar,global_auxvar, &
   endif
    
 end subroutine RichardsAccumSensibility
+
+! ************************************************************************** !
+
+subroutine PerturbatePermeability(material_auxvar, material_auxvar_pert, &
+                                  pert, option)
+
+  ! Perturbate the permeability
+  ! 
+  ! Author: Moise Rousseau
+  ! 09/04/2020
+  ! 
+  
+  use Option_module
+
+  type(material_auxvar_type) :: material_auxvar
+  type(material_auxvar_type) :: material_auxvar_pert
+  PetscReal :: pert
+  type(option_type) :: option
+  
+  PetscReal :: x
+  PetscInt :: iperm
+  
+  !test for scalar permeability
+  if (material_auxvar%permeability(perm_xx_index) /= &
+      material_auxvar%permeability(perm_yy_index) .or. &
+      material_auxvar%permeability(perm_xx_index) /= &
+      material_auxvar%permeability(perm_zz_index) .or. &
+      option%flow%full_perm_tensor) then
+    option%io_buffer = 'Sensibility analysis for permeability &
+                        requires scalar permeability'
+    call PrintErrMsg(option)
+  endif
+  ! update diagonal permeability
+  do iperm = perm_xx_index, perm_zz_index
+    x = material_auxvar%permeability(iperm)
+    pert = perturbation_tolerance*x
+    material_auxvar_pert%permeability(iperm) = x + pert
+  enddo
+
+end subroutine PerturbatePermeability
+
+! ************************************************************************** !
+
+subroutine SensibilityAnalysisDestroy()
+
+end subroutine SensibilityAnalysisDestroy
 
 ! ************************************************************************** !
     
