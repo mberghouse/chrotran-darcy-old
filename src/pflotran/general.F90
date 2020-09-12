@@ -1236,11 +1236,12 @@ subroutine GeneralResidual(snes,xx,r,realization,ierr)
   general_high_temp_ts_cut = PETSC_FALSE
   general_allow_state_change = PETSC_TRUE
   general_state_changed = PETSC_FALSE
-!  if (general_sub_newton_iter_num > 0 .and. option%flow%using_newtontrd) then
+  if (general_sub_newton_iter_num > 0 .and. option%flow%using_newtontrd .and. &
+      general_newtontrd_hold_inner) then
     ! when newtonTR is active and has inner iterations to re-evaluate the residual,
     ! primary variables must not change. -hdp
-!    general_allow_state_change = PETSC_FALSE
-!  endif
+    general_allow_state_change = PETSC_FALSE
+  endif
                                             ! do update state
   call GeneralUpdateAuxVars(realization,general_allow_state_change, &
                             general_allow_state_change)

@@ -174,6 +174,10 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   !     snes->ttol for subsequent iterations.
   call SNESConvergedDefault(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
                             0,ierr);CHKERRQ(ierr)
+                            
+  if (option%convergence /= CONVERGENCE_CONVERGED .and. reason == -9) then
+    return
+  endif
 #if 0
   if (i_iteration == 0 .and. &
       option%print_screen_flag .and. solver%print_convergence) then
@@ -184,9 +188,9 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
   ! for some reason (e.g. negative saturation/mole fraction in multiphase),
   ! we are forcing extra newton iterations
   if (option%force_newton_iteration) then
-    reason = 0
+   reason = 0
 !   reason = -1
-!    return
+   return
   endif
   
 ! Checking if norm exceeds divergence tolerance
@@ -267,7 +271,8 @@ subroutine ConvergenceTest(snes_,i_iteration,xnorm,unorm,fnorm,reason, &
     ! force the minimum number of iterations
     if (i_iteration < solver%newton_min_iterations .and. reason /= -88) then
       if (reason == 6) then
-        reason = 6  ! reason = 6 will also force the next iteration for TR.
+        reason = 6  ! reason = 6 will also force the next iteration for TR
+                    ! on 0th iteration
       else
         reason = 0
       endif

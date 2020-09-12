@@ -38,6 +38,7 @@ module General_Aux_module
   PetscBool, public :: general_allow_state_change = PETSC_TRUE
   PetscBool, public :: general_state_changed = PETSC_FALSE
   PetscBool, public :: general_force_iteration = PETSC_FALSE
+  PetscBool, public :: general_newtontrd_hold_inner = PETSC_FALSE
   PetscBool, public :: gen_chk_max_dpl_liq_state_only = PETSC_FALSE
 
   ! debugging

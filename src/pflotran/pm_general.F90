@@ -234,12 +234,16 @@ subroutine PMGeneralReadSimOptionsBlock(this,input)
         this%rel_update_inf_tol(2,2)=this%rel_update_inf_tol(2,1)
       case('HARMONIC_GAS_DIFFUSIVE_DENSITY')
         general_harmonic_diff_density = PETSC_TRUE
+      case('NEWTONTRD_HOLD_INNER_ITERATIONS',&
+           'HOLD_INNER_ITERATIONS','NEWTONTRD_HOLD_INNER')
+        !heeho: only used when using newtontrd-c
+        general_newtontrd_hold_inner = PETSC_TRUE
       case('IMMISCIBLE')
         general_immiscible = PETSC_TRUE
       case('ISOTHERMAL')
         general_isothermal = PETSC_TRUE
       case('LIQUID_COMPONENT_FORMULA_WEIGHT')
-         !heeho: assuming liquid component is index 1
+        !heeho: assuming liquid component is index 1
         call InputReadDouble(input,option,fmw_comp(1))
         call InputErrorMsg(input,option,keyword,error_string)
       case('NO_AIR')
@@ -1348,25 +1352,37 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
     if (option%flow%using_newtontrd .and. &
         general_state_changed .and. &
         .not.rho_flag) then
-        ! if we reach convergence in an inner newton iteration of TR
-        ! then we must force an outer iteration to allow state change
-        ! in case the solutions are out-of-bounds of the states -hdp
+      if (general_newtontrd_hold_inner) then
+        ! if we hold inner iterations, we must not change state in
+        ! the inner iteration. If we reach convergence in an inner 
+        ! newtontrd iteration, then we must force an outer iteration 
+        ! to allow state change in case the solutions are 
+        ! out-of-bounds of the states -hdp
         general_force_iteration = PETSC_TRUE
+        general_state_changed = PETSC_FALSE
+      else
         ! if we have state changes, we exit out of inner iteration
-        ! and go to the next newton iteration
-        ! inner iteration should only be used when there is no state
-        ! changes 
+        ! and go to the next newton iteration. the tr inner iteration
+        !  should only be used when there is no state changes
         ! if rho is satisfied in inner iteration, the algorithm already
         ! exited the inner iteration. -heeho
+        general_force_iteration = PETSC_TRUE
         general_state_changed = PETSC_FALSE
+      endif
     endif
 
     call MPI_Allreduce(MPI_IN_PLACE,general_force_iteration,ONE_INTEGER, &
                        MPI_LOGICAL,MPI_LOR,option%mycomm,ierr)
     if (general_force_iteration) then
-      option%convergence = CONVERGENCE_BREAKOUT_INNER_ITER
-      general_force_iteration = PETSC_FALSE
-    endif
+      if (.not.general_newtontrd_hold_inner) then
+        option%convergence = CONVERGENCE_BREAKOUT_INNER_ITER
+        general_force_iteration = PETSC_FALSE
+      else if (general_newtontrd_hold_inner .and. &
+               option%convergence == CONVERGENCE_CONVERGED) then
+        option%convergence = CONVERGENCE_BREAKOUT_INNER_ITER
+        general_force_iteration = PETSC_FALSE
+      endif
+    endif 
 
     if (this%logging_verbosity > 0 .and. it > 0 .and. &
         option%convergence == CONVERGENCE_CONVERGED) then
@@ -1399,16 +1415,6 @@ subroutine PMGeneralCheckConvergence(this,snes,it,xnorm,unorm,fnorm, &
       call OptionPrint(string,option)
       option%convergence = CONVERGENCE_CUT_TIMESTEP
     endif
-
-!    if (option%flow%using_newtontrd .and. &
-!        general_sub_newton_iter_num > 1 .and. &
-!        general_force_iteration .and. &
-!        option%convergence == CONVERGENCE_CONVERGED) then
-        ! This is a complicated case but necessary.
-        ! right now PFLOTRAN declares convergence with a negative rho in tr.c
-        ! this should not be happening thus cutting timestep.
-!        option%convergence = CONVERGENCE_CUT_TIMESTEP
-!    endif
  
     if (general_sub_newton_iter_num > 20) then
       ! cut time step in case PETSC solvers are missing inner iterations
