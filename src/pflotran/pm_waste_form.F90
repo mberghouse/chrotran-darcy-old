@@ -3477,7 +3477,7 @@ subroutine PMWFSolve(this,time,ierr)
     !
     if (associated(this%criticality_mediator)) then
       call CriticalitySolve(this%criticality_mediator,this%realization,time, &
-                            cur_waste_form,ierr)
+                            cur_waste_form,ierr,this%realization%option)
     endif
     cur_waste_form => cur_waste_form%next
   enddo
@@ -5648,7 +5648,7 @@ end subroutine AssignCritMech
 
 ! ************************************************************************** !
 
-subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
+subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
   !
   !Author: Michael Nole
   !Date: 11/05/18
@@ -5661,6 +5661,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   use Global_Aux_module
   use Grid_module
   use Utility_module
+  use Option_module
   
   implicit none
 
@@ -5669,6 +5670,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   PetscReal :: time
   class(waste_form_base_type), pointer :: waste_form
   PetscErrorCode :: ierr
+  class(option_type) :: option
 
   PetscInt :: i,j,k, ghosted_id
   type(criticality_type), pointer :: cur_criticality
@@ -5698,10 +5700,10 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
     avg_sat_local  = avg_sat_local  + &  ! Liquid Saturation
       (global_auxvars(ghosted_id)%sat(LIQUID_PHASE) * scaling_factor(i))
   enddo
-  call CalcParallelSUM(realization%option,waste_form%rank_list,avg_temp_local, &
-                       avg_temp_global)
-  call CalcParallelSUM(realization%option,waste_form%rank_list,avg_sat_local, &
-                        avg_sat_global)
+  ! call MPI_Reduce(avg_temp_local,avg_temp_global,ONE_INTEGER_MPI, &
+  !   MPI_DOUBLE_PRECISION,MPI_SUM,option%io_rank,option%mycomm,ierr)
+  ! call MPI_Reduce(avg_sat_local,avg_sat_global,ONE_INTEGER_MPI, &
+  !   MPI_DOUBLE_PRECISION,MPI_SUM,option%io_rank,option%mycomm,ierr)
   
   cur_criticality => this%criticality_list
   dataset => cur_criticality%crit_mech%neutronics_dataset
@@ -5716,7 +5718,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
       cur_criticality%crit_event%crit_flag = PETSC_FALSE
     endif
 
-    if (avg_sat_global <= cur_criticality%crit_mech%crit_sat) then
+    if (avg_sat_local <= cur_criticality%crit_mech%crit_sat) then
       cur_criticality%crit_event%crit_flag = PETSC_FALSE
     endif
 
