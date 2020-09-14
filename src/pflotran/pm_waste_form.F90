@@ -442,6 +442,7 @@ module PM_Waste_Form_class
     character(len=MAXSTRINGLENGTH) :: heat_dataset_name
     PetscReal :: decay_heat
     PetscReal :: crit_heat
+    PetscReal :: crit_sat
     PetscReal :: sw
     PetscReal :: rho_w
     PetscReal :: temperature
@@ -5257,6 +5258,7 @@ subroutine CriticalityMechInit(this)
 
   this%decay_heat = 0.d0
   this%crit_heat = 0.d0
+  this%crit_sat = 0.d0
   this%sw = 0.d0
   this%rho_w = 0.d0
   this%temperature = 0.d0
@@ -5394,6 +5396,10 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
                   'criticality mechanism assignment',error_string)
             call StringToUpper(word)
             new_crit_mech%mech_name = trim(word)
+          case('CRITICAL_SATURATION')
+            call InputReadDouble(input,option,new_crit_mech%crit_sat)
+            call InputErrorMsg(input,option,'CRITICAL SATURATION LEVEL',&
+              error_string)
           case('HEAT_OF_CRITICALITY')
             ! call InputReadDouble(input,option,new_crit_mech%crit_heat)
             ! call InputErrorMsg(input,option,'HEAT_OF_CRITICALITY',error_string)
@@ -5710,6 +5716,10 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
       cur_criticality%crit_event%crit_flag = PETSC_FALSE
     endif
 
+    if (avg_sat_global <= cur_criticality%crit_mech%crit_sat) then
+      cur_criticality%crit_event%crit_flag = PETSC_FALSE
+    endif
+
     call CriticalityCalc(cur_criticality%crit_mech,time,ierr)
     
     ! Unless constant power level is defined, 
@@ -5748,8 +5758,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
 
       if (cur_criticality%crit_event%crit_flag) then
         cur_criticality%crit_mech%temperature = avg_temp_local
-        heat_source(j) = heat_source(j) + cur_criticality%crit_mech%crit_heat *&
-                         avg_sat_local
+        heat_source(j) = heat_source(j) + cur_criticality%crit_mech%crit_heat
       endif
 
       ! Distribute heat source throughout all cells in a waste package
