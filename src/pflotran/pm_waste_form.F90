@@ -3477,7 +3477,7 @@ subroutine PMWFSolve(this,time,ierr)
     !
     if (associated(this%criticality_mediator)) then
       call CriticalitySolve(this%criticality_mediator,this%realization,time, &
-                            cur_waste_form,ierr,this%realization%option)
+                            cur_waste_form,ierr)
     endif
     cur_waste_form => cur_waste_form%next
   enddo
@@ -5648,7 +5648,7 @@ end subroutine AssignCritMech
 
 ! ************************************************************************** !
 
-subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
+subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   !
   !Author: Michael Nole
   !Date: 11/05/18
@@ -5670,9 +5670,9 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
   PetscReal :: time
   class(waste_form_base_type), pointer :: waste_form
   PetscErrorCode :: ierr
-  class(option_type) :: option
 
-  PetscInt :: i,j,k, ghosted_id
+  type(option_type), pointer :: option
+  PetscInt :: i, j, k, ghosted_id
   type(criticality_type), pointer :: cur_criticality
   type(grid_type), pointer :: grid
   type(global_auxvar_type), pointer :: global_auxvars(:)
@@ -5680,7 +5680,8 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
   PetscReal, pointer :: scaling_factor(:)
   PetscReal, pointer :: heat_source(:)
   PetscReal, pointer :: templist(:)
-  PetscReal :: tref, t_low, t_high, avg_temp_local, avg_temp_global
+  PetscReal :: tref, t_low, t_high
+  PetscReal :: avg_temp_local, avg_temp_global
   PetscReal :: avg_sat_local, avg_sat_global
 
   call VecGetArrayF90(this%data_mediator%vec,heat_source, &
@@ -5689,21 +5690,27 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
   ! Get temperature of waste form
   grid => realization%patch%grid
   global_auxvars => realization%patch%aux%Global%auxvars
+  option => realization%option
   scaling_factor => waste_form%scaling_factor
   avg_temp_local = 0.d0
+  avg_temp_global = 0.d0
   avg_sat_local  = 0.d0
+  avg_sat_global  = 0.d0
   tref = 0.d0
   do i = 1,waste_form%region%num_cells
     ghosted_id = grid%nL2G(waste_form%region%cell_ids(i))
     avg_temp_local = avg_temp_local + &  ! Celcius
       (global_auxvars(ghosted_id)%temp * scaling_factor(i))
-    avg_sat_local  = avg_sat_local  + &  ! Liquid Saturation
+    avg_sat_local = avg_sat_local + &  ! Liquid Saturation
       (global_auxvars(ghosted_id)%sat(LIQUID_PHASE) * scaling_factor(i))
   enddo
-  ! call MPI_Reduce(avg_temp_local,avg_temp_global,ONE_INTEGER_MPI, &
-  !   MPI_DOUBLE_PRECISION,MPI_SUM,option%io_rank,option%mycomm,ierr)
-  ! call MPI_Reduce(avg_sat_local,avg_sat_global,ONE_INTEGER_MPI, &
-  !   MPI_DOUBLE_PRECISION,MPI_SUM,option%io_rank,option%mycomm,ierr)
+
+  call CalcParallelSUM(option,waste_form%rank_list,avg_temp_local, &
+                       avg_temp_global)
+  call CalcParallelSUM(option,waste_form%rank_list,avg_sat_local, &
+                        avg_sat_global)
+  avg_temp_global = avg_temp_global / size(waste_form%rank_list)
+  avg_sat_global = avg_sat_global / size(waste_form%rank_list)
   
   cur_criticality => this%criticality_list
   dataset => cur_criticality%crit_mech%neutronics_dataset
@@ -5718,7 +5725,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
       cur_criticality%crit_event%crit_flag = PETSC_FALSE
     endif
 
-    if (avg_sat_local <= cur_criticality%crit_mech%crit_sat) then
+    if (avg_sat_global <= cur_criticality%crit_mech%crit_sat) then
       cur_criticality%crit_event%crit_flag = PETSC_FALSE
     endif
 
@@ -5727,7 +5734,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
     ! Unless constant power level is defined, 
     ! find criticality power level from temperature
     if (cur_criticality%crit_mech%crit_heat == 0.0d0) then
-      tref = avg_temp_local
+      tref = avg_temp_global
       if (associated(dataset%time_storage)) then
         templist => dataset%time_storage%times
         k=1
@@ -5759,7 +5766,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr,option)
       heat_source(j) = cur_criticality%crit_mech%decay_heat
 
       if (cur_criticality%crit_event%crit_flag) then
-        cur_criticality%crit_mech%temperature = avg_temp_local
+        cur_criticality%crit_mech%temperature = avg_temp_global
         heat_source(j) = heat_source(j) + cur_criticality%crit_mech%crit_heat
       endif
 
