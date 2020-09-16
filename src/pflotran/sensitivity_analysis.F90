@@ -1,4 +1,10 @@
-module Sensibility_Analysis_module
+! TODO
+! Initialization to not create the J matrix at each time
+! Make card for input deck (i.e. no more called by debug)
+! Find where to call the sensitivity analysis
+! update to consider porosity
+
+module Sensitivity_Analysis_module
 
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -22,51 +28,50 @@ module Sensibility_Analysis_module
   PetscReal, parameter :: floweps   = 1.D-24
   PetscReal, parameter :: perturbation_tolerance = 1.d-3
 
-  public :: RichardsPermeabilitySensibility, &
-            RichardsPorositySensibility
+  public :: RichardsPermeabilitySensitivity, &
+            RichardsPorositySensitivity
 
 contains
 
 ! ************************************************************************** !
 
-subroutine SensibilityAnalysisCreate()
+subroutine SensitivityAnalysisCreate()
 
-end subroutine SensibilityAnalysisCreate
+end subroutine SensitivityAnalysisCreate
 
 ! ************************************************************************** !
 
-subroutine RichardsPermeabilitySensibility(realization,ierr)
+subroutine RichardsPermeabilitySensitivity(realization,ierr)
 
   use Realization_Subsurface_class
   
   type(realization_subsurface_type) :: realization
   PetscErrorCode :: ierr
   
-  call RichardsSensibility(realization,PERMEABILITY,ierr)
+  call RichardsSensitivity(realization,PERMEABILITY,ierr)
 
 end subroutine
 
 ! ************************************************************************** !
 
-subroutine RichardsPorositySensibility(realization,ierr)
+subroutine RichardsPorositySensitivity(realization,ierr)
 
   use Realization_Subsurface_class
   
-  Mat :: J
   type(realization_subsurface_type) :: realization
   PetscErrorCode :: ierr
   
-  call RichardsSensibility(realization,POROSITY,ierr)
+  call RichardsSensitivity(realization,POROSITY,ierr)
 
 end subroutine
 
 ! ************************************************************************** !
 
-subroutine RichardsSensibility(realization,ivar,ierr)
+subroutine RichardsSensitivity(realization,ivar,ierr)
   ! 
-  ! Computes derivative of the residual according to the permeability at 
+  ! Computes derivative of the residual according to the ivar at 
   ! each grid cell
-  ! Most of the subroutines are taken from RichardsJacobian
+  ! Structure similar to RichardsJacobian
   ! 
   ! Author: Moise Rousseau
   ! Date: 09/03/2020
@@ -104,22 +109,22 @@ subroutine RichardsSensibility(realization,ivar,ierr)
                                     realization%option%nflowdof, &
                                     J_mat_type, J, option)
 
-  call MatSetOptionsPrefix(J,"sensibility_",ierr);CHKERRQ(ierr)
+  call MatSetOptionsPrefix(J,"Sensitivity_",ierr);CHKERRQ(ierr)
   
   call MatZeroEntries(J,ierr);CHKERRQ(ierr)
 
-  call RichardsSensibilityInternalConn(J,realization,ivar,ierr)
-  call RichardsSensibilityBoundaryConn(J,realization,ivar,ierr)
-  !call RichardsSensibilitySourceSink(J,realization,ivar,ierr)
+  call RichardsSensitivityInternalConn(J,realization,ivar,ierr)
+  call RichardsSensitivityBoundaryConn(J,realization,ivar,ierr)
+  !call RichardsSensitivitySourceSink(J,realization,ivar,ierr)
   !update here when porosity ok
-  !call RichardsSensibilityAccumulation(J,realization,ivar,ierr)
+  !call RichardsSensitivityAccumulation(J,realization,ivar,ierr)
   
   call MatAssemblyBegin(J,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
   call MatAssemblyEnd(J,MAT_FINAL_ASSEMBLY,ierr);CHKERRQ(ierr)
 
   select case(ivar)
     case(PERMEABILITY)
-      call DebugWriteFilename(realization%debug,string,'K_sensibility','', &
+      call DebugWriteFilename(realization%debug,string,'K_Sensitivity','', &
                               richards_ts_count,richards_ts_cut_count, &
                               richards_ni_count)
       call DebugCreateViewer(realization%debug,string,option,viewer)
@@ -127,11 +132,11 @@ subroutine RichardsSensibility(realization,ivar,ierr)
       call DebugViewerDestroy(realization%debug,viewer)
     case(POROSITY)
       call DebugWriteFilename(realization%debug,string, &
-                              'Porosity_sensibility', '', &
+                              'Porosity_Sensitivity', '', &
                               richards_ts_count,richards_ts_cut_count, &
                               richards_ni_count)
     case default
-      call PrintErrMsg(option, "Wrong value of ivar in RichardsSensibility")
+      call PrintErrMsg(option, "Wrong value of ivar in RichardsSensitivity")
   end select
   
   !destroy J
@@ -141,9 +146,9 @@ end subroutine
 
 ! ************************************************************************** !
 
-subroutine RichardsSensibilityInternalConn(A,realization,ivar,ierr)
+subroutine RichardsSensitivityInternalConn(A,realization,ivar,ierr)
   ! 
-  ! Computes the interior flux terms of the sensibility
+  ! Computes the interior flux terms of the Sensitivity
   ! 
   ! Author: Moise Rousseau
   ! Date: 09/03/2020
@@ -244,7 +249,7 @@ subroutine RichardsSensibilityInternalConn(A,realization,ivar,ierr)
       icc_up = patch%cc_id(ghosted_id_up)
       icc_dn = patch%cc_id(ghosted_id_dn)
       
-      call RichardsFluxSensibility(rich_auxvars(ghosted_id_up), &
+      call RichardsFluxSensitivity(rich_auxvars(ghosted_id_up), &
                  global_auxvars(ghosted_id_up), &
                  material_auxvars(ghosted_id_up), &
                  rich_auxvars(ghosted_id_dn), &
@@ -305,11 +310,11 @@ subroutine RichardsSensibilityInternalConn(A,realization,ivar,ierr)
     cur_connection_set => cur_connection_set%next
   enddo
 
-end subroutine RichardsSensibilityInternalConn
+end subroutine RichardsSensitivityInternalConn
 
 ! ************************************************************************** !
 
-subroutine RichardsFluxSensibility(rich_auxvar_up,global_auxvar_up, &
+subroutine RichardsFluxSensitivity(rich_auxvar_up,global_auxvar_up, &
                                   material_auxvar_up, & 
                                   rich_auxvar_dn,global_auxvar_dn, &
                                   material_auxvar_dn, &
@@ -319,7 +324,7 @@ subroutine RichardsFluxSensibility(rich_auxvar_up,global_auxvar_up, &
                                   characteristic_curves_dn, &
                                   Jup,Jdn, ivar)
   ! 
-  ! Computes the sensibility of the internal flux terms
+  ! Computes the Sensitivity of the internal flux terms
   ! For K or poro, just change the value in the numerical derivative with a 
   ! select statement
   ! 
@@ -431,13 +436,13 @@ subroutine RichardsFluxSensibility(rich_auxvar_up,global_auxvar_up, &
   call MaterialAuxVarStrip(material_auxvar_pert_up)
   call MaterialAuxVarStrip(material_auxvar_pert_dn)    
 
-end subroutine RichardsFluxSensibility
+end subroutine RichardsFluxSensitivity
 
 ! ************************************************************************** !
 
-subroutine RichardsSensibilityBoundaryConn(A,realization,ivar,ierr)
+subroutine RichardsSensitivityBoundaryConn(A,realization,ivar,ierr)
   ! 
-  ! Computes the boundary flux terms of the sensibility
+  ! Computes the boundary flux terms of the Sensitivity
   ! 
   ! Author: Moise Rousseau
   ! Date: 09/03/2020
@@ -523,7 +528,7 @@ subroutine RichardsSensibilityBoundaryConn(A,realization,ivar,ierr)
 
       icc_dn = patch%cc_id(ghosted_id) 
 
-      call RichardsBCFluxSensibility(boundary_condition%flow_condition%itype, &
+      call RichardsBCFluxSensitivity(boundary_condition%flow_condition%itype, &
                      boundary_condition%flow_aux_real_var(:,iconn), &
                      rich_auxvars_bc(sum_connection), &
                      global_auxvars_bc(sum_connection), &
@@ -555,11 +560,11 @@ subroutine RichardsSensibilityBoundaryConn(A,realization,ivar,ierr)
     boundary_condition => boundary_condition%next
   enddo
   
-end subroutine RichardsSensibilityBoundaryConn
+end subroutine RichardsSensitivityBoundaryConn
 
 ! ************************************************************************** !
 
-subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
+subroutine RichardsBCFluxSensitivity(ibndtype,auxvars, &
                                     rich_auxvar_up,global_auxvar_up, &
                                     rich_auxvar_dn,global_auxvar_dn, &
                                     material_auxvar_dn, &
@@ -568,7 +573,7 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
                                     Jdn, ivar)
   ! 
   ! Computes numerically the derivatives of the boundary flux
-  ! terms for the sensibility
+  ! terms for the Sensitivity
   ! 
   ! Author: Moise Rousseau
   ! Date: 09/03/2020
@@ -676,14 +681,14 @@ subroutine RichardsBCFluxSensibility(ibndtype,auxvars, &
   call MaterialAuxVarStrip(material_auxvar_pert_dn)
   deallocate(material_auxvar_pert_up,material_auxvar_pert_dn)
 
-end subroutine RichardsBCFluxSensibility
+end subroutine RichardsBCFluxSensitivity
 
 ! ************************************************************************** !
 
-subroutine RichardsSensibilitySourceSink(A,realization,ivar,ierr)
+subroutine RichardsSensitivitySourceSink(A,realization,ivar,ierr)
   ! 
   ! Computes the accumulation and source/sink terms of
-  ! the sensibility
+  ! the Sensitivity
   ! 
   ! Author: Moise Rousseau
   ! Date: 09/03/2020
@@ -872,13 +877,13 @@ subroutine RichardsSensibilitySourceSink(A,realization,ivar,ierr)
   endif
 #endif
 
-end subroutine RichardsSensibilitySourceSink
+end subroutine RichardsSensitivitySourceSink
 
 ! ************************************************************************** !
 
-subroutine RichardsSensibilityAccumulation(A,realization,ivar,ierr)
+subroutine RichardsSensitivityAccumulation(A,realization,ivar,ierr)
   ! 
-  ! Computes the accumulation terms of the sensibility
+  ! Computes the accumulation terms of the Sensitivity
   ! 
   ! Author: Moise Rousseau
   ! Date: 09/03/2020
@@ -930,7 +935,7 @@ subroutine RichardsSensibilityAccumulation(A,realization,ivar,ierr)
       ghosted_id = grid%nL2G(local_id)
       !geh - Ignore inactive cells with inactive materials
       if (patch%imat(ghosted_id) <= 0) cycle
-      call RichardsAccumSensibility(rich_auxvars(ghosted_id), &
+      call RichardsAccumSensitivity(rich_auxvars(ghosted_id), &
            global_auxvars(ghosted_id), &
            material_auxvars(ghosted_id), &
            option, &
@@ -981,18 +986,18 @@ subroutine RichardsSensibilityAccumulation(A,realization,ivar,ierr)
     call DebugViewerDestroy(realization%debug,viewer)
   endif
 
-end subroutine RichardsSensibilityAccumulation
+end subroutine RichardsSensitivityAccumulation
 
 ! ************************************************************************** !
 
-subroutine RichardsAccumSensibility(rich_auxvar,global_auxvar, &
+subroutine RichardsAccumSensitivity(rich_auxvar,global_auxvar, &
                                    material_auxvar, &
                                    option, &
                                    characteristic_curves, &
                                    J,ivar)
   ! 
   ! Computes derivatives of the accumulation
-  ! term for the sensibility
+  ! term for the Sensitivity
   ! 
   ! Author: Moise Rousseau
   ! Date: 09/03/2020
@@ -1076,7 +1081,7 @@ subroutine RichardsAccumSensibility(rich_auxvar,global_auxvar, &
     call MaterialAuxVarStrip(material_auxvar_pert)  
   endif
    
-end subroutine RichardsAccumSensibility
+end subroutine RichardsAccumSensitivity
 
 ! ************************************************************************** !
 
@@ -1105,7 +1110,7 @@ subroutine PerturbatePermeability(material_auxvar, material_auxvar_pert, &
       material_auxvar%permeability(perm_xx_index) /= &
       material_auxvar%permeability(perm_zz_index) .or. &
       option%flow%full_perm_tensor) then
-    option%io_buffer = 'Sensibility analysis for permeability &
+    option%io_buffer = 'Sensitivity analysis for permeability &
                         requires scalar permeability'
     call PrintErrMsg(option)
   endif
@@ -1120,9 +1125,9 @@ end subroutine PerturbatePermeability
 
 ! ************************************************************************** !
 
-subroutine SensibilityAnalysisDestroy()
+subroutine SensitivityAnalysisDestroy()
 
-end subroutine SensibilityAnalysisDestroy
+end subroutine SensitivityAnalysisDestroy
 
 ! ************************************************************************** !
     

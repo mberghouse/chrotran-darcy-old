@@ -2062,7 +2062,7 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
   use Option_module
   use Logging_module
   use Debug_module
-  use Sensibility_analysis_module
+  use Sensitivity_analysis_module
 
   implicit none
 
@@ -2129,8 +2129,8 @@ subroutine RichardsJacobian(snes,xx,A,B,realization,ierr)
     call PrintMsg(option)
   endif
   !Added by Moise Rousseau 09-03-2020
-  if (realization%debug%matview_perm_sensibility) then
-    call RichardsPermeabilitySensibility(realization,ierr)
+  if (realization%debug%matview_perm_sensitivity) then
+    call RichardsPermeabilitySensitivity(realization,ierr)
   endif
 
 #if 0

@@ -18,7 +18,7 @@ module Debug_module
     PetscBool :: vecview_solution
     PetscBool :: matview_Jacobian
     PetscBool :: matview_Jacobian_detailed
-    PetscBool :: matview_perm_sensibility
+    PetscBool :: matview_perm_sensitivity
     PetscBool :: norm_Jacobian
 
     PetscInt  :: output_format
@@ -61,7 +61,7 @@ function DebugCreate()
   debug%vecview_solution = PETSC_FALSE
   debug%matview_Jacobian = PETSC_FALSE
   debug%matview_Jacobian_detailed = PETSC_FALSE
-  debug%matview_perm_sensibility = PETSC_FALSE
+  debug%matview_perm_sensitivity = PETSC_FALSE
   debug%norm_Jacobian = PETSC_FALSE
 
   debug%output_format = DEBUG_ASCII_FORMAT
@@ -129,7 +129,7 @@ subroutine DebugRead(debug,input,option)
            'VIEW_JACOBIAN_DETAILED')
         debug%matview_Jacobian_detailed = PETSC_TRUE
       case ('PRINT_PERMEABILITY_SENSITIVITY')
-        debug%matview_perm_sensibility = PETSC_TRUE
+        debug%matview_perm_sensitivity = PETSC_TRUE
       case('PRINT_WAYPOINTS')
         debug%print_waypoints = PETSC_TRUE
       case('APPEND_COUNTS_TO_FILENAME','APPEND_COUNTS_TO_FILENAMES')

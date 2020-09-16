@@ -103,7 +103,7 @@ mode_obj = \
         ${common_src}nw_transport.o \
 	${common_src}reactive_transport.o \
 	${common_src}richards.o \
-	${common_src}sensibility_analysis.o \
+	${common_src}sensitivity_analysis.o \
 	${common_src}richards_common.o \
 	${common_src}th.o \
 	${common_src}inlinesurface.o
