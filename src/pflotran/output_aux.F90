@@ -47,6 +47,7 @@ module Output_Aux_module
     PetscBool :: print_hdf5_aveg_mass_flowrate
     PetscBool :: print_hdf5_aveg_energy_flowrate
     PetscBool :: print_explicit_flowrate
+    PetscBool :: print_hdf5_connection_ids
 
     PetscBool :: print_tecplot 
     PetscInt :: tecplot_format
@@ -232,6 +233,7 @@ function OutputOptionCreate()
   output_option%print_hdf5_aveg_mass_flowrate = PETSC_FALSE
   output_option%print_hdf5_aveg_energy_flowrate = PETSC_FALSE
   output_option%print_explicit_flowrate = PETSC_FALSE
+  output_option%print_hdf5_connection_ids = PETSC_FALSE
   output_option%print_tecplot = PETSC_FALSE
   output_option%tecplot_format = 0
   output_option%print_tecplot_vel_cent = PETSC_FALSE
@@ -338,6 +340,8 @@ function OutputOptionDuplicate(output_option)
     output_option%print_hdf5_aveg_energy_flowrate
   output_option2%print_explicit_flowrate = &
     output_option%print_explicit_flowrate
+  output_option2%print_hdf5_connection_ids = &
+    output_option%print_hdf5_connection_ids
   output_option2%print_tecplot = output_option%print_tecplot
   output_option2%tecplot_format = output_option%tecplot_format
   output_option2%print_tecplot_vel_cent = output_option%print_tecplot_vel_cent

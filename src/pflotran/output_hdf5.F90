@@ -2041,6 +2041,11 @@ subroutine WriteHDF5CoordinatesUGridXDMF(realization_base,option,file_id)
   call VecDestroy(global_vec,ierr);CHKERRQ(ierr)
   call VecDestroy(natural_vec,ierr);CHKERRQ(ierr)
   call UGridDMDestroy(ugdm_element)
+  
+  ! Added by Moise Rousseau 09/16/20
+  if (realization_base%output_option%print_hdf5_connection_ids) then
+    call WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
+  endif
 
   ! Cell center X/Y/Z
   call VecCreateMPI(option%mycomm,grid%nlmax, &
@@ -2276,6 +2281,202 @@ subroutine WriteHDF5CoordinatesUGridXDMF(realization_base,option,file_id)
   call UGridDMDestroy(ugdm_cell)
 
 end subroutine WriteHDF5CoordinatesUGridXDMF
+
+! ************************************************************************** !
+
+subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
+  ! 
+  ! Write the detail of connection ids in the output HDF5 file
+  ! and in Domain/Connection Ids
+  ! Used to index the velocity_at_face_by_connection and 
+  ! permeability_at_face as well as all other face centered variables
+  ! 
+  ! Author: Moise Rousseau, Polytechnique Montreal
+  ! Date: 09/16/20
+  ! 
+  
+  use Realization_Base_class, only : realization_base_type
+  use hdf5
+  use Grid_module
+  use Option_module
+  use Connection_module
+  use Coupler_module
+  use Grid_Unstructured_Aux_module
+  use Variables_module
+  
+  implicit none
+  
+  class(realization_base_type) :: realization_base
+  type(option_type), pointer :: option
+  integer(HID_T) :: file_id
+  
+  type(connection_set_list_type), pointer :: connection_set_list
+  type(connection_set_type), pointer :: cur_connection_set
+  type(coupler_type), pointer :: boundary_condition
+  type(grid_type), pointer :: grid
+  PetscInt :: ipass, icount, iconn, istart
+  PetscInt :: total_num_connections
+  PetscInt, allocatable :: int_array(:)
+  PetscErrorCode :: ierr
+  
+  integer(HID_T) :: data_type
+  integer(HID_T) :: grp_id
+  integer(HID_T) :: file_space_id
+  integer(HID_T) :: realization_set_id
+  integer(HID_T) :: memory_space_id
+  integer(HID_T) :: data_set_id
+  integer(HID_T) :: prop_id
+  integer(HSIZE_T) :: dims(3)
+  integer(HSIZE_T) :: start(3), length(3), stride(3)
+  PetscMPIInt :: rank_mpi,file_space_rank_mpi
+  PetscMPIInt :: hdf5_flag
+  PetscMPIInt, parameter :: ON=1, OFF=0
+  PetscMPIInt :: hdf5_err
+  character(len=MAXSTRINGLENGTH) :: string
+  
+  ! Ask for space and organize it
+  ! number of connections
+  total_num_connections = 0
+  ipass = 1
+  nullify(boundary_condition)
+  nullify(cur_connection_set)
+  do 
+    select case(ipass)
+      case(1) ! internal connections
+        cur_connection_set => grid%internal_connection_set_list%first
+      case(2) ! boundary connections
+        ! sets up first boundary condition in list
+        if (.not.associated(boundary_condition)) then
+          boundary_condition => & 
+             realization_base%patch%boundary_condition_list%first
+        endif
+        if (associated(boundary_condition)) then
+          cur_connection_set => boundary_condition%connection_set
+        else
+          nullify(cur_connection_set)
+        endif
+    end select
+    do 
+      if (.not.associated(cur_connection_set)) exit
+      total_num_connections = total_num_connections + &
+                            cur_connection_set%num_connections
+      cur_connection_set => cur_connection_set%next
+    enddo
+    select case(ipass)
+      case(1) ! internal connections
+        ipass = ipass + 1
+      case(2) ! boundary connections
+        if (associated(boundary_condition)) then
+          boundary_condition => boundary_condition%next
+        endif
+        if (.not.associated(boundary_condition)) exit
+    end select
+  enddo
+  
+  ! memory space which is a 1D vector
+  rank_mpi = 1
+  dims = 0
+  dims(1) = total_num_connections * 2
+  call h5screate_simple_f(rank_mpi,dims,memory_space_id,hdf5_err,dims)
+   
+  ! file space which is a 2D block
+  rank_mpi = 2
+  dims = 0
+  dims(2) = total_num_connections
+  dims(1) = 2
+  call h5pcreate_f(H5P_DATASET_CREATE_F,prop_id,hdf5_err)
+  
+  string = "Connection Ids" // CHAR(0)
+
+  call h5eset_auto_f(OFF,hdf5_err)
+  call h5dopen_f(file_id,string,data_set_id,hdf5_err)
+  hdf5_flag = hdf5_err
+  call h5eset_auto_f(ON,hdf5_err)
+  if (hdf5_flag < 0) then
+    ! if the dataset does not exist, create it
+    call h5screate_simple_f(rank_mpi,dims,file_space_id,hdf5_err,dims)
+    call h5dcreate_f(file_id,string,H5T_NATIVE_DOUBLE,file_space_id, &
+                     data_set_id,hdf5_err,prop_id)
+  else
+    call h5dget_space_f(data_set_id,file_space_id,hdf5_err)
+  endif
+
+  call h5pclose_f(prop_id,hdf5_err)
+
+  istart = 0
+  !geh: cannot use dims(1) in MPI_Allreduce as it causes errors on 
+  !     Juqueen
+  call MPI_Exscan(total_num_connections, istart, ONE_INTEGER_MPI, &
+                  MPIU_INTEGER, MPI_SUM, option%mycomm, ierr)
+
+  start(2) = istart
+  start(1) = 0
+  
+  length(2) = total_num_connections
+  length(1) = 2
+
+  stride = 1
+  call h5sselect_hyperslab_f(file_space_id,H5S_SELECT_SET_F,start,length, &
+                             hdf5_err,stride,stride)
+
+  ! TODO write the data
+  call h5pcreate_f(H5P_DATASET_XFER_F,prop_id,hdf5_err)
+#ifndef SERIAL_HDF5
+    call h5pset_dxpl_mpio_f(prop_id,H5FD_MPIO_INDEPENDENT_F, &
+                            hdf5_err)
+#endif
+  allocate(int_array(total_num_connections*2))
+  icount = 0
+  ipass = 0
+  nullify(boundary_condition)
+  nullify(cur_connection_set)
+  do 
+    select case(ipass)
+      case(1) ! internal connections
+        cur_connection_set => grid%internal_connection_set_list%first
+      case(2) ! boundary connections
+        ! sets up first boundary condition in list
+        if (.not.associated(boundary_condition)) then
+          boundary_condition => realization_base%patch%boundary_condition_list%first
+        endif
+        if (associated(boundary_condition)) then
+          cur_connection_set => boundary_condition%connection_set
+        else
+          nullify(cur_connection_set)
+        endif
+    end select
+    do 
+      if (.not.associated(cur_connection_set)) exit
+      do iconn = 1, cur_connection_set%num_connections
+        int_array(icount) = cur_connection_set%id_dn(iconn)
+        int_array(icount + 1) = cur_connection_set%id_up(iconn)
+        icount = icount + 2
+      enddo
+      cur_connection_set => cur_connection_set%next
+    enddo
+    select case(ipass)
+      case(1) ! internal connections
+        ipass = ipass + 1
+      case(2) ! boundary connections
+        if (associated(boundary_condition)) then
+          boundary_condition => boundary_condition%next
+        endif
+        if (.not.associated(boundary_condition)) exit
+    end select
+  enddo
+
+  call PetscLogEventBegin(logging%event_h5dwrite_f,ierr);CHKERRQ(ierr)
+  call h5dwrite_f(data_set_id,H5T_NATIVE_DOUBLE,int_array,dims, &
+                  hdf5_err,memory_space_id,file_space_id,prop_id)
+  call PetscLogEventEnd(logging%event_h5dwrite_f,ierr);CHKERRQ(ierr)
+  
+  ! desallocate
+  deallocate(int_array)
+  call h5pclose_f(prop_id,hdf5_err)
+  call h5dclose_f(data_set_id,hdf5_err)
+  call h5sclose_f(file_space_id,hdf5_err)
+  
+end subroutine WriteHDF5ConnectionIdsUGridXDMF
 
 ! ************************************************************************** !
 

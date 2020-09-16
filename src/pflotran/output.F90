@@ -119,6 +119,7 @@ subroutine OutputFileRead(input,realization,output_option, &
   PetscBool :: added
   PetscBool :: vel_cent, vel_face
   PetscBool :: fluxes
+  PetscBool :: print_connection_ids
   PetscBool :: mass_flowrate, energy_flowrate
   PetscBool :: aveg_mass_flowrate, aveg_energy_flowrate,is_sum,is_rst
 
@@ -548,6 +549,10 @@ subroutine OutputFileRead(input,realization,output_option, &
 !.............................
       case('PRINT_COLUMN_IDS')
         output_option%print_column_ids = PETSC_TRUE
+
+!.............................
+      case('PRINT_CONNECTION_IDS')
+        print_connection_ids = PETSC_TRUE
         
 !.............................
       case('DETAILED')
@@ -607,6 +612,16 @@ subroutine OutputFileRead(input,realization,output_option, &
 
   if (fluxes) then
     output_option%print_fluxes = PETSC_TRUE
+  endif
+  
+  if (print_connection_ids) then
+    if (output_option%print_tecplot) then
+      option%io_buffer = 'Keyword: PRINT_CONNECTION_IDS only defined for &
+                         &FORMAT HDF5'
+      call PrintErrMsg(option)
+    endif
+    if (output_option%print_hdf5) &
+         output_option%print_hdf5_connection_ids = PETSC_TRUE
   endif
 
   if(output_option%aveg_output_variable_list%nvars>0) then
