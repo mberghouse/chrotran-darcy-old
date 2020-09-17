@@ -1213,6 +1213,26 @@ subroutine OutputVariableToID(word,name,units,category,id,subvar,subsubvar, &
       name = 'K Orthogonality Error'
       category = OUTPUT_GENERIC
       id = K_ORTHOGONALITY_ERROR
+    case ('FACE_PERMEABILITY')
+      units = 'm^2'
+      name = 'Face Permeability'
+      category = OUTPUT_GENERIC
+      id = -1
+    case ('FACE_AREA')
+      units = 'm^2'
+      name = 'Face Area'
+      category = OUTPUT_GENERIC
+      id = -1
+    case ('FACE_NORMAL')
+      units = 'm'
+      name = 'Face Normal'
+      category = OUTPUT_GENERIC
+      id = -1
+    case ('FACE_CELL_CENTER_CONNECTION')
+      units = 'm'
+      name = 'Face Connection'
+      category = OUTPUT_GENERIC
+      id = -1
   end select
 
 end subroutine OutputVariableToID
