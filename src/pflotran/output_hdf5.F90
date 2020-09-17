@@ -2314,7 +2314,7 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
   type(connection_set_type), pointer :: cur_connection_set
   type(coupler_type), pointer :: boundary_condition
   type(grid_type), pointer :: grid
-  PetscInt :: ipass, icount, iconn, istart
+  PetscInt :: icount, iconn, istart
   PetscInt :: total_num_connections
   PetscInt, allocatable :: int_array(:)
   PetscErrorCode :: ierr
@@ -2337,42 +2337,29 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
   ! Ask for space and organize it
   ! number of connections
   total_num_connections = 0
-  ipass = 1
   nullify(boundary_condition)
   nullify(cur_connection_set)
-  do 
-    select case(ipass)
-      case(1) ! internal connections
-        cur_connection_set => grid%internal_connection_set_list%first
-      case(2) ! boundary connections
-        ! sets up first boundary condition in list
-        if (.not.associated(boundary_condition)) then
-          boundary_condition => & 
-             realization_base%patch%boundary_condition_list%first
-        endif
-        if (associated(boundary_condition)) then
-          cur_connection_set => boundary_condition%connection_set
-        else
-          nullify(cur_connection_set)
-        endif
-    end select
-    do 
-      if (.not.associated(cur_connection_set)) exit
-      total_num_connections = total_num_connections + &
-                            cur_connection_set%num_connections
-      cur_connection_set => cur_connection_set%next
-    enddo
-    select case(ipass)
-      case(1) ! internal connections
-        ipass = ipass + 1
-      case(2) ! boundary connections
-        if (associated(boundary_condition)) then
-          boundary_condition => boundary_condition%next
-        endif
-        if (.not.associated(boundary_condition)) exit
-    end select
-  enddo
   
+  !internal connections
+  cur_connection_set => &
+            realization_base%patch%grid%internal_connection_set_list%first
+  do
+    total_num_connections = total_num_connections + &
+                            cur_connection_set%num_connections
+    cur_connection_set => cur_connection_set%next
+    if (.not.associated(cur_connection_set)) exit
+  enddo
+  ! boundary connections
+  boundary_condition => & 
+             realization_base%patch%boundary_condition_list%first
+  do
+    cur_connection_set => boundary_condition%connection_set
+    total_num_connections = total_num_connections + &
+                            cur_connection_set%num_connections
+    boundary_condition => boundary_condition%next
+    if (.not.associated(boundary_condition)) exit
+  enddo
+    
   ! memory space which is a 1D vector
   rank_mpi = 1
   dims = 0
@@ -2425,57 +2412,48 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
     call h5pset_dxpl_mpio_f(prop_id,H5FD_MPIO_INDEPENDENT_F, &
                             hdf5_err)
 #endif
+
   allocate(int_array(total_num_connections*2))
-  icount = 0
-  ipass = 0
+  icount = 1
   nullify(boundary_condition)
   nullify(cur_connection_set)
-  do 
-    select case(ipass)
-      case(1) ! internal connections
-        cur_connection_set => grid%internal_connection_set_list%first
-      case(2) ! boundary connections
-        ! sets up first boundary condition in list
-        if (.not.associated(boundary_condition)) then
-          boundary_condition => realization_base%patch%boundary_condition_list%first
-        endif
-        if (associated(boundary_condition)) then
-          cur_connection_set => boundary_condition%connection_set
-        else
-          nullify(cur_connection_set)
-        endif
-    end select
-    do 
-      if (.not.associated(cur_connection_set)) exit
-      do iconn = 1, cur_connection_set%num_connections
-        int_array(icount) = cur_connection_set%id_dn(iconn)
-        int_array(icount + 1) = cur_connection_set%id_up(iconn)
-        icount = icount + 2
-      enddo
-      cur_connection_set => cur_connection_set%next
+  !internal connections
+  cur_connection_set => &
+            realization_base%patch%grid%internal_connection_set_list%first
+  do
+    do iconn = 1, cur_connection_set%num_connections
+      int_array(icount) = cur_connection_set%id_dn(iconn)
+      int_array(icount + 1) = cur_connection_set%id_up(iconn)
+      icount = icount + 2
     enddo
-    select case(ipass)
-      case(1) ! internal connections
-        ipass = ipass + 1
-      case(2) ! boundary connections
-        if (associated(boundary_condition)) then
-          boundary_condition => boundary_condition%next
-        endif
-        if (.not.associated(boundary_condition)) exit
-    end select
+    cur_connection_set => cur_connection_set%next
+    if (.not.associated(cur_connection_set)) exit
+  enddo
+  ! boundary connections
+  boundary_condition => & 
+             realization_base%patch%boundary_condition_list%first
+  do
+    cur_connection_set => boundary_condition%connection_set
+    do iconn = 1, cur_connection_set%num_connections
+      int_array(icount) = cur_connection_set%id_dn(iconn)
+      int_array(icount + 1) = -1
+      icount = icount + 2
+    enddo
+    boundary_condition => boundary_condition%next
+    if (.not.associated(boundary_condition)) exit
   enddo
 
   call PetscLogEventBegin(logging%event_h5dwrite_f,ierr);CHKERRQ(ierr)
-  call h5dwrite_f(data_set_id,H5T_NATIVE_DOUBLE,int_array,dims, &
+  call h5dwrite_f(data_set_id,H5T_NATIVE_INTEGER,int_array,dims, &
                   hdf5_err,memory_space_id,file_space_id,prop_id)
-  call PetscLogEventEnd(logging%event_h5dwrite_f,ierr);CHKERRQ(ierr)
+  call PetscLogEventEnd(logging%event_h5dwrite_f,ierr);CHKERRQ(ierr) 
   
-  ! desallocate
-  deallocate(int_array)
   call h5pclose_f(prop_id,hdf5_err)
   call h5dclose_f(data_set_id,hdf5_err)
   call h5sclose_f(file_space_id,hdf5_err)
   
+  deallocate(int_array)
+
 end subroutine WriteHDF5ConnectionIdsUGridXDMF
 
 ! ************************************************************************** !
