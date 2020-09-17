@@ -443,6 +443,7 @@ module PM_Waste_Form_class
     PetscReal :: decay_heat
     PetscReal :: crit_heat
     PetscReal :: crit_sat
+    PetscReal :: crit_den
     PetscReal :: sw
     PetscReal :: rho_w
     PetscReal :: temperature
@@ -5259,6 +5260,7 @@ subroutine CriticalityMechInit(this)
   this%decay_heat = 0.d0
   this%crit_heat = 0.d0
   this%crit_sat = 0.d0
+  this%crit_den = 0.d0
   this%sw = 0.d0
   this%rho_w = 0.d0
   this%temperature = 0.d0
@@ -5400,6 +5402,12 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
             call InputReadDouble(input,option,new_crit_mech%crit_sat)
             call InputErrorMsg(input,option,'CRITICAL SATURATION LEVEL',&
               error_string)
+          case('CRITICAL_WATER_DENSITY')
+            call InputReadDouble(input,option,new_crit_mech%crit_den)
+            call InputErrorMsg(input,option,'CRITICAL WATER DENSITY',&
+              error_string)
+            call InputReadAndConvertUnits(input,new_crit_mech%crit_den, &
+              'kg/m^3',trim(error_string)//',CRITICAL WATER DENSITY',option)
           case('HEAT_OF_CRITICALITY')
             ! call InputReadDouble(input,option,new_crit_mech%crit_heat)
             ! call InputErrorMsg(input,option,'HEAT_OF_CRITICALITY',error_string)
@@ -5683,6 +5691,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   PetscReal :: tref, t_low, t_high
   PetscReal :: avg_temp_local, avg_temp_global
   PetscReal :: avg_sat_local, avg_sat_global
+  PetscReal :: avg_lden_local, avg_lden_global
 
   call VecGetArrayF90(this%data_mediator%vec,heat_source, &
                       ierr);CHKERRQ(ierr)
@@ -5696,6 +5705,8 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   avg_temp_global = 0.d0
   avg_sat_local  = 0.d0
   avg_sat_global  = 0.d0
+  avg_lden_local = 0.d0
+  avg_lden_global  = 0.d0
   tref = 0.d0
   do i = 1,waste_form%region%num_cells
     ghosted_id = grid%nL2G(waste_form%region%cell_ids(i))
@@ -5703,14 +5714,19 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
       (global_auxvars(ghosted_id)%temp * scaling_factor(i))
     avg_sat_local = avg_sat_local + &  ! Liquid Saturation
       (global_auxvars(ghosted_id)%sat(LIQUID_PHASE) * scaling_factor(i))
+    avg_lden_local = avg_lden_local + &  ! Liquid Density
+      (global_auxvars(ghosted_id)%den_kg(LIQUID_PHASE)*scaling_factor(i))
   enddo
 
   call CalcParallelSUM(option,waste_form%rank_list,avg_temp_local, &
                        avg_temp_global)
   call CalcParallelSUM(option,waste_form%rank_list,avg_sat_local, &
                         avg_sat_global)
+  call CalcParallelSUM(option,waste_form%rank_list,avg_lden_local, &
+                        avg_lden_global)
   avg_temp_global = avg_temp_global / size(waste_form%rank_list)
   avg_sat_global = avg_sat_global / size(waste_form%rank_list)
+  avg_lden_global = avg_lden_global / size(waste_form%rank_list)
   
   cur_criticality => this%criticality_list
   dataset => cur_criticality%crit_mech%neutronics_dataset
@@ -5726,6 +5742,10 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
     endif
 
     if (avg_sat_global <= cur_criticality%crit_mech%crit_sat) then
+      cur_criticality%crit_event%crit_flag = PETSC_FALSE
+    endif
+
+    if (avg_lden_global <= cur_criticality%crit_mech%crit_den) then
       cur_criticality%crit_event%crit_flag = PETSC_FALSE
     endif
 
