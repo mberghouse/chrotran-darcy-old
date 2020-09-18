@@ -809,6 +809,11 @@ subroutine OutputVariableToID(word,name,units,category,id,subvar,subsubvar, &
       units = 'm'
       category = OUTPUT_GENERIC
       id = LIQUID_HEAD
+    case ('LIQUID_PZ_HEAD')
+      name = 'Liquid Piezometric Head'
+      units = 'm'
+      category = OUTPUT_GENERIC
+      id = LIQUID_PZ_HEAD
     case ('LIQUID_DENSITY')
       name = 'Liquid Density'
       units = 'kg/m^3'
