@@ -5658,12 +5658,12 @@ end subroutine AssignCritMech
 
 subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   !
-  !Author: Michael Nole
-  !Date: 11/05/18
+  ! Author: Michael Nole
+  ! Date: 11/05/18
   !
-  !Modifications for neutronics surrogate model
-  !Author: Alex Salazar
-  !Date: 08/27/2020
+  ! Modifications for neutronics surrogate model
+  ! Author: Alex Salazar
+  ! Date: 08/27/2020
   !
   use Realization_Subsurface_class
   use Global_Aux_module
