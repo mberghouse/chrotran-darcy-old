@@ -2204,7 +2204,6 @@ subroutine SubsurfaceReadInput(simulation,input)
 
   PetscBool :: vel_cent
   PetscBool :: vel_face
-  PetscBool :: print_connection_ids
   PetscBool :: fluxes
   PetscBool :: mass_flowrate
   PetscBool :: energy_flowrate
@@ -3016,7 +3015,6 @@ subroutine SubsurfaceReadInput(simulation,input)
       case ('OUTPUT')
         vel_cent = PETSC_FALSE
         vel_face = PETSC_FALSE
-        print_connection_ids = PETSC_FALSE
         fluxes = PETSC_FALSE
         mass_flowrate = PETSC_FALSE
         energy_flowrate = PETSC_FALSE
@@ -3408,8 +3406,6 @@ subroutine SubsurfaceReadInput(simulation,input)
               vel_cent = PETSC_TRUE
             case('VELOCITY_AT_FACE')
               vel_face = PETSC_TRUE
-            case('PRINT_CONNECTION_IDS')
-	            print_connection_ids = PETSC_TRUE
             case('FLUXES')
               fluxes = PETSC_TRUE
             case('FLOWRATES','FLOWRATE')
@@ -3473,15 +3469,6 @@ subroutine SubsurfaceReadInput(simulation,input)
             output_option%print_tecplot_vel_face = PETSC_TRUE
           if (output_option%print_hdf5) &
            output_option%print_hdf5_vel_face = PETSC_TRUE
-        endif
-        if (print_connection_ids) then
-          if (output_option%print_tecplot) then
-            option%io_buffer = 'Keyword: PRINT_CONNECTION_IDS only defined for &
-                               &FORMAT HDF5'
-            call PrintErrMsg(option)
-          endif
-          if (output_option%print_hdf5) &
-               output_option%print_hdf5_connection_ids = PETSC_TRUE
         endif
         if (fluxes) then
           output_option%print_fluxes = PETSC_TRUE

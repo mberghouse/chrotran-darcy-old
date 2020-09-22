@@ -7374,6 +7374,8 @@ subroutine PatchGetVariable1(patch,field,reaction_base,option, &
         call PatchGetKOrthogonalityError(grid, material_auxvars, vec_ptr)
         !vec_ptr(:) = UNINITIALIZED_DOUBLE
       endif
+    case(FACE_PERMEABILITY, FACE_AREA) ! or all other connection indexed output
+        call PatchGetFaceVariable(patch, material_auxvars, ivar, vec_ptr,option)
     case default
       call PatchUnsupportedVariable(ivar,option)
   end select
@@ -10257,6 +10259,94 @@ subroutine PatchGetKOrthogonalityError(grid, material_auxvars, error)
   deallocate(array_error)
 
 end subroutine PatchGetKOrthogonalityError
+
+! ************************************************************************** !
+
+subroutine PatchGetFaceVariable(patch, material_auxvars, ivar, vec_ptr,option)
+  !
+  ! Populate the vec_ptr with face variable
+  !
+  ! Author: Moise Rousseau
+  ! Date: 06/28/20
+  
+  use Connection_module
+  use Coupler_module
+  use Variables_module
+  use Material_Aux_class
+  use Utility_module, only : DotProduct
+  use Option_module
+  
+  type(patch_type), pointer :: patch
+  class(material_auxvar_type), pointer :: material_auxvars(:)
+  type(option_type) :: option
+  PetscInt :: ivar
+  PetscReal, pointer :: vec_ptr(:)
+  
+  class (connection_set_type), pointer :: cur_connection_set
+  type(coupler_type), pointer :: boundary_condition
+  PetscInt :: iconn, icount
+  PetscInt :: local_id_up, local_id_dn, ghosted_id_up, ghosted_id_dn
+  PetscReal :: perm_up, perm_dn, dd_up, dd_dn, dist(-1:3)
+
+  nullify(boundary_condition)
+  nullify(cur_connection_set)
+  !internal connections
+  icount = 1
+  cur_connection_set => patch%grid%internal_connection_set_list%first
+  do
+    if (.not.associated(cur_connection_set)) exit
+    select case(ivar)
+      case(FACE_PERMEABILITY)
+        do iconn = 1, cur_connection_set%num_connections
+          !Cell ids from both side of the face
+          ghosted_id_up = cur_connection_set%id_up(iconn)
+          ghosted_id_dn = cur_connection_set%id_dn(iconn)
+          local_id_up = patch%grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
+          local_id_dn = patch%grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
+          dist(:) = cur_connection_set%dist(:,iconn)
+          dd_up = dist(0)*dist(-1)
+          dd_dn = dist(0)-dd_up
+          call material_auxvars(local_id_up)%PermeabilityTensorToScalar( &
+                                    dist,perm_up)
+          call material_auxvars(local_id_dn)%PermeabilityTensorToScalar( &
+                                    dist,perm_dn)
+          vec_ptr(icount) = (perm_up * perm_dn)/(dd_up*perm_dn + dd_dn*perm_up)
+          icount = icount + 1
+        enddo
+      case(FACE_AREA)
+        do iconn = 1, cur_connection_set%num_connections
+          vec_ptr(icount) = cur_connection_set%area(iconn)
+          icount = icount + 1
+        enddo
+    end select
+    cur_connection_set => cur_connection_set%next
+  enddo
+  ! boundary connections
+  boundary_condition => patch%boundary_condition_list%first
+  do
+    if (.not.associated(boundary_condition)) exit
+    cur_connection_set => boundary_condition%connection_set
+    select case(ivar)
+      case(FACE_PERMEABILITY)
+        do iconn = 1, cur_connection_set%num_connections
+          !Cell ids from both side of the face
+          ghosted_id_dn = cur_connection_set%id_dn(iconn)
+          local_id_dn = patch%grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
+          call material_auxvars(local_id_dn)%PermeabilityTensorToScalar( &
+                                   cur_connection_set%dist(1:3,iconn), perm_dn)
+          vec_ptr(icount) = perm_dn
+          icount = icount + 1
+        enddo
+      case(FACE_AREA)
+        do iconn = 1, cur_connection_set%num_connections
+          vec_ptr(icount) = cur_connection_set%area(iconn)
+          icount = icount + 1
+        enddo
+    end select
+    boundary_condition => boundary_condition%next
+  enddo
+    
+end subroutine PatchGetFaceVariable
 
 ! ************************************************************************** !
 

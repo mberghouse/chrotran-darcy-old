@@ -174,5 +174,8 @@ module Variables_module
   PetscInt, parameter, public :: K_ORTHOGONALITY_ERROR   = 140
   
   PetscInt, parameter, public :: LIQUID_PZ_HEAD          = 141
+  
+  PetscInt, parameter, public :: FACE_PERMEABILITY       = 142
+  PetscInt, parameter, public :: FACE_AREA               = 143
 
 end module Variables_module

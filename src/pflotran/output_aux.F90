@@ -179,6 +179,7 @@ module Output_Aux_module
   PetscInt, parameter, public :: OUTPUT_DISPLACEMENT = 7
   PetscInt, parameter, public :: OUTPUT_STRESS = 8
   PetscInt, parameter, public :: OUTPUT_STRAIN = 9
+  PetscInt, parameter, public :: OUTPUT_FACE = 10
 
   public :: OutputOptionCreate, &
             OutputOptionDuplicate, &
@@ -1221,22 +1222,22 @@ subroutine OutputVariableToID(word,name,units,category,id,subvar,subsubvar, &
     case ('FACE_PERMEABILITY')
       units = 'm^2'
       name = 'Face Permeability'
-      category = OUTPUT_GENERIC
-      id = -1
+      category = OUTPUT_FACE
+      id = FACE_PERMEABILITY
     case ('FACE_AREA')
       units = 'm^2'
       name = 'Face Area'
-      category = OUTPUT_GENERIC
-      id = -1
+      category = OUTPUT_FACE
+      id = FACE_AREA
     case ('FACE_NORMAL')
       units = 'm'
       name = 'Face Normal'
-      category = OUTPUT_GENERIC
+      category = OUTPUT_FACE
       id = -1
-    case ('FACE_CELL_CENTER_CONNECTION')
-      units = 'm'
-      name = 'Face Connection'
-      category = OUTPUT_GENERIC
+    case ('FACE_VELOCITY_BY_CONNECTION_IDS')
+      units = 'm/s'
+      name = 'Face Velocity'
+      category = OUTPUT_FACE
       id = -1
   end select
 
@@ -1386,6 +1387,8 @@ function OutputVariableToCategoryString(icategory)
       string = 'STRESS'
     case(OUTPUT_STRAIN)
       string = 'STRAIN'
+    case(OUTPUT_FACE)
+      string = 'FACE'
     case default
       string = 'GENERIC'
   end select

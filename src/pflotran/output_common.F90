@@ -44,7 +44,8 @@ module Output_Common_module
             OutputGetExplicitIDsFlowrates, &
             OutputGetExplicitAuxVars, &
             OutputGetExplicitCellInfo, &
-            OutputCollectVelocityOrFlux
+            OutputCollectVelocityOrFlux, &
+            OutputGetNumberOfFaceConnection
               
 contains
 
@@ -2066,5 +2067,54 @@ subroutine OutputCollectVelocityOrFlux(realization_base, iphase, direction, &
   call VecDestroy(global_vec,ierr);CHKERRQ(ierr)
 
 end subroutine OutputCollectVelocityOrFlux
+
+! ************************************************************************** !
+
+subroutine OutputGetNumberOfFaceConnection(realization_base, nconnection)
+  ! 
+  ! Compute the number of connection in the grid (internal and
+  ! and boundary)
+  ! 
+  ! Author: Moise Rousseau, Polytechnique Montreal
+  ! 09/21/20
+  ! 
+  
+  use Connection_module
+  use Coupler_module
+  use Option_module
+  
+  class(realization_base_type) :: realization_base
+  PetscInt :: nconnection
+  
+  type(option_type), pointer :: option
+  type(connection_set_type), pointer :: cur_connection_set
+  type(coupler_type), pointer :: boundary_condition
+  
+  nullify(boundary_condition)
+  nullify(cur_connection_set)
+  nconnection = 0
+  option => realization_base%option
+  
+  !internal connections
+  cur_connection_set => &
+            realization_base%patch%grid%internal_connection_set_list%first
+  do
+    if (.not.associated(cur_connection_set)) exit
+    nconnection = nconnection + &
+                            cur_connection_set%num_connections
+    cur_connection_set => cur_connection_set%next
+  enddo
+  ! boundary connections
+  boundary_condition => & 
+             realization_base%patch%boundary_condition_list%first
+  do
+    if (.not.associated(boundary_condition)) exit
+    cur_connection_set => boundary_condition%connection_set
+    nconnection = nconnection + &
+                            cur_connection_set%num_connections
+    boundary_condition => boundary_condition%next
+  enddo
+  
+end subroutine OutputGetNumberOfFaceConnection
 
 end module Output_Common_module
