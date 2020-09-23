@@ -2333,7 +2333,8 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
   type(connection_set_type), pointer :: cur_connection_set
   type(coupler_type), pointer :: boundary_condition
   PetscInt :: icount, iconn, istart
-  PetscInt :: total_num_connections
+  PetscInt :: ghosted_id, nat_id
+  PetscInt :: total_num_connections, nlconnection !local connection
   PetscInt, allocatable :: int_array(:)
   PetscErrorCode :: ierr
   
@@ -2355,15 +2356,18 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
   ! Ask for space and organize it
   ! number of connections
   total_num_connections = 0
-  call OutputGetNumberOfFaceConnection(realization_base, total_num_connections)
+  nlconnection = 0
+  call OutputGetNumberOfFaceConnection(realization_base, nlconnection)
   
   ! memory space which is a 1D vector
   rank_mpi = 1
   dims = 0
-  dims(1) = total_num_connections * 2
+  dims(1) = nlconnection * 2
   call h5screate_simple_f(rank_mpi,dims,memory_space_id,hdf5_err,dims)
    
   ! file space which is a 2D block
+  call MPI_Allreduce(nlconnection,total_num_connections,ONE_INTEGER_MPI, &
+                     MPIU_INTEGER, MPI_SUM,option%mycomm,ierr);CHKERRQ(ierr)
   rank_mpi = 2
   dims = 0
   dims(2) = total_num_connections
@@ -2379,24 +2383,23 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
   if (hdf5_flag < 0) then
     ! if the dataset does not exist, create it
     call h5screate_simple_f(rank_mpi,dims,file_space_id,hdf5_err,dims)
-    call h5dcreate_f(file_id,string,H5T_NATIVE_DOUBLE,file_space_id, &
+    call h5dcreate_f(file_id,string,H5T_NATIVE_INTEGER,file_space_id, &
                      data_set_id,hdf5_err,prop_id)
   else
     call h5dget_space_f(data_set_id,file_space_id,hdf5_err)
   endif
 
   call h5pclose_f(prop_id,hdf5_err)
-
-  istart = 0
+  
   !geh: cannot use dims(1) in MPI_Allreduce as it causes errors on 
   !     Juqueen
-  call MPI_Exscan(total_num_connections, istart, ONE_INTEGER_MPI, &
-                  MPIU_INTEGER, MPI_SUM, option%mycomm, ierr)
+  call MPI_Exscan(nlconnection, istart, ONE_INTEGER_MPI, MPIU_INTEGER, &
+                  MPI_SUM, option%mycomm, ierr);CHKERRQ(ierr)
 
   start(2) = istart
   start(1) = 0
   
-  length(2) = total_num_connections
+  length(2) = nlconnection
   length(1) = 2
 
   stride = 1
@@ -2410,7 +2413,7 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
                             hdf5_err)
 #endif
 
-  allocate(int_array(total_num_connections*2))
+  allocate(int_array(nlconnection*2))
   icount = 1
   nullify(boundary_condition)
   nullify(cur_connection_set)
@@ -2419,8 +2422,12 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
             realization_base%patch%grid%internal_connection_set_list%first
   do
     do iconn = 1, cur_connection_set%num_connections
-      int_array(icount) = cur_connection_set%id_dn(iconn)
-      int_array(icount + 1) = cur_connection_set%id_up(iconn)
+      ghosted_id = cur_connection_set%id_dn(iconn)
+      nat_id = realization_base%patch%grid%nG2A(ghosted_id)
+      int_array(icount) = nat_id
+      ghosted_id = cur_connection_set%id_up(iconn)
+      nat_id = realization_base%patch%grid%nG2A(ghosted_id)
+      int_array(icount + 1) = nat_id
       icount = icount + 2
     enddo
     cur_connection_set => cur_connection_set%next
@@ -2432,7 +2439,9 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
   do
     cur_connection_set => boundary_condition%connection_set
     do iconn = 1, cur_connection_set%num_connections
-      int_array(icount) = cur_connection_set%id_dn(iconn)
+      ghosted_id = cur_connection_set%id_dn(iconn)
+      nat_id = realization_base%patch%grid%nG2A(ghosted_id)
+      int_array(icount) = nat_id
       int_array(icount + 1) = -1
       icount = icount + 2
     enddo
