@@ -966,6 +966,8 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
     elseif (soil_compressibility_index > 0) then
       call MaterialCompressSoil(material_auxvar,cell_pressure, &
                                 gen_auxvar%effective_porosity,dpor_dp)
+    elseif (Initialized(MATERIAL_PHI_TO_PERM_MODEL)) then
+      call MaterialPermToPhi(material_auxvar,general_avg_buffer_stress)
     endif
     if (option%iflag /= GENERAL_UPDATE_FOR_DERIVATIVE) then
       material_auxvar%porosity = gen_auxvar%effective_porosity
@@ -980,7 +982,7 @@ subroutine GeneralAuxVarCompute(x,gen_auxvar,global_auxvar,material_auxvar, &
     endif
 
     if (Initialized(MATERIAL_PHI_TO_PERM_MODEL)) then
-      call MaterialPermToPhi(material_auxvar)
+      call MaterialPermToPhi(material_auxvar,general_avg_buffer_stress)
     endif
  
 

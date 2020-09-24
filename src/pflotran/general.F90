@@ -781,10 +781,10 @@ subroutine GeneralUpdateAuxVars(realization,update_state,update_state_bc)
 
   !MAN: For DRZ perm evolution, just working in serial
   if (GENERAL_UPDATE_DRZ_PERM) then
-    alpha = 1.d0
-    alpha_t = 1.d-5
-    youngs_mod = 24.d6
-    nu = 0.3d0
+    !alpha = 1.d0
+    !alpha_t = 1.d-5
+    !youngs_mod = 24.d6
+    !nu = 0.3d0
     general_avg_buffer_stress = 0.d0
     thermal_stress = 0.d0
     poroelastic_stress = 0.d0

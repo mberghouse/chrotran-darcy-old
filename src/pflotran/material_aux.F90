@@ -983,17 +983,18 @@ subroutine MaterialSwell(sat_init,sat,bulk_mod,swelling_coeff,swelling_stress)
 
   if (sat < sat_init) return
 
-  ! Rutqvist et al., 2011, Eqn 39. Swelling stress in Pa 
+  ! Rutqvist et al., 2011, Eqn 39. Swelling stress in Pa
   swelling_stress = 3.d0 * bulk_mod * (sat - sat_init) * swelling_coeff
 
 end subroutine MaterialSwell
 
 ! ************************************************************************** !
-subroutine MaterialPermToPhi(material_aux)
+subroutine MaterialPermToPhi(material_aux,sigma)
 
   implicit none
 
   class(material_auxvar_type) :: material_aux
+  PetscReal :: sigma
 
   PetscReal :: gamma
 
@@ -1006,9 +1007,18 @@ subroutine MaterialPermToPhi(material_aux)
                        gamma * material_aux%porosity_0)
   endif
 
-  material_aux%porosity = log(material_aux%permeability(ONE_INTEGER) / &
-                              material_aux%k_0) * 1/gamma
+  select case(material_aux%fracture_perm_model)
 
+    case(THREE_INTEGER)
+      !Two-part Hooke's Model (Zheng et al., 2016)
+      material_aux%porosity = material_aux%porosity_0 * &
+                              (1.d0 - material_aux%fracture_compressibility * &
+                               sigma/1.d6) + material_aux%soft_fraction * &
+                               exp(-sigma/(1.d6*material_aux%bulk_mod)) 
+    case default
+      material_aux%porosity = log(material_aux%permeability(ONE_INTEGER) / &
+                                  material_aux%k_0) * 1/gamma
+  end select
 end subroutine MaterialPermToPhi
 ! ************************************************************************** !
 
