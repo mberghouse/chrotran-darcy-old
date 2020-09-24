@@ -549,7 +549,7 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
   PetscInt :: vert_count
   Vec :: ivec
   PetscErrorCode :: ierr
-  PetscInt :: nconnection
+  PetscInt :: nlconnection, total_num_connections
 
   discretization => realization_base%discretization
   patch => realization_base%patch
@@ -683,8 +683,10 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
   call DiscretizationDuplicateVector(discretization,global_vec,global_vec_vy)
   call DiscretizationDuplicateVector(discretization,global_vec,global_vec_vz)
   
-  call OutputGetNumberOfFaceConnection(realization_base, nconnection)
-  call VecCreateMPI(option%mycomm,PETSC_DECIDE, nconnection, & 
+  call OutputGetNumberOfFaceConnection(realization_base, nlconnection)
+  call MPI_Allreduce(nlconnection,total_num_connections,ONE_INTEGER_MPI, &
+                     MPIU_INTEGER, MPI_SUM,option%mycomm,ierr);CHKERRQ(ierr)
+  call VecCreateMPI(option%mycomm,nlconnection, total_num_connections, & 
                     face_vec,ierr);CHKERRQ(ierr)
 
   select case (var_list_type)
@@ -705,10 +707,10 @@ subroutine OutputHDF5UGridXDMF(realization_base,var_list_type)
         if (cur_variable%icategory == OUTPUT_FACE) then
           call OutputGetVariableArray(realization_base,face_vec,cur_variable)
           if (cur_variable%iformat == 0) then
-            call HDF5WriteDataSetFromVec(string,option,natural_vec,grp_id, &
+            call HDF5WriteDataSetFromVec(string,option,face_vec,grp_id, &
                                          H5T_NATIVE_DOUBLE)
           else
-            call HDF5WriteDataSetFromVec(string,option,natural_vec,grp_id, &
+            call HDF5WriteDataSetFromVec(string,option,face_vec,grp_id, &
                                          H5T_NATIVE_INTEGER)
           endif
           cur_variable => cur_variable%next
@@ -2393,9 +2395,9 @@ subroutine WriteHDF5ConnectionIdsUGridXDMF(realization_base,option,file_id)
   
   !geh: cannot use dims(1) in MPI_Allreduce as it causes errors on 
   !     Juqueen
+  istart = 0
   call MPI_Exscan(nlconnection, istart, ONE_INTEGER_MPI, MPIU_INTEGER, &
                   MPI_SUM, option%mycomm, ierr);CHKERRQ(ierr)
-
   start(2) = istart
   start(1) = 0
   

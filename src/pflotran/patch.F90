@@ -10301,14 +10301,16 @@ subroutine PatchGetFaceVariable(patch, material_auxvars, ivar, vec_ptr,option)
           !Cell ids from both side of the face
           ghosted_id_up = cur_connection_set%id_up(iconn)
           ghosted_id_dn = cur_connection_set%id_dn(iconn)
-          local_id_up = patch%grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
-          local_id_dn = patch%grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
+          !local_id_up = patch%grid%nG2L(ghosted_id_up) ! = zero for ghost nodes
+          !local_id_dn = patch%grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
           dist(:) = cur_connection_set%dist(:,iconn)
-          dd_up = dist(0)*dist(-1)
-          dd_dn = dist(0)-dd_up
-          call material_auxvars(local_id_up)%PermeabilityTensorToScalar( &
+          dd_up = dist(-1)
+          dd_dn = 1.d0-dd_up
+          perm_up = 0.
+          perm_dn = 0.
+          call material_auxvars(ghosted_id_up)%PermeabilityTensorToScalar( &
                                     dist,perm_up)
-          call material_auxvars(local_id_dn)%PermeabilityTensorToScalar( &
+          call material_auxvars(ghosted_id_dn)%PermeabilityTensorToScalar( &
                                     dist,perm_dn)
           vec_ptr(icount) = (perm_up * perm_dn)/(dd_up*perm_dn + dd_dn*perm_up)
           icount = icount + 1
@@ -10331,9 +10333,9 @@ subroutine PatchGetFaceVariable(patch, material_auxvars, ivar, vec_ptr,option)
         do iconn = 1, cur_connection_set%num_connections
           !Cell ids from both side of the face
           ghosted_id_dn = cur_connection_set%id_dn(iconn)
-          local_id_dn = patch%grid%nG2L(ghosted_id_dn) ! = zero for ghost nodes
-          call material_auxvars(local_id_dn)%PermeabilityTensorToScalar( &
-                                   cur_connection_set%dist(1:3,iconn), perm_dn)
+          dist(:) = cur_connection_set%dist(:,iconn)
+          call material_auxvars(ghosted_id_dn)%PermeabilityTensorToScalar( &
+                                   dist, perm_dn)
           vec_ptr(icount) = perm_dn
           icount = icount + 1
         enddo
