@@ -1124,6 +1124,51 @@ subroutine OutputVariableToID(word,name,units,category,id,subvar,subsubvar, &
       name = 'Permeability YZ'
       category = OUTPUT_GENERIC
       id = PERMEABILITY_YZ
+    case ('LIQUID_CONDUCTIVITY','LIQUID_CONDUCTIVITY_X')
+      units = 'm/s'
+      name = 'Liquid Conductivity X'
+      category = OUTPUT_GENERIC
+      id = LIQUID_CONDUCTIVITY
+    case ('LIQUID_CONDUCTIVITY_Y')
+      units = 'm/s'
+      name = 'Liquid Conductivity Y'
+      category = OUTPUT_GENERIC
+      id = LIQUID_CONDUCTIVITY_Y
+    case ('LIQUID_CONDUCTIVITY_Z')
+      units = 'm/s'
+      name = 'Liquid Conductivity Z'
+      category = OUTPUT_GENERIC
+      id = LIQUID_CONDUCTIVITY_Z
+   case ('LIQUID_CONDUCTIVITY_XY')
+      if (.not.option%flow%full_perm_tensor) then
+        option%io_buffer = 'LIQUID_CONDUCTIVITY_XY only supported for &
+          full tensor permeability.'
+        call PrintErrMsg(option)
+      endif
+      units = 'm/s'
+      name = 'Liquid Conductivity XY'
+      category = OUTPUT_GENERIC
+      id = LIQUID_CONDUCTIVITY_XY
+   case ('LIQUID_CONDUCTIVITY_XZ')
+      if (.not.option%flow%full_perm_tensor) then
+        option%io_buffer = 'LIQUID_CONDUCTIVITY_XZ only supported for &
+          full tensor permeability.'
+        call PrintErrMsg(option)
+      endif
+      units = 'm/s'
+      name = 'Liquid Conductivity XZ'
+      category = OUTPUT_GENERIC
+      id = LIQUID_CONDUCTIVITY_XZ
+    case ('LIQUID_CONDUCTIVITY_YZ')
+      if (.not.option%flow%full_perm_tensor) then
+        option%io_buffer = 'LIQUID_CONDUCTIVITY_YZ only supported for &
+          full tensor permeability.'
+        call PrintErrMsg(option)
+      endif
+      units = 'm/s'
+      name = 'Liquid Conductivity YZ'
+      category = OUTPUT_GENERIC
+      id = LIQUID_CONDUCTIVITY_YZ
     case ('GAS_PERMEABILITY','GAS_PERMEABILITY_X')
       units = 'm^2'
       name = 'Gas Permeability X'

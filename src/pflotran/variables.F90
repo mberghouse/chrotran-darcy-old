@@ -175,7 +175,15 @@ module Variables_module
   
   PetscInt, parameter, public :: LIQUID_PZ_HEAD          = 141
   
-  PetscInt, parameter, public :: FACE_PERMEABILITY       = 142
-  PetscInt, parameter, public :: FACE_AREA               = 143
+  PetscInt, parameter, public :: LIQUID_CONDUCTIVITY     = 142
+  PetscInt, parameter, public :: LIQUID_CONDUCTIVITY_X   = 143
+  PetscInt, parameter, public :: LIQUID_CONDUCTIVITY_Y   = 144
+  PetscInt, parameter, public :: LIQUID_CONDUCTIVITY_Z   = 145
+  PetscInt, parameter, public :: LIQUID_CONDUCTIVITY_XY  = 146
+  PetscInt, parameter, public :: LIQUID_CONDUCTIVITY_YZ  = 147
+  PetscInt, parameter, public :: LIQUID_CONDUCTIVITY_XZ  = 148
+  
+  PetscInt, parameter, public :: FACE_PERMEABILITY       = 149
+  PetscInt, parameter, public :: FACE_AREA               = 150
 
 end module Variables_module

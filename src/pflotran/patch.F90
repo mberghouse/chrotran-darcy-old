@@ -7266,6 +7266,39 @@ subroutine PatchGetVariable1(patch,field,reaction_base,option, &
                                   vec_ptr(local_id),ivar)
           enddo
       end select
+    case(LIQUID_CONDUCTIVITY,LIQUID_CONDUCTIVITY_X, &
+         LIQUID_CONDUCTIVITY_Y,LIQUID_CONDUCTIVITY_Z, &
+         LIQUID_CONDUCTIVITY_XY,LIQUID_CONDUCTIVITY_XZ, &
+         LIQUID_CONDUCTIVITY_YZ)
+      select case(ivar)
+        case(LIQUID_CONDUCTIVITY, LIQUID_CONDUCTIVITY_X)
+          ivar_temp = PERMEABILITY_X
+        case(LIQUID_CONDUCTIVITY_Y)
+          ivar_temp = PERMEABILITY_Y
+        case(LIQUID_CONDUCTIVITY_Z)
+          ivar_temp = PERMEABILITY_Z
+        case(LIQUID_CONDUCTIVITY_XY)
+          ivar_temp = PERMEABILITY_XY
+        case(LIQUID_CONDUCTIVITY_XZ)
+          ivar_temp = PERMEABILITY_XZ
+        case(LIQUID_CONDUCTIVITY_YZ)
+          ivar_temp = PERMEABILITY_YZ
+      end select
+      select case(option%iflowmode)
+        case(RICHARDS_MODE)
+          do local_id=1,grid%nlmax
+            ghosted_id = grid%nL2G(local_id)
+            tempreal = patch%aux%Richards%auxvars(ghosted_id)%kr / &
+                       patch%aux%Richards%auxvars(ghosted_id)%kvr
+            vec_ptr(local_id) = EARTH_GRAVITY / tempreal * &
+               patch%aux%Global%auxvars(ghosted_id)%den_kg(1) * &
+               MaterialAuxVarGetValue(material_auxvars(ghosted_id), ivar_temp)
+          enddo
+        case default
+          option%io_buffer = 'Output of liquid conductivity &
+            &not supported for current flow mode.'
+          call PrintMsg(option)
+      end select
     case(LIQUID_RELATIVE_PERMEABILITY)
       select case(option%iflowmode)
         case(RICHARDS_MODE)
@@ -8582,6 +8615,36 @@ function PatchGetVariableValueAtCell(patch,field,reaction_base,option, &
                                                           ghosted_id), &
                                 material_auxvars(ghosted_id), &
                                 value,ivar)
+      end select
+    case(LIQUID_CONDUCTIVITY,LIQUID_CONDUCTIVITY_X, &
+         LIQUID_CONDUCTIVITY_Y,LIQUID_CONDUCTIVITY_Z, &
+         LIQUID_CONDUCTIVITY_XY,LIQUID_CONDUCTIVITY_XZ, &
+         LIQUID_CONDUCTIVITY_YZ)
+      select case(ivar)
+        case(LIQUID_CONDUCTIVITY, LIQUID_CONDUCTIVITY_X)
+          ivar_temp = PERMEABILITY_X
+        case(LIQUID_CONDUCTIVITY_Y)
+          ivar_temp = PERMEABILITY_Y
+        case(LIQUID_CONDUCTIVITY_Z)
+          ivar_temp = PERMEABILITY_Z
+        case(LIQUID_CONDUCTIVITY_XY)
+          ivar_temp = PERMEABILITY_XY
+        case(LIQUID_CONDUCTIVITY_XZ)
+          ivar_temp = PERMEABILITY_XZ
+        case(LIQUID_CONDUCTIVITY_YZ)
+          ivar_temp = PERMEABILITY_YZ
+      end select
+      select case(option%iflowmode)
+        case(RICHARDS_MODE)
+          value = patch%aux%Richards%auxvars(ghosted_id)%kr / &
+                     patch%aux%Richards%auxvars(ghosted_id)%kvr
+          value = EARTH_GRAVITY / value * &
+               patch%aux%Global%auxvars(ghosted_id)%den_kg(1) * &
+               MaterialAuxVarGetValue(material_auxvars(ghosted_id), ivar_temp)
+        case default
+          option%io_buffer = 'Output of liquid conductivity &
+            &not supported for current flow mode.'
+          call PrintMsg(option)
       end select
     case(LIQUID_RELATIVE_PERMEABILITY)
       select case(option%iflowmode)
