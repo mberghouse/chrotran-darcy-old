@@ -7407,7 +7407,8 @@ subroutine PatchGetVariable1(patch,field,reaction_base,option, &
         call PatchGetKOrthogonalityError(grid, material_auxvars, vec_ptr)
         !vec_ptr(:) = UNINITIALIZED_DOUBLE
       endif
-    case(FACE_PERMEABILITY, FACE_AREA) ! or all other connection indexed output
+    case(FACE_PERMEABILITY,FACE_AREA,FACE_UPWIND_FRACTION) 
+        ! or all other connection indexed output
         call PatchGetFaceVariable(patch, material_auxvars, ivar, vec_ptr,option)
     case default
       call PatchUnsupportedVariable(ivar,option)
@@ -10383,6 +10384,11 @@ subroutine PatchGetFaceVariable(patch, material_auxvars, ivar, vec_ptr,option)
           vec_ptr(icount) = cur_connection_set%area(iconn)
           icount = icount + 1
         enddo
+      case(FACE_UPWIND_FRACTION)
+        do iconn = 1, cur_connection_set%num_connections
+          vec_ptr(icount) = cur_connection_set%dist(-1,iconn)
+          icount = icount + 1
+        enddo
     end select
     cur_connection_set => cur_connection_set%next
   enddo
@@ -10405,6 +10411,11 @@ subroutine PatchGetFaceVariable(patch, material_auxvars, ivar, vec_ptr,option)
       case(FACE_AREA)
         do iconn = 1, cur_connection_set%num_connections
           vec_ptr(icount) = cur_connection_set%area(iconn)
+          icount = icount + 1
+        enddo
+      case(FACE_UPWIND_FRACTION)
+        do iconn = 1, cur_connection_set%num_connections
+          vec_ptr(icount) = cur_connection_set%dist(-1,iconn)
           icount = icount + 1
         enddo
     end select
