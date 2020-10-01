@@ -25,6 +25,7 @@ module Fracture_module
     PetscReal :: change_perm_x
     PetscReal :: change_perm_y
     PetscReal :: change_perm_z
+    PetscBool :: test
   contains
     procedure, public :: Read => FractureRead
   end type fracture_type
@@ -81,6 +82,7 @@ subroutine FractureInit(this)
   this%change_perm_x = 0.d0
   this%change_perm_y = 0.d0
   this%change_perm_z = 0.d0
+  this%test = PETSC_FALSE
 
 end subroutine FractureInit
 
@@ -209,6 +211,8 @@ subroutine FractureRead(this,input,option)
           this%change_perm_y = 1.d0
         case('ALTER_PERM_Z')
           this%change_perm_z = 1.d0
+        case('TEST')
+          this%test = PETSC_TRUE
         case default
           call InputKeywordUnrecognized(input,word, &
                   'MATERIAL_PROPERTY,WIPP-FRACTURE',option)
