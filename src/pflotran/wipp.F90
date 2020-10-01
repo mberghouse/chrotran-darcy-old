@@ -25,7 +25,7 @@ module Fracture_module
     PetscReal :: change_perm_x
     PetscReal :: change_perm_y
     PetscReal :: change_perm_z
-    PetscBool :: test
+    PetscBool :: unit_test
   contains
     procedure, public :: Read => FractureRead
   end type fracture_type
@@ -82,7 +82,7 @@ subroutine FractureInit(this)
   this%change_perm_x = 0.d0
   this%change_perm_y = 0.d0
   this%change_perm_z = 0.d0
-  this%test = PETSC_FALSE
+  this%unit_test = PETSC_FALSE
 
 end subroutine FractureInit
 
@@ -212,7 +212,7 @@ subroutine FractureRead(this,input,option)
         case('ALTER_PERM_Z')
           this%change_perm_z = 1.d0
         case('TEST')
-          this%test = PETSC_TRUE
+          this%unit_test = PETSC_TRUE
         case default
           call InputKeywordUnrecognized(input,word, &
                   'MATERIAL_PROPERTY,WIPP-FRACTURE',option)
@@ -437,10 +437,9 @@ module Creep_Closure_module
     PetscReal :: time_closeoff
     PetscReal :: time_datamax
     PetscReal :: porosity_minimum
+    PetscBool :: unit_test
     class(lookup_table_general_type), pointer :: lookup_table
-    
     class(creep_closure_type), pointer :: next
-    
   contains
     procedure, public :: Read => CreepClosureRead
     procedure, public :: Evaluate => CreepClosureEvaluate
@@ -495,7 +494,8 @@ function CreepClosureCreate()
   CreepClosureCreate%shutdown_pressure = 5.d7 ! set to BRAGFLO default
   CreepClosureCreate%porosity_minimum = 1.d-2 
   CreepClosureCreate%time_closeoff = 1.d20 ! s
-  CreepClosureCreate%time_datamax =  1.d20 ! s
+  CreepClosureCreate%time_datamax = 1.d20 ! s
+  CreepClosureCreate%unit_test = PETSC_FALSE
   nullify(CreepClosureCreate%lookup_table)
   nullify(CreepClosureCreate%next)
   
@@ -541,6 +541,9 @@ subroutine CreepClosureRead(this,input,option)
     call StringToUpper(keyword)   
       
     select case(trim(keyword))
+      ! TODO:Jenn Make the TEST specific to tables, if you don't want to test all
+      case('TEST')
+       this%unit_test = PETSC_TRUE
       case('FILENAME') 
         call InputReadFilename(input,option,filename)
         call InputErrorMsg(input,option,'FILENAME',error_string)
@@ -881,6 +884,7 @@ module Klinkenberg_module
   type, public :: klinkenberg_type
     PetscReal :: a
     PetscReal :: b
+    PetscBool :: unit_test
   contains
     procedure, public :: Read => KlinkenbergRead
     procedure, public :: Evaluate => KlinkenbergEvaluate
@@ -933,6 +937,7 @@ function KlinkenbergCreate()
   allocate(KlinkenbergCreate)
   KlinkenbergCreate%a = UNINITIALIZED_DOUBLE
   KlinkenbergCreate%b = UNINITIALIZED_DOUBLE
+  KlinkenbergCreate%unit_test = PETSC_FALSE
   
 end function KlinkenbergCreate
 
@@ -977,6 +982,8 @@ subroutine KlinkenbergRead(this,input,option)
       case('B') 
         call InputReadDouble(input,option,this%b)
         call InputErrorMsg(input,option,'b',error_string)
+      case('TEST')
+        this%unit_test = PETSC_TRUE
      case default
         call InputKeywordUnrecognized(input,keyword,error_string,option)
     end select
