@@ -885,6 +885,7 @@ module Klinkenberg_module
     PetscReal :: a
     PetscReal :: b
     PetscBool :: unit_test
+    character(len=MAXSTRINGLENGTH) :: input_filename
   contains
     procedure, public :: Read => KlinkenbergRead
     procedure, public :: Evaluate => KlinkenbergEvaluate
@@ -901,6 +902,7 @@ module Klinkenberg_module
 
   public :: KlinkenbergInit, &
             KlinkenbergCreate, &
+            KlinkenbergUnitTest, &
             KlinkenbergDestroy
   
   contains
@@ -938,6 +940,7 @@ function KlinkenbergCreate()
   KlinkenbergCreate%a = UNINITIALIZED_DOUBLE
   KlinkenbergCreate%b = UNINITIALIZED_DOUBLE
   KlinkenbergCreate%unit_test = PETSC_FALSE
+  KlinkenbergCreate%input_filename = ''
   
 end function KlinkenbergCreate
 
@@ -984,6 +987,11 @@ subroutine KlinkenbergRead(this,input,option)
         call InputErrorMsg(input,option,'b',error_string)
       case('TEST')
         this%unit_test = PETSC_TRUE
+        call InputReadFilename(input,option,this%input_filename)
+        ! Not sure I want to have the error message because maybe we don't
+        ! absolutely need to provide an input file if we just want it to
+        ! run through standard values, which would be hardcoded:
+        !call InputErrorMsg(input,option,'TEST FILENAME',error_string)
      case default
         call InputKeywordUnrecognized(input,keyword,error_string,option)
     end select
@@ -1072,6 +1080,25 @@ subroutine KlinkenbergTest(this,liquid_permeability,gas_pressure)
            this%Evaluate(liquid_permeability,gas_pressure)
   
 end subroutine KlinkenbergTest
+
+! ************************************************************************** !
+
+subroutine KlinkenbergUnitTest(this)
+  ! 
+  ! Author: Jenn Frederick
+  ! Date: 09/30/2020
+  ! 
+  implicit none
+  
+  class(klinkenberg_type) :: this
+  
+  ! This routine will be called if this%unit_test is true.
+  ! If an input filename is given, then this%input_filename will have a 
+  ! non-zero length and it will read it. If not, it will just increment 
+  ! through some hardcoded values and spit the input/output out into 
+  ! another file.
+  
+end subroutine KlinkenbergUnitTest
 
 ! ************************************************************************** !
 

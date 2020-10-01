@@ -3689,6 +3689,9 @@ subroutine SubsurfaceReadInput(simulation,input)
         call KlinkenbergInit()
         klinkenberg => KlinkenbergCreate()
         call Klinkenberg%Read(input,option)
+        if (Klinkenberg%unit_test) then
+          call KlinkenbergUnitTest(klinkenberg)
+        endif
 
 !....................
       case ('ONLY_VERTICAL_FLOW')
