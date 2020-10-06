@@ -5518,7 +5518,7 @@ subroutine PatchGetVariable1(patch,field,reaction_base,option, &
               vec_ptr(local_id) = &
                 patch%aux%Global%auxvars(grid%nL2G(local_id))%pres(1) / &
                 (EARTH_GRAVITY * &
-                patch%aux%Global%auxvars(grid%nL2G(local_id))%den_kg(1)) - &
+                patch%aux%Global%auxvars(grid%nL2G(local_id))%den_kg(1)) + &
                 grid%z(grid%nL2G(local_id))
             enddo
           case(LIQUID_SATURATION)
@@ -7578,9 +7578,9 @@ function PatchGetVariableValueAtCell(patch,field,reaction_base,option, &
                     patch%aux%Global%auxvars(ghosted_id)%den_kg(1)
           case(LIQUID_PZ_HEAD)
             value = patch%aux%Global%auxvars(ghosted_id)%pres(1) / &
-                    (EARTH_GRAVITY * &
-                    patch%aux%Global%auxvars(ghosted_id)%den_kg(1)) - &
-                    grid%z(ghosted_id)
+                  (EARTH_GRAVITY * &
+                  patch%aux%Global%auxvars(ghosted_id)%den_kg(1)) + &
+                  grid%z(ghosted_id)
           case(LIQUID_SATURATION)
             value = patch%aux%Global%auxvars(ghosted_id)%sat(1)
           case(LIQUID_DENSITY)
