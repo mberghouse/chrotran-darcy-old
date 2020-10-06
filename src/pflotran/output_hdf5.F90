@@ -946,6 +946,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
 
   Vec :: global_vec
   Vec :: natural_vec
+  Vec :: face_vec
   PetscReal, pointer :: v_ptr
 
   character(len=MAXSTRINGLENGTH) :: filename_path, filename_header
@@ -970,6 +971,7 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
   PetscInt :: num_vertices, num_cells
   PetscInt :: mesh_type
   PetscErrorCode :: ierr
+  PetscInt :: nlconnection, total_num_connections
 
   discretization => realization_base%discretization
   patch => realization_base%patch
@@ -1171,6 +1173,12 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
                                   option)
   call DiscretizationCreateVector(discretization,ONEDOF,natural_vec,NATURAL, &
                                   option)
+  
+  call OutputGetNumberOfFaceConnection(realization_base, nlconnection)
+  call MPI_Allreduce(nlconnection,total_num_connections,ONE_INTEGER_MPI, &
+                     MPIU_INTEGER, MPI_SUM,option%mycomm,ierr);CHKERRQ(ierr)
+  call VecCreateMPI(option%mycomm,nlconnection, total_num_connections, & 
+                    face_vec,ierr);CHKERRQ(ierr)
 
   select case (var_list_type)
 
@@ -1179,15 +1187,31 @@ subroutine OutputHDF5UGridXDMFExplicit(realization_base,var_list_type)
       cur_variable => output_option%output_snap_variable_list%first
       do
         if (.not.associated(cur_variable)) exit
-        call OutputGetVariableArray(realization_base,global_vec,cur_variable)
-        call DiscretizationGlobalToNatural(discretization,global_vec, &
-                                           natural_vec,ONEDOF)
+        
         string = cur_variable%name
         if (len_trim(cur_variable%units) > 0) then
           word = cur_variable%units
           call HDF5MakeStringCompatible(word)
           string = trim(string) // ' [' // trim(word) // ']'
         endif
+        
+        if (cur_variable%icategory == OUTPUT_FACE) then
+          call OutputGetVariableArray(realization_base,face_vec,cur_variable)
+          if (cur_variable%iformat == 0) then
+            call HDF5WriteDataSetFromVec(string,option,face_vec,grp_id, &
+                                         H5T_NATIVE_DOUBLE)
+          else
+            call HDF5WriteDataSetFromVec(string,option,face_vec,grp_id, &
+                                         H5T_NATIVE_INTEGER)
+          endif
+          cur_variable => cur_variable%next
+          cycle
+        endif
+        
+        call OutputGetVariableArray(realization_base,global_vec,cur_variable)
+        call DiscretizationGlobalToNatural(discretization,global_vec, &
+                                           natural_vec,ONEDOF)
+
         if (cur_variable%iformat == 0) then
           call HDF5WriteDataSetFromVec(string,option,natural_vec, &
                                        grp_id,H5T_NATIVE_DOUBLE)
