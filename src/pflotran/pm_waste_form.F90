@@ -5035,7 +5035,6 @@ subroutine PMWFInputRecord(this)
 ! --------------
   PetscInt :: id
   character(len=MAXWORDLENGTH) :: word
-  class(criticality_mediator_type), pointer :: cm
   class(criticality_type), pointer :: cur_criticality
 ! --------------
 
@@ -5044,26 +5043,26 @@ subroutine PMWFInputRecord(this)
   write(id,'(a29)',advance='no') 'pm: '
   write(id,'(a)') this%name
 
-  cm => this%criticality_mediator
-  cur_criticality => cm%criticality_list
+  if (associated(this%criticality_mediator)) then
+    cur_criticality => this%criticality_mediator%criticality_list
   
-  do
-    if (.not. associated(cur_criticality)) exit
+    do
+      if (.not. associated(cur_criticality)) exit
+      
+      write(id,'(a29)',advance='no') 'criticality mechanism: '
+      write(id,'(a)') cur_criticality%crit_event%mech_name
+      write(id,'(a29)',advance='no') 'criticality start: '
+      write(word,'(es12.5)') cur_criticality%crit_event%crit_start
+      write(id,'(a)') trim(adjustl(word)) // ' sec'
+      write(id,'(a29)',advance='no') 'criticality end: '
+      write(word,'(es12.5)') cur_criticality%crit_event%crit_end
+      write(id,'(a)') trim(adjustl(word)) // ' sec'
+      
+      cur_criticality => cur_criticality%next
+    enddo
     
-    write(id,'(a29)',advance='no') 'criticality mechanism: '
-    write(id,'(a)') cur_criticality%crit_event%mech_name
-    write(id,'(a29)',advance='no') 'criticality start: '
-    write(word,'(es12.5)') cur_criticality%crit_event%crit_start
-    write(id,'(a)') trim(adjustl(word)) // ' sec'
-    write(id,'(a29)',advance='no') 'criticality end: '
-    write(word,'(es12.5)') cur_criticality%crit_event%crit_end
-    write(id,'(a)') trim(adjustl(word)) // ' sec'
+    call CriticalityMechanismInputRecord(this%criticality_mediator);
     
-    cur_criticality => cur_criticality%next
-  enddo
-  
-  if (associated(cm)) then
-    call CriticalityMechanismInputRecord(cm);
   endif
   
 end subroutine PMWFInputRecord
