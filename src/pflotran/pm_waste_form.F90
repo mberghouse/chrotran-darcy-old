@@ -1004,7 +1004,7 @@ subroutine PMWFReadPMBlock(this,input)
   
   ! Assign chosen mechanism to each criticality object
   if (associated(this%criticality_mediator)) then
-    call AssignCritMech(this%criticality_mediator)
+    call AssignCritMech(this%criticality_mediator,option)
   endif
   
   ! Assign chosen mechanism to each waste form
@@ -2035,6 +2035,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
                  ',DECAY_START_TIME',option)
         !-----------------------------    
           case('CRITICALITY')
+            allocate(new_criticality)
             new_criticality => CriticalityCreate()
             call InputPushBlock(input,option)
             do
@@ -2074,6 +2075,9 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
             call InputPopBlock(input,option)
             if (.not. associated(this%criticality_mediator)) then
               this%criticality_mediator => CriticalityMediatorCreate()
+            endif
+            if (.not. associated(this%criticality_mediator%criticality_list)) &
+              then
               this%criticality_mediator%criticality_list => new_criticality
             else
               cur_criticality => this%criticality_mediator%criticality_list
@@ -2081,10 +2085,13 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
                 if (.not. associated(cur_criticality)) exit
                 if (.not. associated(cur_criticality%next)) then
                   cur_criticality%next => new_criticality
+                  added = PETSC_TRUE
                 endif
+                if (added) exit
                 cur_criticality => cur_criticality%next
               enddo
             endif
+            nullify(new_criticality)
           case default
             call InputKeywordUnrecognized(input,word,error_string,option)
         !-----------------------------
@@ -5125,7 +5132,7 @@ subroutine CriticalityMechanismInputRecord(this)
     endif
     
     if (len(adjustl(trim(cur_crit_mech%heat_dataset_name))) > 0) then
-      write(id,'(a29)',advance='no') 'decay heat data set: '
+      write(id,'(a29)',advance='no') 'decay heat dataset: '
       write(id,'(a)') adjustl(trim(cur_crit_mech%heat_dataset_name))
     endif
     
@@ -5134,7 +5141,7 @@ subroutine CriticalityMechanismInputRecord(this)
     write(id,'(a)') trim(adjustl(word))
 
     if (len(adjustl(trim(cur_crit_mech%rad_dataset_name))) > 0) then 
-      write(id,'(a29)',advance='no') 'inventory data set: '
+      write(id,'(a29)',advance='no') 'inventory dataset: '
       write(id,'(a)') adjustl(trim(cur_crit_mech%rad_dataset_name))
     endif
 
@@ -5357,6 +5364,7 @@ subroutine CriticalityMechInit(this)
   allocate(this)
   nullify(this%next)
 
+  this%mech_name = ""
   this%decay_heat = 0.d0
   this%crit_heat = 0.d0
   this%crit_sat = 0.d0
@@ -5477,12 +5485,14 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
   character(len=MAXSTRINGLENGTH) :: error_string,temp_string
 
   PetscBool :: found
+  PetscBool :: added
 
   character(len=MAXWORDLENGTH) :: word
-  type(criticality_mechanism_type), pointer :: new_crit_mech, cur_crit_mech
+  class(criticality_mechanism_type), pointer :: new_crit_mech, cur_crit_mech
 
   error_string = trim(error_string) // ',CRITICALITY'
   found = PETSC_TRUE
+  added = PETSC_FALSE
   select case(trim(keyword))
     case('CRITICALITY_MECH')
       allocate(new_crit_mech)
@@ -5599,12 +5609,14 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
         do
           if (.not. associated(cur_crit_mech)) exit
           if (.not. associated(cur_crit_mech%next)) then
-            cur_crit_mech => new_crit_mech
+            cur_crit_mech%next => new_crit_mech
+            added = PETSC_TRUE
           endif
+          if (added) exit
           cur_crit_mech => cur_crit_mech%next
         enddo
       endif
-      nullify(cur_crit_mech)
+      nullify(new_crit_mech)
     case default
       found = PETSC_FALSE
   end select
@@ -5655,6 +5667,7 @@ subroutine CriticalityCalc(this,time,ierr)
   else
     this%decay_heat = 0.d0
   endif
+  
 end subroutine CriticalityCalc
 
 ! ************************************************************************** !
@@ -5730,29 +5743,41 @@ end subroutine CriticalityInitializeRun
 
 ! ************************************************************************** !
 
-subroutine AssignCritMech(this)
+subroutine AssignCritMech(this,option)
 
   use String_module
+  use Option_module
 
   implicit none
 
   type(criticality_mediator_type), pointer :: this
+  type(option_type) :: option
 
   type(criticality_mechanism_type), pointer :: cur_mechanism
   type(criticality_type), pointer :: cur_criticality
+  PetscBool :: assigned
 
   cur_criticality => this%criticality_list
   do
     if(.not. associated(cur_criticality)) exit
+    assigned = PETSC_FALSE
     cur_mechanism => this%crit_mech_list
     do
       if (.not. associated(cur_mechanism)) exit
       if (StringCompare(cur_criticality%crit_event%mech_name, &
           cur_mechanism%mech_name)) then
         cur_criticality%crit_mech => cur_mechanism
+        assigned = PETSC_TRUE
         exit
       endif
+      cur_mechanism => cur_mechanism%next
     enddo
+    if (.not. assigned) then
+      option%io_buffer = 'Criticality mechanism "' &
+                         // trim(cur_criticality%crit_event%mech_name) // &
+                         '" not found among the available options.'
+      call PrintErrMsg(option)
+    endif
     cur_criticality => cur_criticality%next
   enddo
 
