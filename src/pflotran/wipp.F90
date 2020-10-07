@@ -1091,12 +1091,137 @@ subroutine KlinkenbergUnitTest(this)
   implicit none
   
   class(klinkenberg_type) :: this
-  
-  ! This routine will be called if this%unit_test is true.
-  ! If an input filename is given, then this%input_filename will have a 
-  ! non-zero length and it will read it. If not, it will just increment 
-  ! through some hardcoded values and spit the input/output out into 
-  ! another file.
+
+  PetscReal, pointer :: temp_gas_pressure(:)           ! [Pa]
+  PetscReal, pointer :: temp_liquid_perm(:,:)          ! [m2]
+  PetscReal, pointer :: temp_corr_gas_perm(:,:)        ! [m2]
+  PetscReal, pointer :: gas_pressure(:)                ! [Pa]
+  PetscReal, pointer :: liquid_permeability(:,:)       ! [m2]
+  PetscReal, pointer :: corr_gas_permeability(:,:)     ! [m2]
+  PetscReal :: gas_permeability(3)                     ! [m2]
+  PetscReal :: diff                   
+  PetscReal :: gp_init, lp_init
+  PetscReal :: gp_space, lp_space
+  PetscReal, parameter :: tolerance = 1.d-8
+  PetscInt :: i, j, k
+  character(len=MAXWORDLENGTH) :: pass_fail(3)
+  character(len=MAXWORDLENGTH), parameter :: filename_out = './klinkenberg.out'
+  PetscInt :: rc_in, rc_out, fu_in, fu_out
+  PetscBool :: input_file_given
+  PetscInt :: values(8)
+  character(len=8) :: date
+  character(len=5) :: zone
+  character(len=10) :: time
+
+  allocate(temp_gas_pressure(99))
+  allocate(temp_liquid_perm(99,3))
+  allocate(temp_corr_gas_perm(99,3))
+
+  gp_init = 1.d5    ! [Pa]
+  gp_space = 2.d5   ! [Pa]
+  lp_init = 1.d-12  ! [m2]
+  lp_space = 5.d-12 ! [m2]
+
+  open(action='write', file=filename_out, iostat=rc_out, newunit=fu_out)
+  call date_and_time(DATE=date,ZONE=zone,TIME=time,VALUES=values)
+  write(fu_out,*) date(1:4),'/',date(5:6),'/',date(7:8),' ',time(1:2),':', &
+                  time(3:4),' ',zone(1:3),':',zone(4:5),'UTC'
+  write(fu_out,*)
+
+  if (len(trim(this%input_filename)) > 0) then
+  !------- an input file was provided -------------------------------
+    input_file_given = PETSC_TRUE
+    write(fu_out,'(a)') 'NOTE: The input file provided was:'
+    write(fu_out,'(a,a)') '      ', trim(this%input_filename)
+
+    write(fu_out,'(a,d17.10,a)') 'NOTE: The validation test tolerance is ', &
+                             tolerance, '.'
+    write(fu_out,*)
+    i = 1
+    open(action='read', file=trim(this%input_filename), iostat=rc_in, &
+         newunit=fu_in)
+    read(fu_in, *) ! skip header line
+    do
+      read (fu_in, *, iostat=rc_in) temp_liquid_perm(i,1), &
+                                    temp_liquid_perm(i,2), &
+                                    temp_liquid_perm(i,3), &
+                                    temp_gas_pressure(i), &
+                                    temp_corr_gas_perm(i,1), &
+                                    temp_corr_gas_perm(i,2), &
+                                    temp_corr_gas_perm(i,3) 
+      if (rc_in /= 0) exit 
+      i = i + 1 
+    enddo
+    ! read in values while counting how many values with i
+    allocate(gas_pressure(i-1))
+    allocate(liquid_permeability(i-1,3))
+    allocate(corr_gas_permeability(i-1,3))
+    gas_pressure(:) = temp_gas_pressure(1:i-1)
+    liquid_permeability(:,:) = temp_liquid_perm(1:i-1,1:3)
+    corr_gas_permeability(:,:) = temp_corr_gas_perm(1:i-1,1:3)
+  else
+  !------- an input file was not provided ---------------------------
+    input_file_given = PETSC_FALSE
+    write(fu_out,'(a)') 'WARNING: An input file was not provided.'
+    write(fu_out,'(a)') 'WARNING: Automatic validation will not be performed.'
+    write(fu_out,'(a)') 'WARNING: Validation is left for the user to perform.'
+    write(fu_out,*)
+    allocate(gas_pressure(99))
+    allocate(liquid_permeability(99,3))
+    do k=1,99
+      gas_pressure(k) = gp_init + (k-1)*gp_space
+      liquid_permeability(k,:) = lp_init + (k-1)*lp_space
+    enddo
+  endif
+
+  i = 0
+  do k=1,size(gas_pressure)
+    write(fu_out,'(a,I2,a)') '||-----------TEST-#',k,'-----------------------&
+                               &--------------||'
+    write(fu_out,'(a)') '[in]  liquid permeability (x,y,z) [m2]:'
+    write(fu_out,'(a,d17.10,a,d17.10,a,d17.10,a)') ' (', &
+      liquid_permeability(k,1),',',liquid_permeability(k,2),',', &
+      liquid_permeability(k,3),')'
+    write(fu_out,'(a)') '[in]  gas pressure [Pa]:'
+    write(fu_out,'(d17.10)') gas_pressure(k)
+    gas_permeability = this%Evaluate(liquid_permeability(k,:),gas_pressure(k))
+    write(fu_out,'(a)') '[out] gas permeability (x,y,z) [m2]:'
+    write(fu_out,'(a,d17.10,a,d17.10,a,d17.10,a)') ' (', &
+      gas_permeability(1),',',gas_permeability(2),',',gas_permeability(3),')'
+    if (input_file_given) then
+      write(fu_out,'(a)') '[given] gas permeability (x,y,z) [m2]:'
+      write(fu_out,'(a,d17.10,a,d17.10,a,d17.10,a)') ' (', &
+        corr_gas_permeability(k,1),',',corr_gas_permeability(k,2),',', &
+        corr_gas_permeability(k,3),')'
+      do j=1,3
+        diff = abs(corr_gas_permeability(k,j)-gas_permeability(j))
+        if (diff > (tolerance*corr_gas_permeability(k,j))) then
+          pass_fail(j) = 'FAIL!'
+          i = i + 1
+        else
+          pass_fail(j) = 'pass'
+        endif
+      enddo
+      write(fu_out,'(a,a,a,a,a)') trim(pass_fail(1)),', ',trim(pass_fail(2)), &
+                                  ', ',trim(pass_fail(3))
+    endif
+    write(fu_out,*)
+  enddo
+  write(fu_out,'(a)') 'TEST SUMMARY:'
+  if (i == 0) then
+    write(fu_out,'(a)') ' All tests passed!'
+  else
+    write(fu_out,'(a,I3,a)') ' A total of (', i, ') test(s) failed!'
+  endif
+
+  close(fu_out)
+  close(fu_in)
+  deallocate(liquid_permeability)
+  deallocate(gas_pressure)
+  deallocate(temp_liquid_perm)
+  deallocate(temp_gas_pressure)
+  deallocate(temp_corr_gas_perm)
+  if (input_file_given) deallocate(corr_gas_permeability)
   
 end subroutine KlinkenbergUnitTest
 
