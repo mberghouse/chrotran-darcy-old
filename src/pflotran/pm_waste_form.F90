@@ -5034,6 +5034,9 @@ subroutine PMWFInputRecord(this)
 ! id: [-] file id number
 ! --------------
   PetscInt :: id
+  character(len=MAXWORDLENGTH) :: word
+  class(criticality_mediator_type), pointer :: cm
+  class(criticality_type), pointer :: cur_criticality
 ! --------------
 
   id = INPUT_RECORD_UNIT
@@ -5041,8 +5044,106 @@ subroutine PMWFInputRecord(this)
   write(id,'(a29)',advance='no') 'pm: '
   write(id,'(a)') this%name
 
+  cm => this%criticality_mediator
+  cur_criticality => cm%criticality_list
+  
+  do
+    if (.not. associated(cur_criticality)) exit
+    
+    write(id,'(a29)',advance='no') 'criticality mechanism: '
+    write(id,'(a)') cur_criticality%crit_event%mech_name
+    write(id,'(a29)',advance='no') 'criticality start: '
+    write(word,'(es12.5)') cur_criticality%crit_event%crit_start
+    write(id,'(a)') trim(adjustl(word)) // ' sec'
+    write(id,'(a29)',advance='no') 'criticality end: '
+    write(word,'(es12.5)') cur_criticality%crit_event%crit_end
+    write(id,'(a)') trim(adjustl(word)) // ' sec'
+    
+    cur_criticality => cur_criticality%next
+  enddo
+  
+  if (associated(cm)) then
+    call CriticalityMechanismInputRecord(cm);
+  endif
   
 end subroutine PMWFInputRecord
+
+! ************************************************************************** !
+
+subroutine CriticalityMechanismInputRecord(this)
+  ! 
+  ! Writes criticality mechanism information to the input record file.
+  ! 
+  ! Author: Alex Salazar, SNL
+  ! Date: 10/06/2020
+  ! 
+  implicit none
+  ! INPUT ARGUMENTS:
+  ! ================
+  type(criticality_mediator_type), pointer :: this
+  ! ---------------------------------
+  ! LOCAL VARIABLES:
+  ! ================
+  class(criticality_mechanism_type), pointer :: cur_crit_mech
+  character(len=MAXWORDLENGTH) :: word
+  PetscInt :: id = INPUT_RECORD_UNIT
+  ! ---------------------------------
+
+  write(id,'(a)') ' '
+  ! write(id,'(a)') '---------------------------------------------------------&
+  !      &-----------------------'
+  write(id,'(a29)',advance='no') '---------------------------: '
+  write(id,'(a)') 'CRITICALITY MECHANISMS'
+
+  cur_crit_mech => this%crit_mech_list
+  do
+    if (.not.associated(cur_crit_mech)) exit
+
+    write(id,'(a29)',advance='no') 'criticality mechanism name: '
+    write(id,'(a)') adjustl(trim(cur_crit_mech%mech_name))
+    
+    if (len(adjustl(trim(cur_crit_mech%neutronics_dataset_name))) > 0) then
+      write(id,'(a29)',advance='no') 'neutronics surrogate model: '
+      write(id,'(a)') adjustl(trim(cur_crit_mech%neutronics_dataset_name))
+    endif
+    
+    if (cur_crit_mech%crit_heat > 0.0d0) then
+      write(id,'(a29)',advance='no') 'heat of criticality: '
+      write(word,'(es12.5)') cur_crit_mech%crit_heat
+      write(id,'(a)') trim(adjustl(word)) // ' MW'
+    endif
+    
+    if (cur_crit_mech%crit_sat > 0.0d0) then
+      write(id,'(a29)',advance='no') 'critical saturation level: '
+      write(word,'(f7.5)') cur_crit_mech%crit_sat
+      write(id,'(a)') trim(adjustl(word))
+    endif
+    
+    if (cur_crit_mech%crit_den > 0.0d0) then
+      write(id,'(a29)',advance='no') 'critical water density: '
+      write(word,'(es12.5)') cur_crit_mech%crit_den
+      write(id,'(a)') trim(adjustl(word)) // ' kg/m^3'
+    endif
+    
+    if (len(adjustl(trim(cur_crit_mech%heat_dataset_name))) > 0) then
+      write(id,'(a29)',advance='no') 'decay heat data set: '
+      write(id,'(a)') adjustl(trim(cur_crit_mech%heat_dataset_name))
+    endif
+    
+    write(id,'(a29)',advance='no') 'decay heat source condition: '
+    write(word,'(I1)') cur_crit_mech%heat_source_cond
+    write(id,'(a)') trim(adjustl(word))
+
+    if (len(adjustl(trim(cur_crit_mech%rad_dataset_name))) > 0) then 
+      write(id,'(a29)',advance='no') 'inventory data set: '
+      write(id,'(a)') adjustl(trim(cur_crit_mech%rad_dataset_name))
+    endif
+
+    write(id,'(a29)') '---------------------------: '
+    cur_crit_mech => cur_crit_mech%next
+  enddo
+
+end subroutine CriticalityMechanismInputRecord
 
 ! ************************************************************************** !
 
@@ -5265,6 +5366,10 @@ subroutine CriticalityMechInit(this)
   this%rho_w = 0.d0
   this%temperature = 0.d0
   this%k_effective = 0.d0
+
+  this%rad_dataset_name = ""
+  this%neutronics_dataset_name = ""
+  this%heat_dataset_name = ""
 
   this%rad_dataset => DatasetAsciiCreate()
   this%neutronics_dataset => DatasetAsciiCreate()
