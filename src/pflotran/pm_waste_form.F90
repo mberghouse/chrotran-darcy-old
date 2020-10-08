@@ -383,6 +383,7 @@ module PM_Waste_Form_class
     PetscReal :: decay_start_time                      
     character(len=MAXWORDLENGTH) :: mech_name
     class(wf_mechanism_base_type), pointer :: mechanism
+    class(criticality_mediator_type), pointer :: criticality_mediator
     class(waste_form_base_type), pointer :: next
     
   end type waste_form_base_type
@@ -858,6 +859,7 @@ function PMWFWasteFormCreate()
   nullify(wf%rad_mass_fraction)       ! g-rad/g-matrix
   nullify(wf%rad_concentration)       ! mol-rad/g-matrix
   nullify(wf%inst_release_amount)     ! mol-rad/g-matrix
+  nullify(wf%criticality_mediator)
   nullify(wf%mechanism)
   nullify(wf%next)
  !------- canister degradation model -----------------
@@ -946,10 +948,13 @@ subroutine PMWFReadPMBlock(this,input)
 ! -------------------------------------------------------
   class(waste_form_base_type), pointer :: cur_waste_form
   class(wf_mechanism_base_type), pointer :: cur_mechanism
+  class(criticality_mechanism_type), pointer :: cur_crm
+  class(criticality_type), pointer :: cur_cr
   type(option_type), pointer :: option
   character(len=MAXWORDLENGTH) :: word
   character(len=MAXSTRINGLENGTH) :: error_string
   PetscBool :: found
+  PetscBool :: assigned
 ! -------------------------------------------------------
 
   option => this%option
@@ -1011,6 +1016,7 @@ subroutine PMWFReadPMBlock(this,input)
   cur_waste_form => this%waste_form_list
   do
     if (.not.associated(cur_waste_form)) exit
+    ! Mechanism
     cur_mechanism => this%mechanism_list
     do
       if (.not.associated(cur_mechanism)) exit
@@ -1028,6 +1034,35 @@ subroutine PMWFReadPMBlock(this,input)
       call PrintErrMsg(option)
     endif
     
+    ! Criticality Mechanism
+    if (associated(this%criticality_mediator)) then
+      cur_cr => cur_waste_form%criticality_mediator%criticality_list
+      do 
+        if(.not. associated(cur_cr)) exit
+        assigned = PETSC_FALSE
+        cur_crm => this%criticality_mediator%crit_mech_list
+        do
+          if (.not.associated(cur_crm)) exit
+          if (StringCompare(cur_cr%crit_event%mech_name, &
+              cur_crm%mech_name)) then
+            cur_cr%crit_mech => cur_crm
+            assigned = PETSC_TRUE
+            exit
+          endif
+          cur_crm => cur_crm%next
+        enddo
+        if (.not. assigned) then
+          option%io_buffer = 'Criticality mechanism "' &
+                             // trim(cur_cr%crit_event%mech_name) // &
+                             '" specified for waste form in region"' // &
+                             trim(cur_waste_form%region_name) // &
+                             '" not found among the available options.'
+          call PrintErrMsg(option)
+        endif
+        cur_cr => cur_cr%next
+      enddo
+    endif
+
     if (.not.cur_waste_form%mechanism%canister_degradation_model) then
       ! canister vitality specified, but can.deg. model is off:
       if (initialized(cur_waste_form%canister_vitality_rate)) then
@@ -1955,16 +1990,19 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
 ! new_waste_form: pointer to new waste form object
 ! cur_waste_form: pointer to current waste form object
 ! ----------------------------------------------------------------------
-  PetscBool :: added
+  PetscBool :: added, cm_added, wf_cm_added
   PetscInt :: num_errors
   character(len=MAXWORDLENGTH) :: word
   class(waste_form_base_type), pointer :: new_waste_form, cur_waste_form
   type(criticality_type), pointer :: cur_criticality, new_criticality
+  type(criticality_type), pointer :: wf_cur_criticality, wf_new_criticality
 ! ----------------------------------------------------------------------
 
   error_string = trim(error_string) // ',WASTE_FORM'
   found = PETSC_TRUE
   added = PETSC_FALSE
+  cm_added = PETSC_FALSE
+  wf_cm_added = PETSC_FALSE
   num_errors = 0
 
   select case(trim(keyword))
@@ -2037,6 +2075,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
           case('CRITICALITY')
             allocate(new_criticality)
             new_criticality => CriticalityCreate()
+            wf_new_criticality => CriticalityCreate()
             call InputPushBlock(input,option)
             do
               call InputReadPflotranString(input, option)
@@ -2052,6 +2091,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
                                      error_string)
                   call StringToUpper(word)
                   new_criticality%crit_event%mech_name= trim(word)
+                  wf_new_criticality%crit_event%mech_name= trim(word)
                 case('CRIT_START')
                   call InputReadDouble(input,option,new_criticality% &
                                        crit_event%crit_start)
@@ -2060,6 +2100,8 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
                            crit_event%crit_start,'sec', &
                            trim(error_string)//',CRIT_START', &
                            option)
+                  wf_new_criticality%crit_event%crit_start = &
+                    new_criticality%crit_event%crit_start
                 case('CRIT_END')
                   call InputReadDouble(input,option,new_criticality% &
                                        crit_event%crit_end)
@@ -2068,6 +2110,8 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
                            crit_event%crit_end,'sec', &
                            trim(error_string)//',CRIT_END', &
                            option)
+                  wf_new_criticality%crit_event%crit_end = &
+                     new_criticality%crit_event%crit_end
                 case default
                   call InputKeywordUnrecognized(input,word,error_string,option)
               end select
@@ -2085,13 +2129,35 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
                 if (.not. associated(cur_criticality)) exit
                 if (.not. associated(cur_criticality%next)) then
                   cur_criticality%next => new_criticality
-                  added = PETSC_TRUE
+                  cm_added = PETSC_TRUE
                 endif
-                if (added) exit
+                if (cm_added) exit
                 cur_criticality => cur_criticality%next
               enddo
             endif
             nullify(new_criticality)
+            if (.not. associated(new_waste_form%criticality_mediator)) then
+              new_waste_form%criticality_mediator => &
+                CriticalityMediatorCreate()
+            endif
+            if (.not. associated(new_waste_form%criticality_mediator% &
+                criticality_list)) then
+              new_waste_form%criticality_mediator%criticality_list => &
+                wf_new_criticality
+            else
+              wf_cur_criticality => &
+                new_waste_form%criticality_mediator%criticality_list
+              do
+                if (.not. associated(wf_cur_criticality)) exit
+                if (.not. associated(wf_cur_criticality%next)) then
+                  wf_cur_criticality%next => wf_new_criticality
+                  wf_cm_added = PETSC_TRUE
+                endif
+                if (wf_cm_added) exit
+                wf_cur_criticality => wf_cur_criticality%next
+              enddo
+            endif
+            nullify(wf_new_criticality)
           case default
             call InputKeywordUnrecognized(input,word,error_string,option)
         !-----------------------------
@@ -5043,6 +5109,7 @@ subroutine PMWFInputRecord(this)
   PetscInt :: id
   character(len=MAXWORDLENGTH) :: word
   class(criticality_type), pointer :: cur_criticality
+  class(waste_form_base_type), pointer :: cur_waste_form
 ! --------------
 
   id = INPUT_RECORD_UNIT
@@ -5050,26 +5117,79 @@ subroutine PMWFInputRecord(this)
   write(id,'(a29)',advance='no') 'pm: '
   write(id,'(a)') this%name
 
-  if (associated(this%criticality_mediator)) then
-    cur_criticality => this%criticality_mediator%criticality_list
-  
+  if (associated(this%waste_form_list)) then
+    
+    cur_waste_form => this%waste_form_list
+    
+    write(id,'(a)') ' '
+    ! write(id,'(a)') '---------------------------------------------------------&
+    !      &-----------------------'
+    write(id,'(a29)',advance='no') '---------------------------: '
+    write(id,'(a)') 'WASTE FORMS'
     do
-      if (.not. associated(cur_criticality)) exit
+      if (.not. associated(cur_waste_form)) exit
       
-      write(id,'(a29)',advance='no') 'criticality mechanism: '
-      write(id,'(a)') cur_criticality%crit_event%mech_name
-      write(id,'(a29)',advance='no') 'criticality start: '
-      write(word,'(es12.5)') cur_criticality%crit_event%crit_start
-      write(id,'(a)') trim(adjustl(word)) // ' sec'
-      write(id,'(a29)',advance='no') 'criticality end: '
-      write(word,'(es12.5)') cur_criticality%crit_event%crit_end
-      write(id,'(a)') trim(adjustl(word)) // ' sec'
+      if (len(trim(adjustl(cur_waste_form%region_name))) > 0) then
+        write(id,'(a29)',advance='no') 'region: '
+        write(id,'(a)') cur_waste_form%region_name
+      endif
+      if (len(trim(adjustl(cur_waste_form%mech_name))) > 0) then
+        write(id,'(a29)',advance='no') 'mechanism: '
+        write(id,'(a)') cur_waste_form%mech_name
+      endif
+      if (Initialized(cur_waste_form%volume)) then
+        write(id,'(a29)',advance='no') 'volume: '
+        write(word,'(es12.5)') cur_waste_form%volume
+        write(id,'(a)') trim(adjustl(word)) // ' m^3'
+      endif
+      if (Initialized(cur_waste_form%exposure_factor)) then
+        write(id,'(a29)',advance='no') 'exposure_factor: '
+        write(word,'(es12.5)') cur_waste_form%exposure_factor
+        write(id,'(a)') trim(adjustl(word))
+      endif
+      if (Initialized(cur_waste_form%breach_time)) then
+        write(id,'(a29)',advance='no') 'breach time: '
+        write(word,'(es12.5)') cur_waste_form%breach_time
+        write(id,'(a)') trim(adjustl(word)) // ' sec'
+      endif
+      if (Initialized(cur_waste_form%decay_start_time)) then
+        write(id,'(a29)',advance='no') 'decay start time: '
+        write(word,'(es12.5)') cur_waste_form%decay_start_time
+        write(id,'(a)') trim(adjustl(word)) // ' sec'
+      endif
+      if (Initialized(cur_waste_form%canister_vitality_rate)) then
+        write(id,'(a29)',advance='no') 'canister vitality rate: '
+        write(word,'(es12.5)') cur_waste_form%canister_vitality_rate
+        write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
+      endif
       
-      cur_criticality => cur_criticality%next
+      
+      if (associated(cur_waste_form%criticality_mediator)) then
+        cur_criticality => cur_waste_form%criticality_mediator%criticality_list
+        do 
+          if (.not. associated(cur_criticality)) exit
+          
+          write(id,'(a29)',advance='no') 'criticality mechanism: '
+          write(id,'(a)') cur_criticality%crit_event%mech_name
+          write(id,'(a29)',advance='no') 'criticality start: '
+          write(word,'(es12.5)') cur_criticality%crit_event%crit_start
+          write(id,'(a)') trim(adjustl(word)) // ' sec'
+          write(id,'(a29)',advance='no') 'criticality end: '
+          write(word,'(es12.5)') cur_criticality%crit_event%crit_end
+          write(id,'(a)') trim(adjustl(word)) // ' sec'
+          
+          cur_criticality => cur_criticality%next
+        enddo
+      endif
+      
+      write(id,'(a29)') '---------------------------: '
+      cur_waste_form => cur_waste_form%next
     enddo
     
+  endif
+
+  if (associated(this%criticality_mediator)) then
     call CriticalityMechanismInputRecord(this%criticality_mediator);
-    
   endif
   
 end subroutine PMWFInputRecord
@@ -5858,7 +5978,6 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   avg_lden_global = avg_lden_global / size(waste_form%rank_list)
   
   cur_criticality => this%criticality_list
-  dataset => cur_criticality%crit_mech%neutronics_dataset
   j = 0
   do
     if (.not. associated(cur_criticality)) exit
@@ -5883,6 +6002,7 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
     ! Unless constant power level is defined, 
     ! find criticality power level from temperature
     if (cur_criticality%crit_mech%crit_heat == 0.0d0) then
+      dataset => cur_criticality%crit_mech%neutronics_dataset
       tref = avg_temp_global
       if (associated(dataset%time_storage)) then
         templist => dataset%time_storage%times
