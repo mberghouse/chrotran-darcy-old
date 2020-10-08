@@ -5133,6 +5133,21 @@ subroutine PMWFInputRecord(this)
         write(id,'(a29)',advance='no') 'region: '
         write(id,'(a)') cur_waste_form%region_name
       endif
+      if (Initialized(cur_waste_form%coordinate%x)) then
+        write(id,'(a29)',advance='no') 'x-coordinate: '
+        write(word,'(es12.5)') cur_waste_form%coordinate%x
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+      if (Initialized(cur_waste_form%coordinate%y)) then
+        write(id,'(a29)',advance='no') 'y-coordinate: '
+        write(word,'(es12.5)') cur_waste_form%coordinate%y
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+      if (Initialized(cur_waste_form%coordinate%z)) then
+        write(id,'(a29)',advance='no') 'z-coordinate: '
+        write(word,'(es12.5)') cur_waste_form%coordinate%z
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
       if (len(trim(adjustl(cur_waste_form%mech_name))) > 0) then
         write(id,'(a29)',advance='no') 'mechanism: '
         write(id,'(a)') cur_waste_form%mech_name
@@ -5163,7 +5178,6 @@ subroutine PMWFInputRecord(this)
         write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
       endif
       
-      
       if (associated(cur_waste_form%criticality_mediator)) then
         cur_criticality => cur_waste_form%criticality_mediator%criticality_list
         do 
@@ -5188,11 +5202,175 @@ subroutine PMWFInputRecord(this)
     
   endif
 
+  if (associated(this%mechanism_list)) then
+    call MechanismInputRecord(this%mechanism_list);
+  endif
+
   if (associated(this%criticality_mediator)) then
     call CriticalityMechanismInputRecord(this%criticality_mediator);
   endif
   
 end subroutine PMWFInputRecord
+
+! ************************************************************************** !
+
+subroutine MechanismInputRecord(this)
+  ! 
+  ! Writes waste form mechanism information to the input record file.
+  ! 
+  ! Author: Alex Salazar, SNL
+  ! Date: 10/07/2020
+  ! 
+  implicit none
+  ! INPUT ARGUMENTS:
+  ! ================
+  class(wf_mechanism_base_type), pointer :: this
+  ! ---------------------------------
+  ! LOCAL VARIABLES:
+  ! ================
+  class(wf_mechanism_base_type), pointer :: cur_mech
+  character(len=MAXWORDLENGTH) :: word
+  PetscInt :: i
+  PetscInt :: id = INPUT_RECORD_UNIT
+  ! ---------------------------------
+
+  write(id,'(a)') ' '
+  ! write(id,'(a)') '---------------------------------------------------------&
+  !      &-----------------------'
+  write(id,'(a29)',advance='no') '---------------------------: '
+  write(id,'(a)') 'WASTE FORM MECHANISMS'
+
+  cur_mech => this
+  do
+    if (.not.associated(cur_mech)) exit
+
+    ! BASE VARIABLES
+    write(id,'(a29)',advance='no') 'mechanism name: '
+    write(id,'(a)') adjustl(trim(cur_mech%name))
+    
+    if (Initialized(cur_mech%specific_surface_area)) then
+      write(id,'(a29)',advance='no') 'specific surface area: '
+      write(word,'(es12.5)') cur_mech%specific_surface_area
+      write(id,'(a)') trim(adjustl(word)) // ' m^2/kg'
+    endif
+    
+    if (Initialized(cur_mech%matrix_density)) then
+      write(id,'(a29)',advance='no') 'matrix density: '
+      write(word,'(es12.5)') cur_mech%matrix_density
+      write(id,'(a)') trim(adjustl(word)) // ' kg/m^3'
+    endif
+    
+    if (cur_mech%canister_degradation_model) then
+      if (Initialized(cur_mech%vitality_rate_mean)) then
+        write(id,'(a29)',advance='no') 'mean degradation rate: '
+        write(word,'(es12.5)') cur_mech%vitality_rate_mean 
+        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
+      endif
+      if (Initialized(cur_mech%vitality_rate_stdev)) then
+        write(id,'(a29)',advance='no') 'stdev degradation rate: '
+        write(word,'(es12.5)') cur_mech%vitality_rate_stdev
+        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
+      endif
+      if (Initialized(cur_mech%vitality_rate_trunc)) then
+        write(id,'(a29)',advance='no') 'degradation rate truncation: '
+        write(word,'(es12.5)') cur_mech%vitality_rate_trunc
+        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
+      endif
+      if (Initialized(cur_mech%canister_material_constant)) then
+        write(id,'(a29)',advance='no') 'material constant: '
+        write(word,'(es12.5)') cur_mech%canister_material_constant
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+    endif
+    
+    if (cur_mech%num_species > 0) then
+      write(id,'(a29)') 'SPECIES: '
+      do i = 1,cur_mech%num_species
+        write(id,'(a29)',advance='no') ''
+        write(id,'(a12,1X)',advance='no') & 
+          cur_mech%rad_species_list(i)%name
+        write(id,'(es12.5,1X)',advance='no') & 
+          cur_mech%rad_species_list(i)%formula_weight
+        write(id,'(es12.5,1X)',advance='no') & 
+          cur_mech%rad_species_list(i)%decay_constant
+        write(id,'(es12.5,1X)',advance='no') & 
+          cur_mech%rad_species_list(i)%mass_fraction
+        write(id,'(es12.5,1X)',advance='no') & 
+          cur_mech%rad_species_list(i)%inst_release_fraction
+        write(id,'(a12)') cur_mech%rad_species_list(i)%daughter
+      enddo
+    endif
+    
+    ! SELECT TYPE
+    select type(cm => cur_mech)
+    class is(wf_mechanism_glass_type)
+      
+      if (cm%dissolution_rate > 0.0d0) then
+        write(id,'(a29)',advance='no') 'dissolution rate: '
+        write(word,'(es12.5)') cm%dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2-sec'
+      endif
+      
+      if (Initialized(cm%k0)) then
+        write(id,'(a29)',advance='no') 'intrinsic dissolution rate: '
+        write(word,'(es12.5)') cm%k0
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2-sec'
+      endif
+      
+      if (Initialized(cm%k_long)) then
+        write(id,'(a29)',advance='no') 'K_LONG (dissolution rate): '
+        write(word,'(es12.5)') cm%k_long
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2-sec'
+      endif
+      
+      if (Initialized(cm%nu)) then
+        write(id,'(a29)',advance='no') 'pH dependence parameter: '
+        write(word,'(es12.5)') cm%nu
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+      
+      if (Initialized(cm%ea)) then
+        write(id,'(a29)',advance='no') 'effective activation energy: '
+        write(word,'(es12.5)') cm%ea
+        write(id,'(a)') trim(adjustl(word)) // ' J/mol'
+      endif
+      
+      if (Initialized(cm%Q)) then
+        write(id,'(a29)',advance='no') 'Q value: '
+        write(word,'(es12.5)') cm%Q
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+      
+      if (Initialized(cm%K)) then
+        write(id,'(a29)',advance='no') 'equilibrium constant: '
+        write(word,'(es12.5)') cm%K
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+      
+      if (Initialized(cm%V)) then
+        write(id,'(a29)',advance='no') 'exponent parameter: '
+        write(word,'(es12.5)') cm%V
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+      
+      if (Initialized(cm%pH)) then
+        write(id,'(a29)',advance='no') 'pH: '
+        write(word,'(es12.5)') cm%pH
+        write(id,'(a)') trim(adjustl(word)) // ''
+      endif
+    class is(wf_mechanism_dsnf_type)
+      if (Initialized(cm%frac_dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'fractional dissolution rate: '
+        write(word,'(es12.5)') cm%frac_dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
+      endif
+    end select
+
+    write(id,'(a29)') '---------------------------: '
+    cur_mech => cur_mech%next
+  enddo
+  
+end subroutine MechanismInputRecord
 
 ! ************************************************************************** !
 
