@@ -1919,6 +1919,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
         this%mechanism_list => new_mechanism
       else
         cur_mechanism => this%mechanism_list
+        added = PETSC_TRUE
         do
           if (.not.associated(cur_mechanism)) exit
           if (.not.associated(cur_mechanism%next)) then
@@ -2125,6 +2126,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
               this%criticality_mediator%criticality_list => new_criticality
             else
               cur_criticality => this%criticality_mediator%criticality_list
+              cm_added = PETSC_FALSE
               do
                 if (.not. associated(cur_criticality)) exit
                 if (.not. associated(cur_criticality%next)) then
@@ -2147,6 +2149,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
             else
               wf_cur_criticality => &
                 new_waste_form%criticality_mediator%criticality_list
+              wf_cm_added = PETSC_FALSE
               do
                 if (.not. associated(wf_cur_criticality)) exit
                 if (.not. associated(wf_cur_criticality%next)) then
@@ -2200,6 +2203,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
         this%waste_form_list => new_waste_form
       else
         cur_waste_form => this%waste_form_list
+        added = PETSC_FALSE
         do
           if (.not.associated(cur_waste_form)) exit
           if (.not.associated(cur_waste_form%next)) then
@@ -6004,6 +6008,7 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
         this%crit_mech_list => new_crit_mech
       else
         cur_crit_mech => this%crit_mech_list
+        added = PETSC_FALSE
         do
           if (.not. associated(cur_crit_mech)) exit
           if (.not. associated(cur_crit_mech%next)) then
