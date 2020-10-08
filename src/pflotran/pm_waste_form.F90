@@ -5097,20 +5097,16 @@ subroutine PMWFInputRecord(this)
   
 ! INPUT ARGUMENTS:
 ! ================
-! this (input/output): waste form process model object
-! ---------------------------------
   class(pm_waste_form_type) :: this
 ! ---------------------------------
 
 ! LOCAL VARIABLES:
 ! ================
-! id: [-] file id number
-! --------------
   PetscInt :: id
   character(len=MAXWORDLENGTH) :: word
   class(criticality_type), pointer :: cur_criticality
   class(waste_form_base_type), pointer :: cur_waste_form
-! --------------
+! ---------------------------------
 
   id = INPUT_RECORD_UNIT
   
@@ -5122,8 +5118,6 @@ subroutine PMWFInputRecord(this)
     cur_waste_form => this%waste_form_list
     
     write(id,'(a)') ' '
-    ! write(id,'(a)') '---------------------------------------------------------&
-    !      &-----------------------'
     write(id,'(a29)',advance='no') '---------------------------: '
     write(id,'(a)') 'WASTE FORMS'
     do
@@ -5133,49 +5127,58 @@ subroutine PMWFInputRecord(this)
         write(id,'(a29)',advance='no') 'region: '
         write(id,'(a)') cur_waste_form%region_name
       endif
+      
       if (Initialized(cur_waste_form%coordinate%x)) then
         write(id,'(a29)',advance='no') 'x-coordinate: '
         write(word,'(es12.5)') cur_waste_form%coordinate%x
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
+      
       if (Initialized(cur_waste_form%coordinate%y)) then
         write(id,'(a29)',advance='no') 'y-coordinate: '
         write(word,'(es12.5)') cur_waste_form%coordinate%y
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
+      
       if (Initialized(cur_waste_form%coordinate%z)) then
         write(id,'(a29)',advance='no') 'z-coordinate: '
         write(word,'(es12.5)') cur_waste_form%coordinate%z
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
-      if (len(trim(adjustl(cur_waste_form%mech_name))) > 0) then
-        write(id,'(a29)',advance='no') 'mechanism: '
-        write(id,'(a)') cur_waste_form%mech_name
-      endif
-      if (Initialized(cur_waste_form%volume)) then
-        write(id,'(a29)',advance='no') 'volume: '
-        write(word,'(es12.5)') cur_waste_form%volume
-        write(id,'(a)') trim(adjustl(word)) // ' m^3'
-      endif
+      
       if (Initialized(cur_waste_form%exposure_factor)) then
         write(id,'(a29)',advance='no') 'exposure_factor: '
         write(word,'(es12.5)') cur_waste_form%exposure_factor
         write(id,'(a)') trim(adjustl(word))
       endif
-      if (Initialized(cur_waste_form%breach_time)) then
-        write(id,'(a29)',advance='no') 'breach time: '
-        write(word,'(es12.5)') cur_waste_form%breach_time
-        write(id,'(a)') trim(adjustl(word)) // ' sec'
+      
+      if (Initialized(cur_waste_form%volume)) then
+        write(id,'(a29)',advance='no') 'volume: '
+        write(word,'(es12.5)') cur_waste_form%volume
+        write(id,'(a)') trim(adjustl(word)) // ' m^3'
       endif
-      if (Initialized(cur_waste_form%decay_start_time)) then
-        write(id,'(a29)',advance='no') 'decay start time: '
-        write(word,'(es12.5)') cur_waste_form%decay_start_time
-        write(id,'(a)') trim(adjustl(word)) // ' sec'
+      
+      if (len(trim(adjustl(cur_waste_form%mech_name))) > 0) then
+        write(id,'(a29)',advance='no') 'mechanism: '
+        write(id,'(a)') cur_waste_form%mech_name
       endif
+      
       if (Initialized(cur_waste_form%canister_vitality_rate)) then
         write(id,'(a29)',advance='no') 'canister vitality rate: '
         write(word,'(es12.5)') cur_waste_form%canister_vitality_rate
         write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
+      endif
+      
+      if (Initialized(cur_waste_form%breach_time)) then
+        write(id,'(a29)',advance='no') 'canister breach time: '
+        write(word,'(es12.5)') cur_waste_form%breach_time
+        write(id,'(a)') trim(adjustl(word)) // ' sec'
+      endif
+      
+      if (cur_waste_form%decay_start_time > 0.0d0) then
+        write(id,'(a29)',advance='no') 'decay start time: '
+        write(word,'(es12.5)') cur_waste_form%decay_start_time
+        write(id,'(a)') trim(adjustl(word)) // ' sec'
       endif
       
       if (associated(cur_waste_form%criticality_mediator)) then
@@ -5183,11 +5186,15 @@ subroutine PMWFInputRecord(this)
         do 
           if (.not. associated(cur_criticality)) exit
           
+          write(id,'(a)') ' '
+          
           write(id,'(a29)',advance='no') 'criticality mechanism: '
           write(id,'(a)') cur_criticality%crit_event%mech_name
+          
           write(id,'(a29)',advance='no') 'criticality start: '
           write(word,'(es12.5)') cur_criticality%crit_event%crit_start
           write(id,'(a)') trim(adjustl(word)) // ' sec'
+          
           write(id,'(a29)',advance='no') 'criticality end: '
           write(word,'(es12.5)') cur_criticality%crit_event%crit_end
           write(id,'(a)') trim(adjustl(word)) // ' sec'
@@ -5235,18 +5242,18 @@ subroutine MechanismInputRecord(this)
   ! ---------------------------------
 
   write(id,'(a)') ' '
-  ! write(id,'(a)') '---------------------------------------------------------&
-  !      &-----------------------'
   write(id,'(a29)',advance='no') '---------------------------: '
   write(id,'(a)') 'WASTE FORM MECHANISMS'
 
   cur_mech => this
   do
-    if (.not.associated(cur_mech)) exit
+    if (.not. associated(cur_mech)) exit
 
     ! BASE VARIABLES
-    write(id,'(a29)',advance='no') 'mechanism name: '
-    write(id,'(a)') adjustl(trim(cur_mech%name))
+    if (len(trim(adjustl(cur_mech%name))) > 0) then
+      write(id,'(a29)',advance='no') 'mechanism name: '
+      write(id,'(a)') adjustl(trim(cur_mech%name))
+    endif
     
     if (Initialized(cur_mech%specific_surface_area)) then
       write(id,'(a29)',advance='no') 'specific surface area: '
@@ -5260,27 +5267,10 @@ subroutine MechanismInputRecord(this)
       write(id,'(a)') trim(adjustl(word)) // ' kg/m^3'
     endif
     
-    if (cur_mech%canister_degradation_model) then
-      if (Initialized(cur_mech%vitality_rate_mean)) then
-        write(id,'(a29)',advance='no') 'mean degradation rate: '
-        write(word,'(es12.5)') cur_mech%vitality_rate_mean 
-        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
-      endif
-      if (Initialized(cur_mech%vitality_rate_stdev)) then
-        write(id,'(a29)',advance='no') 'stdev degradation rate: '
-        write(word,'(es12.5)') cur_mech%vitality_rate_stdev
-        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
-      endif
-      if (Initialized(cur_mech%vitality_rate_trunc)) then
-        write(id,'(a29)',advance='no') 'degradation rate truncation: '
-        write(word,'(es12.5)') cur_mech%vitality_rate_trunc
-        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
-      endif
-      if (Initialized(cur_mech%canister_material_constant)) then
-        write(id,'(a29)',advance='no') 'material constant: '
-        write(word,'(es12.5)') cur_mech%canister_material_constant
-        write(id,'(a)') trim(adjustl(word)) // ''
-      endif
+    if (.not. cur_mech%seed == 1) then
+      write(id,'(a29)',advance='no') 'random seed: '
+      write(word,'(I12)') cur_mech%seed
+      write(id,'(a)') trim(adjustl(word)) // ' kg/m^3'
     endif
     
     if (cur_mech%num_species > 0) then
@@ -5301,6 +5291,34 @@ subroutine MechanismInputRecord(this)
       enddo
     endif
     
+    if (cur_mech%canister_degradation_model) then
+      
+      if (Initialized(cur_mech%vitality_rate_mean)) then
+        write(id,'(a29)',advance='no') 'mean degradation rate: '
+        write(word,'(es12.5)') cur_mech%vitality_rate_mean 
+        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
+      endif
+      
+      if (Initialized(cur_mech%vitality_rate_stdev)) then
+        write(id,'(a29)',advance='no') 'stdev degradation rate: '
+        write(word,'(es12.5)') cur_mech%vitality_rate_stdev
+        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
+      endif
+      
+      if (Initialized(cur_mech%vitality_rate_trunc)) then
+        write(id,'(a29)',advance='no') 'degradation rate truncation: '
+        write(word,'(es12.5)') cur_mech%vitality_rate_trunc
+        write(id,'(a)') trim(adjustl(word)) // ' log10/yr'
+      endif
+      
+      if (Initialized(cur_mech%canister_material_constant)) then
+        write(id,'(a29)',advance='no') 'canister material constant: '
+        write(word,'(es12.5)') cur_mech%canister_material_constant
+        write(id,'(a)') trim(adjustl(word))
+      endif
+      
+    endif
+    
     ! SELECT TYPE
     select type(cm => cur_mech)
     class is(wf_mechanism_glass_type)
@@ -5308,25 +5326,25 @@ subroutine MechanismInputRecord(this)
       if (cm%dissolution_rate > 0.0d0) then
         write(id,'(a29)',advance='no') 'dissolution rate: '
         write(word,'(es12.5)') cm%dissolution_rate
-        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2-sec'
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2/sec'
       endif
       
       if (Initialized(cm%k0)) then
-        write(id,'(a29)',advance='no') 'intrinsic dissolution rate: '
+        write(id,'(a29)',advance='no') 'K_0 (int. dissolution rate): '
         write(word,'(es12.5)') cm%k0
-        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2-sec'
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2/sec'
       endif
       
       if (Initialized(cm%k_long)) then
         write(id,'(a29)',advance='no') 'K_LONG (dissolution rate): '
         write(word,'(es12.5)') cm%k_long
-        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2-sec'
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2/sec'
       endif
       
       if (Initialized(cm%nu)) then
-        write(id,'(a29)',advance='no') 'pH dependence parameter: '
+        write(id,'(a29)',advance='no') 'nu (pH dependence): '
         write(word,'(es12.5)') cm%nu
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
       
       if (Initialized(cm%ea)) then
@@ -5338,32 +5356,115 @@ subroutine MechanismInputRecord(this)
       if (Initialized(cm%Q)) then
         write(id,'(a29)',advance='no') 'Q value: '
         write(word,'(es12.5)') cm%Q
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
       
       if (Initialized(cm%K)) then
-        write(id,'(a29)',advance='no') 'equilibrium constant: '
+        write(id,'(a29)',advance='no') 'K (equilibrium constant): '
         write(word,'(es12.5)') cm%K
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
       
       if (Initialized(cm%V)) then
-        write(id,'(a29)',advance='no') 'exponent parameter: '
+        write(id,'(a29)',advance='no') 'V (exponent parameter): '
         write(word,'(es12.5)') cm%V
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
       
       if (Initialized(cm%pH)) then
         write(id,'(a29)',advance='no') 'pH: '
         write(word,'(es12.5)') cm%pH
-        write(id,'(a)') trim(adjustl(word)) // ''
+        write(id,'(a)') trim(adjustl(word))
       endif
+      
     class is(wf_mechanism_dsnf_type)
+      
       if (Initialized(cm%frac_dissolution_rate)) then
         write(id,'(a29)',advance='no') 'fractional dissolution rate: '
         write(word,'(es12.5)') cm%frac_dissolution_rate
         write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
       endif
+      
+    class is(wf_mechanism_wipp_type)
+      
+      if (Initialized(cm%frac_dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'fractional dissolution rate: '
+        write(word,'(es12.5)') cm%frac_dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
+      endif
+      
+    class is(wf_mechanism_fmdm_type)
+      
+      if (Initialized(cm%dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'dissolution rate: '
+        write(word,'(es12.5)') cm%dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2/sec'
+      endif
+      
+      if (Initialized(cm%frac_dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'fractional dissolution rate: '
+        write(word,'(es12.5)') cm%frac_dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
+      endif
+      
+      if (Initialized(cm%burnup)) then
+        write(id,'(a29)',advance='no') 'burnup: '
+        write(word,'(es12.5)') cm%burnup
+        write(id,'(a)') trim(adjustl(word)) // ' GWd/MTHM'
+      endif
+      
+    class is(wf_mechanism_fmdm_surrogate_type)
+      
+      if (Initialized(cm%dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'dissolution rate: '
+        write(word,'(es12.5)') cm%dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2/sec'
+      endif
+      
+      if (Initialized(cm%frac_dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'fractional dissolution rate: '
+        write(word,'(es12.5)') cm%frac_dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
+      endif
+      
+      if (Initialized(cm%burnup)) then
+        write(id,'(a29)',advance='no') 'burnup: '
+        write(word,'(es12.5)') cm%burnup
+        write(id,'(a)') trim(adjustl(word)) // ' GWd/MTHM'
+      endif
+      
+      if (Initialized(cm%decay_time)) then
+        write(id,'(a29)',advance='no') 'decay time: '
+        write(word,'(es12.5)') cm%decay_time
+        write(id,'(a)') trim(adjustl(word)) // ' sec'
+      endif
+      
+      if (Initialized(cm%num_nearest_neighbor)) then
+        write(id,'(a29)',advance='no') 'nearest neighbor: '
+        write(word,'(I12)') cm%num_nearest_neighbor
+        write(id,'(a)') trim(adjustl(word))
+      endif
+      
+      if (Initialized(cm%knnr_eps)) then
+        write(id,'(a29)',advance='no') 'KNNR EPS: '
+        write(word,'(es12.5)') cm%knnr_eps
+        write(id,'(a)') trim(adjustl(word))
+      endif
+      
+    class is(wf_mechanism_custom_type)
+      
+      if (Initialized(cm%dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'dissolution rate: '
+        write(word,'(es12.5)') cm%dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' kg/m^2/sec'
+      endif
+      
+      if (Initialized(cm%frac_dissolution_rate)) then
+        write(id,'(a29)',advance='no') 'fractional dissolution rate: '
+        write(word,'(es12.5)') cm%frac_dissolution_rate
+        write(id,'(a)') trim(adjustl(word)) // ' sec^-1'
+      endif
+      
     end select
 
     write(id,'(a29)') '---------------------------: '
@@ -5394,8 +5495,6 @@ subroutine CriticalityMechanismInputRecord(this)
   ! ---------------------------------
 
   write(id,'(a)') ' '
-  ! write(id,'(a)') '---------------------------------------------------------&
-  !      &-----------------------'
   write(id,'(a29)',advance='no') '---------------------------: '
   write(id,'(a)') 'CRITICALITY MECHANISMS'
 
@@ -5403,15 +5502,15 @@ subroutine CriticalityMechanismInputRecord(this)
   do
     if (.not.associated(cur_crit_mech)) exit
 
-    write(id,'(a29)',advance='no') 'criticality mechanism name: '
-    write(id,'(a)') adjustl(trim(cur_crit_mech%mech_name))
+    if (len(adjustl(trim(cur_crit_mech%mech_name))) > 0) then
+      write(id,'(a29)',advance='no') 'criticality mechanism name: '
+      write(id,'(a)') adjustl(trim(cur_crit_mech%mech_name))
+    endif
     
     if (len(adjustl(trim(cur_crit_mech%neutronics_dataset_name))) > 0) then
       write(id,'(a29)',advance='no') 'neutronics surrogate model: '
       write(id,'(a)') adjustl(trim(cur_crit_mech%neutronics_dataset_name))
-    endif
-    
-    if (cur_crit_mech%crit_heat > 0.0d0) then
+    elseif (cur_crit_mech%crit_heat > 0.0d0) then
       write(id,'(a29)',advance='no') 'heat of criticality: '
       write(word,'(es12.5)') cur_crit_mech%crit_heat
       write(id,'(a)') trim(adjustl(word)) // ' MW'
@@ -5419,7 +5518,7 @@ subroutine CriticalityMechanismInputRecord(this)
     
     if (cur_crit_mech%crit_sat > 0.0d0) then
       write(id,'(a29)',advance='no') 'critical saturation level: '
-      write(word,'(f7.5)') cur_crit_mech%crit_sat
+      write(word,'(es12.5)') cur_crit_mech%crit_sat
       write(id,'(a)') trim(adjustl(word))
     endif
     
@@ -5434,9 +5533,11 @@ subroutine CriticalityMechanismInputRecord(this)
       write(id,'(a)') adjustl(trim(cur_crit_mech%heat_dataset_name))
     endif
     
-    write(id,'(a29)',advance='no') 'decay heat source condition: '
-    write(word,'(I1)') cur_crit_mech%heat_source_cond
-    write(id,'(a)') trim(adjustl(word))
+    if (.not. cur_crit_mech%heat_source_cond == 0) then
+      write(id,'(a29)',advance='no') 'decay heat source condition: '
+      write(word,'(I1)') cur_crit_mech%heat_source_cond
+      write(id,'(a)') trim(adjustl(word))
+    endif
 
     if (len(adjustl(trim(cur_crit_mech%rad_dataset_name))) > 0) then 
       write(id,'(a29)',advance='no') 'inventory dataset: '
@@ -5671,6 +5772,7 @@ subroutine CriticalityMechInit(this)
   this%rho_w = 0.d0
   this%temperature = 0.d0
   this%k_effective = 0.d0
+  this%heat_source_cond = 0
 
   this%rad_dataset_name = ""
   this%neutronics_dataset_name = ""
@@ -5821,8 +5923,6 @@ subroutine ReadCriticalityMech(this,input,option,keyword,error_string,found)
             call InputReadAndConvertUnits(input,new_crit_mech%crit_den, &
               'kg/m^3',trim(error_string)//',CRITICAL WATER DENSITY',option)
           case('HEAT_OF_CRITICALITY')
-            ! call InputReadDouble(input,option,new_crit_mech%crit_heat)
-            ! call InputErrorMsg(input,option,'HEAT_OF_CRITICALITY',error_string)
             call InputPushBlock(input,option)
             do
               call InputReadPflotranString(input,option)
