@@ -2149,8 +2149,8 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
             else
               wf_cur_criticality => &
                 new_waste_form%criticality_mediator%criticality_list
-              wf_cm_added = PETSC_FALSE
               do
+                wf_cm_added = PETSC_FALSE
                 if (.not. associated(wf_cur_criticality)) exit
                 if (.not. associated(wf_cur_criticality%next)) then
                   wf_cur_criticality%next => wf_new_criticality
@@ -2283,6 +2283,7 @@ subroutine PMWFAssociateRegion(this,region_list)
   type(region_type), pointer :: new_region
   class(waste_form_base_type), pointer :: cur_waste_form
   type(criticality_type), pointer :: cur_criticality
+  type(criticality_type), pointer :: wf_cur_criticality
   type(option_type), pointer :: option
   type(grid_type), pointer :: grid
   character(len=MAXWORDLENGTH) :: word1, word2
@@ -2305,6 +2306,13 @@ subroutine PMWFAssociateRegion(this,region_list)
   
   do
     if (.not.associated(cur_waste_form)) exit
+    
+    if (associated(cur_waste_form%criticality_mediator)) then
+     wf_cur_criticality => cur_waste_form%criticality_mediator%criticality_list
+    else
+     nullify(wf_cur_criticality)
+    endif
+    
     ! if COORDINATE was given, auto-create a region for it
     if (Initialized(cur_waste_form%coordinate%z)) then
       local_id(1) = -1
@@ -2342,6 +2350,14 @@ subroutine PMWFAssociateRegion(this,region_list)
           cur_criticality => cur_criticality%next
         endif
         
+        if (associated(wf_cur_criticality)) then
+          do
+            if (.not. associated(wf_cur_criticality)) exit
+            wf_cur_criticality%region => new_region
+            wf_cur_criticality => wf_cur_criticality%next
+          enddo
+        endif
+        
         allocate(cur_waste_form%scaling_factor(1))
         cur_waste_form%scaling_factor(1) = 1.d0
       endif
@@ -2357,6 +2373,14 @@ subroutine PMWFAssociateRegion(this,region_list)
             cur_criticality => cur_criticality%next
           endif
           
+          if (associated(wf_cur_criticality)) then
+            do
+              if (.not. associated(wf_cur_criticality)) exit
+              wf_cur_criticality%region => cur_region
+              wf_cur_criticality => wf_cur_criticality%next
+            enddo
+          endif
+          
           exit
         endif
         cur_region => cur_region%next
@@ -2367,6 +2391,19 @@ subroutine PMWFAssociateRegion(this,region_list)
         call PrintErrMsg(option)
       endif
     endif
+    
+    if (associated(cur_waste_form%criticality_mediator)) then
+     wf_cur_criticality => cur_waste_form%criticality_mediator%criticality_list
+     do
+       if (.not.associated(wf_cur_criticality)) exit
+       if (.not.associated(wf_cur_criticality%region)) then
+         nullify(cur_waste_form%criticality_mediator%criticality_list)
+         exit
+       endif
+       wf_cur_criticality => wf_cur_criticality%next
+     enddo
+    endif
+    
     !
     cur_waste_form => cur_waste_form%next
   enddo
@@ -2838,6 +2875,12 @@ end subroutine PMWFSetup
   size_of_vec = 0
   do
     if (.not.associated(cur_waste_form)) exit
+    
+    if (associated(cur_waste_form%criticality_mediator)) then
+     call CriticalityInitializeRun(cur_waste_form%criticality_mediator, &
+                                   this%realization,this%option)
+    endif
+    
     size_of_vec = size_of_vec + (cur_waste_form%mechanism%num_species * &
                                  cur_waste_form%region%num_cells)
     num_waste_form_cells = num_waste_form_cells + 1
@@ -3553,8 +3596,12 @@ subroutine PMWFSolve(this,time,ierr)
       cur_waste_form%instantaneous_mass_rate = 0.d0
     endif
     !
-    if (associated(this%criticality_mediator)) then
-      call CriticalitySolve(this%criticality_mediator,this%realization,time, &
+    ! if (associated(this%criticality_mediator)) then
+    !   call CriticalitySolve(this%criticality_mediator,this%realization,time, &
+    !                         cur_waste_form,ierr)
+    ! endif
+    if (associated(cur_waste_form%criticality_mediator)) then
+      call CriticalitySolve(cur_waste_form%criticality_mediator,this%realization,time, &
                             cur_waste_form,ierr)
     endif
     cur_waste_form => cur_waste_form%next
