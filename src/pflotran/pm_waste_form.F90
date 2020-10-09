@@ -502,6 +502,7 @@ module PM_Waste_Form_class
             CriticalityMechCreate, &
             CriticalityCreate, &
             ReadCriticalityMech, &
+            DecayHeatCalc, &
             CriticalityCalc, &
             CriticalityInitializeRun, &
             AssignCritMech, &
@@ -6075,7 +6076,7 @@ end subroutine ReadCriticalityMech
 
 ! ************************************************************************** !
 
-subroutine CriticalityCalc(this,time,ierr)
+subroutine DecayHeatCalc(this,time,ierr)
 
   ! Calculate mass and heat source terms as a function of time.
   ! Author: Michael Nole
@@ -6117,6 +6118,60 @@ subroutine CriticalityCalc(this,time,ierr)
   else
     this%decay_heat = 0.d0
   endif
+  
+end subroutine DecayHeatCalc
+
+! ************************************************************************** !
+
+subroutine CriticalityCalc(this,temperature,ierr)
+
+  ! Calculate criticality heat source term as a function of temperature.
+  ! Author: Alex Salazar
+  ! Date: 10/08/2020
+
+  implicit none
+
+  type(criticality_mechanism_type) :: this
+  PetscReal :: temperature
+  PetscErrorCode :: ierr
+
+  PetscReal :: tref, t_low, t_high
+  PetscReal, pointer :: templist(:)
+  class(dataset_ascii_type), pointer :: dataset
+  PetscInt :: k
+  
+  ! Unless constant power level is defined, find criticality power level
+  ! from temperature
+  if (len(trim(this%neutronics_dataset_name)) > 0) then
+    dataset => this%neutronics_dataset
+    tref = temperature
+    if (associated(dataset%time_storage)) then
+      templist => dataset%time_storage%times
+      k=1
+      t_low = templist(k)
+      t_high = t_low
+      do
+        if(tref < templist(k)) exit
+        if(k == size(templist)) exit
+        t_low = templist(k)
+        k = k+1
+        t_high = templist(k)
+      enddo
+      if (k == size(templist) .and. tref >= templist(k)) then
+        this%crit_heat = dataset%rbuffer(k)
+      elseif (k==1) then
+        this%crit_heat = 0.d0
+      else
+        this%crit_heat = dataset%rbuffer(k-1) + &
+          (tref-t_low)/(t_high-t_low)* &
+          (dataset%rbuffer(k)-dataset%rbuffer(k-1))
+      endif
+    else
+      this%crit_heat = 0.d0
+    endif
+  else
+    return  ! constant heat of criticality
+  end if
   
 end subroutine CriticalityCalc
 
@@ -6263,11 +6318,8 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   type(criticality_type), pointer :: cur_criticality
   type(grid_type), pointer :: grid
   type(global_auxvar_type), pointer :: global_auxvars(:)
-  class(dataset_ascii_type), pointer :: dataset
   PetscReal, pointer :: scaling_factor(:)
   PetscReal, pointer :: heat_source(:)
-  PetscReal, pointer :: templist(:)
-  PetscReal :: tref, t_low, t_high
   PetscReal :: avg_temp_local, avg_temp_global
   PetscReal :: avg_sat_local, avg_sat_global
   PetscReal :: avg_lden_local, avg_lden_global
@@ -6286,7 +6338,6 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
   avg_sat_global  = 0.d0
   avg_lden_local = 0.d0
   avg_lden_global  = 0.d0
-  tref = 0.d0
   do i = 1,waste_form%region%num_cells
     ghosted_id = grid%nL2G(waste_form%region%cell_ids(i))
     avg_temp_local = avg_temp_local + &  ! Celcius
@@ -6327,38 +6378,9 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
       cur_criticality%crit_event%crit_flag = PETSC_FALSE
     endif
 
-    call CriticalityCalc(cur_criticality%crit_mech,time,ierr)
+    call DecayHeatCalc(cur_criticality%crit_mech,time,ierr)
     
-    ! Unless constant power level is defined (i.e. %crit_heat > 0 MW)
-    ! find criticality power level from temperature
-    if (len(trim(cur_criticality%crit_mech%neutronics_dataset_name)) > 0) then
-      dataset => cur_criticality%crit_mech%neutronics_dataset
-      tref = avg_temp_global
-      if (associated(dataset%time_storage)) then
-        templist => dataset%time_storage%times
-        k=1
-        t_low = templist(k)
-        t_high = t_low
-        do
-          if(tref < templist(k)) exit
-          if(j == size(templist)) exit
-          t_low = templist(k)
-          k = k+1
-          t_high = templist(k)
-        enddo
-        if (k == size(templist) .and. tref >= templist(k)) then
-          cur_criticality%crit_mech%crit_heat = dataset%rbuffer(k)
-        elseif (k==1) then
-          cur_criticality%crit_mech%crit_heat = 0.d0
-        else
-          cur_criticality%crit_mech%crit_heat = dataset%rbuffer(k-1) + &
-            (tref-t_low)/(t_high-t_low)* &
-            (dataset%rbuffer(k)-dataset%rbuffer(k-1))
-        endif
-      else
-        cur_criticality%crit_mech%crit_heat = 0.d0
-      endif
-    end if
+    call CriticalityCalc(cur_criticality%crit_mech,avg_temp_global,ierr)
     
     do i = 1, cur_criticality%region%num_cells
       j = j + 1
