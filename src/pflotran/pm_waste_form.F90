@@ -2126,7 +2126,7 @@ subroutine PMWFReadWasteForm(this,input,option,keyword,error_string,found)
               this%criticality_mediator%criticality_list => new_criticality
             else
               cur_criticality => this%criticality_mediator%criticality_list
-              cm_added = PETSC_FALSE
+              !cm_added = PETSC_FALSE
               do
                 if (.not. associated(cur_criticality)) exit
                 if (.not. associated(cur_criticality%next)) then
