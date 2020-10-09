@@ -1919,7 +1919,7 @@ subroutine PMWFReadMechanism(this,input,option,keyword,error_string,found)
         this%mechanism_list => new_mechanism
       else
         cur_mechanism => this%mechanism_list
-        added = PETSC_TRUE
+        added = PETSC_FALSE
         do
           if (.not.associated(cur_mechanism)) exit
           if (.not.associated(cur_mechanism%next)) then
