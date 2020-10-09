@@ -6282,9 +6282,9 @@ subroutine CriticalitySolve(this,realization,time,waste_form,ierr)
 
     call CriticalityCalc(cur_criticality%crit_mech,time,ierr)
     
-    ! Unless constant power level is defined, 
+    ! Unless constant power level is defined (i.e. %crit_heat > 0 MW)
     ! find criticality power level from temperature
-    if (cur_criticality%crit_mech%crit_heat == 0.0d0) then
+    if (len(trim(cur_criticality%crit_mech%neutronics_dataset_name)) > 0) then
       dataset => cur_criticality%crit_mech%neutronics_dataset
       tref = avg_temp_global
       if (associated(dataset%time_storage)) then
