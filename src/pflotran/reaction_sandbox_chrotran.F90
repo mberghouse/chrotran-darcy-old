@@ -55,6 +55,8 @@ module Reaction_Sandbox_Chrotran_class
     PetscReal :: stoichiometric_D_2
     PetscReal :: exponent_B
     PetscReal :: density_B
+    PetscReal :: beta
+    PetscReal :: alpha
     
   contains
     procedure, public :: ReadInput => ChrotranRead
@@ -118,6 +120,8 @@ function ChrotranCreate()
   ChrotranCreate%mass_action_B = 0.d0
   ChrotranCreate%mass_action_X = 0.d0
   ChrotranCreate%density_B = 0.d0
+  ChrotranCreate%alpha = 0.d0
+  ChrotranCreate%beta = 0.d0
   nullify(ChrotranCreate%next)
 
 end function ChrotranCreate
@@ -187,7 +191,15 @@ subroutine ChrotranRead(this,input,option)
         call InputReadWord(input,option,this%name_biomineral,PETSC_TRUE)
         call InputErrorMsg(input,option,'name_biomineral', &
                            'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS') 
-                                             
+      case('ALPHA') 
+        call InputReadDouble(input,option,this%alpha) 
+        call InputErrorMsg(input,option,'alpha', &
+                           'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS')    
+
+      case('BETA') 
+        call InputReadDouble(input,option,this%beta) 
+        call InputErrorMsg(input,option,'beta', &
+                           'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS')                                 
       case('EXPONENT_B')
         ! Read the double precision background concentration in kg/m^3
         call InputReadDouble(input,option,this%exponent_B)
@@ -481,9 +493,12 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
                            material_auxvar%volume* &                              ! m3 bulk
                            immobile_to_water_vol                                  ! L water/m3 bulk
 
-  biomass_residual_delta = &                                                      ! Growth usage, mol/s
+  biomass_residual_delta = &
+
                            - mu_B*material_auxvar%volume + &                      ! mol/m3 bulk/s * m3 bulk
                            ! Natural decay, mol/s
+                           global_auxvar%darcy_vel(iphase)* &                       ! Growth usage, mol/s
+                          (this%alpha*global_auxvar%pres(iphase))**this%beta * &
                            this%rate_B_2* &                         ! 1/s
                            (rt_auxvar%immobile(this%B_id) - &
                             this%background_concentration_B)* &                                  ! mol/m3 bulk
@@ -628,6 +643,8 @@ subroutine ChrotranKineticState(this,rt_auxvar,global_auxvar, &
   biomass_residual_delta = &                                       ! Growth usage, mol/s
             - mu_B*material_auxvar%volume + &                      ! mol/m3 bulk/s * m3 bulk
             ! Natural decay, mol/s
+            global_auxvar%darcy_vel(iphase)* &                       ! Growth usage, mol/s
+            (this%alpha*global_auxvar%pres(iphase))**this%beta * &
             this%rate_B_2* &                         ! 1/s
             (rt_auxvar%immobile(this%B_id) - &
             this%background_concentration_B)* &                                   ! mol/m3 bulk
