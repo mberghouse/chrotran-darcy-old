@@ -305,7 +305,7 @@ subroutine ChrotranSetup(this,reaction,option)
   ! Date: 08/19/2015
   !
 
-  use Reaction_Aux_module, only : reaction_type, GetPrimarySpeciesIDFromName
+  use Reaction_Aux_module, only : reaction_rt_type, GetPrimarySpeciesIDFromName
   use Reaction_Immobile_Aux_module, only : GetImmobileSpeciesIDFromName
   use Reaction_Mineral_Aux_module, only : GetMineralIDFromName
   use Option_module
