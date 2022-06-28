@@ -9,6 +9,7 @@ module Reaction_Sandbox_module
   use Reaction_Sandbox_Example_class
   use Reaction_Sandbox_Simple_class
   use Reaction_Sandbox_Cyber_class
+  use Reaction_Sandbox_Chrotran_class
   use Reaction_Sandbox_Gas_class 
 
   ! Add new reacton sandbox classes here.
@@ -164,6 +165,7 @@ subroutine RSandboxRead2(local_sandbox_list,input,option)
         new_sandbox => SimpleCreate()
       case('CYBERNETIC')
         new_sandbox => CyberCreate()
+	  case('CHROTRAN') => CyberCreate()
       case('GAS')
         new_sandbox => GasCreate()
       case default
