@@ -300,7 +300,7 @@ subroutine ChrotranRead(this,input,option)
                            'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS')
                            
       case default
-        call InputKeywordUnrecognized(word, &
+        call InputKeywordUnrecognized(input,word, &
                      'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS',option)
     end select
   enddo
