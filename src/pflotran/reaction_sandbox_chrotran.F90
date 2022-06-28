@@ -1,6 +1,8 @@
 module Reaction_Sandbox_Chrotran_class
 
 ! Sandbox reaction for Cr(VI) reduction using bio-reduction with reduced permeability
+#include "petsc/finclude/petscsys.h"
+  use petscsys
 
   use Reaction_Sandbox_Base_class
 
@@ -13,7 +15,7 @@ module Reaction_Sandbox_Chrotran_class
 
   private
 
-#include "petsc/finclude/petscsys.h"
+
 
   type, public, &
     extends(reaction_sandbox_base_type) :: reaction_sandbox_chrotran_type
@@ -139,6 +141,7 @@ subroutine ChrotranRead(this,input,option)
   implicit none
 
   class(reaction_sandbox_chrotran_type) :: this
+
   type(input_type), pointer  :: input
   type(option_type) :: option
 
@@ -310,7 +313,7 @@ subroutine ChrotranSetup(this,reaction,option)
   implicit none
 
   class(reaction_sandbox_chrotran_type) :: this
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   type(option_type) :: option
 
   this%D_mobile_id = &
@@ -362,7 +365,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
 
   class(reaction_sandbox_chrotran_type) :: this
   type(option_type) :: option
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   PetscBool :: compute_derivative
   ! the following arrays must be declared after reaction
   PetscReal :: Residual(reaction%ncomp)
