@@ -172,5 +172,7 @@ module Variables_module
   PetscInt, parameter, public :: MNRL_VOLUME_FRACTION    = 139
 
   PetscInt, parameter, public :: K_ORTHOGONALITY_ERROR   = 140
+  PetscInt, parameter, public :: DARCY_VELOCITY          = 141
+
 
 end module Variables_module
