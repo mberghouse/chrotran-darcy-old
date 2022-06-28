@@ -586,7 +586,7 @@ subroutine ChrotranKineticState(this,rt_auxvar,global_auxvar, &
 
   class(reaction_sandbox_chrotran_type) :: this
   type(option_type) :: option
-  type(reaction_type) :: reaction
+  class(reaction_rt_type) :: reaction
   ! the following arrays must be declared after reaction
   type(reactive_transport_auxvar_type) :: rt_auxvar
   type(global_auxvar_type) :: global_auxvar
