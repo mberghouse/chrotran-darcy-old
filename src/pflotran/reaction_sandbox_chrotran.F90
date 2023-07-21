@@ -231,7 +231,6 @@ subroutine ChrotranRead(this,input,option)
       case('K_O')
         call InputReadDouble(input, option, this%K_O)
         call InputErrorMsg(input, option, 'K_O', 'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS')
-    ...
 
       case('NAME_O2')
         call InputReadWord(input,option,this%name_O2,PETSC_TRUE)
