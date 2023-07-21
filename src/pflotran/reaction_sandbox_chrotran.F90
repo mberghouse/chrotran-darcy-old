@@ -528,7 +528,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
                      mobile_mole_fraction* &                                ! dimensionless
                      rt_auxvar%immobile(this%B_id)* &                 ! mol/m3 bulk
                      material_auxvar%volume * this%k* &        ! oxygen 
-					 (this%O / (this%K_O + this%O))             ! limitation
+					 (this%O / (this%K_O + this%O2_id))             ! limitation
 			
   oxygen_rate = -respiration_rate * this%B_id
   
