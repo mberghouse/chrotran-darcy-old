@@ -539,7 +539,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
                      material_auxvar%volume * this%k* &        ! oxygen 
 					 (this%O2_id / (this%K_O + this%O2_id))             ! limitation
 			
-  oxygen_rate = -respiration_rate * this%B_id
+  oxygen_rate = -respiration_rate * rt_auxvar%immobile(this%B_id)
   
   Residual(idof_O2) = Residual(idof_O2) + oxygen_rate * material_auxvar%volume
   Residual(idof_CO2) = Residual(idof_CO2) + respiration_rate * material_auxvar%volume
