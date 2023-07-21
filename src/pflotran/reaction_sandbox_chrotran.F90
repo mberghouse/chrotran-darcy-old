@@ -26,6 +26,7 @@ module Reaction_Sandbox_Chrotran_class
     character(len=MAXWORDLENGTH) :: name_I ! This is for the alcohol in the reaction
     character(len=MAXWORDLENGTH) :: name_X ! This is for the biocide in the reaction
     character(len=MAXWORDLENGTH) :: name_biomineral ! This is for the dummny bio mineral
+	character(len=MAXWORDLENGTH) :: name_O2 ! This is for the dummny bio mineral
 
     PetscInt :: B_id
     PetscInt :: C_id
@@ -96,6 +97,7 @@ function ChrotranCreate()
   ChrotranCreate%name_B = ''
   ChrotranCreate%name_I = ''
   ChrotranCreate%name_X = ''
+  ChrotranCreate%name_O2 = ''
   ChrotranCreate%name_biomineral = ''
 
   ChrotranCreate%D_mobile_id = 0
