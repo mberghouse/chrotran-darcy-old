@@ -535,8 +535,8 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
   mu_CD = this%mass_action_CD*sum_food*rt_auxvar%total(idof_Cr,iphase)    ! mol/L/s
   
   respiration_rate = - rt_auxvar%immobile(this%B_id)* &                 ! mol/m3 bulk
-                     material_auxvar%volume * this%k         ! oxygen 
-					 (rt_auxvar%total(idof_O2,iphase) / &   
+                     material_auxvar%volume * this%k * &         ! fitting parameter k
+					 (rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
 					 (this%K_O + rt_auxvar%total(idof_O2,iphase)))             ! limitation
 			
   oxygen_rate = - respiration_rate
