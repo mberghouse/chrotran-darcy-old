@@ -540,7 +540,8 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
                      material_auxvar%volume * this%k * &         ! fitting parameter k
 					 (rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
 					 (this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
-					 global_auxvar%sat(iphase)
+					 -2*abs(global_auxvar%sat(iphase)-.5)+1
+					 !(-4.3*(global_auxvar%sat(iphase)-.5)**2+1)
 			
   oxygen_rate = - respiration_rate
   
@@ -688,6 +689,7 @@ subroutine ChrotranKineticState(this,rt_auxvar,global_auxvar, &
   
   idof_food_mobile = this%D_mobile_id
   idof_Cr = this%C_id
+  idof_O2 = this%O2_id
   idof_alcohol = this%I_id
   idof_biocide = this%X_id
   idof_biomass = reaction%offset_immobile + this%B_id
