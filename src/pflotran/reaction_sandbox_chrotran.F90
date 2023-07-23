@@ -524,7 +524,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
         ! F monod term, unitless
         (sum_food/(sum_food + this%monod_D))* &
 		(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
-		(this%K_O + rt_auxvar%total(idof_O2,iphase)))             ! limitation
+		(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
         ! B monod inhibition term, unitless
         (this%inhibition_B/ &
         (rt_auxvar%immobile(this%B_id) + &
