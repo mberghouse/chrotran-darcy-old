@@ -539,7 +539,8 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
   respiration_rate = - rt_auxvar%immobile(this%B_id)* &                 ! mol/m3 bulk
                      material_auxvar%volume * this%k * &         ! fitting parameter k
 					 (rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
-					 (this%K_O + rt_auxvar%total(idof_O2,iphase)))             ! limitation
+					 (this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
+					 global_auxvar%sat(iphase)
 			
   oxygen_rate = - respiration_rate
   
@@ -700,6 +701,9 @@ subroutine ChrotranKineticState(this,rt_auxvar,global_auxvar, &
             immobile_to_water_vol                                                 ! in mol/L water; Note that food_immobile is divided by porosity*saturation
   
   mu_B = this%rate_B_1*rt_auxvar%immobile(this%B_id)* &      ! mol/m3 bulk/s
+			(sum_food/(sum_food + this%monod_D))* &
+			(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
+			(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
             ! F monod term, unitless
             (sum_food/(sum_food + this%monod_D))* &
             ! B monod inhibition term, unitless
