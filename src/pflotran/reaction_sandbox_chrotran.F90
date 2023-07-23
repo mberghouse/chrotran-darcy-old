@@ -704,8 +704,8 @@ subroutine ChrotranKineticState(this,rt_auxvar,global_auxvar, &
   
   mu_B = this%rate_B_1*rt_auxvar%immobile(this%B_id)* &      ! mol/m3 bulk/s
 			(sum_food/(sum_food + this%monod_D))* &
-			(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
-			(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
+			!(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
+			!(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
             ! F monod term, unitless
             (sum_food/(sum_food + this%monod_D))* &
             ! B monod inhibition term, unitless
