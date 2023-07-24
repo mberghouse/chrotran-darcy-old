@@ -524,8 +524,8 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
         ! F monod term, unitless
         (sum_food/(sum_food + this%monod_D))* &
 		!(-2*abs(global_auxvar%sat(iphase)-.5)+1)*&    ! saturation O2 lmitation
-		(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
-		(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
+		!(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
+		!(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
         ! B monod inhibition term, unitless
         (this%inhibition_B/ &
         (rt_auxvar%immobile(this%B_id) + &
@@ -539,8 +539,8 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
   
   respiration_rate = - rt_auxvar%immobile(this%B_id)* &                 ! mol/m3 bulk
                      material_auxvar%volume * this%k * &         ! fitting parameter k
-					 !(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
-					 !(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
+					 (rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
+					 (this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
 					 (-2*abs(global_auxvar%sat(iphase)-.5)+1)
 					 
 			
