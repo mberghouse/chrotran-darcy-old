@@ -523,6 +523,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
   mu_B = this%rate_B_1*rt_auxvar%immobile(this%B_id)* &      ! mol/m3 bulk/s
         ! F monod term, unitless
         (sum_food/(sum_food + this%monod_D))* & !    
+		(rt_auxvar%total(idof_O2,iphase))**.02* &   
 		!(1.1/(1+exp(.3*(17.4-global_auxvar%temp))))*& !   
 		   ! y=1.1/(1+e^(.3*(17.4-x)))
 		!(-2*abs(global_auxvar%sat(iphase)-.5)+1)*&    ! saturation O2 lmitation
@@ -544,6 +545,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
 					 (rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
 					 (this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
 					 (-2*abs(global_auxvar%sat(iphase)-.5)+1)*&
+					 (rt_auxvar%total(idof_O2,iphase))**.02* &   
 					 (1.1/(1+exp(.3*(17.4-global_auxvar%temp))))
 					 
 			
