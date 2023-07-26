@@ -549,7 +549,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
 					 (1.1/(1+exp(.3*(17.4-global_auxvar%temp))))
 					 
 			
-  oxygen_rate = - respiration_rate*.01
+  oxygen_rate = - respiration_rate*.002
   
   Residual(idof_O2) = Residual(idof_O2) + oxygen_rate 
   Residual(idof_CO2) = Residual(idof_CO2) + respiration_rate 
