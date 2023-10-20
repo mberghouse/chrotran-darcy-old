@@ -542,14 +542,14 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
   
   respiration_rate = - rt_auxvar%immobile(this%B_id)* &                 ! mol/m3 bulk
                      material_auxvar%volume * this%k * &         ! fitting parameter k
-					 (rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
-					 (this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
+					 !(rt_auxvar%total(idof_O2,iphase) / &        !oxygen 
+					 !(this%K_O + rt_auxvar%total(idof_O2,iphase)))*&             ! limitation
 					 (-2*abs(global_auxvar%sat(iphase)-.5)+1)*&
-					 ((rt_auxvar%total(idof_O2,iphase))**.0002)* &   
+					 !((rt_auxvar%total(idof_O2,iphase))**.0002)* &   
 					 (1.1/(1+exp(.3*(17.4-global_auxvar%temp))))
 					 
 			
-  oxygen_rate = - respiration_rate*.002
+  oxygen_rate = - respiration_rate
   
   Residual(idof_O2) = Residual(idof_O2) + oxygen_rate 
   Residual(idof_CO2) = Residual(idof_CO2) + respiration_rate 
