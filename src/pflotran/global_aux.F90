@@ -10,6 +10,7 @@ module Global_Aux_module
 
   type, public :: global_auxvar_type
     PetscInt :: istate
+	!PetscReal :: is_biomass
     PetscReal :: temp
     PetscReal, pointer :: pres(:)
     PetscReal, pointer :: pres_store(:,:)

@@ -117,7 +117,7 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
   call random_number(random_factor)
   random_factor = 0.5 + 1.5 * random_factor 
   nphase = rt_parameter%nphase
-  
+  is_biomass = 1
   abs_dist(:) = dabs(dist(1:3))
   harmonic_tran_coefs_over_dist(:,:) = 0.d0    
 
@@ -328,6 +328,7 @@ subroutine TDispersionBC(ibndtype, &
   PetscReal :: t_ref_inv
 
   nphase = rt_parameter%nphase
+  is_biomass=1
 
   abs_dist_dn(:) = dabs(dist_dn(1:3))
   tran_coefs_over_dist(:,:) = 0.d0    
