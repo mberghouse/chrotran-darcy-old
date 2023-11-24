@@ -325,10 +325,6 @@ subroutine TDispersionBC(ibndtype, &
 ! Additional variables for random factor generation
   PetscReal :: random_factor
   PetscInt :: seed, count_rate, count_max
-
-! Generate a random value between 0.5 and 2
-  call random_number(random_factor)
-  random_factor = 0.5 + 1.5 * random_factor 
   PetscReal :: t_ref_inv
 
   nphase = rt_parameter%nphase
@@ -410,6 +406,9 @@ subroutine TDispersionBC(ibndtype, &
     endif
 	! Modify the dispersion only if the species is biomass
     if (is_biomass) then
+	! Generate a random value between 0.5 and 2
+      call random_number(random_factor)
+      random_factor = 0.5 + 1.5 * random_factor 
       mechanical_dispersion = mechanical_dispersion * random_factor
     endif
 	
