@@ -54,7 +54,7 @@ contains
 
 subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
                       cell_centered_velocity_up,dispersivity_up, &
-                      global_auxvar_dn,global_auxvar, material_auxvar_dn, &
+                      global_auxvar_dn, material_auxvar_dn, &
                       cell_centered_velocity_dn,dispersivity_dn,dist, &
                       rt_parameter,option,qdarcy, &
                       harmonic_tran_coefs_over_dist)
@@ -270,7 +270,7 @@ end subroutine TDispersion
 
 subroutine TDispersionBC(ibndtype, &
                           global_auxvar_up, &
-                          global_auxvar_dn, global_auxvar, material_auxvar_dn, &
+                          global_auxvar_dn,  material_auxvar_dn, &
                           cell_centered_velocity_dn,dispersivity_dn, &
                           dist_dn, &
                           rt_parameter,option,qdarcy, &
