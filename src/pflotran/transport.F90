@@ -242,8 +242,8 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
     endif
 	
 	!if (global_auxvar%is_biomass==1) then
-    mechanical_dispersion_up = mechanical_dispersion_up * random_factor
-	mechanical_dispersion_dn = mechanical_dispersion_dn * random_factor
+    mechanical_dispersion_up = mechanical_dispersion_up * 1000000
+	mechanical_dispersion_dn = mechanical_dispersion_dn * 1000000
     !endif
     ! hydrodynamic dispersion = mechanical disperson + &
     !   saturation * porosity * tortuosity * molecular diffusion
@@ -411,7 +411,7 @@ subroutine TDispersionBC(ibndtype, &
 	! Generate a random value between 0.5 and 2
     call random_number(random_factor)
     random_factor = 1000 + 10000 * random_factor 
-    mechanical_dispersion = mechanical_dispersion * random_factor
+    mechanical_dispersion = mechanical_dispersion * 1000000
     !endif
 	
 
