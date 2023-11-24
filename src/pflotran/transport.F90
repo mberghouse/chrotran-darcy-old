@@ -51,6 +51,7 @@ contains
 
 ! ************************************************************************** !
 
+
 subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
                       cell_centered_velocity_up,dispersivity_up, &
                       global_auxvar_dn,material_auxvar_dn, &
@@ -106,7 +107,15 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
   PetscReal :: v_up, v_dn
   PetscReal :: vi2_over_v_up, vj2_over_v_up, vk2_over_v_up
   PetscReal :: vi2_over_v_dn, vj2_over_v_dn, vk2_over_v_dn  
+  logical :: is_biomass
 
+! Additional variables for random factor generation
+  PetscReal :: random_factor
+  PetscInt :: seed, count_rate, count_max
+
+! Generate a random value between 0.5 and 2
+  call random_number(random_factor)
+  random_factor = 0.5 + 1.5 * random_factor 
   nphase = rt_parameter%nphase
   
   abs_dist(:) = dabs(dist(1:3))
@@ -231,6 +240,10 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
       mechanical_dispersion_up = dispersivity_up(LONGITUDINAL)*dabs(q) 
       mechanical_dispersion_dn = dispersivity_dn(LONGITUDINAL)*dabs(q) 
     endif
+	if (is_biomass) then
+      mechanical_dispersion_up = mechanical_dispersion_up * random_factor
+	  mechanical_dispersion_dn = mechanical_dispersion_dn * random_factor
+    endif
     ! hydrodynamic dispersion = mechanical disperson + &
     !   saturation * porosity * tortuosity * molecular diffusion
     hydrodynamic_dispersion_up(:) = &
@@ -284,6 +297,18 @@ subroutine TDispersionBC(ibndtype, &
   PetscReal :: cell_centered_velocity_dn(3,2)
   PetscReal :: dist_dn(-1:3)
   PetscReal :: qdarcy(*)
+  ! Additional variable for biomass flag
+  logical :: is_biomass
+
+! Additional variables for random factor generation
+  PetscReal :: random_factor
+  PetscInt :: seed, count_rate, count_max
+
+! Generate a random value between 0.5 and 2
+  call random_number(random_factor)
+  random_factor = 0.5 + 1.5 * random_factor  ! scale and shift to get a value between 0.5 and 2
+
+
   type(reactive_transport_param_type) :: rt_parameter
   PetscReal :: tran_coefs_over_dist(rt_parameter%naqcomp, &
                                              rt_parameter%nphase)
@@ -383,6 +408,11 @@ subroutine TDispersionBC(ibndtype, &
     else
       mechanical_dispersion = dispersivity_dn(LONGITUDINAL)*dabs(q) 
     endif
+	! Modify the dispersion only if the species is biomass
+    if (is_biomass) then
+      mechanical_dispersion = mechanical_dispersion * random_factor
+    endif
+	
 
     select case(ibndtype)
       case(DIRICHLET_BC,DIRICHLET_ZERO_GRADIENT_BC)
