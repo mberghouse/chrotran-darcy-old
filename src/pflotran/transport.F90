@@ -297,16 +297,7 @@ subroutine TDispersionBC(ibndtype, &
   PetscReal :: cell_centered_velocity_dn(3,2)
   PetscReal :: dist_dn(-1:3)
   PetscReal :: qdarcy(*)
-  ! Additional variable for biomass flag
-  logical :: is_biomass
 
-! Additional variables for random factor generation
-  PetscReal :: random_factor
-  PetscInt :: seed, count_rate, count_max
-
-! Generate a random value between 0.5 and 2
-  call random_number(random_factor)
-  random_factor = 0.5 + 1.5 * random_factor  ! scale and shift to get a value between 0.5 and 2
 
 
   type(reactive_transport_param_type) :: rt_parameter
@@ -332,7 +323,15 @@ subroutine TDispersionBC(ibndtype, &
   PetscReal :: t_ref_inv
 
   nphase = rt_parameter%nphase
-  
+  logical :: is_biomass
+
+! Additional variables for random factor generation
+  PetscReal :: random_factor
+  PetscInt :: seed, count_rate, count_max
+
+! Generate a random value between 0.5 and 2
+  call random_number(random_factor)
+  random_factor = 0.5 + 1.5 * random_factor 
   abs_dist_dn(:) = dabs(dist_dn(1:3))
   tran_coefs_over_dist(:,:) = 0.d0    
 
