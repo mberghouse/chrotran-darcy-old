@@ -54,7 +54,7 @@ contains
 
 subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
                       cell_centered_velocity_up,dispersivity_up, &
-                      global_auxvar_dn,material_auxvar_dn, &
+                      global_auxvar_dn,global_auxvar, material_auxvar_dn, &
                       cell_centered_velocity_dn,dispersivity_dn,dist, &
                       rt_parameter,option,qdarcy, &
                       harmonic_tran_coefs_over_dist)
@@ -115,7 +115,7 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
 
 ! Generate a random value between 0.5 and 2
   call random_number(random_factor)
-  random_factor = 4.5 + 1.5 * random_factor 
+  random_factor = 1000 + 10000 * random_factor 
   nphase = rt_parameter%nphase
   !is_biomass = 1
   abs_dist(:) = dabs(dist(1:3))
@@ -270,7 +270,7 @@ end subroutine TDispersion
 
 subroutine TDispersionBC(ibndtype, &
                           global_auxvar_up, &
-                          global_auxvar_dn,material_auxvar_dn, &
+                          global_auxvar_dn, global_auxvar, material_auxvar_dn, &
                           cell_centered_velocity_dn,dispersivity_dn, &
                           dist_dn, &
                           rt_parameter,option,qdarcy, &
@@ -410,7 +410,7 @@ subroutine TDispersionBC(ibndtype, &
     if (global_auxvar%is_biomass ==1) then
 	! Generate a random value between 0.5 and 2
       call random_number(random_factor)
-      random_factor = 4.5 + 1.5 * random_factor 
+      random_factor = 1000 + 10000 * random_factor 
       mechanical_dispersion = mechanical_dispersion * random_factor
     endif
 	
