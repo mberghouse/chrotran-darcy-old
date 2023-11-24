@@ -74,7 +74,7 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
   implicit none
   
   type(option_type) :: option
-  type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
+  type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn , global_auxvar
   class(material_auxvar_type) :: material_auxvar_up, material_auxvar_dn
   PetscReal :: dispersivity_up(3), dispersivity_dn(3)
   PetscReal :: cell_centered_velocity_up(3,2), &
@@ -107,7 +107,7 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
   PetscReal :: v_up, v_dn
   PetscReal :: vi2_over_v_up, vj2_over_v_up, vk2_over_v_up
   PetscReal :: vi2_over_v_dn, vj2_over_v_dn, vk2_over_v_dn  
-  PetscReal :: is_biomass
+  !PetscReal :: is_biomass
 
 ! Additional variables for random factor generation
   PetscReal :: random_factor
@@ -117,7 +117,7 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
   call random_number(random_factor)
   random_factor = 0.5 + 1.5 * random_factor 
   nphase = rt_parameter%nphase
-  is_biomass = 1
+  !is_biomass = 1
   abs_dist(:) = dabs(dist(1:3))
   harmonic_tran_coefs_over_dist(:,:) = 0.d0    
 
@@ -240,7 +240,8 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
       mechanical_dispersion_up = dispersivity_up(LONGITUDINAL)*dabs(q) 
       mechanical_dispersion_dn = dispersivity_dn(LONGITUDINAL)*dabs(q) 
     endif
-	if (is_biomass==1) then
+	
+	if (global_auxvar%is_biomass==1) then
       mechanical_dispersion_up = mechanical_dispersion_up * random_factor
 	  mechanical_dispersion_dn = mechanical_dispersion_dn * random_factor
     endif
@@ -291,7 +292,7 @@ subroutine TDispersionBC(ibndtype, &
   
   PetscInt :: ibndtype
   type(option_type) :: option
-  type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn 
+  type(global_auxvar_type) :: global_auxvar_up, global_auxvar_dn, global_auxvar 
   class(material_auxvar_type) :: material_auxvar_dn
   PetscReal :: dispersivity_dn(3)
   PetscReal :: cell_centered_velocity_dn(3,2)
@@ -320,7 +321,7 @@ subroutine TDispersionBC(ibndtype, &
   PetscReal :: hydrodynamic_dispersion(rt_parameter%naqcomp)
   PetscReal :: v_dn
   PetscReal :: vi2_over_v_dn, vj2_over_v_dn, vk2_over_v_dn  
-  PetscReal :: is_biomass
+  !PetscReal :: is_biomass
 
 ! Additional variables for random factor generation
   PetscReal :: random_factor
@@ -328,7 +329,7 @@ subroutine TDispersionBC(ibndtype, &
   PetscReal :: t_ref_inv
 
   nphase = rt_parameter%nphase
-  is_biomass=1
+  !is_biomass=1
 
   abs_dist_dn(:) = dabs(dist_dn(1:3))
   tran_coefs_over_dist(:,:) = 0.d0    
@@ -406,7 +407,7 @@ subroutine TDispersionBC(ibndtype, &
       mechanical_dispersion = dispersivity_dn(LONGITUDINAL)*dabs(q) 
     endif
 	! Modify the dispersion only if the species is biomass
-    if (is_biomass ==1) then
+    if (global_auxvar%is_biomass ==1) then
 	! Generate a random value between 0.5 and 2
       call random_number(random_factor)
       random_factor = 0.5 + 1.5 * random_factor 

@@ -10,7 +10,7 @@ module Global_Aux_module
 
   type, public :: global_auxvar_type
     PetscInt :: istate
-	!PetscReal :: is_biomass
+	PetscReal :: is_biomass
     PetscReal :: temp
     PetscReal, pointer :: pres(:)
     PetscReal, pointer :: pres_store(:,:)
@@ -107,6 +107,7 @@ subroutine GlobalAuxVarInit(auxvar,option)
   
   auxvar%istate = 0
   auxvar%temp = 0.d0
+  auxvar%is_biomass = 0.d0
 
   ! nullify everthing to begin with and allocate later
   nullify(auxvar%pres)
@@ -253,6 +254,7 @@ subroutine GlobalAuxVarCopy(auxvar,auxvar2,option)
   auxvar2%istate = auxvar%istate
   auxvar2%pres = auxvar%pres
   auxvar2%temp = auxvar%temp
+  auxvar2%is_biomass = auxvar%is_biomass
   auxvar2%sat = auxvar%sat
   auxvar2%den = auxvar%den
   auxvar2%den_kg = auxvar%den_kg
