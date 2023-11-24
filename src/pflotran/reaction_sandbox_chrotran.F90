@@ -38,7 +38,7 @@ module Reaction_Sandbox_Chrotran_class
     PetscInt :: biomineral_id
     PetscInt :: O2_id
 	PetscInt :: CO2_id
-	PetscInt :: micro_motility   ! logical parameter to turn on or off microbial motility
+	PetscReal :: micro_motility   ! logical parameter to turn on or off microbial motility
     ! Decay and inhibition parameters in our sophisticated model
     PetscReal :: background_concentration_B    ! Minimum background concentration of the biomass
     PetscReal :: rate_B_1
@@ -112,7 +112,7 @@ function ChrotranCreate()
   ChrotranCreate%O2_id = 0
   ChrotranCreate%CO2_id = 0
   ChrotranCreate%biomineral_id = 0
-  ChrotranCreate%micro_motility = 0
+  ChrotranCreate%micro_motility = 0.d0
   
   ChrotranCreate%stoichiometric_D_1 = 0.d0
   ChrotranCreate%rate_D = 0.d0
@@ -213,7 +213,8 @@ subroutine ChrotranRead(this,input,option)
       case('MICRO_MOTILITY') 
         call InputReadDouble(input,option,this%micro_motility) 
         call InputErrorMsg(input,option,'micro_motility', &
-                           'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS')   
+                           'CHEMISTRY,REACTION_SANDBOX,CHROTRAN_PARAMETERS')  
+
       case('ALPHA') 
         call InputReadDouble(input,option,this%alpha) 
         call InputErrorMsg(input,option,'alpha', &
