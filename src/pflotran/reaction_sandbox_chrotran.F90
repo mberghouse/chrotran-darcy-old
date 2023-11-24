@@ -453,6 +453,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
   PetscReal :: biomass_residual_delta
   PetscReal :: respiration_rate
   PetscReal :: oxygen_rate
+  PetscInt :: is_biomass
   is_biomass = this%micro_motility
 
   ! Description of subroutine arguments:
