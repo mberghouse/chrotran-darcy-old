@@ -445,6 +445,7 @@ subroutine ChrotranReact(this,Residual,Jacobian,compute_derivative, &
 
   PetscInt, parameter :: iphase = 1
   PetscReal :: L_water
+  PetscReal :: imob_bio
   PetscReal :: mu_B, mu_CD
   PetscReal :: sum_food
   PetscInt :: idof_food_mobile, idof_food_immobile, idof_biomass, idof_Cr, idof_O2, idof_CO2
@@ -696,7 +697,7 @@ subroutine ChrotranKineticState(this,rt_auxvar,global_auxvar, &
 
   PetscInt, parameter :: iphase = 1
   PetscReal :: biomass_residual_delta, delta_volfrac
-  
+  PetscReal :: imob_bio
   PetscReal :: L_water
   PetscReal :: mu_B, mu_CD
   PetscReal :: sum_food
