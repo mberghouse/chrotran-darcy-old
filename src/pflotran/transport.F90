@@ -241,10 +241,10 @@ subroutine TDispersion(global_auxvar_up,material_auxvar_up, &
       mechanical_dispersion_dn = dispersivity_dn(LONGITUDINAL)*dabs(q) 
     endif
 	
-	if (global_auxvar%is_biomass==1) then
-      mechanical_dispersion_up = mechanical_dispersion_up * random_factor
-	  mechanical_dispersion_dn = mechanical_dispersion_dn * random_factor
-    endif
+	!if (global_auxvar%is_biomass==1) then
+    mechanical_dispersion_up = mechanical_dispersion_up * random_factor
+	mechanical_dispersion_dn = mechanical_dispersion_dn * random_factor
+    !endif
     ! hydrodynamic dispersion = mechanical disperson + &
     !   saturation * porosity * tortuosity * molecular diffusion
     hydrodynamic_dispersion_up(:) = &
@@ -407,12 +407,12 @@ subroutine TDispersionBC(ibndtype, &
       mechanical_dispersion = dispersivity_dn(LONGITUDINAL)*dabs(q) 
     endif
 	! Modify the dispersion only if the species is biomass
-    if (global_auxvar%is_biomass ==1) then
+    !if (global_auxvar%is_biomass ==1) then
 	! Generate a random value between 0.5 and 2
-      call random_number(random_factor)
-      random_factor = 1000 + 10000 * random_factor 
-      mechanical_dispersion = mechanical_dispersion * random_factor
-    endif
+    call random_number(random_factor)
+    random_factor = 1000 + 10000 * random_factor 
+    mechanical_dispersion = mechanical_dispersion * random_factor
+    !endif
 	
 
     select case(ibndtype)
