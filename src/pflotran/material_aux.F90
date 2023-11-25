@@ -1,4 +1,4 @@
-module Material_Aux_module
+module Material_Aux_class
  
 #include "petsc/finclude/petscsys.h"
   use petscsys
@@ -1004,4 +1004,4 @@ subroutine MaterialAuxDestroy(aux)
 
 end subroutine MaterialAuxDestroy
 
-end module Material_Aux_module
+end module Material_Aux_class
