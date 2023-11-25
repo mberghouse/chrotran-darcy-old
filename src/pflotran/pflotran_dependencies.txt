@@ -813,7 +813,7 @@ reaction_sandbox.o : global_aux.o input_aux.o material_aux.o option.o \
                      reaction_sandbox_example.o reaction_sandbox_gas.o \
                      reaction_sandbox_pnnl_cyber.o reaction_sandbox_simple.o \
                      reaction_sandbox_ufd_wp.o reactive_transport_aux.o \
-                     reaction_sandbox_chrotran.o string.o utility.o
+                     reaction_sandbox_chrotran.o reaction_sandbox_bioTH.o string.o utility.o
 reaction_sandbox_base.o : global_aux.o input_aux.o material_aux.o option.o \
                           output_aux.o pflotran_constants.o reaction_aux.o \
                           reactive_transport_aux.o
@@ -838,6 +838,12 @@ reaction_sandbox_pnnl_cyber.o : global_aux.o input_aux.o material_aux.o \
                                 reactive_transport_aux.o string.o utility.o \
                                 variables.o
 reaction_sandbox_chrotran.o : global_aux.o input_aux.o material_aux.o \
+                                option.o output_aux.o pflotran_constants.o \
+                                reaction_aux.o reaction_immobile_aux.o \
+                                reaction_mineral_aux.o reaction_sandbox_base.o \
+                                reactive_transport_aux.o string.o utility.o \
+                                variables.o
+reaction_sandbox_bioTH.o : global_aux.o input_aux.o material_aux.o \
                                 option.o output_aux.o pflotran_constants.o \
                                 reaction_aux.o reaction_immobile_aux.o \
                                 reaction_mineral_aux.o reaction_sandbox_base.o \
