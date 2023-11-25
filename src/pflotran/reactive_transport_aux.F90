@@ -196,8 +196,8 @@ function RTAuxCreate(naqcomp,nphase)
   aux%rt_parameter%species_dependent_diffusion = PETSC_FALSE
   nullify(aux%rt_parameter%pri_spec_to_coll_spec)
   nullify(aux%rt_parameter%coll_spec_to_pri_spec)
-  aux%rt_parameter%calculate_transverse_dispersion = GLOBAL_IMPLICIT
-  aux%rt_parameter%temperature_dependent_diffusion = GLOBAL_IMPLICIT
+  aux%rt_parameter%calculate_transverse_dispersion = PETSC_TRUE
+  aux%rt_parameter%temperature_dependent_diffusion = PETSC_TRUE
 #ifdef OS_STATISTICS
   aux%rt_parameter%newton_call_count = 0
   aux%rt_parameter%sum_newton_call_count = 0.d0

@@ -420,7 +420,7 @@ subroutine BioTH_Read(this,input,option)
             call InputPushBlock(input,option)
             ! Gotta turn this on so Darcy velocity is stored in global
             ! and can be used in the reaction sandbox
-            option%flow%store_darcy_vel = PETSC_TRUE
+            !option%flow%store_darcy_vel = PETSC_TRUE
             do
               call InputReadPflotranString(input,option)
               if (InputError(input)) exit
